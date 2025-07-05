@@ -22,16 +22,16 @@ export default function ServicesFR() {
           <div className="space-y-4 border-t border-gray-300 pt-6">
             <h2 className="text-2xl font-heading flex items-center space-x-2 drop-shadow-sm">
               <span>🔧</span>
-              <span>Développement IA & GPT sur mesure</span>
+              <span>Développement IA &amp; GPT sur mesure</span>
             </h2>
             <p className="leading-relaxed text-midgray">
-              Que vous ayez besoin d’un chatbot intelligent, d’un GPT pour créer du contenu, ou d’un assistant IA complet,
+              Que vous ayez besoin d&apos;un chatbot intelligent, d&apos;un GPT pour créer du contenu, ou d&apos;un assistant IA complet,
               je conçois des solutions sur mesure :
             </p>
             <ul className="list-disc list-inside text-midgray space-y-1">
-              <li>Analyse des besoins & prototypage</li>
-              <li>Conception de prompts & ingénierie d’instructions</li>
-              <li>Intégration d’API (OpenAI, Azure, Hugging Face, etc.)</li>
+              <li>Analyse des besoins &amp; prototypage</li>
+              <li>Conception de prompts &amp; ingénierie d&apos;instructions</li>
+              <li>Intégration d&apos;API (OpenAI, Azure, Hugging Face, etc.)</li>
               <li>Déploiement sur Streamlit, Vercel, Heroku ou votre propre stack</li>
             </ul>
           </div>
@@ -40,11 +40,11 @@ export default function ServicesFR() {
           <div className="space-y-4 border-t border-gray-300 pt-6">
             <h2 className="text-2xl font-heading flex items-center space-x-2 drop-shadow-sm">
               <span>⚙️</span>
-              <span>Ingénierie & optimisation de prompts</span>
+              <span>Ingénierie &amp; optimisation de prompts</span>
             </h2>
             <p className="leading-relaxed text-midgray">
               Maximisez votre budget LLM avec des prompts précis, efficaces et alignés sur vos objectifs.
-              J’audite, optimise et documente les bonnes pratiques pour des résultats concrets.
+              J&apos;audite, optimise et documente les bonnes pratiques pour des résultats concrets.
             </p>
           </div>
 
@@ -55,13 +55,13 @@ export default function ServicesFR() {
               <span>Automatisation des flux de travail</span>
             </h2>
             <p className="leading-relaxed text-midgray">
-              Automatisez les tâches répétitives, les rapports et les flux de données pour vous concentrer sur l’essentiel.
+              Automatisez les tâches répétitives, les rapports et les flux de données pour vous concentrer sur l&apos;essentiel.
               Du no-code à Python, je vous aide à :
             </p>
             <ul className="list-disc list-inside text-midgray space-y-1">
               <li>Identifier les opportunités à fort retour sur investissement</li>
-              <li>Créer & mettre en œuvre des workflows sur mesure</li>
-              <li>S’intégrer à vos outils existants (Slack, Notion, Google Sheets, etc.)</li>
+              <li>Créer &amp; mettre en œuvre des workflows sur mesure</li>
+              <li>S&apos;intégrer à vos outils existants (Slack, Notion, Google Sheets, etc.)</li>
             </ul>
           </div>
 

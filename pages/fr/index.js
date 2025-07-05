@@ -60,8 +60,8 @@ export default function HomeFR() {
         <section className="px-8 pb-12 space-y-6 bg-white/90 text-dark">
           <h2 className="text-2xl font-heading text-primary">🧠 Projets précédents</h2>
           <ul className="text-midgray space-y-2">
-            <li><strong>Coach d’entretien GPT</strong> – Préparation personnalisée en quelques minutes</li>
-            <li><strong>Générateur d’histoires GPT</strong> – Contenu créatif à la demande</li>
+            <li><strong>Coach d&apos;entretien GPT</strong> – Préparation personnalisée en quelques minutes</li>
+            <li><strong>Générateur d&apos;histoires GPT</strong> – Contenu créatif à la demande</li>
             <li><strong>Planificateur de médias sociaux</strong> – Calendriers IA sur 30 jours</li>
           </ul>
           <ConsultCTA>Réserver une consultation gratuite</ConsultCTA>

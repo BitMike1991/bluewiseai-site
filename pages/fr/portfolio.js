@@ -20,15 +20,15 @@ export default function PortfolioFR() {
 
           {/* Projet 1 */}
           <div className="space-y-2 border-t border-gray-300 pt-6">
-            <h2 className="text-2xl font-heading text-dark drop-shadow-sm">💼 Coach d’Entretien GPT</h2>
+            <h2 className="text-2xl font-heading text-dark drop-shadow-sm">💼 Coach d&apos;Entretien GPT</h2>
             <p className="leading-relaxed text-midgray">
-              Une application web qui simule des entretiens d’embauche et fournit un retour personnalisé sur vos réponses.
+              Une application web qui simule des entretiens d&apos;embauche et fournit un retour personnalisé sur vos réponses.
               Conçue avec Next.js, OpenAI GPT-4 et hébergée sur Vercel.
             </p>
             <ul className="list-disc list-inside text-midgray space-y-1">
               <li>Questions dynamiques selon le poste visé</li>
               <li>Enregistrement et lecture directement dans le navigateur</li>
-              <li>Score en temps réel & conseils d’amélioration</li>
+              <li>Score en temps réel &amp; conseils d&apos;amélioration</li>
             </ul>
             <a
               href="https://www.jobinterviewcoachgpt.app/"
@@ -42,13 +42,13 @@ export default function PortfolioFR() {
 
           {/* Projet 2 */}
           <div className="space-y-2 border-t border-gray-300 pt-6">
-            <h2 className="text-2xl font-heading text-dark drop-shadow-sm">📚 Générateur d’Histoires sur Demande</h2>
+            <h2 className="text-2xl font-heading text-dark drop-shadow-sm">📚 Générateur d&apos;Histoires sur Demande</h2>
             <p className="leading-relaxed text-midgray">
               Un GPT personnalisé pour créer des histoires pour enfants à partir de vos idées : personnages, thèmes, décors.
               Déployé comme plugin ChatGPT privé avec une interface Streamlit.
             </p>
             <ul className="list-disc list-inside text-midgray space-y-1">
-              <li>Modèles de prompts selon l’âge et le style</li>
+              <li>Modèles de prompts selon l&apos;âge et le style</li>
               <li>Export PDF automatique avec illustrations</li>
               <li>Facilement intégrable à un site web ou à Slack</li>
             </ul>
@@ -66,12 +66,12 @@ export default function PortfolioFR() {
           <div className="space-y-2 border-t border-gray-300 pt-6">
             <h2 className="text-2xl font-heading text-dark drop-shadow-sm">📆 Calendrier Réseaux Sociaux IA – 30 Jours</h2>
             <p className="leading-relaxed text-midgray">
-              Génère un mois complet de publications et légendes pour Instagram & TikTok, selon le ton de votre marque.
+              Génère un mois complet de publications et légendes pour Instagram &amp; TikTok, selon le ton de votre marque.
               Utilise OpenAI fine-tuning + LangChain.
             </p>
             <ul className="list-disc list-inside text-midgray space-y-1">
               <li>Export CSV pour outils de planification</li>
-              <li>Optimisation du ton & des hashtags</li>
+              <li>Optimisation du ton &amp; des hashtags</li>
               <li>Mode aperçu et édition en lot</li>
             </ul>
             <a
@@ -86,3 +86,18 @@ export default function PortfolioFR() {
 
           {/* À venir */}
           <div className="space-y-2 border-t border-gray-300 pt-6">
+            <h2 className="text-2xl font-heading text-dark drop-shadow-sm">🚀 À venir…</h2>
+            <p className="leading-relaxed text-midgray">
+              Je travaille constamment sur de nouveaux outils IA — assistants RAG, démos de vision par ordinateur, tableaux de bord analytiques... Restez à l&apos;écoute !
+            </p>
+          </div>
+
+          {/* CTA */}
+          <div className="pt-8 text-center">
+            <ConsultCTA>Réserver une consultation gratuite</ConsultCTA>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}

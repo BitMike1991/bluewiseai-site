@@ -1,4 +1,3 @@
-// src/pages/fr/about.js
 import ConsultCTA from '@/components/ConsultCTA';
 
 export default function APropos() {
@@ -28,15 +27,15 @@ export default function APropos() {
               Bonjour, je suis Mikael — le créateur de Blue Wise AI.
             </p>
             <p className="leading-relaxed drop-shadow-sm">
-              J&#39;ai lancé ce projet pour aider des personnes comme moi — motivées, créatives,
-              mais sans une grande équipe technique — à utiliser l&#39;IA pour créer des
+              J&apos;ai lancé ce projet pour aider des personnes comme moi — motivées, créatives,
+              mais sans une grande équipe technique — à utiliser l&apos;IA pour créer des
               outils intelligents et utiles qui font gagner du temps et libèrent le potentiel
               de croissance.
             </p>
             <p className="leading-relaxed drop-shadow-sm">
-              Vous n&#39;avez pas besoin d&#39;être développeur ou fondateur de startup financé par
-              du capital-risque pour profiter de l&#39;IA. Il vous suffit du bon guide,
-              d&#39;un peu de créativité et d&#39;un vrai problème à résoudre.
+              Vous n&apos;avez pas besoin d&apos;être développeur ou fondateur de startup financé par
+              du capital-risque pour profiter de l&apos;IA. Il vous suffit du bon guide,
+              d&apos;un peu de créativité et d&apos;un vrai problème à résoudre.
             </p>
           </div>
 
@@ -55,7 +54,7 @@ export default function APropos() {
               personnalisé ou prototyper une idée SaaS — je peux vous aider à y arriver rapidement.
             </p>
             <p className="leading-relaxed drop-shadow-sm">
-              J&#39;ai déjà lancé une application IA et je continue de perfectionner mes compétences.
+              J&apos;ai déjà lancé une application IA et je continue de perfectionner mes compétences.
               Pas de blabla. Pas de complexité inutile. Juste des outils clairs et utiles.
             </p>
           </div>
@@ -67,11 +66,11 @@ export default function APropos() {
               <span>Comment je travaille</span>
             </h2>
             <blockquote className="border-l-4 border-primary pl-4 italic drop-shadow-sm">
-              Clarté d&#39;abord. Rapidité ensuite. Valeur toujours.
+              Clarté d&apos;abord. Rapidité ensuite. Valeur toujours.
             </blockquote>
             <p className="leading-relaxed drop-shadow-sm">
               Je garde les choses légères et efficaces. Pas de processus gonflé,
-              pas de jargon et pas de délais d&#39;agence. Juste vous, moi et un objectif
+              pas de jargon et pas de délais d&apos;agence. Juste vous, moi et un objectif
               commun : construire quelque chose qui fonctionne.
             </p>
           </div>
@@ -80,14 +79,14 @@ export default function APropos() {
           <div className="space-y-4">
             <h2 className="text-2xl font-heading flex items-center space-x-2 drop-shadow-sm">
               <span>🌱</span>
-              <span>Pourquoi c&#39;est important</span>
+              <span>Pourquoi c&apos;est important</span>
             </h2>
             <p className="leading-relaxed drop-shadow-sm">
-              Blue Wise AI fait partie d&#39;une mission plus large pour moi —
+              Blue Wise AI fait partie d&apos;une mission plus large pour moi —
               vivre simplement, travailler intelligemment et aider les autres à faire de même.
             </p>
             <p className="leading-relaxed drop-shadow-sm">
-              Je crois en des outils qui servent les gens — pas l&#39;inverse.
+              Je crois en des outils qui servent les gens — pas l&apos;inverse.
             </p>
           </div>
 

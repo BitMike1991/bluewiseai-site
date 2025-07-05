@@ -20,7 +20,7 @@ export default function ContactFR() {
       setForm({ name: '', email: '', message: '' });
     } catch (err) {
       console.error(err);
-      setStatus('Oups ! Une erreur s’est produite.');
+      setStatus('Oups ! Une erreur s&rsquo;est produite.');
     }
   };
 
