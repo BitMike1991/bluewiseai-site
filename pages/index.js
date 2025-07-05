@@ -1,4 +1,3 @@
-// src/pages/index.js
 import ConsultCTA from '@/components/ConsultCTA';
 import { Brain } from 'lucide-react';
 

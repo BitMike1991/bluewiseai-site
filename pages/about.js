@@ -1,4 +1,3 @@
-// src/pages/en/about.js
 import ConsultCTA from '@/components/ConsultCTA';
 
 export default function About() {
@@ -22,17 +21,17 @@ export default function About() {
           <div className="space-y-4">
             <h2 className="text-2xl font-heading flex items-center space-x-2 drop-shadow-sm">
               <span>👋</span>
-              <span>Who's behind Blue Wise AI?</span>
+              <span>Who&rsquo;s behind Blue Wise AI?</span>
             </h2>
             <p className="leading-relaxed drop-shadow-sm">
-              Hi, I’m Mikael — the builder behind Blue Wise AI.
+              Hi, I&rsquo;m Mikael — the builder behind Blue Wise AI.
             </p>
             <p className="leading-relaxed drop-shadow-sm">
               I started this project to help people like me — motivated, creative, but without a big tech team —
               use AI to build smart, useful tools that save time and unlock growth.
             </p>
             <p className="leading-relaxed drop-shadow-sm">
-              You don’t need to be a developer or a VC-backed startup founder to benefit from AI.
+              You don&rsquo;t need to be a developer or a VC-backed startup founder to benefit from AI.
               You just need the right guide, a bit of creativity, and a real problem worth solving.
             </p>
           </div>
@@ -45,11 +44,11 @@ export default function About() {
             </h2>
             <p className="leading-relaxed drop-shadow-sm">
               I work best with ambitious, vision-driven people who want to bring ideas to life but
-              aren’t sure how to get there. Whether it's automating your workflow, building a custom GPT tool,
+              aren&rsquo;t sure how to get there. Whether it&rsquo;s automating your workflow, building a custom GPT tool,
               or prototyping a SaaS idea — I can help you get there fast.
             </p>
             <p className="leading-relaxed drop-shadow-sm">
-              I’ve launched an AI-powered app already and continue to sharpen my skills daily.
+              I&rsquo;ve launched an AI-powered app already and continue to sharpen my skills daily.
               No fluff. No unnecessary complexity. Just clear, useful tools.
             </p>
           </div>

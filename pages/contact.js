@@ -45,9 +45,9 @@ export default function Contact() {
             </p>
             <p>
               I offer tailored guidance, practical prototypes, and clear next steps — whether
-              you're just getting started or scaling up.
+              you&rsquo;re just getting started or scaling up.
             </p>
-            <p className="text-xl font-semibold">Let’s talk.</p>
+            <p className="text-xl font-semibold">Let&rsquo;s talk.</p>
           </div>
 
           {/* Contact Form */}

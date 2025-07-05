@@ -38,7 +38,7 @@ export default function Services() {
               <span>Prompt Engineering & Optimization</span>
             </h2>
             <p className="leading-relaxed drop-shadow-sm">
-              Get the most out of your LLM budget with prompts that are precise, efficient, and aligned with your goals. I’ll audit your existing prompts, optimize for cost and quality, and document best practices.
+              Get the most out of your LLM budget with prompts that are precise, efficient, and aligned with your goals. I&rsquo;ll audit your existing prompts, optimize for cost and quality, and document best practices.
             </p>
           </div>
 
@@ -49,7 +49,7 @@ export default function Services() {
               <span>AI Workflow Automation</span>
             </h2>
             <p className="leading-relaxed drop-shadow-sm">
-              Automate repetitive tasks, reports, and data pipelines so you can focus on what matters. From no-code Zapier/Maker workflows to fully custom Python scripts and RAG-powered systems, I’ll help you:
+              Automate repetitive tasks, reports, and data pipelines so you can focus on what matters. From no-code Zapier/Maker workflows to fully custom Python scripts and RAG-powered systems, I&rsquo;ll help you:
             </p>
             <ul className="list-disc list-inside drop-shadow-sm space-y-1">
               <li>Identify high-ROI automation opportunities</li>
@@ -73,7 +73,7 @@ export default function Services() {
           <div className="pt-8 text-center space-y-2">
             <h3 className="text-xl font-heading drop-shadow-sm">Ready to get started?</h3>
             <p className="drop-shadow-sm">
-              Let’s talk through your project and find the perfect AI solution to drive real results.
+              Let&rsquo;s talk through your project and find the perfect AI solution to drive real results.
             </p>
             <ConsultCTA>Book a free consultation</ConsultCTA>
           </div>

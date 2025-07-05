@@ -40,7 +40,7 @@ export default function Portfolio() {
           <div className="space-y-2">
             <h2 className="text-2xl font-heading drop-shadow-sm">📚 On-Demand Story Maker GPT</h2>
             <p className="leading-relaxed drop-shadow-sm">
-              A custom GPT that crafts kids’ stories based on your prompts: characters, themes, and settings. Deployed as a private ChatGPT plugin and wrapped in a simple Streamlit front-end.
+              A custom GPT that crafts kids&rsquo; stories based on your prompts: characters, themes, and settings. Deployed as a private ChatGPT plugin and wrapped in a simple Streamlit front-end.
             </p>
             <ul className="list-disc list-inside drop-shadow-sm space-y-1">
               <li>Prompt templates for age & genre tailoring</li>
@@ -82,7 +82,7 @@ export default function Portfolio() {
           <div className="space-y-2">
             <h2 className="text-2xl font-heading drop-shadow-sm">🚀 More to Come…</h2>
             <p className="leading-relaxed drop-shadow-sm">
-              I’m continually experimenting with new AI tools—RAG-based assistants, computer vision demos, and data-driven analytics dashboards. Stay tuned!
+              I&rsquo;m continually experimenting with new AI tools—RAG-based assistants, computer vision demos, and data-driven analytics dashboards. Stay tuned!
             </p>
           </div>
 
