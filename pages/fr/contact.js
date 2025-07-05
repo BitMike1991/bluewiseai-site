@@ -35,13 +35,14 @@ export default function ContactFR() {
     >
       <div className="min-h-screen py-16 px-4 backdrop-brightness-110">
         <section className="max-w-3xl mx-auto space-y-10 px-6 sm:px-12">
+
           {/* Titre */}
           <h1 className="text-4xl font-heading text-center drop-shadow-md">📬 Contact</h1>
 
           {/* Introduction */}
           <div className="space-y-4 text-center drop-shadow-sm">
             <p className="text-lg">
-              Vous avez une idée de projet ou vous souhaitez découvrir comment l’IA peut simplifier votre activité ?
+              Vous avez une idée de projet ou vous souhaitez découvrir comment l&#39;IA peut simplifier votre activité ?
             </p>
             <p>
               Je propose un accompagnement personnalisé, des prototypes rapides et des solutions concrètes, adaptées à vos besoins.
@@ -89,7 +90,7 @@ export default function ContactFR() {
 
             <button
               type="submit"
-              className="bg-primary text-white px-6 py-3 rounded shadow hover:bg-blue-600 transition"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl shadow transition-colors duration-200"
             >
               Envoyer le message
             </button>
