@@ -105,10 +105,10 @@ export default function Contact() {
               <li>
                 📧 Email:{' '}
                 <a
-                  href="mailto:bluewiseai@ptoton.me"
+                  href="mailto:bluewiseai@proton.me"
                   className="text-primary hover:underline"
                 >
-                  bluewiseai@ptoton.me
+                  bluewiseai@proton.me
                 </a>
               </li>
               <li>
