@@ -43,11 +43,12 @@ export default function HeroV2() {
 
       <div className="pointer-events-none absolute inset-0 bg-slate-950/30 z-0" />
 
-      {/* GHOST TEXT — NOW LIFTED BY ~150px */}
+      {/* GHOST TEXT — lifted more so it sits between heading + body */}
       <div
         className="pointer-events-none absolute inset-0 flex items-center justify-center z-0"
         style={{
-          transform: `translateY(${ghostOffset * 0.15 - 150}px)`,
+          // smaller parallax factor, much bigger negative offset
+          transform: `translateY(${ghostOffset * 0.12 - 260}px)`,
         }}
       >
         <p className="select-none text-[5rem] sm:text-[7rem] lg:text-[9rem] font-extrabold tracking-[0.25em] text-white/5">
@@ -55,14 +56,14 @@ export default function HeroV2() {
         </p>
       </div>
 
-      {/* MAIN CONTENT — NOW STARTS MUCH HIGHER */}
+      {/* MAIN CONTENT — STARTS HIGHER */}
       <div className="relative z-20 max-w-4xl px-6 text-left pt-6 pb-24">
         {/* Tagline */}
         <p className="text-xs sm:text-sm font-medium tracking-[0.24em] text-blue-400/90 uppercase mb-3">
           BlueWise AI – Automation Agency
         </p>
 
-        {/* HEADLINE — MOVED UP */}
+        {/* HEADLINE */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white mb-4">
           Automate Your Business.
           <br />
@@ -71,10 +72,10 @@ export default function HeroV2() {
           </span>
         </h1>
 
-        {/* BIGGER SPACER under H1 */}
+        {/* SPACER under H1 */}
         <div className="h-16 sm:h-20 lg:h-24" />
 
-        {/* PARAGRAPH — LOWER THAN BEFORE */}
+        {/* PARAGRAPH */}
         <p className="text-base sm:text-lg text-slate-200/85 max-w-xl mb-12">
           Small AI automations delivered in 24–48 hours. Email agents, lead bots,
           missed-call text-back, and custom workflows — built for real small
