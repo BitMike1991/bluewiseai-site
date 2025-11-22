@@ -2,7 +2,16 @@ import HeroV2 from "../components/HeroV2";
 
 export default function Home() {
   return (
-    <div className="bg-black">
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundImage: "url('/styles/backgroundpages.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center top",
+        backgroundAttachment: "fixed",
+        backgroundColor: "#020617",
+      }}
+    >
       {/* HERO */}
       <HeroV2 />
 
