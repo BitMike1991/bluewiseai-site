@@ -1,5 +1,4 @@
-import HeroV2 from "@/components/HeroV2";
-import ConsultCTA from "@/components/ConsultCTA";
+import HeroV2 from "../components/HeroV2";
 
 export default function Home() {
   return (
@@ -33,7 +32,9 @@ export default function Home() {
         </ul>
 
         <div className="mt-8">
-          <ConsultCTA>Book a free consultation</ConsultCTA>
+          <button className="rounded-xl px-8 py-3 font-semibold text-white bg-blue-500 hover:bg-blue-400 shadow-lg shadow-blue-500/30 transition-transform hover:-translate-y-[1px]">
+            Book a free consultation
+          </button>
         </div>
       </section>
     </div>

@@ -1,4 +1,5 @@
-import imgHeroBg1 from "figma:asset/a030c285260fc5fedc5a13e26406093ccfe551d4.png";
+// Use the image from /public/styles/hero-bg.png
+const imgHeroBg1 = "/styles/hero-bg.png";
 
 export default function HeroV2() {
   return (
@@ -49,21 +50,11 @@ export default function HeroV2() {
 
         {/* Buttons */}
         <div className="flex flex-wrap items-center gap-4">
-          {/* Main CTA */}
-          <button className="rounded-xl px-7 py-3.5 text-sm sm:text-base font-semibold
-            bg-blue-600 hover:bg-blue-500 text-white
-            shadow-xl shadow-blue-500/30
-            transition-transform hover:-translate-y-[2px]">
+          <button className="rounded-xl px-7 py-3.5 text-sm sm:text-base font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-500/30 transition-transform hover:-translate-y-[2px]">
             See 2-Minute Demo
           </button>
 
-          {/* Secondary CTA */}
-          <button className="rounded-xl px-7 py-3.5 text-sm sm:text-base font-semibold
-            border border-blue-300/60 text-blue-200
-            hover:bg-blue-500/10 hover:border-blue-300/80
-            backdrop-blur-md
-            shadow-md shadow-blue-900/10
-            transition-transform hover:-translate-y-[2px]">
+          <button className="rounded-xl px-7 py-3.5 text-sm sm:text-base font-semibold border border-blue-300/60 text-blue-200 hover:bg-blue-500/10 hover:border-blue-300/80 backdrop-blur-md shadow-md shadow-blue-900/10 transition-transform hover:-translate-y-[2px]">
             Book Free Automation Audit
           </button>
         </div>
