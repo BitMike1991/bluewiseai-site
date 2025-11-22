@@ -10,13 +10,19 @@ export default function HeroV2() {
       setScrollY(y > 600 ? 600 : y);
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    if (typeof window !== "undefined") {
+      window.addEventListener("scroll", handleScroll);
+      return () => window.removeEventListener("scroll", handleScroll);
+    }
   }, []);
 
+  // Parallax factors
   const bgOffset = scrollY * 0.12;
   const glowOffset = scrollY * 0.18;
-  const ghostOffset = scrollY * 0.22;
+
+  // Static vertical shift of the hero image so "BLUE WISE AI" sits higher
+  // Try -120, -150, -180 to fine-tune.
+  const imageLift = -140;
 
   return (
     <section
@@ -24,7 +30,8 @@ export default function HeroV2() {
       style={{
         backgroundImage: `url(${background.src})`,
         backgroundSize: "cover",
-        backgroundPosition: `center ${-bgOffset}px`,
+        // Move image UP by imageLift, then apply parallax
+        backgroundPosition: `center ${imageLift - bgOffset}px`,
         backgroundColor: "#020617",
       }}
     >
@@ -34,37 +41,27 @@ export default function HeroV2() {
         style={{ transform: `translateY(${glowOffset * -0.2}px)` }}
       />
 
+      {/* Top glow */}
       <div
         className="pointer-events-none absolute -top-40 left-1/2 z-0 h-[700px] w-[700px] -translate-x-1/2 rounded-full bg-white/4 blur-3xl"
         style={{ transform: `translateY(${glowOffset * -0.4}px)` }}
       />
 
+      {/* Side glow */}
       <div className="pointer-events-none absolute right-32 top-24 h-72 w-72 rounded-full bg-blue-500/25 blur-3xl z-0" />
 
+      {/* Dark overlay for readability */}
       <div className="pointer-events-none absolute inset-0 bg-slate-950/30 z-0" />
 
-      {/* GHOST TEXT — lifted more so it sits between heading + body */}
-      <div
-        className="pointer-events-none absolute inset-0 flex items-center justify-center z-0"
-        style={{
-          // smaller parallax factor, much bigger negative offset
-          transform: `translateY(${ghostOffset * 0.12 - 150}px)`,
-        }}
-      >
-        <p className="select-none text-[5rem] sm:text-[7rem] lg:text-[9rem] font-extrabold tracking-[0.25em] text-white/5">
-          BLUE WISE AI
-        </p>
-      </div>
-
-      {/* MAIN CONTENT — STARTS HIGHER */}
-      <div className="relative z-20 max-w-4xl px-6 text-left pt-6 pb-24">
+      {/* MAIN CONTENT */}
+      <div className="relative z-20 max-w-4xl px-6 text-left pt-4 pb-24">
         {/* Tagline */}
-        <p className="text-xs sm:text-sm font-medium tracking-[0.24em] text-blue-400/90 uppercase mb-3">
+        <p className="text-xs sm:text-sm font-medium tracking-[0.24em] text-blue-400/90 uppercase mb-2">
           BlueWise AI – Automation Agency
         </p>
 
-        {/* HEADLINE */}
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white mb-4">
+        {/* HEADLINE (kept high) */}
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white mb-3">
           Automate Your Business.
           <br />
           <span className="text-white">
@@ -72,18 +69,19 @@ export default function HeroV2() {
           </span>
         </h1>
 
-        {/* SPACER under H1 */}
-        <div className="h-16 sm:h-20 lg:h-24" />
+        {/* BIG spacer so the ghost "BLUE WISE AI" can live between H1 & body */}
+        <div className="h-24 sm:h-28 lg:h-32" />
 
-        {/* PARAGRAPH */}
+        {/* PARAGRAPH (pulled lower) */}
         <p className="text-base sm:text-lg text-slate-200/85 max-w-xl mb-12">
-          Small AI automations delivered in 24–48 hours. Email agents, lead bots,
-          missed-call text-back, and custom workflows — built for real small
-          businesses.
+          Small AI automations delivered in 24–48 hours. Email agents, lead
+          bots, missed-call text-back, and custom workflows — built for real
+          small businesses.
         </p>
 
         {/* CTA BUTTONS WITH GLOW */}
         <div className="relative inline-flex flex-wrap items-center gap-4">
+          {/* Glow behind buttons */}
           <div className="pointer-events-none absolute -inset-x-6 -inset-y-3 bg-blue-500/30 blur-3xl opacity-80 z-0" />
 
           <button className="relative z-10 rounded-xl px-7 py-3.5 text-sm sm:text-base font-semibold bg-blue-500 hover:bg-blue-400 text-white shadow-xl shadow-blue-500/40 transition-transform hover:-translate-y-[1px]">
