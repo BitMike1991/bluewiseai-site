@@ -21,7 +21,7 @@ export default function HeroV2() {
 
   return (
     <section
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      className="relative min-h-screen flex items-start justify-center overflow-hidden"
       style={{
         backgroundImage: `url(${background.src})`,
         backgroundSize: "cover",
@@ -47,25 +47,25 @@ export default function HeroV2() {
       {/* Dark overlay */}
       <div className="pointer-events-none absolute inset-0 bg-slate-950/30 z-0" />
 
-      {/* GHOST TEXT — moved UP by 100px */}
+      {/* GHOST TEXT – sits around the true middle of the viewport */}
       <div
         className="pointer-events-none absolute inset-0 flex items-center justify-center z-0"
-        style={{ transform: `translateY(${ghostOffset * 0.2 - 100}px)` }}
+        style={{ transform: `translateY(${ghostOffset * 0.15 - 10}px)` }}
       >
         <p className="select-none text-[5rem] sm:text-[7rem] lg:text-[9rem] font-extrabold tracking-[0.25em] text-white/5">
           BLUE WISE AI
         </p>
       </div>
 
-      {/* MAIN CONTENT — moved HIGHER */}
-      <div className="relative z-20 max-w-4xl px-6 text-left pt-10 pb-20">
+      {/* MAIN CONTENT – anchored near top */}
+      <div className="relative z-20 max-w-4xl px-6 text-left pt-28 pb-24">
         {/* Tagline */}
         <p className="text-xs sm:text-sm font-medium tracking-[0.24em] text-blue-400/90 uppercase mb-4">
           BlueWise AI – Automation Agency
         </p>
 
-        {/* HEADLINE — pulled up & tightened */}
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white mb-4 sm:mb-6 lg:mb-8">
+        {/* HEADLINE (upper block) */}
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white mb-4 sm:mb-5 lg:mb-6">
           Automate Your Business.
           <br />
           <span className="text-white">
@@ -73,11 +73,11 @@ export default function HeroV2() {
           </span>
         </h1>
 
-        {/* SPACER — now smaller because headline is higher */}
-        <div className="h-2 sm:h-3 lg:h-4" />
+        {/* BIG GAP so ghost text lives between H1 + paragraph */}
+        <div className="h-10 sm:h-12 lg:h-16" />
 
-        {/* PARAGRAPH — still lower than headline */}
-        <p className="text-base sm:text-lg text-slate-200/85 max-w-xl mb-10">
+        {/* PARAGRAPH (lower block) */}
+        <p className="text-base sm:text-lg text-slate-200/85 max-w-xl mb-12">
           Small AI automations delivered in 24–48 hours. Email agents, lead
           bots, missed-call text-back, and custom workflows — built for real
           small businesses.
@@ -85,6 +85,7 @@ export default function HeroV2() {
 
         {/* CTA BUTTONS with glow */}
         <div className="relative inline-flex flex-wrap items-center gap-4">
+          {/* Glow behind buttons */}
           <div className="pointer-events-none absolute -inset-x-6 -inset-y-3 bg-blue-500/30 blur-3xl opacity-80 z-0" />
 
           <button className="relative z-10 rounded-xl px-7 py-3.5 text-sm sm:text-base font-semibold bg-blue-500 hover:bg-blue-400 text-white shadow-xl shadow-blue-500/40 transition-transform hover:-translate-y-[1px]">
