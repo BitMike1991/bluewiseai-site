@@ -48,7 +48,7 @@ export default function HeroV2() {
         className="pointer-events-none absolute inset-0 flex items-center justify-center z-0"
         style={{
           // smaller parallax factor, much bigger negative offset
-          transform: `translateY(${ghostOffset * 0.12 - 300}px)`,
+          transform: `translateY(${ghostOffset * 0.12 - 150}px)`,
         }}
       >
         <p className="select-none text-[5rem] sm:text-[7rem] lg:text-[9rem] font-extrabold tracking-[0.25em] text-white/5">
