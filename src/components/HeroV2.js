@@ -56,9 +56,9 @@ export default function HeroV2() {
     ? "Réserver un audit d'automatisation gratuit"
     : "Book Free Automation Audit";
 
-  // Heading sizes – EN untouched, FR slightly tweaked for mobile
+  // Heading sizes – EN untouched, FR slightly smaller but still strong
   const headingClassName = isFr
-    ? "text-[2rem] sm:text-[2.5rem] lg:text-[3.1rem] font-bold leading-tight text-white mb-3 max-w-[21rem] sm:max-w-[30rem]"
+    ? "text-[2.3rem] sm:text-[2.7rem] lg:text-[3.1rem] font-bold leading-tight text-white mb-3 max-w-[34rem]"
     : "text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white mb-3 max-w-3xl";
 
   return (
@@ -90,7 +90,7 @@ export default function HeroV2() {
       <div className="pointer-events-none absolute inset-0 bg-slate-950/30 z-0" />
 
       {/* MAIN CONTENT */}
-      <div className="relative z-20 w-full max-w-4xl px-4 sm:px-6 text-left pt-24 sm:pt-28 pb-24">
+      <div className="relative z-20 max-w-4xl px-6 text-left pt-4 pb-24">
         {/* Tagline */}
         <p className="text-xs sm:text-sm font-medium tracking-[0.24em] text-blue-400/90 uppercase mb-2">
           {tagline}
@@ -103,7 +103,7 @@ export default function HeroV2() {
               {/* Line 1 */}
               {"Automatisez votre entreprise."}
               <br />
-              {/* Line 2 – now allowed to wrap on very small screens */}
+              {/* Line 2 — NOW can wrap on small screens */}
               <span className="text-white whitespace-normal sm:whitespace-nowrap">
                 {"Gagnez "}
                 <span className="text-blue-300">{"5–10 heures"}</span>
@@ -123,7 +123,11 @@ export default function HeroV2() {
         </h1>
 
         {/* Spacer so the ghost “BLUE WISE AI” can breathe */}
-        <div className={isFr ? "h-12 sm:h-14 lg:h-16" : "h-24 sm:h-28 lg:h-32"} />
+        <div
+          className={
+            isFr ? "h-12 sm:h-14 lg:h-16" : "h-24 sm:h-28 lg:h-32"
+          }
+        />
 
         {/* Subtext */}
         <p
