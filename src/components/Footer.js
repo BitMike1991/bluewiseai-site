@@ -18,25 +18,39 @@ export default function Footer() {
             target="_blank"
             aria-label="LinkedIn"
             title="LinkedIn"
-            className="hover:text-blue-600 transition"
+            className="
+              hover:text-blue-600
+              transition
+              hover:drop-shadow-[0_0_12px_rgba(59,130,246,0.7)]
+            "
           >
             <Linkedin className="w-5 h-5" />
           </Link>
+
           <Link
             href="https://twitter.com/bluewiseai"
             target="_blank"
             aria-label="X (Twitter)"
             title="X (Twitter)"
-            className="hover:text-blue-600 transition"
+            className="
+              hover:text-blue-600
+              transition
+              hover:drop-shadow-[0_0_12px_rgba(59,130,246,0.7)]
+            "
           >
             <Twitter className="w-5 h-5" />
           </Link>
+
           <Link
             href="https://github.com/bluewiseai"
             target="_blank"
             aria-label="GitHub"
             title="GitHub"
-            className="hover:text-blue-600 transition"
+            className="
+              hover:text-blue-600
+              transition
+              hover:drop-shadow-[0_0_12px_rgba(59,130,246,0.7)]
+            "
           >
             <Github className="w-5 h-5" />
           </Link>

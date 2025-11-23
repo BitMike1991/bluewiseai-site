@@ -23,9 +23,11 @@ export default function ConsultCTA({ children }) {
         px-6 py-3
         rounded-2xl
         shadow
-        hover:bg-blue-700
-        transition-colors
-        duration-200
+        transition-all duration-300
+        hover:bg-blue-500
+        hover:-translate-y-0.5
+        hover:shadow-[0_0_22px_rgba(59,130,246,0.85)]
+        hover:saturate-150
       "
     >
       {label}

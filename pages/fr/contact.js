@@ -20,7 +20,7 @@ export default function ContactFR() {
       setForm({ name: '', email: '', message: '' });
     } catch (err) {
       console.error(err);
-      setStatus('Oups ! Une erreur s&rsquo;est produite.');
+      setStatus('Oups ! Une erreur s’est produite.');
     }
   };
 
@@ -34,18 +34,30 @@ export default function ContactFR() {
       "
     >
       <div className="min-h-screen py-16 px-4 backdrop-brightness-110">
-        <section className="max-w-3xl mx-auto space-y-10 px-6 sm:px-12">
-
+        <section
+          className="
+            max-w-3xl mx-auto space-y-10 px-6 sm:px-12 py-10
+            rounded-3xl
+            bg-slate-950/80
+            border border-white/10
+            backdrop-blur-md
+            shadow-[0_0_45px_rgba(15,23,42,0.9)]
+          "
+        >
           {/* Titre */}
-          <h1 className="text-4xl font-heading text-center drop-shadow-md">📬 Contact</h1>
+          <h1 className="text-4xl font-heading text-center drop-shadow-md">
+            📬 Contact
+          </h1>
 
           {/* Introduction */}
-          <div className="space-y-4 text-center drop-shadow-sm">
+          <div className="space-y-4 text-center drop-shadow-sm text-slate-100">
             <p className="text-lg">
-              Vous avez une idée de projet ou vous souhaitez découvrir comment l&#39;IA peut simplifier votre activité ?
+              Vous avez une idée de projet ou vous souhaitez découvrir comment
+              l&apos;IA peut simplifier votre activité ?
             </p>
             <p>
-              Je propose un accompagnement personnalisé, des prototypes rapides et des solutions concrètes, adaptées à vos besoins.
+              Je propose un accompagnement personnalisé, des prototypes rapides
+              et des solutions concrètes, adaptées à vos besoins.
             </p>
             <p className="text-xl font-semibold">Parlons-en.</p>
           </div>
@@ -53,60 +65,106 @@ export default function ContactFR() {
           {/* Formulaire de contact */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium drop-shadow-sm">Nom</label>
+              <label className="block text-sm font-medium drop-shadow-sm">
+                Nom
+              </label>
               <input
                 type="text"
                 name="name"
                 value={form.name}
                 onChange={handleChange}
                 required
-                className="mt-1 w-full rounded px-4 py-2 text-black bg-white/90 border border-gray-300"
+                className="
+                  mt-1 w-full rounded-xl px-4 py-2
+                  text-slate-900
+                  bg-white/95
+                  border border-slate-200
+                  focus:border-blue-500
+                  focus:ring-2 focus:ring-blue-400/60
+                  outline-none
+                "
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium drop-shadow-sm">Email</label>
+              <label className="block text-sm font-medium drop-shadow-sm">
+                Email
+              </label>
               <input
                 type="email"
                 name="email"
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="mt-1 w-full rounded px-4 py-2 text-black bg-white/90 border border-gray-300"
+                className="
+                  mt-1 w-full rounded-xl px-4 py-2
+                  text-slate-900
+                  bg-white/95
+                  border border-slate-200
+                  focus:border-blue-500
+                  focus:ring-2 focus:ring-blue-400/60
+                  outline-none
+                "
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium drop-shadow-sm">Message</label>
+              <label className="block text-sm font-medium drop-shadow-sm">
+                Message
+              </label>
               <textarea
                 name="message"
                 rows="5"
                 value={form.message}
                 onChange={handleChange}
                 required
-                className="mt-1 w-full rounded px-4 py-2 text-black bg-white/90 border border-gray-300"
+                className="
+                  mt-1 w-full rounded-xl px-4 py-2
+                  text-slate-900
+                  bg-white/95
+                  border border-slate-200
+                  focus:border-blue-500
+                  focus:ring-2 focus:ring-blue-400/60
+                  outline-none
+                "
               />
             </div>
 
             <button
               type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl shadow transition-colors duration-200"
+              className="
+                inline-flex items-center justify-center
+                bg-blue-600 hover:bg-blue-500
+                text-white font-semibold
+                px-6 py-3 rounded-2xl
+                shadow-[0_0_22px_rgba(59,130,246,0.85)]
+                hover:-translate-y-0.5
+                hover:shadow-[0_0_28px_rgba(59,130,246,0.95)]
+                hover:saturate-150
+                transition-all duration-300
+              "
             >
               Envoyer le message
             </button>
 
-            {status && <p className="text-white drop-shadow-sm">{status}</p>}
+            {status && (
+              <p className="text-sm text-slate-100 drop-shadow-sm">
+                {status}
+              </p>
+            )}
           </form>
 
           {/* Coordonnées */}
-          <div className="pt-10 space-y-4 drop-shadow-sm">
-            <h2 className="text-2xl font-heading">Autres moyens de me contacter</h2>
+          <div className="pt-10 space-y-4 drop-shadow-sm text-slate-100">
+            <h2 className="text-2xl font-heading">
+              Autres moyens de me contacter
+            </h2>
             <ul className="space-y-2 text-white/90">
               <li>
                 📧 Email :{' '}
                 <a
                   href="mailto:mikael@bluewiseai.com"
-                  className="text-primary hover:underline"
+                  className="text-blue-300 hover:underline"
                 >
                   mikael@bluewiseai.com
                 </a>
@@ -117,7 +175,7 @@ export default function ContactFR() {
                   href="https://calendly.com/bluewiseai/15min"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary hover:underline"
+                  className="text-blue-300 hover:underline"
                 >
                   Calendly
                 </a>
@@ -126,7 +184,7 @@ export default function ContactFR() {
                 🔗 Réseaux sociaux :{' '}
                 <a
                   href="https://linkedin.com/in/bluewiseai"
-                  className="text-primary hover:underline"
+                  className="text-blue-300 hover:underline"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -135,14 +193,16 @@ export default function ContactFR() {
                 /{' '}
                 <a
                   href="https://twitter.com/bluewiseai"
-                  className="text-primary hover:underline"
+                  className="text-blue-300 hover:underline"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   X (Twitter)
                 </a>
               </li>
-              <li>🕐 Temps de réponse : sous 24 à 48h (du lundi au vendredi)</li>
+              <li>
+                🕐 Temps de réponse : sous 24 à 48h (du lundi au vendredi)
+              </li>
             </ul>
           </div>
         </section>

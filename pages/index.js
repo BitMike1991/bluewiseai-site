@@ -1,4 +1,6 @@
-import HeroV2 from "../components/HeroV2";
+import HeroV2 from "../src/components/HeroV2";
+import ConsultCTA from "../src/components/ConsultCTA";
+
 
 export default function Home() {
   return (
@@ -29,8 +31,11 @@ export default function Home() {
         </ul>
       </section>
 
-      {/* SECTION 3 — Portfolio Quick Preview */}
-      <section className="max-w-5xl mx-auto px-6 py-20 text-white">
+      {/* SECTION 3 — Portfolio / Demo Anchor */}
+      <section
+        id="demo"
+        className="max-w-5xl mx-auto px-6 py-20 text-white"
+      >
         <h2 className="text-3xl font-bold mb-6">🧠 Recent Automations</h2>
 
         <ul className="space-y-4 text-slate-300 text-lg">
@@ -41,9 +46,10 @@ export default function Home() {
         </ul>
 
         <div className="mt-8">
-          <button className="rounded-xl px-8 py-3 font-semibold text-white bg-blue-500 hover:bg-blue-400 shadow-lg shadow-blue-500/30 transition-transform hover:-translate-y-[1px]">
+          {/* Uses your neon ConsultCTA, which routes to /contact or /fr/contact */}
+          <ConsultCTA>
             Book a free consultation
-          </button>
+          </ConsultCTA>
         </div>
       </section>
     </div>
