@@ -24,11 +24,11 @@ export default function About() {
         >
           {/* TITLE + ONE-LINER */}
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-heading drop-shadow-md">About</h1>
+            <h1 className="text-4xl font-heading drop-shadow-md">About Blue Wise&nbsp;AI</h1>
             <p className="text-lg text-slate-100 drop-shadow-sm">
-              I help small business owners and creators automate the boring stuff
-              so they can win back <span className="text-blue-300">5–10 hours a week</span>
-              and focus on the work that actually moves the needle.
+              I build AI automation systems for small businesses and creators who are tired of drowning in admin.
+              My mission is to free up your time — <span className="text-blue-300">5–10 hours every week</span> —
+              so you can double down on the work that actually grows your business.
             </p>
           </div>
 
@@ -145,11 +145,11 @@ export default function About() {
               <span>Why it matters</span>
             </h2>
             <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Blue Wise AI is part of a bigger mission for me — to live simply,
-              work smart, and help others do the same.
+              Blue Wise AI isn’t just a business — it’s my way of living.
+              I believe in working smart, not hard: using technology to create freedom and focus for ourselves and our clients.
             </p>
             <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              I believe in tools that serve people — not the other way around.
+              Tools should serve people, not the other way around. Every automation I build is designed to simplify your life and amplify your impact.
             </p>
           </div>
 

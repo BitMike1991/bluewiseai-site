@@ -1,7 +1,7 @@
 import Image from "next/image";
 import ConsultCTA from "@/components/ConsultCTA";
 
-export default function APropos() {
+export default function About() {
   return (
     <div
       className="
@@ -22,18 +22,17 @@ export default function APropos() {
             shadow-[0_0_45px_rgba(15,23,42,0.9)]
           "
         >
-          {/* TITRE + ONE-LINER */}
+          {/* TITRE + SOUS-TITRE */}
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-heading drop-shadow-md">À propos</h1>
+            <h1 className="text-4xl font-heading drop-shadow-md">À propos de Blue Wise&nbsp;AI</h1>
             <p className="text-lg text-slate-100 drop-shadow-sm">
-              J&apos;aide les propriétaires de petites entreprises et les créateurs
-              à automatiser les tâches répétitives pour récupérer
-              <span className="text-blue-300"> 5–10 heures par semaine</span>
-              et se concentrer sur ce qui fait vraiment avancer leur activité.
+              Je crée des systèmes d’automatisation IA pour les petites entreprises et les créateurs qui en ont assez de se noyer dans l’administratif.
+              Ma mission est de vous libérer du temps — <span className="text-blue-300">5&nbsp;à&nbsp;10&nbsp;heures chaque semaine</span> —
+              pour que vous puissiez vous concentrer sur ce qui fait vraiment croître votre entreprise.
             </p>
           </div>
 
-          {/* LIGNE PRINCIPALE : PHOTO + INTRO */}
+          {/* HERO ROW: PHOTO + INTRO */}
           <div className="flex flex-col md:flex-row items-center gap-8">
             {/* Photo */}
             <div className="shrink-0">
@@ -46,7 +45,7 @@ export default function APropos() {
                 "
               >
                 <Image
-                  src="/mikael-profile.jpg" // même image que pour la version anglaise
+                  src="/mikael-profile.jpg" // <-- mettez votre photo dans /public sous ce nom ou changez le chemin
                   alt="Mikael, fondateur de BlueWise AI"
                   fill
                   className="object-cover"
@@ -54,26 +53,23 @@ export default function APropos() {
               </div>
             </div>
 
-            {/* Texte intro */}
+            {/* Intro copy */}
             <div className="space-y-4">
               <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
                 <span>👋</span>
-                <span>Qui est derrière Blue Wise AI ?</span>
+                <span>Qui se cache derrière Blue Wise&nbsp;AI&nbsp;?</span>
               </h2>
               <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-                Bonjour, je suis Mikael — le créateur de Blue Wise AI.
+                Salut, je m’appelle Mikael — le constructeur derrière Blue Wise AI.
               </p>
               <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-                J&apos;ai lancé ce projet pour aider des personnes comme moi —
-                motivées, créatives, mais sans grande équipe technique —
-                à utiliser l&apos;IA pour créer des outils intelligents qui font
-                vraiment gagner du temps.
+                J’ai lancé ce projet pour aider des personnes comme moi — motivées, créatives,
+                mais sans une grande équipe technique — à utiliser l’IA pour construire des outils intelligents
+                qui font réellement gagner du temps et stimulent la croissance.
               </p>
               <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-                Vous n&apos;avez pas besoin d&apos;être développeur ou fondateur
-                de startup financée pour profiter de l&apos;IA. Il vous faut le
-                bon accompagnement, un peu de créativité et un problème réel
-                à résoudre.
+                Vous n’avez pas besoin d’être développeur ni fondateur soutenu par du capital‑risque pour profiter de l’IA.
+                Il vous faut juste le bon guide, un peu de créativité et un vrai problème à résoudre.
               </p>
             </div>
           </div>
@@ -85,16 +81,16 @@ export default function APropos() {
               <span>Avec qui je travaille le mieux</span>
             </h2>
             <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Je travaille surtout avec des propriétaires de petites entreprises,
-              des solopreneurs et des créateurs qui :
+              Je travaille le mieux avec des propriétaires de petites entreprises, des fondateurs solitaires et des créateurs
+              qui offrent déjà de la valeur mais se sentent coincés sous trop de tâches manuelles&nbsp;:
             </p>
             <ul className="list-disc list-inside space-y-2 text-slate-100 drop-shadow-sm">
-              <li>Passent trop de temps dans leurs emails et suivis.</li>
-              <li>Savent que l&apos;IA peut aider, mais ne savent pas par où commencer.</li>
-              <li>Préfèrent des systèmes simples et efficaces à des usines à gaz.</li>
+              <li>Vous êtes noyé sous les courriels, les relances et l’administration.</li>
+              <li>Vous savez que l’IA pourrait aider, mais vous ne savez pas par où commencer.</li>
+              <li>Vous préférez des systèmes simples et pratiques à de gros logiciels compliqués.</li>
             </ul>
             <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Si vous vous reconnaissez, on a de bonnes chances de bien travailler ensemble.
+              Si vous vous reconnaissez là‑dedans, nous sommes probablement faits pour travailler ensemble.
             </p>
           </div>
 
@@ -105,18 +101,17 @@ export default function APropos() {
               <span>Ce que je fais</span>
             </h2>
             <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Je conçois et je construis de petites automatisations à fort impact :
+              Je conçois et construis de petites automatisations à fort impact&nbsp;:
             </p>
             <ul className="list-disc list-inside space-y-2 text-slate-100 drop-shadow-sm">
-              <li>Tri, résumé et réponses intelligentes aux emails.</li>
-              <li>Flots de capture et qualification de prospects.</li>
+              <li>Tri des courriels, résumés et réponses intelligentes.</li>
+              <li>Capture de leads et flux de qualification.</li>
               <li>SMS après appel manqué et séquences de suivi.</li>
-              <li>Outils GPT personnalisés pour vos processus métier.</li>
+              <li>Outils GPT sur mesure pour vos workflows spécifiques.</li>
             </ul>
             <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              J&apos;ai déjà lancé des applications et outils internes basés sur l&apos;IA
-              et j&apos;améliore mes compétences chaque jour. Pas de blabla, pas de
-              complexité inutile — juste des outils qui fonctionnent.
+              J’ai déjà lancé des applications alimentées par l’IA et des outils internes et j’affine mes compétences chaque jour.
+              Pas de blabla ni de complexité inutile&nbsp;— juste des outils qui fonctionnent.
             </p>
           </div>
 
@@ -127,42 +122,40 @@ export default function APropos() {
               <span>Comment je travaille</span>
             </h2>
             <blockquote className="border-l-4 border-blue-400 pl-4 italic text-slate-100 drop-shadow-sm">
-              Clarté d&apos;abord. Rapidité ensuite. Valeur toujours.
+              Clarté d’abord. Rapidité ensuite. Valeur toujours.
             </blockquote>
             <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              On commence par un appel court pour comprendre votre activité, vos
-              blocages et où l&apos;automatisation peut créer des gains rapides.
+              Nous commençons par un court appel pour comprendre votre entreprise, vos goulots d’étranglement
+              et où l’automatisation peut créer des gains rapides. Ensuite je propose un plan simple avec une ou deux
+              automatisations à fort levier que nous pouvons construire dans les 1 à 2 semaines qui suivent.
             </p>
             <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Ensuite, je vous propose un plan simple avec une ou deux
-              automatisations à fort levier que l&apos;on peut mettre en place
-              en 1 à 2 semaines.
+              Je garde les choses légères&nbsp;: communication directe, itération rapide et un focus sur des résultats que vous ressentez
+              dans votre agenda et votre charge de travail.
             </p>
           </div>
 
-          {/* POURQUOI C&apos;EST IMPORTANT */}
+          {/* POURQUOI C’EST IMPORTANT */}
           <div className="space-y-4">
             <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
               <span>🌱</span>
-              <span>Pourquoi c&apos;est important</span>
+              <span>Pourquoi c’est important</span>
             </h2>
             <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Blue Wise AI fait partie d&apos;une mission plus large pour moi :
-              vivre simplement, travailler intelligemment et aider d&apos;autres
-              personnes à faire de même.
+              Blue Wise AI n’est pas seulement une entreprise — c’est ma façon de vivre.
+              Je crois au travail intelligent plutôt que difficile&nbsp;: utiliser la technologie pour créer de la liberté et de la concentration pour nous-mêmes et nos clients.
             </p>
             <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Je crois en des outils qui servent les gens — pas l&apos;inverse.
+              Les outils doivent servir les gens, pas l’inverse. Chaque automatisation que je construis vise à simplifier votre vie et à amplifier votre impact.
             </p>
           </div>
 
-          {/* CTA LEAD */}
+          {/* CTA */}
           <div className="pt-8 text-center space-y-3">
             <p className="text-slate-100 drop-shadow-sm">
-              Vous ne savez pas par où commencer ?
-              On peut cartographier ensemble votre première automatisation.
+              Pas sûr de savoir par où commencer&nbsp;? Cartographions ensemble votre première automatisation.
             </p>
-            <ConsultCTA>Réservez une consultation gratuite</ConsultCTA>
+            <ConsultCTA>Réserver une consultation gratuite</ConsultCTA>
           </div>
         </section>
       </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function ContactFR() {
+export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [status, setStatus] = useState('');
 
@@ -9,18 +9,18 @@ export default function ContactFR() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus('Envoi en cours…');
+    setStatus('Envoi…');
     try {
       await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
-      setStatus('Message envoyé ! Merci.');
+      setStatus('Message envoyé ! Merci.');
       setForm({ name: '', email: '', message: '' });
     } catch (err) {
       console.error(err);
-      setStatus('Oups ! Une erreur s’est produite.');
+      setStatus('Oups ! Quelque chose a mal tourné.');
     }
   };
 
@@ -44,25 +44,24 @@ export default function ContactFR() {
             shadow-[0_0_45px_rgba(15,23,42,0.9)]
           "
         >
-          {/* Titre */}
+          {/* Page Title */}
           <h1 className="text-4xl font-heading text-center drop-shadow-md">
-            📬 Contact
+            📬 Commencez votre aventure d’automatisation IA
           </h1>
 
-          {/* Introduction */}
+          {/* Intro message */}
           <div className="space-y-4 text-center drop-shadow-sm text-slate-100">
             <p className="text-lg">
-              Vous avez une idée de projet ou vous souhaitez découvrir comment
-              l&apos;IA peut simplifier votre activité ?
+              Prêt à récupérer votre temps et à développer votre entreprise intelligemment&nbsp;?
             </p>
             <p>
-              Je propose un accompagnement personnalisé, des prototypes rapides
-              et des solutions concrètes, adaptées à vos besoins.
+              Parlez-moi un peu de votre activité et je vous montrerai exactement comment l’automatisation IA peut débarrasser votre emploi du temps des tâches pénibles.
+              Que vous ayez un projet précis en tête ou que vous vouliez simplement explorer les possibilités, cartographions ensemble votre première victoire.
             </p>
-            <p className="text-xl font-semibold">Parlons-en.</p>
+            <p className="text-xl font-semibold">Discutons-en.</p>
           </div>
 
-          {/* Formulaire de contact */}
+          {/* Contact Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium drop-shadow-sm">
@@ -154,14 +153,12 @@ export default function ContactFR() {
             )}
           </form>
 
-          {/* Coordonnées */}
+          {/* Autres moyens de me contacter */}
           <div className="pt-10 space-y-4 drop-shadow-sm text-slate-100">
-            <h2 className="text-2xl font-heading">
-              Autres moyens de me contacter
-            </h2>
+            <h2 className="text-2xl font-heading">Autres moyens de me contacter</h2>
             <ul className="space-y-2 text-white/90">
               <li>
-                📧 Email :{' '}
+                📧 Email&nbsp;:
                 <a
                   href="mailto:mikael@bluewiseai.com"
                   className="text-blue-300 hover:underline"
@@ -170,7 +167,7 @@ export default function ContactFR() {
                 </a>
               </li>
               <li>
-                📅 Prendre rendez-vous :{' '}
+                📅 Réserver une consultation gratuite&nbsp;:
                 <a
                   href="https://calendly.com/bluewiseai/15min"
                   target="_blank"
@@ -181,7 +178,7 @@ export default function ContactFR() {
                 </a>
               </li>
               <li>
-                🔗 Réseaux sociaux :{' '}
+                🔗 Réseaux sociaux&nbsp;:
                 <a
                   href="https://linkedin.com/in/bluewiseai"
                   className="text-blue-300 hover:underline"
@@ -189,8 +186,7 @@ export default function ContactFR() {
                   rel="noopener noreferrer"
                 >
                   LinkedIn
-                </a>{' '}
-                /{' '}
+                </a>{' '}/{' '}
                 <a
                   href="https://twitter.com/bluewiseai"
                   className="text-blue-300 hover:underline"
@@ -201,7 +197,7 @@ export default function ContactFR() {
                 </a>
               </li>
               <li>
-                🕐 Temps de réponse : sous 24 à 48h (du lundi au vendredi)
+                🕐 Temps de réponse&nbsp;: je réponds généralement sous 24–48&nbsp;h (lun–ven)
               </li>
             </ul>
           </div>

@@ -1,7 +1,8 @@
 import HeroV2 from "@/components/HeroV2";
 import ConsultCTA from "@/components/ConsultCTA";
 
-export default function HomeFR() {
+
+export default function Home() {
   return (
     <div
       className="min-h-screen"
@@ -13,24 +14,38 @@ export default function HomeFR() {
         backgroundColor: "#020617",
       }}
     >
-      {/* HERO (bilingual HeroV2 – shows French because of /fr path) */}
+      {/* Titre caché pour le SEO */}
+      {/* Ajout d'un titre H1 caché qui indique clairement le sujet de la page pour les moteurs de recherche. */}
+      <h1 className="sr-only">Automatisation IA pour les petites entreprises</h1>
+
+      {/* HERO */}
       <HeroV2 />
 
-      {/* SECTION 2 — Ce que j'automatise */}
+      {/* INTRO — Pourquoi choisir l'automatisation IA */}
+      <section className="max-w-5xl mx-auto px-6 py-20 text-white text-center">
+        <h2 className="text-3xl font-bold mb-4">Arrêtez de vous noyer dans l’administratif.</h2>
+        <p className="text-xl text-slate-300">
+          Nous construisons des assistants IA et des systèmes d'automatisation qui libèrent votre temps,
+          convertissent davantage de prospects et simplifient votre entreprise. Gagnez 5 à 10 heures
+          par semaine en laissant la technologie gérer le travail répétitif.
+        </p>
+      </section>
+
+      {/* SECTION 2 — Ce que nous automatisons */}
       <section className="max-w-5xl mx-auto px-6 py-20 text-white">
-        <h2 className="text-3xl font-bold mb-6">🔥 Ce que j&apos;automatise</h2>
+        <h2 className="text-3xl font-bold mb-6">🔥 Ce que nous automatisons</h2>
 
         <ul className="space-y-4 text-slate-300 text-lg">
-          <li>⚡ Tri, résumé et réponses automatiques aux emails</li>
+          <li>⚡ Tri des emails, résumés &amp; réponses automatiques</li>
           <li>🤖 Bots de qualification de prospects</li>
-          <li>📞 Systèmes de texto après appel manqué</li>
-          <li>🔁 Séquences automatisées de suivi de prospects</li>
-          <li>🧾 Générateurs de devis et de contrats</li>
-          <li>📁 Classement intelligent et renommage de fichiers</li>
+          <li>📞 SMS après appel manqué avec suivi</li>
+          <li>🔁 Séquences de nurturing automatisées</li>
+          <li>🧾 Générateurs de devis &amp; contrats</li>
+          <li>📁 Agents intelligents pour trier et nommer vos fichiers</li>
         </ul>
       </section>
 
-      {/* SECTION 3 — Automatisations récentes + ancre #demo */}
+      {/* SECTION 3 — Automatisations récentes / Ancre Demo */}
       <section
         id="demo"
         className="max-w-5xl mx-auto px-6 py-20 text-white"
@@ -38,13 +53,14 @@ export default function HomeFR() {
         <h2 className="text-3xl font-bold mb-6">🧠 Automatisations récentes</h2>
 
         <ul className="space-y-4 text-slate-300 text-lg">
-          <li>💼 Coach d&apos;entretien GPT – préparation personnalisée</li>
-          <li>📚 Générateur d&apos;histoires GPT – contenu créatif à la demande</li>
+          <li>💼 Coach d'entretien d'embauche GPT</li>
+          <li>📚 Générateur d'histoires sur demande</li>
           <li>📆 Planificateur de médias sociaux sur 30 jours</li>
-          <li>🛠 Automatisations sur mesure pour différentes industries</li>
+          <li>🛠 Automatisations sur mesure pour plusieurs industries</li>
         </ul>
 
         <div className="mt-8">
+          {/* Utilise votre composant ConsultCTA, qui redirige vers /contact ou /fr/contact */}
           <ConsultCTA>
             Réserver une consultation gratuite
           </ConsultCTA>

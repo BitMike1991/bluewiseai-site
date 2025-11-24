@@ -46,17 +46,19 @@ export default function Contact() {
         >
           {/* Page Title */}
           <h1 className="text-4xl font-heading text-center drop-shadow-md">
-            📬 Contact
+            📬 Start Your AI Automation Journey
           </h1>
 
           {/* Intro message */}
           <div className="space-y-4 text-center drop-shadow-sm text-slate-100">
             <p className="text-lg">
-              Have a project idea or curious about how AI can improve your workflow?
+              Ready to reclaim your time and scale smarter?
             </p>
             <p>
-              I offer tailored guidance, practical prototypes, and clear next steps —
-              whether you&apos;re just getting started or scaling up.
+              Tell me a bit about your business and I&apos;ll show you exactly how
+              AI automation can take the busywork off your plate. Whether
+              you have a specific project in mind or just want to explore
+              possibilities, let&apos;s map out your first win together.
             </p>
             <p className="text-xl font-semibold">Let&apos;s talk.</p>
           </div>

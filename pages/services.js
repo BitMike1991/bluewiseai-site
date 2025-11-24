@@ -21,17 +21,19 @@ export default function Services() {
             shadow-[0_0_45px_rgba(15,23,42,0.9)]
           "
         >
-          {/* TITLE + ONE-LINER */}
+          {/* TITLE + ONE‑LINER */}
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-heading drop-shadow-md">Services</h1>
+            <h1 className="text-4xl font-heading drop-shadow-md">AI Automation Services</h1>
             <p className="text-lg text-slate-100 drop-shadow-sm">
-              Pick a starting point. Each offer is designed to help you{" "}
-              <span className="text-blue-300">win back 5–10 hours a week</span>{" "}
-              by automating the work that drains your time.
+              Stop drowning in admin. Our done‑for‑you AI assistants and
+              automation systems free up
+              <span className="text-blue-300 font-semibold"> 5–10 hours a
+              week</span> so you can focus on the work that actually
+              moves the needle.
             </p>
             <p className="text-sm text-slate-300 drop-shadow-sm">
               All prices in <span className="text-blue-300 font-semibold">USD</span>.
-              Card, bank transfer, and — on request — crypto (USDC, USDT, BTC, ETH).
+              Card, bank transfer and — on request — crypto (USDC, USDT, BTC, ETH).
             </p>
           </div>
 
@@ -59,8 +61,8 @@ export default function Services() {
             </div>
 
             <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              A focused, done-for-you automation that targets one painful manual
-              process and turns it into a simple, reliable system.
+              An immediate win: we pick one painful manual process, automate
+              it end‑to‑end and hand you back hours each week.
             </p>
 
             <ul className="list-disc list-inside space-y-2 text-slate-100 drop-shadow-sm">
@@ -101,9 +103,9 @@ export default function Services() {
             </div>
 
             <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              A connected system of several automations working together to
-              support your core workflows — from lead capture to follow-up,
-              delivery, and internal operations.
+              Transform your operations with 3–6 integrated automations that
+              capture leads, follow up automatically, drive delivery and keep
+              your internal operations humming.
             </p>
 
             <ul className="list-disc list-inside space-y-2 text-slate-100 drop-shadow-sm">
@@ -153,9 +155,9 @@ export default function Services() {
               </div>
 
               <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-                Keep your automations healthy, up to date, and improving over time.
-                Instead of “set it and forget it”, you get a partner who watches,
-                tweaks, and evolves your system with you.
+                Keep your automations healthy, up to date and improving over time.
+                Instead of “set it and forget it”, you get a partner who
+                monitors, tweaks and evolves your system with you.
               </p>
 
               <div className="grid md:grid-cols-3 gap-4">
@@ -227,6 +229,65 @@ export default function Services() {
                 Retainers are available after an initial automation project, so we
                 build something solid first, then keep it running and improving.
               </p>
+            </div>
+          </div>
+
+          {/* WHO THIS IS FOR */}
+          <div className="space-y-4">
+            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
+              <span>🎯</span>
+              <span>Who this is for</span>
+            </h2>
+            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
+              These services are designed for small business owners and solo
+              founders who are overwhelmed by manual admin and client
+              communications, service providers who need to respond faster, and
+              agencies or consultants who want consistent, repeatable systems.
+            </p>
+            <ul className="list-disc list-inside space-y-2 text-slate-100 drop-shadow-sm">
+              <li>Drowning in emails, follow‑ups and admin tasks.</li>
+              <li>Missing leads because you can’t respond 24/7.</li>
+              <li>Wasting hours on routine processes instead of high‑impact work.</li>
+            </ul>
+          </div>
+
+          {/* RESULTS TO EXPECT */}
+          <div className="space-y-4">
+            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
+              <span>🔑</span>
+              <span>What results to expect</span>
+            </h2>
+            <ul className="list-disc list-inside space-y-2 text-slate-100 drop-shadow-sm">
+              <li>Reclaim 5–10 hours per week by automating repetitive tasks.</li>
+              <li>Never miss a lead again — your assistants work 24/7.</li>
+              <li>Deliver a faster, more consistent client experience.</li>
+              <li>Build a scalable foundation that grows with your business.</li>
+            </ul>
+          </div>
+
+          {/* FAQ */}
+          <div className="space-y-4">
+            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
+              <span>❓</span>
+              <span>Frequently asked questions</span>
+            </h2>
+            <div className="space-y-3 text-slate-100 drop-shadow-sm">
+              <div>
+                <p className="font-semibold">Do these automations actually work for small businesses?</p>
+                <p className="text-slate-300">Absolutely. When built properly, they handle the repetitive tasks that eat your time so you can focus on what matters.</p>
+              </div>
+              <div>
+                <p className="font-semibold">Will I need technical skills?</p>
+                <p className="text-slate-300">No. We design and deliver everything for you. You don’t need to touch code — just tell us what needs to happen.</p>
+              </div>
+              <div>
+                <p className="font-semibold">How long does it take?</p>
+                <p className="text-slate-300">Starter automations typically take 1–2 weeks from start to finish. Larger systems take 2–4 weeks depending on complexity.</p>
+              </div>
+              <div>
+                <p className="font-semibold">What happens after launch?</p>
+                <p className="text-slate-300">We offer ongoing care plans so your systems stay healthy, get improvements and evolve as your business grows.</p>
+              </div>
             </div>
           </div>
 

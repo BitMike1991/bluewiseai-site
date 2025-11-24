@@ -1,24 +1,35 @@
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import Image from 'next/image';
+import Link from "next/link";
+import { useRouter } from "next/router";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 export default function Navbar() {
-  const { pathname } = useRouter();
-  const isFr = pathname.startsWith('/fr');
+  const router = useRouter();
+  const { pathname, asPath, query } = router;
 
-  // All pages that should have DARK / GLASS navbar
-  const isDarkPage =
-    pathname === '/' ||
-    pathname === '/fr' ||
-    pathname === '/contact' ||
-    pathname === '/fr/contact' ||
-    pathname === '/about' ||
-    pathname === '/fr/about' ||
-    pathname === '/services' ||
-    pathname === '/fr/services' ||
-    pathname === '/portfolio' ||
-    pathname === '/fr/portfolio';
+  // Real current path (not /pillars/[slug]), without query string
+  const currentPath = (asPath || "").split("?")[0] || "/";
+  const isFr = currentPath.startsWith("/fr");
+
+  // Main dark pages
+  const isMainDarkPage =
+    pathname === "/" ||
+    pathname === "/fr" ||
+    pathname === "/contact" ||
+    pathname === "/fr/contact" ||
+    pathname === "/about" ||
+    pathname === "/fr/about" ||
+    pathname === "/services" ||
+    pathname === "/fr/services" ||
+    pathname === "/portfolio" ||
+    pathname === "/fr/portfolio";
+
+  // Add pillars (index + article pages)
+  const isPillarsPage =
+    pathname.startsWith("/pillars") || pathname.startsWith("/fr/pillars");
+
+  // Final result
+  const isDarkPage = isMainDarkPage || isPillarsPage;
 
   const [scrolled, setScrolled] = useState(false);
 
@@ -32,23 +43,59 @@ export default function Navbar() {
 
   const navItems = isFr
     ? [
-        { href: '/fr', label: 'Accueil' },
-        { href: '/fr/about', label: 'À propos' },
-        { href: '/fr/services', label: 'Services' },
-        { href: '/fr/portfolio', label: 'Portfolio' },
-        { href: '/fr/contact', label: 'Contact', isCTA: true },
+        { href: "/fr", label: "Accueil" },
+        { href: "/fr/about", label: "À propos" },
+        { href: "/fr/services", label: "Services" },
+        { href: "/fr/portfolio", label: "Portfolio" },
+        { href: "/fr/pillars", label: "Ressources" },
+        { href: "/fr/contact", label: "Contact", isCTA: true },
       ]
     : [
-        { href: '/', label: 'Home' },
-        { href: '/about', label: 'About' },
-        { href: '/services', label: 'Services' },
-        { href: '/portfolio', label: 'Portfolio' },
-        { href: '/contact', label: 'Contact', isCTA: true },
+        { href: "/", label: "Home" },
+        { href: "/about", label: "About" },
+        { href: "/services", label: "Services" },
+        { href: "/portfolio", label: "Portfolio" },
+        { href: "/pillars", label: "Resources" },
+        { href: "/contact", label: "Contact", isCTA: true },
       ];
 
-  const switchHref = isFr
-    ? pathname.replace(/^\/fr/, '') || '/'
-    : `/fr${pathname}`;
+  // Mapping EN <-> FR slugs for pillar articles
+  const enToFr = {
+    "ultimate-guide-ai-automation": "guide-ultime-automatisation-ia-pme",
+    "making-money-ai-automation": "gagner-argent-avec-automatisation-ia",
+    "choosing-tools-models": "choisir-outils-modeles-ia",
+  };
+
+  const frToEn = Object.fromEntries(
+    Object.entries(enToFr).map(([en, fr]) => [fr, en])
+  );
+
+  // slug can be string | string[] | undefined
+  let slug = query.slug;
+  if (Array.isArray(slug)) {
+    slug = slug[0];
+  }
+
+  let switchHref;
+
+  if (slug) {
+    // We are on a dynamic article page
+    if (isFr) {
+      const targetSlug = frToEn[slug] || slug;
+      switchHref = `/pillars/${targetSlug}`;
+    } else {
+      const targetSlug = enToFr[slug] || slug;
+      switchHref = `/fr/pillars/${targetSlug}`;
+    }
+  } else {
+    // Static pages: just add/remove /fr prefix
+    if (isFr) {
+      const withoutFr = currentPath.replace(/^\/fr/, "") || "/";
+      switchHref = withoutFr;
+    } else {
+      switchHref = currentPath === "/" ? "/fr" : `/fr${currentPath}`;
+    }
+  }
 
   return (
     <header
@@ -56,20 +103,19 @@ export default function Navbar() {
         sticky top-0 z-50 backdrop-blur-md transition-all duration-300
         ${
           isDarkPage
-            ? (scrolled
-                ? "bg-slate-900/70 shadow-lg border-b border-white/10"
-                : "bg-slate-900/40 shadow-sm")
-            : (scrolled
-                ? "bg-white/80 shadow-lg border-b border-gray-200"
-                : "bg-white/60 shadow")
+            ? scrolled
+              ? "bg-slate-900/70 shadow-lg border-b border-white/10"
+              : "bg-slate-900/40 shadow-sm"
+            : scrolled
+            ? "bg-white/80 shadow-lg border-b border-gray-200"
+            : "bg-white/60 shadow"
         }
       `}
     >
       <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
-
         {/* Logo */}
         <Link
-          href={isFr ? '/fr' : '/'}
+          href={isFr ? "/fr" : "/"}
           className="flex items-center"
           aria-label="BlueWise AI logo"
           title="BlueWise AI"
@@ -89,19 +135,19 @@ export default function Navbar() {
           />
         </Link>
 
-        {/* Navigation */}
+        {/* Nav items */}
         <nav className="flex items-center flex-wrap gap-4 sm:gap-7 text-sm sm:text-base font-medium uppercase tracking-wide">
           {navItems.map(({ href, label, isCTA }) => {
             const isActive = pathname === href || pathname === `${href}/`;
 
             const baseStyle = isCTA
-              ? 'bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition shadow'
+              ? "bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition shadow"
               : `px-3 py-2 rounded transition-all duration-200 ${
                   isActive
-                    ? 'text-blue-300 bg-slate-800/60'
+                    ? "text-blue-300 bg-slate-800/60"
                     : isDarkPage
-                    ? 'text-gray-200 hover:text-white hover:bg-slate-800/50'
-                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-100'
+                    ? "text-gray-200 hover:text-white hover:bg-slate-800/50"
+                    : "text-gray-700 hover:text-blue-600 hover:bg-blue-100"
                 }`;
 
             return (
@@ -125,10 +171,9 @@ export default function Navbar() {
             aria-label="Switch language"
             title="Switch language"
           >
-            {isFr ? 'EN' : 'FR'}
+            {isFr ? "EN" : "FR"}
           </Link>
         </nav>
-
       </div>
     </header>
   );

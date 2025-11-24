@@ -1,6 +1,6 @@
 import ConsultCTA from "@/components/ConsultCTA";
 
-export default function PortfolioFR() {
+export default function Portfolio() {
   return (
     <div
       className="
@@ -21,20 +21,18 @@ export default function PortfolioFR() {
             shadow-[0_0_45px_rgba(15,23,42,0.9)]
           "
         >
-          {/* Titre + Intro */}
+          {/* Page Title + Intro */}
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-heading drop-shadow-md">📁 Portfolio</h1>
+            <h1 className="text-4xl font-heading drop-shadow-md">💼 Portfolio d’automatisation&nbsp;IA</h1>
             <p className="text-lg text-slate-100 drop-shadow-sm">
-              Voici quelques outils et automatisations IA que j&apos;ai construits —
-              de la préparation d&apos;entrevue aux systèmes de contenu.
-              Chaque projet est parti d&apos;un problème concret pour aboutir à un
-              flux de travail qui fait gagner des heures chaque semaine.
+              Voici quelques outils IA et automatisations que j’ai construits — du coaching d’entretien et des systèmes de contenu aux GPT sur mesure.
+              Chaque projet a commencé par une vraie douleur d’entreprise et s’est terminé par un workflow qui économise des heures chaque semaine.
             </p>
           </div>
 
-          {/* Projets */}
+          {/* Projects Grid */}
           <div className="space-y-8">
-            {/* Projet 1 */}
+            {/* Project 1 */}
             <article
               className="
                 rounded-2xl p-6 md:p-7
@@ -49,7 +47,7 @@ export default function PortfolioFR() {
             >
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-3">
                 <h2 className="text-2xl font-heading drop-shadow-sm">
-                  💼 Coach d&apos;Entretien GPT
+                  💼 Coach d'entretien d'embauche GPT
                 </h2>
                 <div className="flex flex-wrap gap-2 text-xs uppercase tracking-wide text-slate-300">
                   <span className="rounded-full border border-slate-600 px-3 py-1">
@@ -62,22 +60,23 @@ export default function PortfolioFR() {
               </div>
 
               <p className="leading-relaxed text-slate-100 drop-shadow-sm mb-3">
-                Une application web qui simule des entretiens d&apos;embauche et
-                fournit un retour personnalisé sur vos réponses. Conçue avec
-                Next.js, OpenAI GPT-4 et hébergée sur Vercel.
+                Une application Web qui simule de véritables scénarios d’entretien et fournit
+                un feedback personnalisé sur vos réponses. Construite avec Next.js,
+                OpenAI GPT‑4 et hébergée sur Vercel.
               </p>
 
-              <ul className="list-disc list-inside text-slate-100 drop-shadow-sm space-y-1 mb-4">
-                <li>Questions dynamiques selon le poste visé.</li>
-                <li>Enregistrement et lecture directement dans le navigateur.</li>
-                <li>Score en temps réel &amp; conseils d&apos;amélioration concrets.</li>
+              <ul className="list-disc list-inside drop-shadow-sm space-y-1 text-slate-100 mb-4">
+                <li>Génération dynamique de questions basée sur le poste visé.</li>
+                <li>Enregistrement et relecture de vos réponses dans le navigateur.</li>
+                <li>Score en temps réel et conseils concrets d'amélioration.</li>
               </ul>
 
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <p className="text-sm text-slate-300 drop-shadow-sm">
-                  <span className="font-semibold text-blue-300">Résultat :</span>{" "}
-                  un environnement sécuritaire pour pratiquer des entrevues
-                  comme en situation réelle.
+                  <span className="font-semibold text-blue-300">
+                    Résultat :
+                  </span>{" "}
+                  Pratiquez des entretiens sous pression sans le stress pour arriver confiant et prêt.
                 </p>
                 <a
                   href="https://www.jobinterviewcoachgpt.app/"
@@ -90,12 +89,12 @@ export default function PortfolioFR() {
                     hover:underline
                   "
                 >
-                  Voir la démo en ligne →
+                  Voir la démo →
                 </a>
               </div>
             </article>
 
-            {/* Projet 2 */}
+            {/* Project 2 */}
             <article
               className="
                 rounded-2xl p-6 md:p-7
@@ -110,36 +109,35 @@ export default function PortfolioFR() {
             >
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-3">
                 <h2 className="text-2xl font-heading drop-shadow-sm">
-                  📚 Générateur d&apos;Histoires sur Demande
+                  📚 Générateur d’histoires sur demande GPT
                 </h2>
                 <div className="flex flex-wrap gap-2 text-xs uppercase tracking-wide text-slate-300">
                   <span className="rounded-full border border-slate-600 px-3 py-1">
                     GPT personnalisé
                   </span>
                   <span className="rounded-full border border-slate-600 px-3 py-1">
-                    Interface Streamlit
+                    Front-End Streamlit
                   </span>
                 </div>
               </div>
 
               <p className="leading-relaxed text-slate-100 drop-shadow-sm mb-3">
-                Un GPT personnalisé pour créer des histoires pour enfants à
-                partir de vos idées : personnages, thèmes, décors, style.
-                Déployé comme expérience privée dans ChatGPT avec une interface
-                Streamlit simple.
+                Un GPT personnalisé qui crée des histoires pour enfants en fonction de vos prompts : personnages,
+                thèmes, décors et style. Déployé comme une expérience privée ChatGPT et enveloppé dans un simple front‑end Streamlit.
               </p>
 
-              <ul className="list-disc list-inside text-slate-100 drop-shadow-sm space-y-1 mb-4">
-                <li>Modèles de prompts selon l&apos;âge, le genre et le ton.</li>
-                <li>Export PDF automatique avec illustrations.</li>
-                <li>Intégrable facilement dans un site web ou un portail client.</li>
+              <ul className="list-disc list-inside drop-shadow-sm space-y-1 text-slate-100 mb-4">
+                <li>Préconfigurations de prompt pour l’âge, le genre et le ton.</li>
+                <li>Exportation PDF automatique avec illustrations.</li>
+                <li>Peut être intégré à des sites web, des portails clients ou des bots Slack.</li>
               </ul>
 
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <p className="text-sm text-slate-300 drop-shadow-sm">
-                  <span className="font-semibold text-blue-300">Résultat :</span>{" "}
-                  un moyen rapide de générer des histoires personnalisées pour
-                  les enfants ou le contenu éducatif.
+                  <span className="font-semibold text-blue-300">
+                    Résultat :
+                  </span>{" "}
+                  Générez des histoires personnalisées et conformes à votre marque en quelques minutes au lieu d’heures.
                 </p>
                 <a
                   href="https://chatgpt.com/g/g-685d9a9fec988191a649d0478b85dd56-storycraft-ai-custom-short-stories"
@@ -157,7 +155,7 @@ export default function PortfolioFR() {
               </div>
             </article>
 
-            {/* Projet 3 */}
+            {/* Project 3 */}
             <article
               className="
                 rounded-2xl p-6 md:p-7
@@ -172,7 +170,7 @@ export default function PortfolioFR() {
             >
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-3">
                 <h2 className="text-2xl font-heading drop-shadow-sm">
-                  📆 Calendrier Réseaux Sociaux IA – 30 Jours
+                  📆 Planificateur de médias sociaux 30 jours GPT
                 </h2>
                 <div className="flex flex-wrap gap-2 text-xs uppercase tracking-wide text-slate-300">
                   <span className="rounded-full border border-slate-600 px-3 py-1">
@@ -185,22 +183,22 @@ export default function PortfolioFR() {
               </div>
 
               <p className="leading-relaxed text-slate-100 drop-shadow-sm mb-3">
-                Génère un mois complet d&apos;idées de publications et de légendes
-                pour Instagram &amp; TikTok, en fonction de la voix de votre
-                marque. Utilise des prompts structurés et un cadre réutilisable.
+                Génère un mois complet d’idées de publications et de légendes pour Instagram et TikTok,
+                adaptées à votre voix de marque. Utilise GPT avec un prompt structuré et un cadre de contenu réutilisable.
               </p>
 
-              <ul className="list-disc list-inside text-slate-100 drop-shadow-sm space-y-1 mb-4">
-                <li>Export CSV prêt pour les outils de planification.</li>
-                <li>Suggestions de ton, accroches et hashtags.</li>
-                <li>Mode aperçu et édition en lot avant publication.</li>
+              <ul className="list-disc list-inside drop-shadow-sm space-y-1 text-slate-100 mb-4">
+                <li>Exportation CSV prête pour les outils de planification.</li>
+                <li>Suggestions de ton, d’accroches et de hashtags.</li>
+                <li>Aperçu en masse et flux d’édition avant publication.</li>
               </ul>
 
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <p className="text-sm text-slate-300 drop-shadow-sm">
-                  <span className="font-semibold text-blue-300">Résultat :</span>{" "}
-                  fini la page blanche au moment de publier : le mois est planifié
-                  en une seule session.
+                  <span className="font-semibold text-blue-300">
+                    Résultat :
+                  </span>{" "}
+                  Ne souffrez plus du syndrome de la page blanche — votre prochain mois de contenu est planifié d’un coup.
                 </p>
                 <a
                   href="https://chatgpt.com/g/g-685da1abb65c81919f4af829257cbabc-30-day-social-media-content-calendar-generator"
@@ -218,7 +216,7 @@ export default function PortfolioFR() {
               </div>
             </article>
 
-            {/* À venir */}
+            {/* Coming Soon */}
             <article
               className="
                 rounded-2xl p-6 md:p-7
@@ -228,17 +226,15 @@ export default function PortfolioFR() {
               "
             >
               <h2 className="text-2xl font-heading drop-shadow-sm mb-2">
-                🚀 À venir…
+                🚀 À suivre…
               </h2>
               <p className="leading-relaxed text-slate-100 drop-shadow-sm mb-2">
-                Je travaille constamment sur de nouveaux outils IA — assistants
-                RAG pour petites entreprises, bots internes, d&eacute;mos de vision
-                par ordinateur, tableaux de bord analytiques...
+                Je suis constamment en train d’expérimenter de nouveaux outils IA — assistants basés sur la RAG,
+                bots internes pour petites entreprises, démos de vision par ordinateur et tableaux de bord d’analytique.
               </p>
               <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-                Si vous avez un flux de travail que vous aimeriez automatiser
-                ou un outil que vous voulez créer, on peut en faire le prochain
-                cas concret de cette page.
+                Si vous avez un flux de travail que vous aimeriez automatiser ou un outil que vous voudriez voir naître,
+                nous pouvons en faire la prochaine étude de cas sur cette page.
               </p>
             </article>
           </div>
@@ -246,8 +242,7 @@ export default function PortfolioFR() {
           {/* CTA */}
           <div className="pt-4 text-center space-y-3">
             <p className="text-slate-100 drop-shadow-sm">
-              Vous aimeriez un outil similaire — ou complètement différent —
-              adapté à votre réalité ?
+              Vous voulez construire quelque chose de similaire — ou complètement nouveau — pour votre propre entreprise&nbsp;?
             </p>
             <ConsultCTA>Réserver une consultation gratuite</ConsultCTA>
           </div>

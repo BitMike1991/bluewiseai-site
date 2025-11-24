@@ -1,6 +1,6 @@
 import ConsultCTA from "@/components/ConsultCTA";
 
-export default function ServicesFR() {
+export default function Services() {
   return (
     <div
       className="
@@ -21,20 +21,17 @@ export default function ServicesFR() {
             shadow-[0_0_45px_rgba(15,23,42,0.9)]
           "
         >
-          {/* TITRE + ONE-LINER */}
+          {/* TITRE + SOUS-TITRE */}
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-heading drop-shadow-md">Services</h1>
+            <h1 className="text-4xl font-heading drop-shadow-md">Services d'automatisation&nbsp;IA</h1>
             <p className="text-lg text-slate-100 drop-shadow-sm">
-              Choisissez votre point de départ. Chaque offre est pensée pour vous
-              aider à{" "}
-              <span className="text-blue-300">récupérer 5–10 heures par semaine</span>{" "}
-              en automatisant le travail qui vous épuise.
+              Arrêtez de vous noyer dans l’administratif. Nos assistants IA et systèmes d’automatisation prêts à l’emploi
+              vous libèrent <span className="text-blue-300 font-semibold">5&nbsp;à&nbsp;10&nbsp;heures par semaine</span>
+              pour vous concentrer sur ce qui compte vraiment.
             </p>
             <p className="text-sm text-slate-300 drop-shadow-sm">
-              Tous les tarifs sont en{" "}
-              <span className="text-blue-300 font-semibold">USD</span>.
-              Paiement par carte, virement bancaire et — sur demande — crypto
-              (USDC, USDT, BTC, ETH).
+              Tous les tarifs en <span className="text-blue-300 font-semibold">USD</span>.
+              Paiement par carte, virement bancaire et — sur demande — crypto (USDC, USDT, BTC, ETH).
             </p>
           </div>
 
@@ -56,28 +53,26 @@ export default function ServicesFR() {
                   Un seul flux de travail
                 </p>
                 <p className="text-xl font-semibold text-blue-300">
-                  297 – 497 $ USD
+                  297 – 497&nbsp;$&nbsp;USD
                 </p>
               </div>
             </div>
 
             <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Une automatisation ciblée, réalisée de A à Z, qui s&apos;attaque à un
-              processus manuel pénible et le transforme en système simple et
-              fiable.
+              Une victoire immédiate : nous choisissons un processus manuel pénible, l’automatisons
+              de bout en bout et vous rendons des heures chaque semaine.
             </p>
 
             <ul className="list-disc list-inside space-y-2 text-slate-100 drop-shadow-sm">
-              <li>Assistant email pour tri, résumé et priorisation.</li>
-              <li>SMS après appel manqué avec suivi de base.</li>
-              <li>Flux de qualification de prospects depuis un formulaire ou chatbot.</li>
+              <li>Assistant de tri et de résumé des emails.</li>
+              <li>SMS après appel manqué avec suivi basique.</li>
+              <li>Flux de qualification de leads depuis un formulaire ou chatbot.</li>
               <li>Petit GPT sur mesure pour une tâche précise de votre activité.</li>
             </ul>
 
             <p className="text-sm text-slate-300 drop-shadow-sm">
-              <span className="font-semibold text-blue-300">Idéal pour :</span>{" "}
-              les entrepreneurs qui veulent un premier gain rapide et voir
-              concrètement la valeur de l&apos;automatisation.
+              <span className="font-semibold text-blue-300">Idéal pour :</span>
+              &nbsp;les entrepreneurs qui veulent un premier gain et voir concrètement la valeur de l’automatisation IA sans un gros projet.
             </p>
           </div>
 
@@ -92,34 +87,32 @@ export default function ServicesFR() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
                 <span>🧩</span>
-                <span>Système d&apos;automatisation d&apos;entreprise</span>
+                <span>Système d'automatisation d'entreprise</span>
               </h2>
               <div className="text-right">
                 <p className="text-sm uppercase tracking-wide text-slate-300">
-                  Plusieurs automatisations connectées
+                  Plusieurs automatisations
                 </p>
                 <p className="text-xl font-semibold text-blue-300">
-                  997 – 1 997 $ USD
+                  997 – 1&nbsp;997&nbsp;$&nbsp;USD
                 </p>
               </div>
             </div>
 
             <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Un ensemble d&apos;automatisations reliées entre elles qui soutiennent
-              vos flux clés — de la capture de prospects au suivi, jusqu&apos;à la
-              livraison et l&apos;organisation interne.
+              Transformez vos opérations avec 3 à 6 automatisations intégrées qui capturent des leads, assurent le suivi automatique,
+              propulsent la livraison et maintiennent vos opérations internes en ordre.
             </p>
 
             <ul className="list-disc list-inside space-y-2 text-slate-100 drop-shadow-sm">
               <li>
-                3 à 6 flux intégrés entre email, CRM, chat ou outils internes.
+                3 à 6 workflows intégrés entre email, CRM, chat ou outils internes.
               </li>
               <li>
                 Capture de leads, qualification et séquences de suivi multi-étapes.
               </li>
               <li>
-                Assistants internes pour vos documents, procédures et base de
-                connaissances clients.
+                Assistants internes pour vos documents, procédures et base de connaissances clients.
               </li>
               <li>
                 Journaux ou vues légères pour visualiser ce que fait le système.
@@ -127,13 +120,12 @@ export default function ServicesFR() {
             </ul>
 
             <p className="text-sm text-slate-300 drop-shadow-sm">
-              <span className="font-semibold text-blue-300">Idéal pour :</span>{" "}
-              les petites entreprises prêtes à réduire sérieusement le travail
-              manuel et à bâtir une base d&apos;automatisation solide.
+              <span className="font-semibold text-blue-300">Idéal pour :</span>
+              &nbsp;les petites entreprises prêtes à réduire sérieusement le travail manuel et à bâtir une base d'automatisation solide.
             </p>
           </div>
 
-          {/* FORFAIT 3 – Support continu & optimisation (abonnements) */}
+          {/* FORFAIT 3 – Support continu & Optimisation */}
           <div
             className="
               space-y-4 p-5 md:p-6 rounded-2xl
@@ -152,20 +144,19 @@ export default function ServicesFR() {
                     Abonnements mensuels
                   </p>
                   <p className="text-sm text-blue-300 font-semibold">
-                    À partir de 149 $ / mois
+                    À partir de 149&nbsp;$&nbsp;/ mois
                   </p>
                 </div>
               </div>
 
               <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-                Gardez vos automatisations en bonne santé, à jour et en
-                amélioration continue. Plutôt que &quot;on installe puis on oublie&quot;,
-                vous avez un partenaire qui surveille, ajuste et fait évoluer
-                vos systèmes avec vous.
+                Maintenez vos automatisations en bonne santé, à jour et en évolution.
+                Au lieu de « installer et oublier », vous obtenez un partenaire qui surveille,
+                ajuste et fait évoluer votre système avec vous.
               </p>
 
               <div className="grid md:grid-cols-3 gap-4">
-                {/* Basic */}
+                {/* Basique */}
                 <div
                   className="
                     rounded-2xl p-4
@@ -174,10 +165,10 @@ export default function ServicesFR() {
                   "
                 >
                   <h3 className="font-heading text-lg drop-shadow-sm">
-                    Basic
+                    Basique
                   </h3>
                   <p className="text-blue-300 font-semibold text-sm mb-2">
-                    149 $ / mois
+                    149&nbsp;$&nbsp;/ mois
                   </p>
                   <ul className="text-sm space-y-1 text-slate-100 drop-shadow-sm">
                     <li>✅ Suivi des automatisations clés</li>
@@ -198,12 +189,12 @@ export default function ServicesFR() {
                     Standard
                   </h3>
                   <p className="text-blue-300 font-semibold text-sm mb-2">
-                    249 $ / mois
+                    249&nbsp;$&nbsp;/ mois
                   </p>
                   <ul className="text-sm space-y-1 text-slate-100 drop-shadow-sm">
-                    <li>✅ Tout ce qu&apos;il y a dans Basic</li>
+                    <li>✅ Tout ce qu’il y a dans Basique</li>
                     <li>✅ Améliorations &amp; optimisations mensuelles</li>
-                    <li>✅ Petites nouvelles étapes d&apos;automatisation au fil du temps</li>
+                    <li>✅ Petites nouvelles étapes d’automatisation au fil du temps</li>
                   </ul>
                 </div>
 
@@ -219,7 +210,7 @@ export default function ServicesFR() {
                     Premium
                   </h3>
                   <p className="text-blue-300 font-semibold text-sm mb-2">
-                    399 $ / mois
+                    399&nbsp;$&nbsp;/ mois
                   </p>
                   <ul className="text-sm space-y-1 text-slate-100 drop-shadow-sm">
                     <li>✅ Support prioritaire</li>
@@ -230,10 +221,68 @@ export default function ServicesFR() {
               </div>
 
               <p className="text-sm text-slate-300 drop-shadow-sm">
-                Les abonnements sont proposés après un premier projet
-                d&apos;automatisation, pour commencer sur une base solide puis
-                l&apos;entretenir dans le temps.
+                Les abonnements sont proposés après un premier projet d'automatisation,
+                afin de construire d'abord une base solide puis de l’entretenir dans le temps.
               </p>
+            </div>
+          </div>
+
+          {/* POUR QUI EST-CE */}
+          <div className="space-y-4">
+            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
+              <span>🎯</span>
+              <span>Pour qui est-ce&nbsp;?</span>
+            </h2>
+            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
+              Ces services sont conçus pour les propriétaires de petites entreprises et les fondateurs individuels
+              dépassés par l’administration manuelle et la communication client,
+              les prestataires de services qui doivent répondre plus rapidement,
+              et les agences ou consultants qui veulent des systèmes cohérents et reproductibles.
+            </p>
+            <ul className="list-disc list-inside space-y-2 text-slate-100 drop-shadow-sm">
+              <li>Vous êtes noyé sous les courriels, relances et tâches administratives.</li>
+              <li>Vous perdez des leads parce que vous ne pouvez pas répondre 24/7.</li>
+              <li>Vous gaspillez des heures sur des processus routiniers plutôt que sur du travail à forte valeur ajoutée.</li>
+            </ul>
+          </div>
+
+          {/* RÉSULTATS À ATTENDRE */}
+          <div className="space-y-4">
+            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
+              <span>🔑</span>
+              <span>Ce que vous pouvez attendre</span>
+            </h2>
+            <ul className="list-disc list-inside space-y-2 text-slate-100 drop-shadow-sm">
+              <li>Récupérez 5 à 10 heures par semaine en automatisant les tâches répétitives.</li>
+              <li>Ne manquez plus aucun lead — vos assistants travaillent 24/7.</li>
+              <li>Offrez une expérience client plus rapide et plus cohérente.</li>
+              <li>Construisez une base évolutive qui grandit avec votre entreprise.</li>
+            </ul>
+          </div>
+
+          {/* FAQ */}
+          <div className="space-y-4">
+            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
+              <span>❓</span>
+              <span>Questions fréquentes</span>
+            </h2>
+            <div className="space-y-3 text-slate-100 drop-shadow-sm">
+              <div>
+                <p className="font-semibold">Est-ce que ces automatisations fonctionnent vraiment pour les petites entreprises&nbsp;?</p>
+                <p className="text-slate-300">Oui. Lorsqu’elles sont bien construites, elles gèrent les tâches répétitives qui vous prennent du temps afin que vous puissiez vous concentrer sur l’essentiel.</p>
+              </div>
+              <div>
+                <p className="font-semibold">Ai-je besoin de compétences techniques&nbsp;?</p>
+                <p className="text-slate-300">Non. Nous concevons et livrons tout pour vous. Vous n’avez pas besoin de toucher au code — dites-nous simplement ce qui doit se passer.</p>
+              </div>
+              <div>
+                <p className="font-semibold">Combien de temps cela prend-il&nbsp;?</p>
+                <p className="text-slate-300">Les automatisations de démarrage prennent généralement 1 à 2 semaines du début à la fin. Les systèmes plus importants prennent 2 à 4 semaines selon la complexité.</p>
+              </div>
+              <div>
+                <p className="font-semibold">Que se passe-t-il après le lancement&nbsp;?</p>
+                <p className="text-slate-300">Nous proposons des plans de support continu afin que vos systèmes restent en bonne santé, soient améliorés et évoluent au fur et à mesure que votre entreprise grandit.</p>
+              </div>
             </div>
           </div>
 
@@ -247,17 +296,16 @@ export default function ServicesFR() {
               <li>On commence par un appel pour comprendre votre activité et vos objectifs.</li>
               <li>On choisit ensemble le point de départ le plus impactant.</li>
               <li>Je conçois et livre une première version en environ 1–2 semaines.</li>
-              <li>On l&apos;ajuste jusqu&apos;à ce qu&apos;elle vous fasse vraiment gagner du temps.</li>
+              <li>On l'ajuste jusqu'à ce qu'elle vous fasse vraiment gagner du temps.</li>
             </ol>
           </div>
 
           {/* CTA */}
           <div className="pt-4 text-center space-y-3">
             <p className="text-slate-100 drop-shadow-sm">
-              Vous hésitez entre plusieurs options ? C&apos;est exactement ce qu&apos;on
-              clarifie pendant la consultation gratuite.
+              Pas sûr(e) de l’option qui vous convient le mieux&nbsp;? C’est exactement ce qu’on clarifie pendant la consultation gratuite.
             </p>
-            <ConsultCTA>Réservez une consultation gratuite</ConsultCTA>
+            <ConsultCTA>Réserver une consultation gratuite</ConsultCTA>
           </div>
         </section>
       </div>

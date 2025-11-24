@@ -1,12 +1,14 @@
+// src/components/Layout.js (or wherever it is)
+
 import { useRouter } from "next/router";
-import Navbar from './Navbar';
-import Footer from './Footer';
+import Navbar from "./Navbar";
+import Footer from "./Footer";
 
 export default function Layout({ children }) {
   const { pathname } = useRouter();
 
-  // All pages that use DARK / TRANSPARENT layout
-  const isDarkPage =
+  // Helper booleans for groups of pages
+  const isMainDarkPage =
     pathname === "/" ||
     pathname === "/fr" ||
     pathname === "/contact" ||
@@ -17,6 +19,12 @@ export default function Layout({ children }) {
     pathname === "/fr/services" ||
     pathname === "/portfolio" ||
     pathname === "/fr/portfolio";
+
+  // All resources / pillars pages (list + articles) → dark layout too
+  const isPillarsPage =
+    pathname.startsWith("/pillars") || pathname.startsWith("/fr/pillars");
+
+  const isDarkPage = isMainDarkPage || isPillarsPage;
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">

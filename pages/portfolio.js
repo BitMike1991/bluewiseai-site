@@ -23,12 +23,10 @@ export default function Portfolio() {
         >
           {/* Page Title + Intro */}
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-heading drop-shadow-md">📁Portfolio</h1>
+            <h1 className="text-4xl font-heading drop-shadow-md">💼 AI Automation Portfolio</h1>
             <p className="text-lg text-slate-100 drop-shadow-sm">
-              A few of the AI tools and automations I&apos;ve built — from
-              interview prep and content systems to custom GPTs. Each project
-              started from a real problem and ended with a workflow that saves
-              time every week.
+              Here are some of the AI tools and automations I&apos;ve built —
+              from interview prep and content systems to custom GPTs. Each project began with a real business pain and finished with a workflow that saves hours every week.
             </p>
           </div>
 
@@ -78,8 +76,8 @@ export default function Portfolio() {
                   <span className="font-semibold text-blue-300">
                     Outcome:
                   </span>{" "}
-                  A safe environment to practice high-pressure interviews like
-                  the real thing.
+                  Practice high‑pressure interviews without the stress so you
+                  walk into the real thing confident and prepared.
                 </p>
                 <a
                   href="https://www.jobinterviewcoachgpt.app/"
@@ -141,8 +139,7 @@ export default function Portfolio() {
                   <span className="font-semibold text-blue-300">
                     Outcome:
                   </span>{" "}
-                  A fast way to generate on-brand, custom stories for kids or
-                  educational content.
+                  Generate custom, on‑brand stories in minutes instead of hours.
                 </p>
                 <a
                   href="https://chatgpt.com/g/g-685d9a9fec988191a649d0478b85dd56-storycraft-ai-custom-short-stories"
@@ -204,8 +201,8 @@ export default function Portfolio() {
                   <span className="font-semibold text-blue-300">
                     Outcome:
                   </span>{" "}
-                  No more staring at a blank screen when it&apos;s time to post.
-                  The month is mapped out in one shot.
+                  Never face blank‑page syndrome again — your next month of
+                  content is planned in one shot.
                 </p>
                 <a
                   href="https://chatgpt.com/g/g-685da1abb65c81919f4af829257cbabc-30-day-social-media-content-calendar-generator"
