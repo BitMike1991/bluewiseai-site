@@ -1,3 +1,5 @@
+/* eslint-disable react/no-unescaped-entities */
+
 // pages/fr/pillars/[slug].js
 
 import fs from "fs";

@@ -1,3 +1,6 @@
+/* eslint-disable react/no-unescaped-entities */
+
+
 import HeroV2 from "@/components/HeroV2";
 import ConsultCTA from "@/components/ConsultCTA";
 

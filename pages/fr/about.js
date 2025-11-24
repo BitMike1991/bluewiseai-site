@@ -1,3 +1,6 @@
+/* eslint-disable react/no-unescaped-entities */
+
+
 import Image from "next/image";
 import ConsultCTA from "@/components/ConsultCTA";
 

@@ -1,3 +1,5 @@
+/* eslint-disable react/no-unescaped-entities */
+
 // pages/fr/pillars/index.js
 
 import Link from "next/link";

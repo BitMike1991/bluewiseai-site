@@ -1,3 +1,6 @@
+/* eslint-disable react/no-unescaped-entities */
+
+
 import { useState } from 'react';
 
 export default function Contact() {

@@ -1,3 +1,6 @@
+/* eslint-disable react/no-unescaped-entities */
+
+
 import ConsultCTA from "@/components/ConsultCTA";
 
 export default function Portfolio() {

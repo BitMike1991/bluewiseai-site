@@ -1,4 +1,5 @@
 // src/data/pillars_fr.js
+/* eslint-disable react/no-unescaped-entities */
 
 const pillarsFr = [
   {
