@@ -1,5 +1,5 @@
 // src/components/Layout.js (or wherever it is)
-
+import { Analytics } from "@vercel/analytics/next"
 import { useRouter } from "next/router";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
