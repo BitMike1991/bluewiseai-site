@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 export default function LeadRescueOnboarding() {
   const [form, setForm] = useState({
-    businessType: 'hvac', // "hvac" or "plumbing"
+    businessType: 'hvac', // 'hvac' | 'plumbing' | 'roofing' | 'chimney' | 'electrician' | 'other'
     businessName: '',
     ownerName: '',
     email: '',
@@ -25,6 +25,21 @@ export default function LeadRescueOnboarding() {
     plumbingFocusAreas: [],
     plumbingEmergency24_7: 'yes',
     plumbingResponseTime: '',
+    // Roofing-specific
+    roofingRoofTypes: '',
+    roofingEmergencyStorm: 'yes',
+    roofingHeightLimits: '',
+    // Chimney-specific
+    chimneyServices: '',
+    chimneySeason: '',
+    chimneyInstallations: '',
+    // Electrician-specific
+    electricianWorkTypes: '',
+    electricianEmergency24_7: 'yes',
+    electricianLicenses: '',
+    // Other Trade
+    otherTradeDescription: '',
+    otherEmergency: 'yes',
   });
 
   const [status, setStatus] = useState('');
@@ -32,7 +47,7 @@ export default function LeadRescueOnboarding() {
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
 
-    // shared services checkboxes
+    // Shared services checkboxes
     if (name === 'services' && type === 'checkbox') {
       setForm((prev) => {
         const updated = checked
@@ -78,11 +93,124 @@ export default function LeadRescueOnboarding() {
     setStatus('Sending…');
 
     try {
+      const businessTypeLabels = {
+        hvac: 'HVAC',
+        plumbing: 'Plumbing',
+        roofing: 'Roofing',
+        chimney: 'Chimney / Fireplace',
+        electrician: 'Electrical',
+        other: 'Other / Mixed Trade',
+      };
+
+      let specificDetails = '';
+
+      switch (form.businessType) {
+        case 'hvac':
+          specificDetails = `
+--------------------------------
+HVAC-specific details
+--------------------------------
+
+Systems you work on:
+${(form.hvacSystemTypes || []).map((s) => `- ${s}`).join('\n') || '- (not specified)'}
+
+Peak months / busy season:
+${form.hvacPeakMonths || 'Not specified'}
+
+Do you offer maintenance contracts?
+${form.hvacMaintenanceContracts || 'Not specified'}
+`.trim();
+          break;
+
+        case 'plumbing':
+          specificDetails = `
+--------------------------------
+Plumbing-specific details
+--------------------------------
+
+Main focus areas:
+${(form.plumbingFocusAreas || []).map((s) => `- ${s}`).join('\n') || '- (not specified)'}
+
+Do you offer 24/7 emergency service?
+${form.plumbingEmergency24_7 || 'Not specified'}
+
+Typical response time for emergency calls:
+${form.plumbingResponseTime || 'Not specified'}
+`.trim();
+          break;
+
+        case 'roofing':
+          specificDetails = `
+--------------------------------
+Roofing-specific details
+--------------------------------
+
+Roof types you work on:
+${form.roofingRoofTypes || 'Not specified'}
+
+Do you offer emergency / storm-damage service?
+${form.roofingEmergencyStorm || 'Not specified'}
+
+Any limits on building height or roof pitch?
+${form.roofingHeightLimits || 'Not specified'}
+`.trim();
+          break;
+
+        case 'chimney':
+          specificDetails = `
+--------------------------------
+Chimney / Fireplace-specific details
+--------------------------------
+
+Chimney & fireplace services you offer:
+${form.chimneyServices || 'Not specified'}
+
+Your busiest season (months):
+${form.chimneySeason || 'Not specified'}
+
+Do you also install stoves / inserts / liners?
+${form.chimneyInstallations || 'Not specified'}
+`.trim();
+          break;
+
+        case 'electrician':
+          specificDetails = `
+--------------------------------
+Electrical-specific details
+--------------------------------
+
+Types of electrical work you do:
+${form.electricianWorkTypes || 'Not specified'}
+
+Do you offer 24/7 emergency calls?
+${form.electricianEmergency24_7 || 'Not specified'}
+
+Licenses, certifications, or jurisdictions:
+${form.electricianLicenses || 'Not specified'}
+`.trim();
+          break;
+
+        case 'other':
+        default:
+          specificDetails = `
+--------------------------------
+Other trade details
+--------------------------------
+
+Describe your main services / trade:
+${form.otherTradeDescription || 'Not specified'}
+
+Do you handle emergency / urgent jobs?
+${form.otherEmergency || 'Not specified'}
+`.trim();
+          break;
+      }
+
       const message = `
 BlueWise AI Lead Rescue System — New Onboarding
 
 Business type:
-- ${form.businessType === 'hvac' ? 'HVAC' : 'Plumbing'}
+- ${businessTypeLabels[form.businessType] || form.businessType}
 
 Business:
 - Name: ${form.businessName}
@@ -112,33 +240,7 @@ ${form.tone}
 Daily Summary Email:
 ${form.summaryEmail}
 
---------------------------------
-${form.businessType === 'hvac' ? 'HVAC-specific details' : 'Plumbing-specific details'}
---------------------------------
-
-${
-  form.businessType === 'hvac'
-    ? `
-Systems you work on:
-${(form.hvacSystemTypes || []).map((s) => `- ${s}`).join('\n') || '- (not specified)'}
-
-Peak months / busy season:
-${form.hvacPeakMonths || 'Not specified'}
-
-Do you offer maintenance contracts?
-${form.hvacMaintenanceContracts || 'Not specified'}
-`.trim()
-    : `
-Main focus areas:
-${(form.plumbingFocusAreas || []).map((s) => `- ${s}`).join('\n') || '- (not specified)'}
-
-Do you offer 24/7 emergency service?
-${form.plumbingEmergency24_7 || 'Not specified'}
-
-Typical response time for emergency calls:
-${form.plumbingResponseTime || 'Not specified'}
-`.trim()
-}
+${specificDetails}
 `.trim();
 
       const res = await fetch('/api/contact', {
@@ -166,7 +268,78 @@ ${form.plumbingResponseTime || 'Not specified'}
     }
   };
 
-  const isHVAC = form.businessType === 'hvac';
+  const { businessType } = form;
+  const isHVAC = businessType === 'hvac';
+  const isPlumbing = businessType === 'plumbing';
+  const isRoofing = businessType === 'roofing';
+  const isChimney = businessType === 'chimney';
+  const isElectrician = businessType === 'electrician';
+  const isOther = businessType === 'other';
+
+  const businessTypeButtons = [
+    { id: 'hvac', label: 'HVAC' },
+    { id: 'plumbing', label: 'Plumbing' },
+    { id: 'roofing', label: 'Roofing' },
+    { id: 'chimney', label: 'Chimney / Fireplace' },
+    { id: 'electrician', label: 'Electrical' },
+    { id: 'other', label: 'Other Trade' },
+  ];
+
+  // 🔹 Services options per trade (this is the part that changed)
+  const serviceOptionsByType = {
+    hvac: [
+      'HVAC Installation',
+      'HVAC Repair',
+      'AC Service',
+      'Furnace Service',
+      'Heat Pump Service',
+      'Ductless / Mini-split',
+      'Emergency HVAC',
+    ],
+    plumbing: [
+      'Plumbing Install',
+      'Plumbing Repair',
+      'Drain Cleaning',
+      'Water Heater',
+      'Sewer / Main line',
+      'Bathroom / Kitchen Renos',
+      'Emergency Plumbing',
+    ],
+    roofing: [
+      'Roof Repair / Leak',
+      'New Roof / Re-roof',
+      'Gutter / Eavestrough',
+      'Roof Inspection',
+      'Emergency Storm Repair',
+    ],
+    chimney: [
+      'Chimney Sweep',
+      'Chimney Inspection',
+      'Chimney / Stove Install',
+      'Chimney Repair / Liner',
+      'Wood Stove / Insert Install',
+      'Chimney Cap / Waterproofing',
+    ],
+    electrician: [
+      'Electrical Troubleshooting',
+      'Panel / Breaker Upgrade',
+      'Lighting / Fixtures',
+      'EV Charger Install',
+      'New Construction / Reno Wiring',
+      'Generator Install',
+      'Emergency Electrical',
+    ],
+    other: [
+      'General Service Call',
+      'Small Jobs / Handyman',
+      'Project Estimates / Quotes',
+      'Maintenance Contracts',
+      'Other (describe in notes)',
+    ],
+  };
+
+  const serviceOptions =
+    serviceOptionsByType[businessType] || serviceOptionsByType.other;
 
   return (
     <div
@@ -189,46 +362,41 @@ ${form.plumbingResponseTime || 'Not specified'}
           "
         >
           <h1 className="text-4xl font-heading text-center drop-shadow-md">
-            BlueWise AI Lead Rescue System — Onboarding
+            BlueWise AI Lead Rescue System — Trade Onboarding
           </h1>
 
           <p className="text-center text-slate-100 drop-shadow-sm">
-            Fill this form so I can configure your custom 24/7 automation system
-            for your HVAC or Plumbing business within 72 hours.
+            Fill out this onboarding so I can configure your custom 24/7
+            automation system for your small trade or home-service business
+            (HVAC, plumbing, roofing, chimney, electrical, or other) within 72
+            hours.
           </p>
 
           {/* Business type selector */}
-          <div className="flex justify-center gap-4">
-            <button
-              type="button"
-              onClick={() => setForm((prev) => ({ ...prev, businessType: 'hvac' }))}
-              className={`
-                px-4 py-2 rounded-full text-sm font-semibold border
-                ${
-                  isHVAC
-                    ? 'bg-blue-600 text-white border-blue-400 shadow-[0_0_18px_rgba(59,130,246,0.85)]'
-                    : 'bg-slate-800/70 text-slate-200 border-slate-600 hover:bg-slate-700'
-                }
-              `}
-            >
-              HVAC
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                setForm((prev) => ({ ...prev, businessType: 'plumbing' }))
-              }
-              className={`
-                px-4 py-2 rounded-full text-sm font-semibold border
-                ${
-                  !isHVAC
-                    ? 'bg-blue-600 text-white border-blue-400 shadow-[0_0_18px_rgba(59,130,246,0.85)]'
-                    : 'bg-slate-800/70 text-slate-200 border-slate-600 hover:bg-slate-700'
-                }
-              `}
-            >
-              Plumbing
-            </button>
+          <div className="flex flex-wrap justify-center gap-3">
+            {businessTypeButtons.map((btn) => {
+              const active = form.businessType === btn.id;
+              return (
+                <button
+                  key={btn.id}
+                  type="button"
+                  onClick={() =>
+                    setForm((prev) => ({ ...prev, businessType: btn.id }))
+                  }
+                  className={`
+                    px-4 py-2 rounded-full text-sm font-semibold border
+                    transition-all duration-200
+                    ${
+                      active
+                        ? 'bg-blue-600 text-white border-blue-400 shadow-[0_0_18px_rgba(59,130,246,0.85)]'
+                        : 'bg-slate-800/70 text-slate-200 border-slate-600 hover:bg-slate-700'
+                    }
+                  `}
+                >
+                  {btn.label}
+                </button>
+              );
+            })}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -289,23 +457,14 @@ ${form.plumbingResponseTime || 'Not specified'}
               />
             </div>
 
-            {/* Shared Services */}
+            {/* Shared Services – now dynamic per trade */}
             <div>
               <label className="block text-sm font-medium drop-shadow-sm">
                 Services Offered
               </label>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-200 text-sm">
-                {[
-                  'HVAC Installation',
-                  'HVAC Repair',
-                  'Emergency HVAC',
-                  'Plumbing Install',
-                  'Plumbing Repair',
-                  'Drain Cleaning',
-                  'Water Heater',
-                  'Emergency Plumbing',
-                ].map((service) => (
+                {serviceOptions.map((service) => (
                   <label key={service} className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -323,7 +482,7 @@ ${form.plumbingResponseTime || 'Not specified'}
             {/* Service Area */}
             <div>
               <label className="block text-sm font-medium drop-shadow-sm">
-                Service Area (Cities, ZIP, Radius)
+                Service Area (Cities, ZIP / Postal Codes, Radius)
               </label>
               <textarea
                 name="serviceArea"
@@ -391,7 +550,7 @@ ${form.plumbingResponseTime || 'Not specified'}
             </div>
 
             {/* Type-specific section */}
-            {isHVAC ? (
+            {isHVAC && (
               <div className="space-y-4 border border-slate-700/70 rounded-2xl p-4 bg-slate-900/60">
                 <h2 className="text-lg font-semibold">HVAC specifics</h2>
 
@@ -451,7 +610,9 @@ ${form.plumbingResponseTime || 'Not specified'}
                   </select>
                 </div>
               </div>
-            ) : (
+            )}
+
+            {isPlumbing && (
               <div className="space-y-4 border border-slate-700/70 rounded-2xl p-4 bg-slate-900/60">
                 <h2 className="text-lg font-semibold">Plumbing specifics</h2>
 
@@ -515,6 +676,191 @@ ${form.plumbingResponseTime || 'Not specified'}
               </div>
             )}
 
+            {isRoofing && (
+              <div className="space-y-4 border border-slate-700/70 rounded-2xl p-4 bg-slate-900/60">
+                <h2 className="text-lg font-semibold">Roofing specifics</h2>
+
+                <div>
+                  <label className="block text-sm font-medium drop-shadow-sm">
+                    Roof types you work on (asphalt, metal, flat, etc.)
+                  </label>
+                  <input
+                    name="roofingRoofTypes"
+                    value={form.roofingRoofTypes}
+                    onChange={handleChange}
+                    placeholder="Example: asphalt shingles, metal roofs, flat roofs"
+                    className="mt-1 w-full rounded-xl px-4 py-2 text-slate-900 bg-white/95 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/60 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium drop-shadow-sm">
+                    Do you offer emergency / storm-damage service?
+                  </label>
+                  <select
+                    name="roofingEmergencyStorm"
+                    value={form.roofingEmergencyStorm}
+                    onChange={handleChange}
+                    className="mt-1 w-full rounded-xl px-4 py-2 text-slate-900 bg-white/95 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/60 outline-none"
+                  >
+                    <option value="yes">Yes, emergency storm repair</option>
+                    <option value="limited">
+                      Limited / only certain situations
+                    </option>
+                    <option value="no">No, regular hours only</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium drop-shadow-sm">
+                    Any limits on building height or roof pitch?
+                  </label>
+                  <input
+                    name="roofingHeightLimits"
+                    value={form.roofingHeightLimits}
+                    onChange={handleChange}
+                    placeholder="Example: up to 2-story residential, no very steep roofs"
+                    className="mt-1 w-full rounded-xl px-4 py-2 text-slate-900 bg-white/95 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/60 outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {isChimney && (
+              <div className="space-y-4 border border-slate-700/70 rounded-2xl p-4 bg-slate-900/60">
+                <h2 className="text-lg font-semibold">
+                  Chimney / Fireplace specifics
+                </h2>
+
+                <div>
+                  <label className="block text-sm font-medium drop-shadow-sm">
+                    What chimney / fireplace services do you offer?
+                  </label>
+                  <input
+                    name="chimneyServices"
+                    value={form.chimneyServices}
+                    onChange={handleChange}
+                    placeholder="Example: sweeping, inspections, repairs, relining, stove installs"
+                    className="mt-1 w-full rounded-xl px-4 py-2 text-slate-900 bg-white/95 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/60 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium drop-shadow-sm">
+                    Your busiest season (months)
+                  </label>
+                  <input
+                    name="chimneySeason"
+                    value={form.chimneySeason}
+                    onChange={handleChange}
+                    placeholder="Example: September–December"
+                    className="mt-1 w-full rounded-xl px-4 py-2 text-slate-900 bg-white/95 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/60 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium drop-shadow-sm">
+                    Do you also install stoves / inserts / liners?
+                  </label>
+                  <input
+                    name="chimneyInstallations"
+                    value={form.chimneyInstallations}
+                    onChange={handleChange}
+                    placeholder="Example: yes, wood stoves & inserts with liners"
+                    className="mt-1 w-full rounded-xl px-4 py-2 text-slate-900 bg-white/95 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/60 outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {isElectrician && (
+              <div className="space-y-4 border border-slate-700/70 rounded-2xl p-4 bg-slate-900/60">
+                <h2 className="text-lg font-semibold">Electrical specifics</h2>
+
+                <div>
+                  <label className="block text-sm font-medium drop-shadow-sm">
+                    Types of electrical work you do
+                  </label>
+                  <input
+                    name="electricianWorkTypes"
+                    value={form.electricianWorkTypes}
+                    onChange={handleChange}
+                    placeholder="Example: residential service calls, commercial, panel upgrades, new construction"
+                    className="mt-1 w-full rounded-xl px-4 py-2 text-slate-900 bg-white/95 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/60 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium drop-shadow-sm">
+                    Do you offer 24/7 emergency calls?
+                  </label>
+                  <select
+                    name="electricianEmergency24_7"
+                    value={form.electricianEmergency24_7}
+                    onChange={handleChange}
+                    className="mt-1 w-full rounded-xl px-4 py-2 text-slate-900 bg-white/95 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/60 outline-none"
+                  >
+                    <option value="yes">Yes, 24/7</option>
+                    <option value="limited">
+                      Limited after-hours / certain days
+                    </option>
+                    <option value="no">No, regular hours only</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium drop-shadow-sm">
+                    Licenses, certifications, or jurisdictions
+                  </label>
+                  <input
+                    name="electricianLicenses"
+                    value={form.electricianLicenses}
+                    onChange={handleChange}
+                    placeholder="Example: Master electrician, licensed in Quebec & Ontario"
+                    className="mt-1 w-full rounded-xl px-4 py-2 text-slate-900 bg-white/95 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/60 outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {isOther && (
+              <div className="space-y-4 border border-slate-700/70 rounded-2xl p-4 bg-slate-900/60">
+                <h2 className="text-lg font-semibold">Other trade specifics</h2>
+
+                <div>
+                  <label className="block text-sm font-medium drop-shadow-sm">
+                    Describe your trade and main services
+                  </label>
+                  <textarea
+                    name="otherTradeDescription"
+                    rows={3}
+                    value={form.otherTradeDescription}
+                    onChange={handleChange}
+                    placeholder="Example: flooring, painting, landscaping, handyman, etc."
+                    className="mt-1 w-full rounded-xl px-4 py-2 text-slate-900 bg-white/95 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/60 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium drop-shadow-sm">
+                    Do you handle emergency / urgent jobs?
+                  </label>
+                  <select
+                    name="otherEmergency"
+                    value={form.otherEmergency}
+                    onChange={handleChange}
+                    className="mt-1 w-full rounded-xl px-4 py-2 text-slate-900 bg-white/95 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/60 outline-none"
+                  >
+                    <option value="yes">Yes, urgent jobs</option>
+                    <option value="limited">
+                      Limited / only certain situations
+                    </option>
+                    <option value="no">No, regular schedule only</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
             {/* Tone */}
             <div>
               <label className="block text-sm font-medium drop-shadow-sm">
@@ -528,7 +874,7 @@ ${form.plumbingResponseTime || 'Not specified'}
               >
                 <option value="friendly">Friendly</option>
                 <option value="professional">Professional</option>
-                <option value="fast">Fast & Efficient</option>
+                <option value="fast">Fast &amp; Efficient</option>
               </select>
             </div>
 
