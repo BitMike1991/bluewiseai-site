@@ -308,7 +308,7 @@ export default function Services() {
             <p className="text-slate-100 drop-shadow-sm">
               Pas sûr(e) de l’option qui vous convient le mieux&nbsp;? C’est exactement ce qu’on clarifie pendant la consultation gratuite.
             </p>
-            <ConsultCTA>Réserver une consultation gratuite</ConsultCTA>
+            <ConsultCTA>Obtenez votre audit IA de 15 minutes — Gratuit</ConsultCTA>
           </div>
         </section>
       </div>

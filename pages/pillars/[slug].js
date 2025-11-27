@@ -65,7 +65,7 @@ export default function PillarArticle({ article, html }) {
               Ready to apply this in your own business? We can design and build
               a small automation that saves you 5–10 hours every week.
             </p>
-            <ConsultCTA>Book a free consultation</ConsultCTA>
+            <ConsultCTA>Free 15-Min Automation Audit</ConsultCTA>
           </div>
         </section>
       </div>

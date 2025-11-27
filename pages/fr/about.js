@@ -158,7 +158,7 @@ export default function About() {
             <p className="text-slate-100 drop-shadow-sm">
               Pas sûr de savoir par où commencer&nbsp;? Cartographions ensemble votre première automatisation.
             </p>
-            <ConsultCTA>Réserver une consultation gratuite</ConsultCTA>
+            <ConsultCTA>Obtenez votre audit IA de 15 minutes — Gratuit</ConsultCTA>
           </div>
         </section>
       </div>

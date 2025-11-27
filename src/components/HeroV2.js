@@ -48,13 +48,14 @@ export default function HeroV2() {
     ? "Petites automatisations IA livrées en 24–48 heures. Agents email, bots de qualification de prospects, rappels SMS après appels manqués et workflows sur mesure — conçus pour de vraies petites entreprises."
     : "Small AI automations delivered in 24–48 hours. Email agents, lead bots, missed-call text-back, and custom workflows — built for real small businesses.";
 
-  const primaryCtaText = isFr
+   const primaryCtaText = isFr
     ? "Voir la démo de 2 minutes"
     : "See 2-Minute Demo";
 
   const secondaryCtaText = isFr
-    ? "Réserver un audit d'automatisation gratuit"
-    : "Book Free Automation Audit";
+    ? "Audit IA 15 min gratuit"
+    : "Free 15-Min Automation Audit";
+
 
   // Heading sizes – EN untouched, FR slightly smaller but still strong
   const headingClassName = isFr

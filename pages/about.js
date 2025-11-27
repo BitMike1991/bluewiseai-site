@@ -159,7 +159,7 @@ export default function About() {
               Not sure where to start? Let&apos;s map out your first automation
               together.
             </p>
-            <ConsultCTA>Book a free consultation</ConsultCTA>
+            <ConsultCTA>Free 15-Min Automation Audit</ConsultCTA>
           </div>
         </section>
       </div>

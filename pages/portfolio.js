@@ -251,7 +251,7 @@ export default function Portfolio() {
               Want to build something similar — or completely new — for your
               own business?
             </p>
-            <ConsultCTA>Book a free consultation</ConsultCTA>
+            <ConsultCTA>Free 15-Min Automation Audit</ConsultCTA>
           </div>
         </section>
       </div>

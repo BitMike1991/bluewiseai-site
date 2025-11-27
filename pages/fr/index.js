@@ -65,7 +65,7 @@ export default function Home() {
         <div className="mt-8">
           {/* Utilise votre composant ConsultCTA, qui redirige vers /contact ou /fr/contact */}
           <ConsultCTA>
-            Réserver une consultation gratuite
+            Obtenez votre audit IA de 15 minutes — Gratuit
           </ConsultCTA>
         </div>
       </section>

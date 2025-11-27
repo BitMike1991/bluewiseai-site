@@ -247,7 +247,7 @@ export default function Portfolio() {
             <p className="text-slate-100 drop-shadow-sm">
               Vous voulez construire quelque chose de similaire — ou complètement nouveau — pour votre propre entreprise&nbsp;?
             </p>
-            <ConsultCTA>Réserver une consultation gratuite</ConsultCTA>
+            <ConsultCTA>Obtenez votre audit IA de 15 minutes — Gratuit</ConsultCTA>
           </div>
         </section>
       </div>

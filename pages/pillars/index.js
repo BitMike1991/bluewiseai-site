@@ -98,7 +98,7 @@ export default function PillarsIndex() {
               Want help turning these ideas into a working system in your
               business? Let&apos;s design your first automation together.
             </p>
-            <ConsultCTA>Book a free consultation</ConsultCTA>
+            <ConsultCTA>Free 15-Min Automation Audit</ConsultCTA>
           </div>
         </section>
       </div>

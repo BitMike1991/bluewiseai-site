@@ -311,7 +311,7 @@ export default function Services() {
               Not sure which option fits you best? That&apos;s exactly what the
               free consultation is for.
             </p>
-            <ConsultCTA>Book a free consultation</ConsultCTA>
+            <ConsultCTA>Free 15-Min Automation Audit</ConsultCTA>
           </div>
         </section>
       </div>

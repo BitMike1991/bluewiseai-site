@@ -102,7 +102,7 @@ export default function PillarsFrIndex() {
               Vous voulez transformer ces idées en systèmes concrets dans votre
               entreprise ? Concevons ensemble votre première automatisation.
             </p>
-            <ConsultCTA>Réserver une consultation gratuite</ConsultCTA>
+            <ConsultCTA>Obtenez votre audit IA de 15 minutes — Gratuit</ConsultCTA>
           </div>
         </section>
       </div>

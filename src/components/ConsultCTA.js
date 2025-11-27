@@ -6,11 +6,12 @@ export default function ConsultCTA({ children }) {
   const { pathname } = useRouter();
   const isFr = pathname.startsWith('/fr');
   const href = isFr ? '/fr/contact' : '/contact';
+
   const label =
     children ||
     (isFr
-      ? 'Réservez une consultation gratuite'
-      : 'Book a Free Consultation');
+      ? 'Obtenez votre audit IA de 15 minutes — Gratuit'
+      : 'Get Your Free 15-Minute AI Automation Audit');
 
   return (
     <Link

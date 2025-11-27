@@ -46,21 +46,30 @@ export default function Contact() {
         >
           {/* Page Title */}
           <h1 className="text-4xl font-heading text-center drop-shadow-md">
-            📬 Start Your AI Automation Journey
+            🧠 Free 15-Minute AI Automation Audit
           </h1>
 
           {/* Intro message */}
           <div className="space-y-4 text-center drop-shadow-sm text-slate-100">
             <p className="text-lg">
-              Ready to reclaim your time and scale smarter?
+              Let&apos;s see exactly how many hours you can save each week.
             </p>
             <p>
-              Tell me a bit about your business and I&apos;ll show you exactly how
-              AI automation can take the busywork off your plate. Whether
-              you have a specific project in mind or just want to explore
-              possibilities, let&apos;s map out your first win together.
+              Share a bit about your business and where you feel the most
+              overloaded (emails, leads, follow-ups, booking, etc.). I&apos;ll map
+              out 1–3 concrete automations you can implement right away — no
+              fluff, no pressure, just a clear plan.
             </p>
-            <p className="text-xl font-semibold">Let&apos;s talk.</p>
+            <p className="text-sm text-slate-300">
+              In 15 minutes we&apos;ll:
+              <br />
+              • Spot where you&apos;re losing time every day
+              <br />
+              • Identify quick-win automations tailored to your business
+              <br />
+              • Decide the best next step to implement (DIY or done-for-you)
+            </p>
+            <p className="text-xl font-semibold">Tell me where it hurts. I&apos;ll show you what we can automate.</p>
           </div>
 
           {/* Contact Form */}
@@ -111,11 +120,12 @@ export default function Contact() {
 
             <div>
               <label className="block text-sm font-medium drop-shadow-sm">
-                Message
+                What do you want to automate first?
               </label>
               <textarea
                 name="message"
                 rows="5"
+                placeholder="Example: Too many client emails, can’t keep up with quote requests, missed calls, follow-ups, etc."
                 value={form.message}
                 onChange={handleChange}
                 required
@@ -145,7 +155,7 @@ export default function Contact() {
                 transition-all duration-300
               "
             >
-              Send Message
+              Request My Free 15-Min Audit
             </button>
 
             {status && (
@@ -171,7 +181,7 @@ export default function Contact() {
                 </a>
               </li>
               <li>
-                📅 Book a free consult:{' '}
+                📅 Book your free 15-min audit:{' '}
                 <a
                   href="https://calendly.com/bluewiseai/15min"
                   target="_blank"

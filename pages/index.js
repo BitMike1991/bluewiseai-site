@@ -73,7 +73,7 @@ export default function Home() {
         <div className="mt-8">
           {/* Uses your neon ConsultCTA, which routes to /contact or /fr/contact */}
           <ConsultCTA>
-            Book a free consultation
+            Free 15-Min Automation Audit
           </ConsultCTA>
         </div>
       </section>
