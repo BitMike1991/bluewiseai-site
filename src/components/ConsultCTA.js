@@ -2,10 +2,15 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-export default function ConsultCTA({ children }) {
+export default function ConsultCTA({ children, href }) {
   const { pathname } = useRouter();
   const isFr = pathname.startsWith('/fr');
-  const href = isFr ? '/fr/contact' : '/contact';
+
+  // Default behavior: go to contact page
+  const defaultHref = isFr ? '/fr/contact' : '/contact';
+
+  // If a custom href is passed, use it. Otherwise use default.
+  const finalHref = href || defaultHref;
 
   const label =
     children ||
@@ -15,7 +20,7 @@ export default function ConsultCTA({ children }) {
 
   return (
     <Link
-      href={href}
+      href={finalHref}
       className="
         inline-block
         bg-blue-600

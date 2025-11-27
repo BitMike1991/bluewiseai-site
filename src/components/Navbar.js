@@ -11,7 +11,7 @@ export default function Navbar() {
   const currentPath = (asPath || "").split("?")[0] || "/";
   const isFr = currentPath.startsWith("/fr");
 
-  // Main dark pages (add onboarding pages here)
+  // Main dark pages (add onboarding & offer pages here)
   const isMainDarkPage =
     pathname === "/" ||
     pathname === "/fr" ||
@@ -24,7 +24,9 @@ export default function Navbar() {
     pathname === "/portfolio" ||
     pathname === "/fr/portfolio" ||
     pathname === "/onboarding-rescue" ||
-    pathname === "/fr/onboarding-rescue";
+    pathname === "/fr/onboarding-rescue" ||
+    pathname === "/lead-rescue" ||
+    pathname === "/fr/lead-rescue";
 
   // Add pillars (index + article pages)
   const isPillarsPage =
@@ -87,7 +89,7 @@ export default function Navbar() {
       switchHref = `/fr/pillars/${targetSlug}`;
     }
   } else {
-    // Static pages (including onboarding-rescue): just add/remove /fr prefix
+    // Static pages (including onboarding/offer): just add/remove /fr prefix
     if (isFr) {
       const withoutFr = currentPath.replace(/^\/fr/, "") || "/";
       switchHref = withoutFr;
@@ -101,7 +103,9 @@ export default function Navbar() {
     pathname.startsWith("/pillars") ||
     pathname.startsWith("/fr/pillars") ||
     pathname === "/onboarding-rescue" ||
-    pathname === "/fr/onboarding-rescue";
+    pathname === "/fr/onboarding-rescue" ||
+    pathname === "/lead-rescue" ||
+    pathname === "/fr/lead-rescue";
 
   // Tailwind styles for nav links
   const linkBase = (isActive) =>
@@ -180,9 +184,7 @@ export default function Navbar() {
           <div className="relative group">
             <button
               type="button"
-              className={`
-                flex items-center gap-1 ${linkBase(isResourcesActive)}
-              `}
+              className={`flex items-center gap-1 ${linkBase(isResourcesActive)}`}
             >
               {isFr ? "Ressources" : "Resources"}
               <span className="text-xs">▾</span>
@@ -192,7 +194,7 @@ export default function Navbar() {
             <div
               className={`
                 invisible opacity-0 group-hover:visible group-hover:opacity-100
-                absolute right-0 mt-2 min-w-[220px] rounded-xl border
+                absolute right-0 mt-2 min-w-[230px] rounded-xl border
                 shadow-lg transition-all duration-150
                 ${
                   isDarkPage
@@ -232,6 +234,45 @@ export default function Navbar() {
                   {isFr
                     ? "Formulaire Lead Rescue"
                     : "Lead Rescue System form"}
+                </Link>
+
+                {/* Divider */}
+                <div
+                  className={
+                    isDarkPage
+                      ? "border-t border-slate-700/70 my-1"
+                      : "border-t border-gray-200 my-1"
+                  }
+                />
+
+                {/* Offers sub-section */}
+                <p
+                  className={`
+                    px-4 pt-1 pb-1 text-[11px] tracking-[0.18em] uppercase
+                    ${
+                      isDarkPage
+                        ? "text-slate-400"
+                        : "text-gray-500"
+                    }
+                  `}
+                >
+                  {isFr ? "Offres" : "Offers"}
+                </p>
+
+                <Link
+                  href={isFr ? "/fr/lead-rescue" : "/lead-rescue"}
+                  className={`
+                    block px-4 py-2 text-sm
+                    ${
+                      isDarkPage
+                        ? "text-gray-200 hover:text-white hover:bg-slate-800/70"
+                        : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                    }
+                  `}
+                >
+                  {isFr
+                    ? "Lead Rescue System (page d’offre)"
+                    : "Lead Rescue System offer"}
                 </Link>
               </div>
             </div>
