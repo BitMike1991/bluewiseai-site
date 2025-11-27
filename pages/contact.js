@@ -69,7 +69,9 @@ export default function Contact() {
               <br />
               • Decide the best next step to implement (DIY or done-for-you)
             </p>
-            <p className="text-xl font-semibold">Tell me where it hurts. I&apos;ll show you what we can automate.</p>
+            <p className="text-xl font-semibold">
+              Tell me where it hurts. I&apos;ll show you what we can automate.
+            </p>
           </div>
 
           {/* Contact Form */}
@@ -167,9 +169,7 @@ export default function Contact() {
 
           {/* Other Contact Info */}
           <div className="pt-10 space-y-4 drop-shadow-sm text-slate-100">
-            <h2 className="text-2xl font-heading">
-              Other ways to reach me
-            </h2>
+            <h2 className="text-2xl font-heading">Other ways to reach me</h2>
             <ul className="space-y-2 text-white/90">
               <li>
                 📧 Email:{' '}
@@ -183,32 +183,56 @@ export default function Contact() {
               <li>
                 📅 Book your free 15-min audit:{' '}
                 <a
-                  href="https://calendly.com/bluewiseai/15min"
+                  href="https://calendly.com/mikael-bluewiseai"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-300 hover:underline"
                 >
-                  Calendly
+                  calendly.com/mikael-bluewiseai
                 </a>
               </li>
               <li>
-                🔗 Social:{' '}
+                🔗 Instagram:{' '}
                 <a
-                  href="https://linkedin.com/in/bluewiseai"
-                  className="text-blue-300 hover:underline"
+                  href="https://www.instagram.com/blue_wiseai/"
                   target="_blank"
                   rel="noopener noreferrer"
-                >
-                  LinkedIn
-                </a>{' '}
-                /{' '}
-                <a
-                  href="https://twitter.com/bluewiseai"
                   className="text-blue-300 hover:underline"
+                >
+                  @blue_wiseai
+                </a>
+              </li>
+              <li>
+                🔗 Facebook:{' '}
+                <a
+                  href="https://www.facebook.com/profile.php?id=61584210422105"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="text-blue-300 hover:underline"
                 >
-                  X (Twitter)
+                  BlueWise AI
+                </a>
+              </li>
+              <li>
+                🔗 X:{' '}
+                <a
+                  href="https://x.com/bluewiseai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-300 hover:underline"
+                >
+                  @bluewiseai
+                </a>
+              </li>
+              <li>
+                🔗 LinkedIn:{' '}
+                <a
+                  href="https://www.linkedin.com/in/mikael-levesque-55572139a/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-300 hover:underline"
+                >
+                  Mikael Levesque
                 </a>
               </li>
               <li>
