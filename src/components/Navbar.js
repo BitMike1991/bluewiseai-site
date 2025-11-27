@@ -11,7 +11,7 @@ export default function Navbar() {
   const currentPath = (asPath || "").split("?")[0] || "/";
   const isFr = currentPath.startsWith("/fr");
 
-  // Main dark pages
+  // Main dark pages (add onboarding pages here)
   const isMainDarkPage =
     pathname === "/" ||
     pathname === "/fr" ||
@@ -22,13 +22,14 @@ export default function Navbar() {
     pathname === "/services" ||
     pathname === "/fr/services" ||
     pathname === "/portfolio" ||
-    pathname === "/fr/portfolio";
+    pathname === "/fr/portfolio" ||
+    pathname === "/onboarding-rescue" ||
+    pathname === "/fr/onboarding-rescue";
 
   // Add pillars (index + article pages)
   const isPillarsPage =
     pathname.startsWith("/pillars") || pathname.startsWith("/fr/pillars");
 
-  // Final result
   const isDarkPage = isMainDarkPage || isPillarsPage;
 
   const [scrolled, setScrolled] = useState(false);
@@ -41,13 +42,13 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Base nav items WITHOUT resources (we’ll handle Resources/Ressources as a dropdown)
   const navItems = isFr
     ? [
         { href: "/fr", label: "Accueil" },
         { href: "/fr/about", label: "À propos" },
         { href: "/fr/services", label: "Services" },
         { href: "/fr/portfolio", label: "Portfolio" },
-        { href: "/fr/pillars", label: "Ressources" },
         { href: "/fr/contact", label: "Contact", isCTA: true },
       ]
     : [
@@ -55,7 +56,6 @@ export default function Navbar() {
         { href: "/about", label: "About" },
         { href: "/services", label: "Services" },
         { href: "/portfolio", label: "Portfolio" },
-        { href: "/pillars", label: "Resources" },
         { href: "/contact", label: "Contact", isCTA: true },
       ];
 
@@ -70,7 +70,6 @@ export default function Navbar() {
     Object.entries(enToFr).map(([en, fr]) => [fr, en])
   );
 
-  // slug can be string | string[] | undefined
   let slug = query.slug;
   if (Array.isArray(slug)) {
     slug = slug[0];
@@ -79,7 +78,7 @@ export default function Navbar() {
   let switchHref;
 
   if (slug) {
-    // We are on a dynamic article page
+    // Dynamic article page
     if (isFr) {
       const targetSlug = frToEn[slug] || slug;
       switchHref = `/pillars/${targetSlug}`;
@@ -88,7 +87,7 @@ export default function Navbar() {
       switchHref = `/fr/pillars/${targetSlug}`;
     }
   } else {
-    // Static pages: just add/remove /fr prefix
+    // Static pages (including onboarding-rescue): just add/remove /fr prefix
     if (isFr) {
       const withoutFr = currentPath.replace(/^\/fr/, "") || "/";
       switchHref = withoutFr;
@@ -96,6 +95,23 @@ export default function Navbar() {
       switchHref = currentPath === "/" ? "/fr" : `/fr${currentPath}`;
     }
   }
+
+  // Helper: active state for dropdown parent (resources)
+  const isResourcesActive =
+    pathname.startsWith("/pillars") ||
+    pathname.startsWith("/fr/pillars") ||
+    pathname === "/onboarding-rescue" ||
+    pathname === "/fr/onboarding-rescue";
+
+  // Tailwind styles for nav links
+  const linkBase = (isActive) =>
+    `px-3 py-2 rounded transition-all duration-200 ${
+      isActive
+        ? "text-blue-300 bg-slate-800/60"
+        : isDarkPage
+        ? "text-gray-200 hover:text-white hover:bg-slate-800/50"
+        : "text-gray-700 hover:text-blue-600 hover:bg-blue-100"
+    }`;
 
   return (
     <header
@@ -137,25 +153,89 @@ export default function Navbar() {
 
         {/* Nav items */}
         <nav className="flex items-center flex-wrap gap-4 sm:gap-7 text-sm sm:text-base font-medium uppercase tracking-wide">
+          {/* Regular nav items (no Resources) */}
           {navItems.map(({ href, label, isCTA }) => {
             const isActive = pathname === href || pathname === `${href}/`;
 
-            const baseStyle = isCTA
-              ? "bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition shadow"
-              : `px-3 py-2 rounded transition-all duration-200 ${
-                  isActive
-                    ? "text-blue-300 bg-slate-800/60"
-                    : isDarkPage
-                    ? "text-gray-200 hover:text-white hover:bg-slate-800/50"
-                    : "text-gray-700 hover:text-blue-600 hover:bg-blue-100"
-                }`;
+            if (isCTA) {
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition shadow"
+                >
+                  {label}
+                </Link>
+              );
+            }
 
             return (
-              <Link key={href} href={href} className={baseStyle}>
+              <Link key={href} href={href} className={linkBase(isActive)}>
                 {label}
               </Link>
             );
           })}
+
+          {/* Resources dropdown */}
+          <div className="relative group">
+            <button
+              type="button"
+              className={`
+                flex items-center gap-1 ${linkBase(isResourcesActive)}
+              `}
+            >
+              {isFr ? "Ressources" : "Resources"}
+              <span className="text-xs">▾</span>
+            </button>
+
+            {/* Dropdown menu */}
+            <div
+              className={`
+                invisible opacity-0 group-hover:visible group-hover:opacity-100
+                absolute right-0 mt-2 min-w-[220px] rounded-xl border
+                shadow-lg transition-all duration-150
+                ${
+                  isDarkPage
+                    ? "bg-slate-900/95 border-white/10"
+                    : "bg-white border-gray-200"
+                }
+              `}
+            >
+              <div className="py-2">
+                {/* Articles / Pillars */}
+                <Link
+                  href={isFr ? "/fr/pillars" : "/pillars"}
+                  className={`
+                    block px-4 py-2 text-sm
+                    ${
+                      isDarkPage
+                        ? "text-gray-200 hover:text-white hover:bg-slate-800/70"
+                        : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                    }
+                  `}
+                >
+                  {isFr ? "Articles & guides" : "Articles & guides"}
+                </Link>
+
+                {/* Lead Rescue Form */}
+                <Link
+                  href={isFr ? "/fr/onboarding-rescue" : "/onboarding-rescue"}
+                  className={`
+                    block px-4 py-2 text-sm
+                    ${
+                      isDarkPage
+                        ? "text-gray-200 hover:text-white hover:bg-slate-800/70"
+                        : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                    }
+                  `}
+                >
+                  {isFr
+                    ? "Formulaire Lead Rescue"
+                    : "Lead Rescue System form"}
+                </Link>
+              </div>
+            </div>
+          </div>
 
           {/* Language switch */}
           <Link

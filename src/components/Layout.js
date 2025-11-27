@@ -1,4 +1,4 @@
-// src/components/Layout.js (or wherever it is)
+// src/components/Layout.js
 import { Analytics } from "@vercel/analytics/next"
 import { useRouter } from "next/router";
 import Navbar from "./Navbar";
@@ -13,12 +13,14 @@ export default function Layout({ children }) {
     pathname === "/fr" ||
     pathname === "/contact" ||
     pathname === "/fr/contact" ||
-    pathname === "/about" ||
-    pathname === "/fr/about" ||
     pathname === "/services" ||
     pathname === "/fr/services" ||
+    pathname === "/about" ||
+    pathname === "/fr/about" ||
     pathname === "/portfolio" ||
-    pathname === "/fr/portfolio";
+    pathname === "/fr/portfolio" ||
+    pathname === "/onboarding-rescue" ||          // ✅ NEW
+    pathname === "/fr/onboarding-rescue";         // ✅ NEW
 
   // All resources / pillars pages (list + articles) → dark layout too
   const isPillarsPage =
@@ -43,6 +45,7 @@ export default function Layout({ children }) {
       </main>
 
       <Footer />
+      <Analytics />
     </div>
   );
 }
