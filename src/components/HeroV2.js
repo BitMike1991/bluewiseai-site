@@ -37,7 +37,6 @@ export default function HeroV2() {
     ? "Automatisez votre entreprise."
     : "Automate Your Business.";
 
-  // Only used for EN; FR will be rendered inline so we can control wrapping
   const titleLine2 = isFr ? null : (
     <>
       Save <span className="text-blue-300">5–10 Hours</span> Every Week.
@@ -48,16 +47,6 @@ export default function HeroV2() {
     ? "Petites automatisations IA livrées en 24–48 heures. Agents email, bots de qualification de prospects, rappels SMS après appels manqués et workflows sur mesure — conçus pour de vraies petites entreprises."
     : "Small AI automations delivered in 24–48 hours. Email agents, lead bots, missed-call text-back, and custom workflows — built for real small businesses.";
 
-   const primaryCtaText = isFr
-    ? "Voir la démo de 2 minutes"
-    : "See 2-Minute Demo";
-
-  const secondaryCtaText = isFr
-    ? "Audit IA 15 min gratuit"
-    : "Free 15-Min Automation Audit";
-
-
-  // Heading sizes – EN untouched, FR slightly smaller but still strong
   const headingClassName = isFr
     ? "text-[2.3rem] sm:text-[2.7rem] lg:text-[3.1rem] font-bold leading-tight text-white mb-3 max-w-[34rem]"
     : "text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white mb-3 max-w-3xl";
@@ -87,7 +76,7 @@ export default function HeroV2() {
       {/* Side glow */}
       <div className="pointer-events-none absolute right-32 top-24 h-72 w-72 rounded-full bg-blue-500/25 blur-3xl z-0" />
 
-      {/* Dark overlay for readability */}
+      {/* Dark overlay */}
       <div className="pointer-events-none absolute inset-0 bg-slate-950/30 z-0" />
 
       {/* MAIN CONTENT */}
@@ -101,17 +90,14 @@ export default function HeroV2() {
         <h1 className={headingClassName}>
           {isFr ? (
             <>
-              {/* Line 1 */}
               {"Automatisez votre entreprise."}
               <br />
-              {/* Line 2 — NOW can wrap on small screens */}
               <span className="text-white whitespace-normal sm:whitespace-nowrap">
                 {"Gagnez "}
                 <span className="text-blue-300">{"5–10 heures"}</span>
                 {" chaque"}
               </span>
               <br />
-              {/* Line 3 */}
               <span className="text-white">{"semaine."}</span>
             </>
           ) : (
@@ -123,12 +109,8 @@ export default function HeroV2() {
           )}
         </h1>
 
-        {/* Spacer so the ghost “BLUE WISE AI” can breathe */}
-        <div
-          className={
-            isFr ? "h-12 sm:h-14 lg:h-16" : "h-24 sm:h-28 lg:h-32"
-          }
-        />
+        {/* Spacer */}
+        <div className={isFr ? "h-12 sm:h-14 lg:h-16" : "h-24 sm:h-28 lg:h-32"} />
 
         {/* Subtext */}
         <p
@@ -139,38 +121,20 @@ export default function HeroV2() {
           {bodyText}
         </p>
 
-        {/* CTA BUTTONS WITH GLOW */}
-        <div className="relative inline-flex flex-wrap items-center gap-4">
-          {/* Glow behind buttons */}
+        {/* SINGLE SPECIAL OFFER CTA */}
+        <div className="relative inline-flex items-center">
+          {/* Glow */}
           <div className="pointer-events-none absolute -inset-x-6 -inset-y-3 bg-blue-500/30 blur-3xl opacity-80 z-0" />
 
-          {/* Primary CTA – scroll to demo section */}
           <Link
-            href="#demo"
-            className="relative z-10 rounded-xl px-7 py-3.5 text-sm sm:text-base font-semibold
-                       bg-blue-500 hover:bg-blue-400 text-white
-                       shadow-xl shadow-blue-500/40
-                       transition-all duration-300
-                       hover:-translate-y-0.5
-                       hover:shadow-[0_0_28px_rgba(59,130,246,0.95)]
-                       hover:saturate-150 hover:animate-pulse"
+            href="https://www.bluewiseai.com/lead-rescue"
+            className="relative z-10 rounded-2xl px-10 py-5 text-xl sm:text-2xl font-extrabold
+                       bg-blue-600 text-white tracking-wide
+                       shadow-[0_0_40px_rgba(59,130,246,0.75)]
+                       animate-flashSpecial
+                       transition-all duration-300"
           >
-            {primaryCtaText}
-          </Link>
-
-          {/* Secondary CTA – goes to contact page */}
-          <Link
-            href={contactHref}
-            className="relative z-10 rounded-xl px-7 py-3.5 text-sm sm:text-base font-semibold
-                       border border-blue-400/70 text-blue-200
-                       hover:bg-blue-500/10 hover:border-blue-300/80
-                       backdrop-blur-sm shadow-md shadow-blue-900/20
-                       transition-all duration-300
-                       hover:-translate-y-0.5
-                       hover:shadow-[0_0_22px_rgba(59,130,246,0.8)]
-                       hover:saturate-150 hover:animate-pulse"
-          >
-            {secondaryCtaText}
+            {isFr ? "OFFRE SPÉCIALE" : "SPECIAL OFFER"}
           </Link>
         </div>
       </div>

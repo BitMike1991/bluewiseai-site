@@ -38,14 +38,18 @@ export default function LeadRescueOffer() {
             <p className="text-sm text-slate-300 drop-shadow-sm">
               Special offer for small trades:{" "}
               <span className="font-semibold text-blue-300">
-                one-time setup fee $297
+                one-time setup fee $497
               </span>{" "}
-              (instead of $997–$1,997) when you choose any monthly care plan.
+              (instead of{" "}
+              <span className="font-semibold">$1,997–$3,500</span>) when you
+              choose any monthly care plan.
             </p>
-            <ConsultCTA href="/onboarding-rescue">Start My Lead Rescue System</ConsultCTA>
+            <ConsultCTA href="/onboarding-rescue">
+              Start My Lead Rescue System
+            </ConsultCTA>
           </div>
 
-          {/* PROBLEM + SIMPLE MATH */}
+          {/* PROBLEM + STATS + SIMPLE MATH */}
           <div
             className="
               space-y-5 p-5 md:p-6 rounded-2xl
@@ -102,6 +106,52 @@ export default function LeadRescueOffer() {
               </div>
             </div>
 
+            {/* STATS BLOCK – REAL, SOURCE-BASED NUMBERS */}
+            <div
+              className="
+                mt-3 rounded-2xl p-4
+                bg-slate-950/80 border border-blue-500/40
+                text-sm text-slate-100
+              "
+            >
+              <h3 className="font-semibold text-blue-300 mb-1">
+                What the data says about missed calls:
+              </h3>
+              <ul className="list-disc list-inside space-y-1">
+                <li>
+                  Industry call-tracking studies show that around{" "}
+                  <span className="font-semibold">
+                    60–62% of calls to small businesses go unanswered
+                  </span>
+                  .
+                </li>
+                <li>
+                  Only about{" "}
+                  <span className="font-semibold">1 in 5 callers</span> who hit
+                  voicemail actually leave a message — the rest just hang up.
+                </li>
+                <li>
+                  Research from InsideSales / HubSpot-style reports shows{" "}
+                  <span className="font-semibold">
+                    roughly 50% of buyers choose the vendor that responds first
+                  </span>
+                  .
+                </li>
+                <li>
+                  Responding to a new lead within{" "}
+                  <span className="font-semibold">5 minutes</span> can make you
+                  dramatically more likely to qualify and win that job compared
+                  to waiting hours or days.
+                </li>
+              </ul>
+              <p className="mt-2 text-slate-300">
+                In plain language: if you don&apos;t answer or follow up fast,
+                a huge percentage of those leads simply disappear — and often go
+                straight to your competitors.
+              </p>
+            </div>
+
+            {/* SIMPLE, HONEST MATH */}
             <div
               className="
                 mt-3 rounded-2xl p-4
@@ -199,10 +249,10 @@ export default function LeadRescueOffer() {
             </h2>
 
             <p className="text-slate-100 drop-shadow-sm">
-              Normally, building a set of 3–6 automations like this would fall
-              into a{" "}
+              Normally, building a set of integrated automations like this would
+              sit inside a{" "}
               <span className="font-semibold text-blue-300">
-                $997–$1,997 setup project
+                $1,997–$3,500 system project
               </span>
               . For small trade businesses, I&apos;m packaging the essential
               pieces into a focused Lead Rescue System instead.
@@ -226,10 +276,10 @@ export default function LeadRescueOffer() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm line-through text-slate-400">
-                    $997 – $1,997 USD
+                    $1,997 – $3,500 USD
                   </p>
                   <p className="text-xl font-semibold text-emerald-300">
-                    $297 USD one-time
+                    $497 USD one-time
                   </p>
                   <p className="text-xs text-slate-300">
                     with any monthly care plan
@@ -258,16 +308,17 @@ export default function LeadRescueOffer() {
               </h3>
               <ul className="list-disc list-inside space-y-1">
                 <li>
-                  Recover <span className="font-semibold">1 job / month</span> at
-                  $300 → your monthly plan is covered.
+                  Recover <span className="font-semibold">1 job / month</span>{" "}
+                  at $300 → your monthly plan is covered.
                 </li>
                 <li>
                   Recover <span className="font-semibold">1 job / week</span> at
-                  $250 → you&apos;re up ~$700–$900 / month.
+                  $250 → you&apos;re up roughly $700–$900 / month.
                 </li>
                 <li>
-                  Recover <span className="font-semibold">1 emergency job</span>{" "}
-                  at $500+ → you&apos;ve already paid for the $297 setup.
+                  Recover{" "}
+                  <span className="font-semibold">a single emergency job</span>{" "}
+                  at $500+ → you&apos;ve already paid for the $497 setup.
                 </li>
               </ul>
               <p className="mt-2 text-slate-300">
@@ -297,7 +348,7 @@ export default function LeadRescueOffer() {
                     Monthly retainers
                   </p>
                   <p className="text-sm text-blue-300 font-semibold">
-                    From $149 / month
+                    From $249 / month
                   </p>
                 </div>
               </div>
@@ -306,8 +357,30 @@ export default function LeadRescueOffer() {
                 Once your Lead Rescue System is live, you don&apos;t want to
                 worry about tools, API keys, updates or breakage. These
                 retainers keep your automations healthy, up to date and
-                improving over time.
+                improving — and they bundle{" "}
+                <span className="font-semibold">
+                  the core tools and subscriptions
+                </span>{" "}
+                into one predictable fee.
               </p>
+
+              {/* What’s included in monthly plans */}
+              <div className="bg-slate-950/60 border border-blue-500/40 p-4 rounded-xl text-sm text-slate-100">
+                <p className="text-blue-300 font-semibold mb-2">
+                  Every monthly plan includes:
+                </p>
+                <ul className="space-y-1">
+                  <li>• Hosting & monitoring of your automations (n8n, DB, logs)</li>
+                  <li>• Core subscriptions (OpenAI usage, infra, dev tools)</li>
+                  <li>• Telnyx messaging setup and management</li>
+                  <li>• Account creation & configuration for all needed tools</li>
+                  <li>• Debugging and fixes when APIs or platforms change</li>
+                </ul>
+                <p className="text-[11px] text-slate-400 mt-2">
+                  Most businesses spend $120–$250/month on these tools alone —
+                  here they&apos;re bundled inside your plan.
+                </p>
+              </div>
 
               <div className="grid md:grid-cols-3 gap-4">
                 {/* Basic */}
@@ -320,12 +393,13 @@ export default function LeadRescueOffer() {
                 >
                   <h3 className="font-heading text-lg drop-shadow-sm">Basic</h3>
                   <p className="text-blue-300 font-semibold text-sm mb-2">
-                    $149 / month
+                    $249 / month
                   </p>
                   <ul className="text-sm space-y-1 text-slate-100 drop-shadow-sm">
-                    <li>✅ Monitoring of key automations</li>
-                    <li>✅ Small fixes &amp; tweaks</li>
-                    <li>✅ Email support</li>
+                    <li>• Monitoring of key Lead Rescue flows</li>
+                    <li>• Fixes & small tweaks included</li>
+                    <li>• Monthly health check summary</li>
+                    <li>• Core infra & tools covered</li>
                   </ul>
                 </div>
 
@@ -341,12 +415,13 @@ export default function LeadRescueOffer() {
                     Standard
                   </h3>
                   <p className="text-blue-300 font-semibold text-sm mb-2">
-                    $249 / month
+                    $449 / month
                   </p>
                   <ul className="text-sm space-y-1 text-slate-100 drop-shadow-sm">
-                    <li>✅ Everything in Basic</li>
-                    <li>✅ Monthly improvements &amp; optimizations</li>
-                    <li>✅ Small new automation steps over time</li>
+                    <li>• Everything in Basic</li>
+                    <li>• 1–2 new automation steps each month</li>
+                    <li>• Ongoing tuning of follow-up, tagging, summaries</li>
+                    <li>• Priority for new feature requests</li>
                   </ul>
                 </div>
 
@@ -362,12 +437,13 @@ export default function LeadRescueOffer() {
                     Premium
                   </h3>
                   <p className="text-blue-300 font-semibold text-sm mb-2">
-                    $399 / month
+                    $799 / month
                   </p>
                   <ul className="text-sm space-y-1 text-slate-100 drop-shadow-sm">
-                    <li>✅ Priority support</li>
-                    <li>✅ Faster turnaround on changes</li>
-                    <li>✅ Strategy input as your systems grow</li>
+                    <li>• Everything in Standard</li>
+                    <li>• Unlimited small Lead Rescue tweaks & variants</li>
+                    <li>• Fast turnaround & priority support</li>
+                    <li>• Strategy input as your systems expand</li>
                   </ul>
                 </div>
               </div>
@@ -375,11 +451,11 @@ export default function LeadRescueOffer() {
               <p className="text-sm text-slate-300 drop-shadow-sm">
                 Your{" "}
                 <span className="font-semibold text-blue-300">
-                  $297 setup fee
+                  $497 setup fee
                 </span>{" "}
-                is paid once to build your Lead Rescue System. The monthly plan
-                keeps everything running smoothly and evolving with your
-                business.
+                is paid once to build and launch your Lead Rescue System. The
+                monthly plan keeps everything running smoothly and evolving with
+                your business.
               </p>
             </div>
           </div>
@@ -426,7 +502,7 @@ export default function LeadRescueOffer() {
               </li>
               <li>
                 <span className="font-semibold">Build:</span> I set up the
-                automation stack (n8n, LLM prompts, logs, summaries).
+                automation stack (n8n, prompts, logs, summaries).
               </li>
               <li>
                 <span className="font-semibold">Test &amp; launch:</span> we run
@@ -449,10 +525,12 @@ export default function LeadRescueOffer() {
               </span>{" "}
               in place once and for all.
             </p>
-            <ConsultCTA href="/onboarding-rescue"> Book My Lead Rescue Call</ConsultCTA>
+            <ConsultCTA href="/onboarding-rescue">
+              Book My Lead Rescue Call
+            </ConsultCTA>
 
             <p className="text-xs text-slate-400">
-              One-time setup $297 with any monthly plan. Additional custom
+              One-time setup $497 with any monthly plan. Additional custom
               automations can be added later as your systems grow.
             </p>
           </div>
