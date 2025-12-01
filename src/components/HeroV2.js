@@ -7,6 +7,7 @@ export default function HeroV2() {
   const { pathname } = useRouter();
   const isFr = pathname.startsWith("/fr");
   const contactHref = isFr ? "/fr/contact" : "/contact";
+  const offerHref = isFr ? "/fr/lead-rescue" : "/lead-rescue";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -127,7 +128,7 @@ export default function HeroV2() {
           <div className="pointer-events-none absolute -inset-x-6 -inset-y-3 bg-blue-500/30 blur-3xl opacity-80 z-0" />
 
           <Link
-            href="https://www.bluewiseai.com/lead-rescue"
+            href={offerHref}
             className="relative z-10 rounded-2xl px-10 py-5 text-xl sm:text-2xl font-extrabold
                        bg-blue-600 text-white tracking-wide
                        shadow-[0_0_40px_rgba(59,130,246,0.75)]
