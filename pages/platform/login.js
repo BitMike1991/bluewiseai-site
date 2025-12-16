@@ -1,3 +1,4 @@
+// pages/platform/login.js
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "../../lib/supabaseClient";
@@ -25,12 +26,13 @@ export default function PlatformLogin() {
     let cancelled = false;
     (async () => {
       const { data } = await supabase.auth.getSession();
-      if (!cancelled && data?.session) router.replace(nextPath);
+      // IMPORTANT: use a full navigation so middleware runs (not router.replace)
+      if (!cancelled && data?.session) window.location.href = nextPath;
     })();
     return () => {
       cancelled = true;
     };
-  }, [router, nextPath]);
+  }, [nextPath]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -50,7 +52,7 @@ export default function PlatformLogin() {
         return;
       }
 
-      // 1) Client login (works, but client-only)
+      // 1) Client login (gets access + refresh tokens)
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -62,7 +64,7 @@ export default function PlatformLogin() {
         throw new Error("No session returned from Supabase.");
       }
 
-      // 2) IMPORTANT: send tokens to server so it can set HttpOnly cookies (middleware can read them)
+      // 2) Send tokens to server so it can set HttpOnly cookies (middleware reads these)
       const resp = await fetch("/api/auth/set-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -77,8 +79,8 @@ export default function PlatformLogin() {
         throw new Error(payload?.error || "Failed to establish session cookies.");
       }
 
-      // 3) Now middleware will see cookies -> redirect will work
-      router.replace(nextPath);
+      // 3) IMPORTANT: force full page load so middleware runs and sees cookies
+      window.location.href = nextPath;
     } catch (err) {
       setMsg(err?.message || "Login failed.");
     } finally {
