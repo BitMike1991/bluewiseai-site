@@ -1,10 +1,5 @@
 // pages/api/inbox/index.js
-import { getSupabaseServerClient } from "../../../lib/supabaseServer";
-
-function getCustomerIdFromRequest(req) {
-  // TEMP: hardcoded until auth is wired properly
-  return 1;
-}
+import { getAuthContext } from "../../../lib/supabaseServer";
 
 function isNonEmptyString(v) {
   return typeof v === "string" && v.trim().length > 0;
@@ -32,9 +27,20 @@ function truncateText(str, max = 220) {
 
 function classifyChannel(channelValue) {
   const s = (channelValue || "").toString().toLowerCase();
-  if (s === "email" || s.includes("email") || s.includes("mailgun") || s.includes("gmail") || s.includes("smtp"))
+  if (
+    s === "email" ||
+    s.includes("email") ||
+    s.includes("mailgun") ||
+    s.includes("gmail") ||
+    s.includes("smtp")
+  )
     return "email";
-  if (s === "sms" || s.includes("sms") || s.includes("telnyx") || s.includes("text"))
+  if (
+    s === "sms" ||
+    s.includes("sms") ||
+    s.includes("telnyx") ||
+    s.includes("text")
+  )
     return "sms";
   return s || "unknown";
 }
@@ -45,16 +51,45 @@ function ts(dateStr) {
   return Number.isNaN(t) ? null : t;
 }
 
+/**
+ * Resolve authenticated tenant context from Supabase auth cookies:
+ * - user from auth
+ * - customerId from public.customer_users mapping
+ */
+async function requireCustomer(req, res) {
+  const { supabase, user, customerId, error } = await getAuthContext(req, res);
+
+  if (!user || !customerId) {
+    return {
+      supabase,
+      customerId: null,
+      error: error || new Error("Not authenticated / no customer mapping"),
+    };
+  }
+
+  const cid = Number(customerId);
+  if (!cid || Number.isNaN(cid)) {
+    return {
+      supabase,
+      customerId: null,
+      error: new Error("Invalid customer_id mapping"),
+    };
+  }
+
+  return { supabase, customerId: cid, error: null };
+}
+
 export default async function handler(req, res) {
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const customerId = getCustomerIdFromRequest(req);
-  if (!customerId) return res.status(401).json({ error: "Not authenticated" });
-
-  const supabase = getSupabaseServerClient();
+  // IMPORTANT: use cookie-aware supabase (not service role) for tenant routes
+  const { supabase, customerId, error } = await requireCustomer(req, res);
+  if (error || !customerId) {
+    return res.status(401).json({ error: error?.message || "Not authenticated" });
+  }
 
   try {
     const { search, status = "open", channel = "all" } = req.query;
@@ -87,7 +122,11 @@ export default async function handler(req, res) {
     if (status && status !== "all") {
       if (status === "open") {
         // broad "open": exclude explicit closed-ish values if present
-        leadsQuery = leadsQuery.not("status", "in", "(closed,closed-won,closed-lost)");
+        leadsQuery = leadsQuery.not(
+          "status",
+          "in",
+          "(closed,closed-won,closed-lost)"
+        );
       } else {
         leadsQuery = leadsQuery.eq("status", status);
       }
@@ -97,7 +136,9 @@ export default async function handler(req, res) {
     if (isNonEmptyString(search)) {
       const term = search.trim();
       leadsQuery = leadsQuery.or(
-        [`name.ilike.%${term}%`, `email.ilike.%${term}%`, `phone.ilike.%${term}%`].join(",")
+        [`name.ilike.%${term}%`, `email.ilike.%${term}%`, `phone.ilike.%${term}%`].join(
+          ","
+        )
       );
     }
 
@@ -124,7 +165,9 @@ export default async function handler(req, res) {
     // ------------------------------------------------------------------
     const { data: inboxLeadRows, error: inboxLeadErr } = await supabase
       .from("inbox_leads")
-      .select("id, lead_id, profile_id, status, summary, last_contact_at, missed_call_count, last_missed_call_at, source, from_email, customer_phone, customer_name")
+      .select(
+        "id, lead_id, profile_id, status, summary, last_contact_at, missed_call_count, last_missed_call_at, source, from_email, customer_phone, customer_name"
+      )
       .eq("customer_id", String(customerId))
       .in("lead_id", leadIds);
 
@@ -173,18 +216,16 @@ export default async function handler(req, res) {
       const lastMsg = latestMsgByLead.get(leadId) || null;
 
       const lastMsgAtTs = ts(lastMsg?.created_at);
-      const lastMissedCallTs = ts(inboxRow?.last_missed_call_at || l.last_missed_call_at);
+      const lastMissedCallTs = ts(
+        inboxRow?.last_missed_call_at || l.last_missed_call_at
+      );
       const lastContactTs = ts(inboxRow?.last_contact_at);
 
       // Choose latest activity among:
       // - latest message
       // - last missed call
       // - inbox_leads.last_contact_at (if you update it for other call-related events)
-      const bestTs = Math.max(
-        lastMsgAtTs || 0,
-        lastMissedCallTs || 0,
-        lastContactTs || 0
-      );
+      const bestTs = Math.max(lastMsgAtTs || 0, lastMissedCallTs || 0, lastContactTs || 0);
 
       let lastContactAt =
         (bestTs ? new Date(bestTs).toISOString() : null) ||
@@ -232,7 +273,8 @@ export default async function handler(req, res) {
         preview = subj ? `${subj} — ${snippet}` : snippet;
       } else {
         previewLabel = "Lead";
-        preview = inboxRow?.summary || (l.status ? `Status: ${l.status}` : "No recent activity.");
+        preview =
+          inboxRow?.summary || (l.status ? `Status: ${l.status}` : "No recent activity.");
       }
 
       // Use inbox_leads status/summary if present (it may be more “thread-like”)
@@ -247,7 +289,9 @@ export default async function handler(req, res) {
       const lastContactAtTs = ts(lastContactAt);
       const needsFollowup =
         (finalStatus || "").toLowerCase() !== "closed" &&
-        (missedCallCount > 0 || !lastContactAtTs || now - lastContactAtTs > 24 * 60 * 60 * 1000);
+        (missedCallCount > 0 ||
+          !lastContactAtTs ||
+          now - lastContactAtTs > 24 * 60 * 60 * 1000);
 
       // Display identity: prefer leads.* but fall back to inbox_leads fields if leads are sparse
       const displayName =

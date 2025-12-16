@@ -1,11 +1,6 @@
 // pages/api/calls/index.js
 
-import { createSupabaseServerClient } from "../../../lib/supabaseServer";
-
-// TEMP: until auth is wired, we hardcode customer_id but keep the pattern
-function getCustomerIdFromRequest(req) {
-  return "1"; // stored as text in most of your tables
-}
+import { getAuthContext } from "../../../lib/supabaseServer";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -14,12 +9,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    const customerId = getCustomerIdFromRequest(req);
-    if (!customerId) {
+    const { supabase, customerId, user } = await getAuthContext(req, res);
+
+    if (!user) {
       return res.status(401).json({ error: "Not authenticated" });
     }
-
-    const supabase = createSupabaseServerClient(req, res);
+    if (!customerId) {
+      return res.status(403).json({ error: "No customer mapping for this user" });
+    }
 
     // Pagination
     const page = Number.parseInt(req.query.page ?? "1", 10) || 1;
@@ -30,15 +27,47 @@ export default async function handler(req, res) {
     const outcomeFilter = req.query.outcome ?? "all";
 
     // 1) Fetch raw Telnyx events
-    const { data, error, count } = await supabase
-      .from("telnyx_other_events")
-      .select("*", { count: "exact" })
-      .order("created_at", { ascending: false })
-      .range(from, to);
+    // Prefer tenant-scoped fetch if telnyx_other_events has customer_id; fallback to original query if not.
+    let data = null;
+    let count = null;
 
-    if (error) {
-      console.error("[/api/calls] Supabase telnyx_other_events error:", error);
-      return res.status(500).json({ error: error.message });
+    {
+      const q = supabase
+        .from("telnyx_other_events")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+      // Try applying tenant filter; if the column doesn't exist in this table, retry without it.
+      const { data: d1, error: e1, count: c1 } = await q.eq("customer_id", customerId);
+
+      if (e1) {
+        const msg = (e1.message || "").toLowerCase();
+        const looksLikeMissingColumn =
+          msg.includes("column") && msg.includes("customer_id") && msg.includes("does not exist");
+
+        if (!looksLikeMissingColumn) {
+          console.error("[/api/calls] Supabase telnyx_other_events error:", e1);
+          return res.status(500).json({ error: e1.message });
+        }
+
+        const { data: d2, error: e2, count: c2 } = await supabase
+          .from("telnyx_other_events")
+          .select("*", { count: "exact" })
+          .order("created_at", { ascending: false })
+          .range(from, to);
+
+        if (e2) {
+          console.error("[/api/calls] Supabase telnyx_other_events error:", e2);
+          return res.status(500).json({ error: e2.message });
+        }
+
+        data = d2;
+        count = c2;
+      } else {
+        data = d1;
+        count = c1;
+      }
     }
 
     // 2) Normalize each row into a "call event"
@@ -293,16 +322,43 @@ export default async function handler(req, res) {
 
     let leadIdsWithOutboundSms = new Set();
     if (leadIds.length > 0) {
-      const { data: msgData, error: msgError } = await supabase
+      // Prefer tenant-scoped inbox_messages query if customer_id exists; fallback to original query if not.
+      const baseQuery = supabase
         .from("inbox_messages")
         .select("id, lead_id, direction, message_type")
         .in("lead_id", leadIds)
         .eq("direction", "outbound");
 
-      if (msgError) {
-        console.error("[/api/calls] inbox_messages error:", msgError);
+      const { data: msgData1, error: msgError1 } = await baseQuery.eq(
+        "customer_id",
+        customerId
+      );
+
+      if (msgError1) {
+        const msg = (msgError1.message || "").toLowerCase();
+        const looksLikeMissingColumn =
+          msg.includes("column") && msg.includes("customer_id") && msg.includes("does not exist");
+
+        if (!looksLikeMissingColumn) {
+          console.error("[/api/calls] inbox_messages error:", msgError1);
+        } else {
+          const { data: msgData2, error: msgError2 } = await supabase
+            .from("inbox_messages")
+            .select("id, lead_id, direction, message_type")
+            .in("lead_id", leadIds)
+            .eq("direction", "outbound");
+
+          if (msgError2) {
+            console.error("[/api/calls] inbox_messages error:", msgError2);
+          } else {
+            for (const m of msgData2 || []) {
+              // we don't strictly require sms vs mms yet
+              leadIdsWithOutboundSms.add(m.lead_id);
+            }
+          }
+        }
       } else {
-        for (const m of msgData || []) {
+        for (const m of msgData1 || []) {
           // we don't strictly require sms vs mms yet
           leadIdsWithOutboundSms.add(m.lead_id);
         }
@@ -345,7 +401,7 @@ export default async function handler(req, res) {
         page,
         pageSize,
         total: filtered.length,
-        hasMore: (count ?? data.length) > to + 1,
+        hasMore: (count ?? (data || []).length) > to + 1,
       },
       filters: {
         outcome: outcomeFilter,

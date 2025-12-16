@@ -10,15 +10,11 @@ export default async function handler(req, res) {
   const { supabase, customerId, user } = await getAuthContext(req, res);
 
   if (!user) return res.status(401).json({ error: "Not authenticated" });
-  if (!customerId) return res.status(403).json({ error: "No customer mapping for this user" });
+  if (!customerId)
+    return res.status(403).json({ error: "No customer mapping for this user" });
 
   try {
-    const {
-      status,
-      search,
-      page = "1",
-      pageSize = "20",
-    } = req.query;
+    const { status, search, page = "1", pageSize = "20" } = req.query;
 
     const pageNum = Math.max(parseInt(page, 10) || 1, 1);
     const sizeNum = Math.min(Math.max(parseInt(pageSize, 10) || 20, 1), 100);
@@ -74,7 +70,8 @@ export default async function handler(req, res) {
       .order("last_message_at", { ascending: false, nullsFirst: false })
       .range(offset, offset + sizeNum - 1);
 
-    const { data: leadRows, error: leadError, count: totalCount } = await leadsQuery;
+    const { data: leadRows, error: leadError, count: totalCount } =
+      await leadsQuery;
     if (leadError) throw leadError;
 
     const leads = leadRows || [];

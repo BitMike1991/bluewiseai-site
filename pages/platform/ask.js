@@ -127,7 +127,12 @@ function saveJson(key, value) {
 export default function AskPage() {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+
   const [error, setError] = useState(null);
+  const [sendError, setSendError] = useState(null);
+  const [sendResult, setSendResult] = useState(null);
+
   const [result, setResult] = useState(null);
 
   const [tab, setTab] = useState("result"); // result | history
@@ -137,6 +142,12 @@ export default function AskPage() {
   const [mode, setMode] = useState("auto"); // auto | leads | summary | tasks
   const inputRef = useRef(null);
 
+  // Draft UI state
+  const [draftVariantId, setDraftVariantId] = useState("v1");
+  const [draftSubject, setDraftSubject] = useState("");
+  const [draftBody, setDraftBody] = useState("");
+  const [draftChannelOverride, setDraftChannelOverride] = useState("auto"); // auto | email | sms
+
   useEffect(() => {
     setHistory(loadJson(LS_HISTORY, []));
     setSaved(
@@ -145,6 +156,7 @@ export default function AskPage() {
         { id: "s2", label: "No reply 24h", q: "Which leads haven't replied in 24h?" },
         { id: "s3", label: "Missed calls no follow-up", q: "Show missed calls without follow-up." },
         { id: "s4", label: "Tasks due today", q: "Show tasks due today." },
+        { id: "s5", label: "Draft reply", q: "Draft an email reply to confirm the follow-up for lead #1" },
       ])
     );
   }, []);
@@ -166,6 +178,8 @@ export default function AskPage() {
   const isTaskList = result && resultType === "task_list" && intent !== "echo";
   const isTaskCreated = result && resultType === "task_created" && intent !== "echo";
   const isTaskUpdated = result && resultType === "task_updated" && intent !== "echo";
+  const isDraftReply = result && resultType === "draft_reply" && intent !== "echo";
+
   const isActionOther =
     result &&
     intent !== "echo" &&
@@ -174,9 +188,30 @@ export default function AskPage() {
     !isConversationSummary &&
     !isTaskList &&
     !isTaskCreated &&
-    !isTaskUpdated;
+    !isTaskUpdated &&
+    !isDraftReply;
 
   const convoItem = isConversationSummary ? result.items?.[0] : null;
+  const draftItem = isDraftReply ? result.items?.[0] : null;
+
+  // Reset Send UI status whenever we get a new result
+  useEffect(() => {
+    setSendResult(null);
+    setSendError(null);
+  }, [result?.intent, result?.resultType]);
+
+  // When a draft arrives, prime editable fields from the selected variant
+  useEffect(() => {
+    if (!isDraftReply || !draftItem) return;
+
+    const variants = Array.isArray(draftItem.variants) ? draftItem.variants : [];
+    const v1 = variants.find((x) => x?.id === "v1") || variants[0] || null;
+
+    setDraftVariantId(v1?.id || "v1");
+    setDraftSubject((v1?.subject || draftItem.subject || "").toString());
+    setDraftBody((v1?.body || draftItem.body || "").toString());
+    setDraftChannelOverride("auto");
+  }, [isDraftReply, draftItem?.leadId]);
 
   // --- smart “ask” -----------------------------------
   async function runAsk(q) {
@@ -187,8 +222,6 @@ export default function AskPage() {
     setError(null);
 
     try {
-      // Optional “mode hints”: keep it light. Your backend still decides via tools.
-      // We just prepend a short hint so the model tends to call the right tool.
       const hint =
         mode === "leads"
           ? "INTENT: list leads.\n"
@@ -210,7 +243,6 @@ export default function AskPage() {
       setResult(json);
       setTab("result");
 
-      // History item (keeps output lightweight)
       const entry = {
         id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
         at: new Date().toISOString(),
@@ -219,7 +251,6 @@ export default function AskPage() {
         resultType: json.resultType || null,
         title: json.title || null,
         aiSummary: json.aiSummary || null,
-        // small snapshot for browsing
         snapshot:
           json.resultType === "conversation_summary"
             ? truncateText(json.items?.[0]?.summary || json.aiSummary || "", 220)
@@ -270,11 +301,103 @@ export default function AskPage() {
   }
 
   function quickCreateTask(leadId, followupType) {
-    // Let the backend choose time if not specified.
-    // Your backend will default to tomorrow 09:00 if model doesn't provide a date.
     runAsk(
       `Create a ${followupType} follow-up for lead #${leadId} tomorrow at 9:00. Note: Auto-created from Command Center.`
     );
+  }
+
+  // --- Draft actions ---------------------------------
+  function applyVariant(variantId) {
+    if (!draftItem) return;
+    const variants = Array.isArray(draftItem.variants) ? draftItem.variants : [];
+    const v = variants.find((x) => x?.id === variantId) || variants[0] || null;
+
+    setDraftVariantId(variantId);
+    setDraftSubject((v?.subject || draftItem.subject || "").toString());
+    setDraftBody((v?.body || draftItem.body || "").toString());
+  }
+
+  const computedDraftChannel = useMemo(() => {
+    if (!draftItem) return null;
+    const ch = (draftItem.channel || "").toLowerCase();
+    if (draftChannelOverride === "email" || draftChannelOverride === "sms") return draftChannelOverride;
+    if (ch === "email" || ch === "sms") return ch;
+    return "email";
+  }, [draftItem, draftChannelOverride]);
+
+  const computedSendTo = useMemo(() => {
+    if (!draftItem) return null;
+    // Ask API tries to give suggestedSendTo; fallback to meta.to.{email/phone}
+    const direct = draftItem.suggestedSendTo || draftItem.suggestedSuggestedSendTo || null;
+    if (direct) return direct;
+
+    const meta = draftItem.meta?.to || {};
+    if (computedDraftChannel === "sms") return meta.phone || null;
+    return meta.email || null;
+  }, [draftItem, computedDraftChannel]);
+
+  async function sendDraftNow() {
+    if (!draftItem?.leadId) {
+      setSendError("Draft is missing leadId. Please re-run the draft.");
+      return;
+    }
+    if (!computedDraftChannel) {
+      setSendError("Draft channel is missing.");
+      return;
+    }
+    if (!computedSendTo) {
+      setSendError("No recipient address found (lead has no email/phone for this channel).");
+      return;
+    }
+
+    const body = (draftBody || "").trim();
+    const subject = (draftSubject || "").trim();
+
+    if (!body) {
+      setSendError("Message body is empty.");
+      return;
+    }
+    if (computedDraftChannel === "email" && !subject) {
+      setSendError("Email subject is required.");
+      return;
+    }
+
+    setSending(true);
+    setSendError(null);
+    setSendResult(null);
+
+    try {
+      const res = await fetch("/api/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lead_id: Number(draftItem.leadId),
+          channel: computedDraftChannel,
+          to: computedSendTo,
+          subject: computedDraftChannel === "email" ? subject : undefined,
+          body,
+          meta: {
+            source: "command_center",
+            draft_variant_id: draftVariantId,
+            intent: "draft_reply",
+          },
+        }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || json.details || `Send failed with ${res.status}`);
+
+      setSendResult(json);
+
+      // Optional: show fresh timeline right away (ask tool will read from messages)
+      // runAsk(`Summarize the conversation for lead #${draftItem.leadId}`);
+
+    } catch (err) {
+      console.error("[/platform/ask] send error:", err);
+      setSendError(err.message || "Failed to send.");
+    } finally {
+      setSending(false);
+    }
   }
 
   // Render helpers
@@ -325,7 +448,7 @@ export default function AskPage() {
   return (
     <DashboardLayout title="Command Center">
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-        {/* Left column: controls + saved prompts */}
+        {/* Left column */}
         <div className="xl:col-span-4 space-y-4">
           <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
             <div className="flex items-start justify-between gap-3">
@@ -336,7 +459,6 @@ export default function AskPage() {
                 </p>
               </div>
 
-              {/* ✅ FIX: internal navigation uses Link */}
               <Link
                 href="/platform/overview"
                 className="shrink-0 rounded-xl border border-slate-700 bg-slate-900/40 px-3 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
@@ -346,50 +468,25 @@ export default function AskPage() {
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                onClick={() => setMode("auto")}
-                className={cx(
-                  "rounded-full border px-3 py-1 text-[11px] font-semibold",
-                  mode === "auto"
-                    ? "border-sky-500/60 bg-sky-500/10 text-sky-200"
-                    : "border-slate-800 bg-slate-950/40 text-slate-300 hover:border-sky-500/40"
-                )}
-              >
-                Auto
-              </button>
-              <button
-                onClick={() => setMode("leads")}
-                className={cx(
-                  "rounded-full border px-3 py-1 text-[11px] font-semibold",
-                  mode === "leads"
-                    ? "border-sky-500/60 bg-sky-500/10 text-sky-200"
-                    : "border-slate-800 bg-slate-950/40 text-slate-300 hover:border-sky-500/40"
-                )}
-              >
-                Leads
-              </button>
-              <button
-                onClick={() => setMode("summary")}
-                className={cx(
-                  "rounded-full border px-3 py-1 text-[11px] font-semibold",
-                  mode === "summary"
-                    ? "border-sky-500/60 bg-sky-500/10 text-sky-200"
-                    : "border-slate-800 bg-slate-950/40 text-slate-300 hover:border-sky-500/40"
-                )}
-              >
-                Summaries
-              </button>
-              <button
-                onClick={() => setMode("tasks")}
-                className={cx(
-                  "rounded-full border px-3 py-1 text-[11px] font-semibold",
-                  mode === "tasks"
-                    ? "border-sky-500/60 bg-sky-500/10 text-sky-200"
-                    : "border-slate-800 bg-slate-950/40 text-slate-300 hover:border-sky-500/40"
-                )}
-              >
-                Tasks
-              </button>
+              {[
+                ["auto", "Auto"],
+                ["leads", "Leads"],
+                ["summary", "Summaries"],
+                ["tasks", "Tasks"],
+              ].map(([k, label]) => (
+                <button
+                  key={k}
+                  onClick={() => setMode(k)}
+                  className={cx(
+                    "rounded-full border px-3 py-1 text-[11px] font-semibold",
+                    mode === k
+                      ? "border-sky-500/60 bg-sky-500/10 text-sky-200"
+                      : "border-slate-800 bg-slate-950/40 text-slate-300 hover:border-sky-500/40"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
 
             <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/60 p-3">
@@ -399,7 +496,8 @@ export default function AskPage() {
                   `Summarize Marc’s conversation`,
                   `Show missed calls without follow-up`,
                   `Which leads haven't replied in 24h?`,
-                  `Create a call follow-up for Isabelle tomorrow at 15:00`,
+                  `Draft an email reply to confirm the follow-up for lead #1`,
+                  `Draft an SMS to ask for photos for lead #12`,
                   `Show open tasks`,
                 ].map((q) => (
                   <button
@@ -453,7 +551,7 @@ export default function AskPage() {
           </div>
         </div>
 
-        {/* Right column: composer + results */}
+        {/* Right column */}
         <div className="xl:col-span-8 space-y-4">
           {/* Composer */}
           <div className="rounded-2xl border border-sky-700/40 bg-slate-950/80 p-4 shadow-[0_0_24px_rgba(56,189,248,0.22)]">
@@ -530,11 +628,144 @@ export default function AskPage() {
                 <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-6">
                   <p className="text-sm font-semibold text-slate-100">Not matched yet</p>
                   <p className="mt-1 text-xs text-slate-400">
-                    This question did not trigger a tool. Try a more specific request like: “Show open tasks”,
-                    “Summarize Marc’s conversation”, or “Leads no reply 24h”.
+                    This question did not trigger a tool. Try: “Show open tasks”, “Summarize Marc’s conversation”, or
+                    “Leads no reply 24h”.
                   </p>
                 </div>
               ) : null}
+
+              {/* ✅ Draft Reply */}
+              {isDraftReply && (
+                <div className="rounded-2xl border border-sky-700/30 bg-slate-950/60 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-100">{result.title || "Draft reply"}</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Lead #{draftItem?.leadId}
+                        {draftItem?.leadName ? ` · ${draftItem.leadName}` : ""} · channel:{" "}
+                        <span className="text-slate-200 font-semibold">{computedDraftChannel}</span>
+                      </p>
+
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        {draftItem?.matchReason ? <StatusPill label={`matched: ${draftItem.matchReason}`} tone="low" /> : null}
+                        {draftItem?.purpose ? <StatusPill label={`purpose: ${draftItem.purpose}`} tone="low" /> : null}
+                        {draftItem?.tone ? <StatusPill label={`tone: ${draftItem.tone}`} tone="low" /> : null}
+                        {draftItem?.language ? <StatusPill label={`lang: ${draftItem.language}`} tone="low" /> : null}
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 flex flex-col gap-2">
+                      {draftItem?.leadId ? (
+                        <Link
+                          href={`/platform/leads/${draftItem.leadId}`}
+                          className="rounded-xl border border-sky-500/60 px-3 py-2 text-[11px] font-semibold text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10 text-center"
+                        >
+                          Open lead
+                        </Link>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-4">
+                    <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <SectionTitle>Send settings</SectionTitle>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          <select
+                            value={draftChannelOverride}
+                            onChange={(e) => setDraftChannelOverride(e.target.value)}
+                            className="rounded-lg border border-slate-700 bg-slate-900/70 px-2 py-1 text-[11px] text-slate-200"
+                            title="Override channel"
+                          >
+                            <option value="auto">Channel: auto</option>
+                            <option value="email">Channel: email</option>
+                            <option value="sms">Channel: sms</option>
+                          </select>
+
+                          <select
+                            value={draftVariantId}
+                            onChange={(e) => applyVariant(e.target.value)}
+                            className="rounded-lg border border-slate-700 bg-slate-900/70 px-2 py-1 text-[11px] text-slate-200"
+                            title="Draft variant"
+                          >
+                            {(Array.isArray(draftItem?.variants) ? draftItem.variants : []).map((v) => (
+                              <option key={v.id} value={v.id}>
+                                Variant {v.id}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <p className="mt-2 text-[11px] text-slate-400">
+                        To: <span className="text-slate-200 font-semibold">{computedSendTo || "—"}</span>
+                      </p>
+
+                      {computedDraftChannel === "email" ? (
+                        <div className="mt-3">
+                          <SectionTitle>Subject</SectionTitle>
+                          <input
+                            value={draftSubject}
+                            onChange={(e) => setDraftSubject(e.target.value)}
+                            className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+                            placeholder="Email subject"
+                          />
+                        </div>
+                      ) : null}
+
+                      <div className="mt-3">
+                        <SectionTitle>Body</SectionTitle>
+                        <textarea
+                          value={draftBody}
+                          onChange={(e) => setDraftBody(e.target.value)}
+                          rows={computedDraftChannel === "sms" ? 5 : 7}
+                          className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+                          placeholder={computedDraftChannel === "sms" ? "SMS message..." : "Email body..."}
+                        />
+                        {computedDraftChannel === "sms" ? (
+                          <p className="mt-1 text-[11px] text-slate-500">
+                            {draftBody?.length || 0} chars (Telnyx cap enforced server-side)
+                          </p>
+                        ) : null}
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                        <div className="text-[11px] text-slate-500">
+                          {draftItem?.scheduledForLocal ? `Follow-up time: ${draftItem.scheduledForLocal}` : null}
+                        </div>
+
+                        <button
+                          onClick={sendDraftNow}
+                          disabled={sending}
+                          className="rounded-xl bg-sky-500 px-4 py-2 text-xs font-semibold text-white shadow shadow-sky-500/40 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+                        >
+                          {sending ? "Sending…" : `Send ${computedDraftChannel === "sms" ? "SMS" : "Email"}`}
+                        </button>
+                      </div>
+
+                      {sendError ? <p className="mt-3 text-xs text-rose-300">{sendError}</p> : null}
+
+                      {sendResult?.success ? (
+                        <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
+                          <p className="text-xs font-semibold text-emerald-200">Sent</p>
+                          <p className="mt-1 text-[11px] text-slate-200">
+                            provider: {sendResult.provider || "—"} · message_id: {sendResult.message_id || "—"} ·{" "}
+                            {sendResult.created_at ? formatWhen(sendResult.created_at) : ""}
+                          </p>
+                        </div>
+                      ) : null}
+
+                      {sendResult && sendResult.success === false ? (
+                        <div className="mt-3 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3">
+                          <p className="text-xs font-semibold text-rose-200">Failed</p>
+                          <p className="mt-1 text-[11px] text-slate-200">{safeText(sendResult.error || "Unknown error")}</p>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Conversation Summary */}
               {isConversationSummary && (
@@ -582,19 +813,25 @@ export default function AskPage() {
 
                       {convoItem?.leadId ? (
                         <button
-                          onClick={() =>
-                            quickCreateTask(convoItem.leadId, convoItem.recommendedFollowUpType || "call")
-                          }
+                          onClick={() => quickCreateTask(convoItem.leadId, convoItem.recommendedFollowUpType || "call")}
                           className="rounded-xl border border-slate-700 bg-slate-900/40 px-3 py-2 text-[11px] font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
                         >
                           Create follow-up
+                        </button>
+                      ) : null}
+
+                      {convoItem?.leadId ? (
+                        <button
+                          onClick={() => applyPrompt(`Draft a reply for lead #${convoItem.leadId} to confirm the follow-up`)}
+                          className="rounded-xl border border-sky-500/60 px-3 py-2 text-[11px] font-semibold text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10"
+                        >
+                          Draft reply
                         </button>
                       ) : null}
                     </div>
                   </div>
 
                   <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {/* Key details */}
                     <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
                       <SectionTitle>Key details</SectionTitle>
                       {(convoItem?.keyDetails || []).length ? (
@@ -608,7 +845,6 @@ export default function AskPage() {
                       )}
                     </div>
 
-                    {/* Objections */}
                     <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
                       <SectionTitle>Objections</SectionTitle>
                       {(convoItem?.objections || []).length ? (
@@ -622,7 +858,6 @@ export default function AskPage() {
                       )}
                     </div>
 
-                    {/* Next steps */}
                     <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
                       <SectionTitle>Next steps</SectionTitle>
                       {(convoItem?.nextSteps || []).length ? (
@@ -636,7 +871,6 @@ export default function AskPage() {
                       )}
                     </div>
 
-                    {/* Open questions */}
                     <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
                       <SectionTitle>Open questions</SectionTitle>
                       {(convoItem?.openQuestions || []).length ? (
@@ -733,6 +967,15 @@ export default function AskPage() {
                                       className="rounded-lg border border-sky-500/60 px-2 py-1 text-[11px] font-semibold text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10"
                                     >
                                       Summarize
+                                    </button>
+                                  ) : null}
+
+                                  {r.leadId ? (
+                                    <button
+                                      onClick={() => applyPrompt(`Draft a reply for lead #${r.leadId} to confirm next steps`)}
+                                      className="rounded-lg border border-sky-500/60 px-2 py-1 text-[11px] font-semibold text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10"
+                                    >
+                                      Draft
                                     </button>
                                   ) : null}
                                 </div>

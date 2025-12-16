@@ -1,13 +1,6 @@
 // pages/api/tasks/[id]/complete.js
 
-import { createSupabaseServerClient } from "../../../../lib/supabaseServer";
-
-// TODO: later derive from auth / session
-function getCustomerIdFromRequest(req) {
-  // followups.customer_id is likely integer in your schema;
-  // using a number here is fine.
-  return 1;
-}
+import { getAuthContext } from "../../../../lib/supabaseServer";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -15,9 +8,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const customerId = getCustomerIdFromRequest(req);
-  if (!customerId) {
+  const { supabase, customerId, user } = await getAuthContext(req, res);
+
+  if (!user) {
     return res.status(401).json({ error: "Not authenticated" });
+  }
+  if (!customerId) {
+    return res.status(403).json({ error: "No customer mapping for this user" });
   }
 
   const { id } = req.query;
@@ -26,8 +23,6 @@ export default async function handler(req, res) {
   if (!followupId || Number.isNaN(followupId)) {
     return res.status(400).json({ error: "Invalid followup id" });
   }
-
-  const supabase = createSupabaseServerClient(req, res);
 
   try {
     const nowIso = new Date().toISOString();

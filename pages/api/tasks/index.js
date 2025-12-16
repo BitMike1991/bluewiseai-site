@@ -1,13 +1,6 @@
 // pages/api/tasks/index.js
 
-import { createSupabaseServerClient } from "../../../lib/supabaseServer";
-
-// TEMP: until auth/session is wired, we hardcode a tenant id but
-// keep the pattern so it's easy to swap later.
-function getCustomerIdFromRequest(req) {
-  // In the future, derive from session / JWT.
-  return "1";
-}
+import { getAuthContext } from "../../../lib/supabaseServer";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -15,32 +8,26 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Server-side Supabase client (aligned with other APIs)
-  const supabase = createSupabaseServerClient(req, res);
+  const { supabase, customerId, user } = await getAuthContext(req, res);
 
-  const {
-    page = "1",
-    pageSize = "25",
-    customerId: customerIdQuery,
-  } = req.query;
+  if (!user) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+  if (!customerId) {
+    return res.status(403).json({ error: "No customer mapping for this user" });
+  }
+
+  const { page = "1", pageSize = "25" } = req.query;
 
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
-  const pageSizeNum = Math.min(
-    100,
-    Math.max(1, parseInt(pageSize, 10) || 25)
-  );
+  const pageSizeNum = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 25));
 
   const from = (pageNum - 1) * pageSizeNum;
   const to = from + pageSizeNum - 1;
 
-  // Multi-tenant discipline:
-  // - Prefer explicit ?customerId=... if provided (useful for testing)
-  // - Otherwise, fall back to the tenant inferred from the request
-  const tenantCustomerId = customerIdQuery || getCustomerIdFromRequest(req);
-
-  if (!tenantCustomerId) {
-    return res.status(401).json({ error: "Not authenticated" });
-  }
+  // Multi-tenant discipline (updated):
+  // - Auth-derived customerId is the ONLY source of truth (no override via query params).
+  const tenantCustomerId = customerId;
 
   try {
     // Base query: followups + joined lead

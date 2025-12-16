@@ -63,7 +63,8 @@ export default async function handler(req, res) {
   const { supabase, customerId, user } = await getAuthContext(req, res);
 
   if (!user) return res.status(401).json({ error: "Not authenticated" });
-  if (!customerId) return res.status(403).json({ error: "No customer mapping for this user" });
+  if (!customerId)
+    return res.status(403).json({ error: "No customer mapping for this user" });
 
   const { id } = req.query;
   const leadId = Number(id);
@@ -152,7 +153,8 @@ export default async function handler(req, res) {
         .eq("id", lead.profile_id)
         .maybeSingle();
 
-      if (profileError) console.error("[api/leads/[id]] profileError", profileError);
+      if (profileError)
+        console.error("[api/leads/[id]] profileError", profileError);
       if (profileRow) profile = profileRow;
     }
 
@@ -182,7 +184,8 @@ export default async function handler(req, res) {
         .eq("profile_id", lead.profile_id)
         .order("is_primary", { ascending: false });
 
-      if (identitiesError) console.error("[api/leads/[id]] identitiesError", identitiesError);
+      if (identitiesError)
+        console.error("[api/leads/[id]] identitiesError", identitiesError);
       identities = identityRows || [];
     }
 
@@ -279,6 +282,8 @@ export default async function handler(req, res) {
           created_at
         `
         )
+        // tenant-safe (messages is multi-tenant)
+        .eq("customer_id", customerId)
         .eq("lead_id", leadId)
         .order("created_at", { ascending: true }),
       supabase
@@ -294,12 +299,16 @@ export default async function handler(req, res) {
           created_at
         `
         )
+        // tenant-safe if customer_id exists; no logic change otherwise since lead_id is canonical per-tenant in your model
+        .eq("customer_id", customerId)
         .eq("lead_id", leadId)
         .order("created_at", { ascending: true }),
     ]);
 
-    if (emailMessagesError) console.error("[api/leads/[id]] emailMessagesError", emailMessagesError);
-    if (inboxMessagesError) console.error("[api/leads/[id]] inboxMessagesError", inboxMessagesError);
+    if (emailMessagesError)
+      console.error("[api/leads/[id]] emailMessagesError", emailMessagesError);
+    if (inboxMessagesError)
+      console.error("[api/leads/[id]] inboxMessagesError", inboxMessagesError);
 
     const emailMessages =
       (emailMessageRows || []).map((m) => ({
@@ -355,7 +364,8 @@ export default async function handler(req, res) {
       .eq("lead_id", leadId)
       .order("due_at", { ascending: true, nullsFirst: false });
 
-    if (followupsError) console.error("[api/leads/[id]] followupsError", followupsError);
+    if (followupsError)
+      console.error("[api/leads/[id]] followupsError", followupsError);
 
     const followups =
       (followupRows || []).map((f) => ({

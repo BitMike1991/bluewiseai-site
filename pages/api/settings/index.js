@@ -1,81 +1,87 @@
 // pages/api/settings.js
- import { createSupabaseServerClient } from '../../../lib/supabaseServer';
+import { getAuthContext } from "../../../lib/supabaseServer";
 
 export default async function handler(req, res) {
-  const supabase = createSupabaseServerClient();
+  const { supabase, customerId, user } = await getAuthContext(req, res);
 
-  // 🔥 For now: single-tenant / demo mode → always customer_id = 1
-  const CUSTOMER_ID = 1;
+  if (!user) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+  if (!customerId) {
+    return res.status(403).json({ error: "No customer mapping for this user" });
+  }
 
-  if (req.method === 'GET') {
+  if (req.method === "GET") {
     try {
       const { data, error } = await supabase
-        .from('customers')
+        .from("customers")
         .select(
           [
-            'id',
-            'business_name',
-            'telnyx_number',
-            'sms_number',
-            'timezone',
-            'industry',
-            'booking_link',
-            'inbox_email',
-            'service_niche',
-            'main_offer',
-            'tone_profile',
-            'email_signature',
-            'signature',
-            'sms_template',
-            'after_hours_sms_template',
-            'business_hours_start',
-            'business_hours_end',
-            'sms_enabled',
-          ].join(',')
+            "id",
+            "business_name",
+            "telnyx_number",
+            "sms_number",
+            "timezone",
+            "industry",
+            "booking_link",
+            "inbox_email",
+            "service_niche",
+            "main_offer",
+            "tone_profile",
+            "email_signature",
+            "signature",
+            "sms_template",
+            "after_hours_sms_template",
+            "business_hours_start",
+            "business_hours_end",
+            "sms_enabled",
+          ].join(",")
         )
-        .eq('id', CUSTOMER_ID)
+        .eq("id", customerId)
         .single();
 
       if (error) {
-        console.error('[api/settings] Supabase error (GET)', error);
+        console.error("[api/settings] Supabase error (GET)", error);
         return res
           .status(500)
-          .json({ error: 'Failed to load settings', details: error.message });
+          .json({ error: "Failed to load settings", details: error.message });
       }
 
       if (!data) {
-        return res.status(404).json({ error: 'Settings not found' });
+        return res.status(404).json({ error: "Settings not found" });
       }
 
       // Normalize into a front-end friendly shape
       const payload = {
         id: data.id,
-        businessName: data.business_name || '',
-        telnyxNumber: data.telnyx_number || '',
-        smsNumber: data.sms_number || '',
-        timezone: data.timezone || 'America/Toronto',
-        industry: data.industry || '',
-        bookingLink: data.booking_link || '',
-        inboxEmail: data.inbox_email || '',
-        serviceNiche: data.service_niche || '',
-        mainOffer: data.main_offer || '',
-        toneProfile: data.tone_profile || '',
-        emailSignature: data.email_signature || data.signature || '',
-        smsTemplate: data.sms_template || '',
-        afterHoursSmsTemplate: data.after_hours_sms_template || '',
-        businessHoursStart: data.business_hours_start || '',
-        businessHoursEnd: data.business_hours_end || '',
+        businessName: data.business_name || "",
+        telnyxNumber: data.telnyx_number || "",
+        smsNumber: data.sms_number || "",
+        timezone: data.timezone || "America/Toronto",
+        industry: data.industry || "",
+        bookingLink: data.booking_link || "",
+        inboxEmail: data.inbox_email || "",
+        serviceNiche: data.service_niche || "",
+        mainOffer: data.main_offer || "",
+        toneProfile: data.tone_profile || "",
+        emailSignature: data.email_signature || data.signature || "",
+        smsTemplate: data.sms_template || "",
+        afterHoursSmsTemplate: data.after_hours_sms_template || "",
+        businessHoursStart: data.business_hours_start || "",
+        businessHoursEnd: data.business_hours_end || "",
         smsEnabled: !!data.sms_enabled,
       };
 
       return res.status(200).json(payload);
     } catch (err) {
-      console.error('[api/settings] Unexpected error (GET)', err);
-      return res.status(500).json({ error: 'Unexpected error loading settings' });
+      console.error("[api/settings] Unexpected error (GET)", err);
+      return res
+        .status(500)
+        .json({ error: "Unexpected error loading settings" });
     }
   }
 
-  if (req.method === 'PATCH' || req.method === 'PUT') {
+  if (req.method === "PATCH" || req.method === "PUT") {
     try {
       const body = req.body || {};
 
@@ -97,7 +103,7 @@ export default async function handler(req, res) {
         business_hours_start: body.businessHoursStart ?? undefined,
         business_hours_end: body.businessHoursEnd ?? undefined,
         sms_enabled:
-          typeof body.smsEnabled === 'boolean' ? body.smsEnabled : undefined,
+          typeof body.smsEnabled === "boolean" ? body.smsEnabled : undefined,
         updated_at: new Date().toISOString(),
       };
 
@@ -109,67 +115,69 @@ export default async function handler(req, res) {
       });
 
       const { data, error } = await supabase
-        .from('customers')
+        .from("customers")
         .update(update)
-        .eq('id', CUSTOMER_ID)
+        .eq("id", customerId)
         .select(
           [
-            'id',
-            'business_name',
-            'telnyx_number',
-            'sms_number',
-            'timezone',
-            'industry',
-            'booking_link',
-            'inbox_email',
-            'service_niche',
-            'main_offer',
-            'tone_profile',
-            'email_signature',
-            'signature',
-            'sms_template',
-            'after_hours_sms_template',
-            'business_hours_start',
-            'business_hours_end',
-            'sms_enabled',
-          ].join(',')
+            "id",
+            "business_name",
+            "telnyx_number",
+            "sms_number",
+            "timezone",
+            "industry",
+            "booking_link",
+            "inbox_email",
+            "service_niche",
+            "main_offer",
+            "tone_profile",
+            "email_signature",
+            "signature",
+            "sms_template",
+            "after_hours_sms_template",
+            "business_hours_start",
+            "business_hours_end",
+            "sms_enabled",
+          ].join(",")
         )
         .single();
 
       if (error) {
-        console.error('[api/settings] Supabase error (PATCH)', error);
+        console.error("[api/settings] Supabase error (PATCH)", error);
         return res
           .status(500)
-          .json({ error: 'Failed to save settings', details: error.message });
+          .json({ error: "Failed to save settings", details: error.message });
       }
 
       const payload = {
         id: data.id,
-        businessName: data.business_name || '',
-        telnyxNumber: data.telnyx_number || '',
-        smsNumber: data.sms_number || '',
-        timezone: data.timezone || 'America/Toronto',
-        industry: data.industry || '',
-        bookingLink: data.booking_link || '',
-        inboxEmail: data.inbox_email || '',
-        serviceNiche: data.service_niche || '',
-        mainOffer: data.main_offer || '',
-        toneProfile: data.tone_profile || '',
-        emailSignature: data.email_signature || data.signature || '',
-        smsTemplate: data.sms_template || '',
-        afterHoursSmsTemplate: data.after_hours_sms_template || '',
-        businessHoursStart: data.business_hours_start || '',
-        businessHoursEnd: data.business_hours_end || '',
+        businessName: data.business_name || "",
+        telnyxNumber: data.telnyx_number || "",
+        smsNumber: data.sms_number || "",
+        timezone: data.timezone || "America/Toronto",
+        industry: data.industry || "",
+        bookingLink: data.booking_link || "",
+        inboxEmail: data.inbox_email || "",
+        serviceNiche: data.service_niche || "",
+        mainOffer: data.main_offer || "",
+        toneProfile: data.tone_profile || "",
+        emailSignature: data.email_signature || data.signature || "",
+        smsTemplate: data.sms_template || "",
+        afterHoursSmsTemplate: data.after_hours_sms_template || "",
+        businessHoursStart: data.business_hours_start || "",
+        businessHoursEnd: data.business_hours_end || "",
         smsEnabled: !!data.sms_enabled,
       };
 
       return res.status(200).json(payload);
     } catch (err) {
-      console.error('[api/settings] Unexpected error (PATCH)', err);
-      return res.status(500).json({ error: 'Unexpected error saving settings' });
+      console.error("[api/settings] Unexpected error (PATCH)", err);
+      return res
+        .status(500)
+        .json({ error: "Unexpected error saving settings" });
     }
   }
 
-  res.setHeader('Allow', ['GET', 'PATCH', 'PUT']);
-  return res.status(405).json({ error: 'Method not allowed' });
+  res.setHeader("Allow", ["GET", "PATCH", "PUT"]);
+  return res.status(405).json({ error: "Method not allowed" });
 }

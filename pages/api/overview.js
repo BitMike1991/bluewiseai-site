@@ -199,8 +199,7 @@ export default async function handler(req, res) {
         baseLabel = direction === "outbound" ? "You sent a message" : "Lead sent a message";
       }
 
-      const preview =
-        row.snippet || row.subject || row.preview || row.body_preview || null;
+      const preview = row.snippet || row.subject || row.preview || row.body_preview || null;
 
       const label = preview ? `${baseLabel} – ${String(preview).slice(0, 80)}` : baseLabel;
 

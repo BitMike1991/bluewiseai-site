@@ -15,11 +15,7 @@ function formatDate(dateString) {
 
 function StatusBadge({ status }) {
   if (!status)
-    return (
-      <span className="px-2 py-1 rounded-full text-xs bg-slate-700/60">
-        unknown
-      </span>
-    );
+    return <span className="px-2 py-1 rounded-full text-xs bg-slate-700/60">unknown</span>;
 
   const colorMap = {
     active: "bg-emerald-500/10 text-emerald-300 border-emerald-500/40",
@@ -34,9 +30,7 @@ function StatusBadge({ status }) {
   const base =
     "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border shadow-sm shadow-slate-900/40";
 
-  const cls =
-    colorMap[status] || "bg-slate-700/60 text-slate-200 border-slate-500/60";
-
+  const cls = colorMap[status] || "bg-slate-700/60 text-slate-200 border-slate-500/60";
   return <span className={`${base} ${cls}`}>{status.replace(/_/g, " ")}</span>;
 }
 
@@ -47,21 +41,14 @@ function getEventLabelAndDescription(event) {
     if (type.includes("miss")) {
       return {
         label: "Missed call",
-        description:
-          "Incoming call was missed. Your AI may have followed up by SMS.",
+        description: "Incoming call was missed. Your AI may have followed up by SMS.",
       };
     }
     if (type.includes("hangup")) {
-      return {
-        label: "Call ended",
-        description: "Call ended. Check call log for more details.",
-      };
+      return { label: "Call ended", description: "Call ended. Check call log for more details." };
     }
     if (type.includes("initiated")) {
-      return {
-        label: "Call started",
-        description: "Call was initiated via Telnyx.",
-      };
+      return { label: "Call started", description: "Call was initiated via Telnyx." };
     }
     return { label: "Call event", description: type };
   }
@@ -92,37 +79,22 @@ function truncateText(str, max = 900) {
 function classifyChannel(channelValue) {
   const s = (channelValue || "").toString().toLowerCase();
 
-  if (
-    s === "email" ||
-    s.includes("email") ||
-    s.includes("mailgun") ||
-    s.includes("gmail") ||
-    s.includes("smtp")
-  ) return "email";
+  if (s === "email" || s.includes("email") || s.includes("mailgun") || s.includes("gmail") || s.includes("smtp"))
+    return "email";
 
-  if (s === "sms" || s.includes("sms") || s.includes("telnyx") || s.includes("text"))
-    return "sms";
+  if (s === "sms" || s.includes("sms") || s.includes("telnyx") || s.includes("text")) return "sms";
 
   return s || "unknown";
 }
 
-// ✅ NEW: UI-safe email cleanup to prevent “huge blank space” + signature preview cut
+// ✅ UI-safe email cleanup to prevent “huge blank space” + signature preview cut
 function normalizeMessageBody(raw) {
   if (!raw) return "";
   let s = raw.toString();
-
-  // Normalize line endings
   s = s.replace(/\r\n/g, "\n");
-
-  // Remove trailing spaces on each line
   s = s.replace(/[ \t]+\n/g, "\n");
-
-  // Collapse 3+ newlines into max 2 (prevents gigantic vertical gaps)
   s = s.replace(/\n{3,}/g, "\n\n");
-
-  // Trim overall
   s = s.trim();
-
   return s;
 }
 
@@ -131,14 +103,12 @@ function splitSignaturePreview(body) {
   const s = body || "";
   if (!s) return { preview: "", hasSig: false };
 
-  // Common signature markers
   const sigRegex =
     /(\n--\s*\n|\n—\s*\n|\n___+\s*\n|\nSent from my (iPhone|Android).*\n|\nBest regards,|\nRegards,|\nSincerely,|\nCordialement,|\nMerci,)/i;
 
   const m = s.match(sigRegex);
   if (!m || typeof m.index !== "number") return { preview: s, hasSig: false };
 
-  // Only cut if marker occurs after a reasonable amount of content
   const idx = m.index;
   if (idx < 40) return { preview: s, hasSig: false };
 
@@ -166,26 +136,20 @@ function TimelineItem({ item }) {
       </span>
     );
 
-    // ✅ Normalize body FIRST (fixes huge vertical whitespace)
     const normalized = normalizeMessageBody(item.body || "");
 
     const EMAIL_LIMIT = 900;
     const OTHER_LIMIT = 1400;
     const limit = channelClass === "email" ? EMAIL_LIMIT : OTHER_LIMIT;
 
-    // ✅ For email preview: cut signature block (but only for preview)
-    const sigSplit = channelClass === "email" ? splitSignaturePreview(normalized) : { preview: normalized, hasSig: false };
+    const sigSplit =
+      channelClass === "email" ? splitSignaturePreview(normalized) : { preview: normalized, hasSig: false };
     const basePreview = sigSplit.preview;
 
-    // Too long if either: length > limit OR we detected signature OR it still has lots of lines
     const tooLong =
-      (channelClass === "email" && sigSplit.hasSig) ||
-      normalized.length > limit ||
-      basePreview.length > limit;
+      (channelClass === "email" && sigSplit.hasSig) || normalized.length > limit || basePreview.length > limit;
 
-    const shownBody = expanded
-      ? normalized
-      : truncateText(basePreview, limit);
+    const shownBody = expanded ? normalized : truncateText(basePreview, limit);
 
     body = (
       <div className="space-y-2">
@@ -205,9 +169,7 @@ function TimelineItem({ item }) {
   } else {
     body = (
       <p className="text-xs text-slate-300">
-        <span className="font-mono text-slate-400/90">
-          {item.description || item.eventType}
-        </span>
+        <span className="font-mono text-slate-400/90">{item.description || item.eventType}</span>
       </p>
     );
   }
@@ -232,6 +194,41 @@ function TimelineItem({ item }) {
   );
 }
 
+function cx(...classes) {
+  return classes.filter(Boolean).join(" ");
+}
+
+function Modal({ open, title, children, onClose }) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50">
+      {/* overlay */}
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      {/* panel */}
+      <div className="absolute inset-0 flex items-center justify-center p-4">
+        <div className="w-full max-w-2xl rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl shadow-black/60">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-800 px-5 py-4">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-slate-100">{title}</p>
+              <p className="mt-1 text-xs text-slate-400">Send an outbound message and log it to the timeline.</p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-slate-700"
+            >
+              Close
+            </button>
+          </div>
+
+          <div className="px-5 py-4">{children}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function LeadDetailPage() {
   const router = useRouter();
   const { id } = router.query;
@@ -242,112 +239,119 @@ export default function LeadDetailPage() {
 
   const [timelineFilter, setTimelineFilter] = useState("all");
 
-  useEffect(() => {
+  // --- Send modal state ---
+  const [sendOpen, setSendOpen] = useState(false);
+  const [sendChannel, setSendChannel] = useState("sms"); // sms | email
+  const [sendTo, setSendTo] = useState("");
+  const [sendSubject, setSendSubject] = useState("");
+  const [sendBody, setSendBody] = useState("");
+  const [sendHtml, setSendHtml] = useState(""); // optional
+  const [sendMeta, setSendMeta] = useState({ source: "manual_ui", context: "lead_detail" });
+
+  const [sendLoading, setSendLoading] = useState(false);
+  const [sendError, setSendError] = useState(null);
+  const [sendSuccess, setSendSuccess] = useState(null);
+
+  async function loadLead() {
     if (!id) return;
+    setLoading(true);
+    setError(null);
 
-    let isCancelled = false;
+    try {
+      const res = await fetch(`/api/leads/${id}`);
+      const json = await res.json();
 
-    async function load() {
-      setLoading(true);
-      setError(null);
+      if (!res.ok) throw new Error(json.error || "Failed to load lead detail");
 
-      try {
-        const res = await fetch(`/api/leads/${id}`);
-        const json = await res.json();
+      const rawLead = json.lead || null;
+      const inboxLead = json.inbox_lead || null;
 
-        if (!res.ok) throw new Error(json.error || "Failed to load lead detail");
-        if (isCancelled) return;
+      const rawMessages = json.messages || [];
+      const rawEvents = json.events || [];
+      const rawFollowups = json.followups || [];
 
-        const rawLead = json.lead || null;
-        const inboxLead = json.inbox_lead || null;
+      const lastContactAt =
+        inboxLead?.last_contact_at ||
+        rawLead?.last_message_at ||
+        rawLead?.last_missed_call_at ||
+        rawLead?.first_seen_at ||
+        rawLead?.created_at ||
+        null;
 
-        const rawMessages = json.messages || [];
-        const rawEvents = json.events || [];
-        const rawFollowups = json.followups || [];
+      const lead = rawLead
+        ? {
+            ...rawLead,
+            firstSeenAt: rawLead.first_seen_at || rawLead.created_at,
+            lastContactAt,
+            createdAt: rawLead.created_at,
+          }
+        : null;
 
-        const lastContactAt =
-          inboxLead?.last_contact_at ||
-          rawLead?.last_message_at ||
-          rawLead?.last_missed_call_at ||
-          rawLead?.first_seen_at ||
-          rawLead?.created_at ||
-          null;
+      const messageItems = rawMessages.map((m) => {
+        const direction = m.direction || "outbound";
+        const channelRaw = m.channel || m.message_type || "sms";
+        const channel = classifyChannel(channelRaw);
+        const body = m.body_text || m.body || "";
 
-        const lead = rawLead
-          ? {
-              ...rawLead,
-              firstSeenAt: rawLead.first_seen_at || rawLead.created_at,
-              lastContactAt,
-              createdAt: rawLead.created_at,
-            }
-          : null;
-
-        const messageItems = rawMessages.map((m) => {
-          const direction = m.direction || "outbound";
-          const channelRaw = m.channel || m.message_type || "sms";
-          const channel = classifyChannel(channelRaw);
-          const body = m.body_text || m.body || "";
-
-          return {
-            id: `msg-${m.id}`,
-            type: "message",
-            direction,
-            channel,
-            body,
-            at: m.created_at,
-          };
-        });
-
-        const eventItems = rawEvents.map((e) => {
-          const type = e.event_type || e.type || "";
-          const { label, description } = getEventLabelAndDescription({ type });
-          return {
-            id: `evt-${e.id}`,
-            type: "event",
-            label,
-            eventType: type,
-            description,
-            at: e.created_at,
-          };
-        });
-
-        const timeline = [...messageItems, ...eventItems].sort((a, b) => {
-          const da = a.at ? new Date(a.at).getTime() : 0;
-          const db = b.at ? new Date(b.at).getTime() : 0;
-          return db - da;
-        });
-
-        const inboundMessages = messageItems.filter((m) => m.direction === "inbound").length;
-        const outboundMessages = messageItems.filter((m) => m.direction === "outbound").length;
-
-        const stats = {
-          totalMessages: messageItems.length,
-          inboundMessages,
-          outboundMessages,
+        return {
+          id: `msg-${m.id}`,
+          type: "message",
+          direction,
+          channel,
+          body,
+          at: m.created_at,
         };
+      });
 
-        const tasks = rawFollowups.map((f) => ({
-          id: f.id,
-          status: f.status || "open",
-          followupType: f.followup_type || "Follow-up",
-          sequenceStage: f.sequence_stage,
-          dueAt: f.due_at,
-          source: "automation",
-        }));
+      const eventItems = rawEvents.map((e) => {
+        const type = e.event_type || e.type || "";
+        const { label, description } = getEventLabelAndDescription({ type });
+        return {
+          id: `evt-${e.id}`,
+          type: "event",
+          label,
+          eventType: type,
+          description,
+          at: e.created_at,
+        };
+      });
 
-        setData({ lead, inboxLead, timeline, stats, tasks });
-      } catch (err) {
-        console.error("Lead detail fetch error", err);
-        if (!isCancelled) setError(err.message || "Failed to load lead");
-      } finally {
-        if (!isCancelled) setLoading(false);
-      }
+      const timeline = [...messageItems, ...eventItems].sort((a, b) => {
+        const da = a.at ? new Date(a.at).getTime() : 0;
+        const db = b.at ? new Date(b.at).getTime() : 0;
+        return db - da;
+      });
+
+      const inboundMessages = messageItems.filter((m) => m.direction === "inbound").length;
+      const outboundMessages = messageItems.filter((m) => m.direction === "outbound").length;
+
+      const stats = {
+        totalMessages: messageItems.length,
+        inboundMessages,
+        outboundMessages,
+      };
+
+      const tasks = rawFollowups.map((f) => ({
+        id: f.id,
+        status: f.status || "open",
+        followupType: f.followup_type || "Follow-up",
+        sequenceStage: f.sequence_stage,
+        dueAt: f.due_at,
+        source: "automation",
+      }));
+
+      setData({ lead, inboxLead, timeline, stats, tasks });
+    } catch (err) {
+      console.error("Lead detail fetch error", err);
+      setError(err.message || "Failed to load lead");
+    } finally {
+      setLoading(false);
     }
+  }
 
-    load();
-    return () => {
-      isCancelled = true;
-    };
+  useEffect(() => {
+    loadLead();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const lead = data?.lead;
@@ -380,6 +384,76 @@ export default function LeadDetailPage() {
     return timeline;
   }, [timeline, timelineFilter]);
 
+  function openSendModal(channel) {
+    const ch = channel || "sms";
+    setSendChannel(ch);
+
+    // default recipient
+    const defaultTo = ch === "sms" ? lead?.phone || "" : lead?.email || "";
+    setSendTo(defaultTo);
+
+    // default content
+    setSendSubject(ch === "email" ? `Re: ${lead?.name || "Your request"}` : "");
+    setSendBody("");
+    setSendHtml("");
+    setSendMeta({ source: "manual_ui", context: "lead_detail", lead_id: Number(id) });
+
+    setSendError(null);
+    setSendSuccess(null);
+    setSendOpen(true);
+  }
+
+  async function submitSend() {
+    if (!lead?.id) return;
+
+    setSendLoading(true);
+    setSendError(null);
+    setSendSuccess(null);
+
+    try {
+      const payload = {
+        lead_id: Number(lead.id),
+        channel: sendChannel,
+        to: (sendTo || "").trim(),
+        subject: sendChannel === "email" ? (sendSubject || "").trim() : undefined,
+        body: (sendBody || "").trim(),
+        html: sendChannel === "email" && sendHtml.trim() ? sendHtml : undefined,
+        meta: sendMeta && typeof sendMeta === "object" ? sendMeta : undefined,
+      };
+
+      if (!payload.to) throw new Error("Recipient is required");
+      if (!payload.body) throw new Error("Message body is required");
+      if (sendChannel === "email" && !payload.subject) throw new Error("Subject is required for email");
+
+      const res = await fetch("/api/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || json.details || `Send failed (${res.status})`);
+
+      if (!json.success) {
+        throw new Error(json.error || "Send failed");
+      }
+
+      setSendSuccess({
+        provider: json.provider,
+        provider_message_id: json.provider_message_id,
+        message_id: json.message_id,
+        created_at: json.created_at,
+      });
+
+      // Refresh timeline so outbound message shows up
+      await loadLead();
+    } catch (e) {
+      setSendError(e?.message || "Failed to send");
+    } finally {
+      setSendLoading(false);
+    }
+  }
+
   return (
     <DashboardLayout title="Lead details">
       <div className="h-full w-full px-6 py-6 text-slate-100">
@@ -397,10 +471,7 @@ export default function LeadDetailPage() {
             <div className="flex items-center gap-3">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-500/15 border border-sky-500/40 shadow-[0_0_20px_rgba(56,189,248,0.5)]">
                 <span className="text-sm font-semibold text-sky-300">
-                  {lead?.name?.[0]?.toUpperCase() ||
-                    lead?.phone?.slice(-2) ||
-                    lead?.email?.[0]?.toUpperCase() ||
-                    "L"}
+                  {lead?.name?.[0]?.toUpperCase() || lead?.phone?.slice(-2) || lead?.email?.[0]?.toUpperCase() || "L"}
                 </span>
               </div>
               <div className="flex flex-col">
@@ -426,9 +497,7 @@ export default function LeadDetailPage() {
           <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
             <div className="flex items-center justify-between mb-4 gap-4">
               <div className="min-w-0">
-                <h2 className="text-sm font-semibold text-slate-100 tracking-wide">
-                  Conversation timeline
-                </h2>
+                <h2 className="text-sm font-semibold text-slate-100 tracking-wide">Conversation timeline</h2>
                 <p className="text-xs text-slate-400">
                   All activity related to this lead (messages, calls, cold outreach events).
                 </p>
@@ -479,41 +548,61 @@ export default function LeadDetailPage() {
 
           <div className="space-y-4">
             <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
-              <h2 className="text-sm font-semibold text-slate-100 mb-2 tracking-wide">
-                Quick actions
-              </h2>
+              <h2 className="text-sm font-semibold text-slate-100 mb-2 tracking-wide">Quick actions</h2>
               <p className="text-xs text-slate-400 mb-4">
-                Manual controls for now. Later these will call n8n webhooks for SMS / email / tasks.
+                Manual sending is now enabled. Later these will also trigger n8n sequences (AI drafts, follow-ups, etc.).
               </p>
+
               <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
-                  className="px-3 py-1.5 rounded-xl text-xs font-medium bg-sky-500/90 hover:bg-sky-400 text-slate-950 shadow-[0_0_18px_rgba(56,189,248,0.8)] transition"
-                  disabled
+                  onClick={() => openSendModal("sms")}
+                  className={cx(
+                    "px-3 py-1.5 rounded-xl text-xs font-medium shadow-[0_0_18px_rgba(56,189,248,0.55)] transition",
+                    lead?.phone
+                      ? "bg-sky-500/90 hover:bg-sky-400 text-slate-950"
+                      : "bg-slate-800 text-slate-400 cursor-not-allowed"
+                  )}
+                  disabled={!lead?.phone}
+                  title={!lead?.phone ? "Lead has no phone number" : "Send SMS"}
                 >
-                  Send SMS reply (coming soon)
+                  Send SMS reply
                 </button>
+
                 <button
                   type="button"
-                  className="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-600/70 transition"
-                  disabled
+                  onClick={() => openSendModal("email")}
+                  className={cx(
+                    "px-3 py-1.5 rounded-xl text-xs font-medium border transition",
+                    lead?.email
+                      ? "bg-slate-800 hover:bg-slate-700 text-slate-100 border-slate-600/70"
+                      : "bg-slate-900 text-slate-500 border-slate-800 cursor-not-allowed"
+                  )}
+                  disabled={!lead?.email}
+                  title={!lead?.email ? "Lead has no email" : "Send email"}
                 >
-                  Send email (coming soon)
+                  Send email
                 </button>
+
                 <button
                   type="button"
-                  className="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-100 border border-slate-700 transition"
+                  className="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800 transition cursor-not-allowed"
                   disabled
                 >
-                  Create follow-up task (coming soon)
+                  Create follow-up task (next)
                 </button>
+              </div>
+
+              <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+                <p className="text-[11px] text-slate-500">
+                  Tip: after sending, the message is written to the <span className="text-slate-300">messages</span>{" "}
+                  table and will appear in the timeline automatically.
+                </p>
               </div>
             </div>
 
             <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
-              <h2 className="text-sm font-semibold text-slate-100 mb-3 tracking-wide">
-                Lead details
-              </h2>
+              <h2 className="text-sm font-semibold text-slate-100 mb-3 tracking-wide">Lead details</h2>
               <dl className="grid grid-cols-1 gap-y-2 text-sm text-slate-200">
                 <div className="flex justify-between gap-4">
                   <dt className="text-slate-400 text-xs uppercase tracking-wide">Phone</dt>
@@ -544,9 +633,7 @@ export default function LeadDetailPage() {
 
             <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
               <div className="flex items-center justify-between mb-2">
-                <h2 className="text-sm font-semibold text-slate-100 tracking-wide">
-                  Follow-up tasks
-                </h2>
+                <h2 className="text-sm font-semibold text-slate-100 tracking-wide">Follow-up tasks</h2>
                 <div className="flex items-center gap-2 text-[11px] text-slate-400">
                   <span>
                     Open: <span className="text-sky-300">{openTasks.length}</span>
@@ -590,15 +677,11 @@ export default function LeadDetailPage() {
                         className="flex items-start justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-2"
                       >
                         <div className="flex flex-col text-xs">
-                          <span className="font-medium text-slate-100">
-                            {task.followupType || "Follow-up"}
-                          </span>
+                          <span className="font-medium text-slate-100">{task.followupType || "Follow-up"}</span>
                           <span className="text-slate-400">
                             {stageLabel} · {dueText}
                           </span>
-                          <span className="text-slate-500">
-                            Source: {task.source || "unknown"}
-                          </span>
+                          <span className="text-slate-500">Source: {task.source || "unknown"}</span>
                         </div>
                         <div className="mt-0.5">{badge}</div>
                       </li>
@@ -609,6 +692,134 @@ export default function LeadDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Send Modal */}
+        <Modal
+          open={sendOpen}
+          title={`Send ${sendChannel === "sms" ? "SMS" : "Email"} to ${lead?.name || "lead"}`}
+          onClose={() => {
+            if (sendLoading) return;
+            setSendOpen(false);
+          }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <button
+              type="button"
+              onClick={() => setSendChannel("sms")}
+              className={cx(
+                "rounded-xl border px-3 py-1.5 text-[11px] font-semibold",
+                sendChannel === "sms"
+                  ? "border-sky-500/60 bg-sky-500/10 text-sky-200"
+                  : "border-slate-800 bg-slate-950/40 text-slate-300 hover:border-sky-500/40"
+              )}
+            >
+              SMS
+            </button>
+            <button
+              type="button"
+              onClick={() => setSendChannel("email")}
+              className={cx(
+                "rounded-xl border px-3 py-1.5 text-[11px] font-semibold",
+                sendChannel === "email"
+                  ? "border-sky-500/60 bg-sky-500/10 text-sky-200"
+                  : "border-slate-800 bg-slate-950/40 text-slate-300 hover:border-sky-500/40"
+              )}
+            >
+              Email
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-300 mb-1">To</label>
+              <input
+                value={sendTo}
+                onChange={(e) => setSendTo(e.target.value)}
+                placeholder={sendChannel === "sms" ? "+1..." : "name@email.com"}
+                className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+              />
+              <p className="mt-1 text-[11px] text-slate-500">
+                Default is the lead’s phone/email. You can override if needed.
+              </p>
+            </div>
+
+            {sendChannel === "email" ? (
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-300 mb-1">Subject</label>
+                <input
+                  value={sendSubject}
+                  onChange={(e) => setSendSubject(e.target.value)}
+                  placeholder="Subject..."
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+                />
+              </div>
+            ) : null}
+
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                Message {sendChannel === "sms" ? "(text)" : "(text body)"}
+              </label>
+              <textarea
+                value={sendBody}
+                onChange={(e) => setSendBody(e.target.value)}
+                rows={sendChannel === "sms" ? 5 : 7}
+                placeholder={sendChannel === "sms" ? "Write your SMS..." : "Write your email..."}
+                className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+              />
+              {sendChannel === "sms" ? (
+                <p className="mt-1 text-[11px] text-slate-500">
+                  Keep it concise. (Server hard cap enforced.)
+                </p>
+              ) : null}
+            </div>
+
+            {sendChannel === "email" ? (
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-300 mb-1">Optional HTML</label>
+                <textarea
+                  value={sendHtml}
+                  onChange={(e) => setSendHtml(e.target.value)}
+                  rows={4}
+                  placeholder="<p>Optional HTML version...</p>"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs font-mono text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+                />
+                <p className="mt-1 text-[11px] text-slate-500">
+                  If provided, Mailgun will send both HTML + Text.
+                </p>
+              </div>
+            ) : null}
+
+            {sendError ? <p className="text-xs text-rose-300">{sendError}</p> : null}
+
+            {sendSuccess ? (
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
+                <p className="text-xs font-semibold text-emerald-200">Sent successfully</p>
+                <p className="mt-1 text-[11px] text-emerald-100">
+                  Provider: {sendSuccess.provider} · Message ID: {sendSuccess.message_id}
+                </p>
+              </div>
+            ) : null}
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setSendOpen(false)}
+                disabled={sendLoading}
+                className="rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-2 text-[11px] font-semibold text-slate-200 hover:border-slate-700 disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitSend}
+                disabled={sendLoading}
+                className="rounded-xl bg-sky-500 px-4 py-2 text-[11px] font-semibold text-white shadow shadow-sky-500/40 hover:bg-sky-400 disabled:opacity-60"
+              >
+                {sendLoading ? "Sending…" : "Send"}
+              </button>
+            </div>
+          </div>
+        </Modal>
       </div>
     </DashboardLayout>
   );

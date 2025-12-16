@@ -1,12 +1,7 @@
 // pages/api/send.js
-import { createSupabaseServerClient } from "../../lib/supabaseServer";
+import { getAuthContext } from "../../lib/supabaseServer";
 import { sendSmsTelnyx } from "../../lib/providers/telnyx";
 import { sendEmailMailgun } from "../../lib/providers/mailgun";
-
-// TEMP: until auth is wired, we hardcode customer_id but keep the pattern
-function getCustomerIdFromRequest(req) {
-  return "1";
-}
 
 function isNonEmptyString(v) {
   return typeof v === "string" && v.trim().length > 0;
@@ -20,48 +15,55 @@ function safeJson(v) {
   }
 }
 
-// Conservative SMS guardrail (Telnyx supports concatenation; we enforce a deterministic cap)
+function normStr(v) {
+  if (v == null) return "";
+  return String(v).trim();
+}
+
+// Conservative SMS guardrail (hard cap)
 const SMS_MAX_LEN = 1200;
 
 export default async function handler(req, res) {
-  if (req.method !== "POST")
+  if (req.method !== "POST") {
+    res.setHeader("Allow", ["POST"]);
     return res.status(405).json({ error: "Method not allowed" });
+  }
 
-  const supabase = createSupabaseServerClient(req, res);
-  const customerId = getCustomerIdFromRequest(req);
+  // ✅ Cookie-aware auth + tenant resolution (matches /api/ask)
+  const { supabase, customerId, user } = await getAuthContext(req, res);
+
+  if (!user) return res.status(401).json({ error: "Not authenticated" });
+  if (!customerId) return res.status(403).json({ error: "No customer mapping for this user" });
 
   // ---- Parse payload ----
-  const { lead_id, channel, to, subject, body, meta } = req.body || {};
+  const { lead_id, channel, to, subject, body, meta, html } = req.body || {};
 
-  if (!lead_id || typeof lead_id !== "number") {
+  if (typeof lead_id !== "number" || !Number.isFinite(lead_id)) {
     return res.status(400).json({ error: "lead_id must be a number" });
   }
+
   if (channel !== "sms" && channel !== "email") {
     return res.status(400).json({ error: "channel must be sms or email" });
   }
-  if (!isNonEmptyString(to)) {
-    return res.status(400).json({ error: "to is required" });
-  }
-  if (!isNonEmptyString(body)) {
-    return res.status(400).json({ error: "body is required" });
+
+  const bodyText = normStr(body);
+  if (!bodyText) return res.status(400).json({ error: "body is required" });
+
+  const subjectText = normStr(subject);
+  const htmlText = isNonEmptyString(html) ? String(html) : null;
+
+  if (channel === "email" && !subjectText) {
+    return res.status(400).json({ error: "subject is required for email" });
   }
 
-  if (channel === "email") {
-    if (!isNonEmptyString(subject)) {
-      return res.status(400).json({ error: "subject is required for email" });
-    }
-  } else if (channel === "sms") {
-    if (body.trim().length > SMS_MAX_LEN) {
-      return res
-        .status(400)
-        .json({ error: `SMS body too long (max ${SMS_MAX_LEN} chars)` });
-    }
+  if (channel === "sms" && bodyText.length > SMS_MAX_LEN) {
+    return res.status(400).json({ error: `SMS body too long (max ${SMS_MAX_LEN} chars)` });
   }
 
   // ---- Verify lead belongs to customer (multi-tenant safety) ----
   const { data: lead, error: leadErr } = await supabase
     .from("leads")
-    .select("id, customer_id, profile_id, email, phone, phone_last7") // ✅ include profile_id
+    .select("id, customer_id, profile_id, email, phone, phone_last7")
     .eq("id", lead_id)
     .eq("customer_id", customerId)
     .maybeSingle();
@@ -69,9 +71,24 @@ export default async function handler(req, res) {
   if (leadErr) return res.status(500).json({ error: leadErr.message });
   if (!lead) return res.status(404).json({ error: "Lead not found" });
 
-  // ---- Resolve provider + from address ----
+  // ---- Resolve provider + from address + safe recipient resolution ----
   let provider = null;
   let fromAddress = null;
+
+  // Prefer lead’s canonical destination unless caller explicitly passed "to"
+  // (Still validate that something exists.)
+  const leadDefaultTo = channel === "sms" ? normStr(lead.phone) : normStr(lead.email);
+  const requestedTo = normStr(to);
+  const finalTo = requestedTo || leadDefaultTo;
+
+  if (!finalTo) {
+    return res.status(400).json({
+      error:
+        channel === "sms"
+          ? "Missing recipient: lead has no phone and no `to` provided"
+          : "Missing recipient: lead has no email and no `to` provided",
+    });
+  }
 
   if (channel === "sms") {
     provider = "telnyx";
@@ -83,67 +100,65 @@ export default async function handler(req, res) {
       .maybeSingle();
 
     if (custErr) return res.status(500).json({ error: custErr.message });
+
     if (!customerRow?.telnyx_sms_number) {
-      return res
-        .status(400)
-        .json({ error: "Missing customers.telnyx_sms_number for this tenant" });
+      return res.status(400).json({ error: "Missing customers.telnyx_sms_number for this tenant" });
     }
 
-    fromAddress = customerRow.telnyx_sms_number;
-  }
-
-  if (channel === "email") {
+    fromAddress = String(customerRow.telnyx_sms_number).trim();
+  } else {
     provider = "mailgun";
-    // Deterministic sender controlled server-side (do not trust UI for From)
-    fromAddress =
-      process.env.MAILGUN_FROM ||
-      `BlueWise AI <sales@${process.env.MAILGUN_DOMAIN}>`;
+    fromAddress = process.env.MAILGUN_FROM || `BlueWise AI <sales@${process.env.MAILGUN_DOMAIN}>`;
   }
 
-  // ---- Observability: create send_logs row first (optional table but we assume it exists) ----
+  // ---- Observability: create send_logs row first (best-effort) ----
   const requestPayload = {
     lead_id,
     channel,
-    to,
-    subject: channel === "email" ? subject : null,
-    body,
+    to: finalTo,
+    subject: channel === "email" ? subjectText : null,
+    body: bodyText,
+    html: channel === "email" ? htmlText : null,
     meta: meta && typeof meta === "object" ? meta : null,
   };
 
-  const { data: logRow, error: logErr } = await supabase
-    .from("send_logs")
-    .insert([
-      {
-        customer_id: customerId,
-        lead_id,
-        channel,
-        provider,
-        request_payload: requestPayload,
-        success: false,
-      },
-    ])
-    .select("id")
-    .single();
+  let sendLogId = null;
+  {
+    const { data: logRow, error: logErr } = await supabase
+      .from("send_logs")
+      .insert([
+        {
+          customer_id: customerId,
+          lead_id,
+          channel,
+          provider,
+          request_payload: requestPayload,
+          success: false,
+        },
+      ])
+      .select("id")
+      .single();
 
-  // If send_logs table doesn’t exist yet, we don’t want to block sending.
-  // We’ll continue, and just skip logging updates.
-  const sendLogId = logErr ? null : logRow?.id ?? null;
+    // If send_logs table doesn’t exist yet, don’t block sending.
+    sendLogId = logErr ? null : logRow?.id ?? null;
+  }
 
   // ---- Send via provider ----
   let sendResult = null;
 
   if (channel === "sms") {
     sendResult = await sendSmsTelnyx({
-      to,
+      to: finalTo,
       from: fromAddress,
-      body,
+      body: bodyText,
     });
   } else {
     sendResult = await sendEmailMailgun({
-      to,
+      to: finalTo,
       from: fromAddress,
-      subject,
-      body,
+      subject: subjectText,
+      body: bodyText,
+      html: htmlText || undefined,
       // replyTo: optional future enhancement
     });
   }
@@ -153,24 +168,23 @@ export default async function handler(req, res) {
   const errorMsg = sendResult?.error || null;
 
   // ---- Persist outbound message to canonical messages table ----
-  // Keep legacy fields intact; we only add send metadata.
   const messageInsert = {
     customer_id: customerId,
     lead_id,
-    profile_id: lead?.profile_id || null, // ✅ populate profile_id
+    profile_id: lead?.profile_id || null,
     direction: "outbound",
     channel, // sms | email
-    message_type: channel, // aligns with your existing patterns
-    subject: channel === "email" ? subject : null,
-    body,
+    message_type: channel, // keep existing pattern
+    subject: channel === "email" ? subjectText : null,
+    body: bodyText,
     provider,
     provider_message_id: providerMessageId,
     status: success ? "sent" : "failed",
     error: success ? null : errorMsg,
-    to_address: to,
+    to_address: finalTo,
     from_address: fromAddress,
     meta: safeJson(meta),
-    raw_payload: safeJson(sendResult?.raw), // provider response, if any
+    raw_payload: safeJson(sendResult?.raw),
   };
 
   const { data: msgRow, error: msgErr } = await supabase
@@ -192,7 +206,6 @@ export default async function handler(req, res) {
   }
 
   if (msgErr) {
-    // We may have successfully sent but failed to persist; surface clearly.
     return res.status(500).json({
       error: "Send completed but failed to persist message",
       provider,
@@ -201,7 +214,6 @@ export default async function handler(req, res) {
     });
   }
 
-  // ---- Response ----
   return res.status(200).json({
     success,
     status: success ? "sent" : "failed",
