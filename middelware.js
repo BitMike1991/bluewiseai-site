@@ -1,32 +1,15 @@
-// /middleware.js
 import { NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
-function unauthorized() {
-  return new NextResponse("Unauthorized", {
-    status: 401,
-    headers: {
-      "WWW-Authenticate": 'Basic realm="BlueWise Platform"',
-    },
-  });
-}
+export async function middleware(req) {
+  let res = NextResponse.next();
 
-function timingSafeEqual(a, b) {
-  // Basic constant-time compare for short strings
-  const aa = String(a || "");
-  const bb = String(b || "");
-  if (aa.length !== bb.length) return false;
-  let out = 0;
-  for (let i = 0; i < aa.length; i++) out |= aa.charCodeAt(i) ^ bb.charCodeAt(i);
-  return out === 0;
-}
+  const pathname = req.nextUrl.pathname;
 
-export function middleware(req) {
-  const { pathname } = req.nextUrl;
+  // Allow login page
+  if (pathname === "/platform/login") return res;
 
-  // Allow public marketing + contact form
-  if (pathname === "/api/contact") return NextResponse.next();
-
-  // Gate all platform pages + sensitive APIs
+  // Protect platform + sensitive APIs
   const isProtected =
     pathname.startsWith("/platform") ||
     pathname.startsWith("/api/ask") ||
@@ -34,40 +17,43 @@ export function middleware(req) {
     pathname.startsWith("/api/inbox") ||
     pathname.startsWith("/api/leads") ||
     pathname.startsWith("/api/overview") ||
-    pathname.startsWith("/api/tasks") || // if you have it
-    pathname.startsWith("/api/followups"); // if you have it
+    pathname.startsWith("/api/tasks") ||
+    pathname.startsWith("/api/followups");
 
-  if (!isProtected) return NextResponse.next();
+  if (!isProtected) return res;
 
-  const user = process.env.BASIC_AUTH_USER;
-  const pass = process.env.BASIC_AUTH_PASS;
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        get(name) {
+          return req.cookies.get(name)?.value;
+        },
+        set(name, value, options) {
+          res.cookies.set({ name, value, ...options });
+        },
+        remove(name, options) {
+          res.cookies.set({ name, value: "", ...options });
+        },
+      },
+    }
+  );
 
-  // If env vars missing, fail CLOSED (safer)
-  if (!user || !pass) return unauthorized();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  const auth = req.headers.get("authorization");
-  if (!auth || !auth.startsWith("Basic ")) return unauthorized();
-
-  let decoded = "";
-  try {
-    decoded = atob(auth.slice("Basic ".length));
-  } catch {
-    return unauthorized();
+  if (!session) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/platform/login";
+    url.searchParams.set("next", pathname);
+    return NextResponse.redirect(url);
   }
 
-  const sep = decoded.indexOf(":");
-  if (sep < 0) return unauthorized();
-
-  const u = decoded.slice(0, sep);
-  const p = decoded.slice(sep + 1);
-
-  const ok = timingSafeEqual(u, user) && timingSafeEqual(p, pass);
-  if (!ok) return unauthorized();
-
-  return NextResponse.next();
+  return res;
 }
 
-// Only run middleware where it matters (faster + safer)
 export const config = {
   matcher: [
     "/platform/:path*",
@@ -78,6 +64,5 @@ export const config = {
     "/api/overview/:path*",
     "/api/tasks/:path*",
     "/api/followups/:path*",
-    "/api/contact", // included so the "allow" rule above can short-circuit safely
   ],
 };
