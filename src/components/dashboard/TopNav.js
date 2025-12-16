@@ -1,7 +1,7 @@
 // src/components/dashboard/TopNav.js
 import Link from "next/link";
 
-export default function TopNav() {
+export default function TopNav({ onLogout }) {
   return (
     <header className="flex items-center justify-between border-b border-slate-800 bg-slate-950/80 px-6 py-3 backdrop-blur">
       <div className="flex items-center gap-3">
@@ -20,12 +20,22 @@ export default function TopNav() {
         <span className="hidden sm:inline">
           Last synced: <span className="text-slate-200">just now</span>
         </span>
+
         <Link
           href="/"
           className="rounded-lg border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-blue-500 hover:text-blue-300"
         >
           Back to site
         </Link>
+
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="rounded-lg border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-red-500 hover:text-red-300"
+          >
+            Logout
+          </button>
+        )}
       </div>
     </header>
   );

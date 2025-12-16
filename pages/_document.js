@@ -14,32 +14,6 @@ export default function Document() {
           rel="stylesheet"
         />
 
-        {/* ✅ Tailwind CDN */}
-        <script src="https://cdn.tailwindcss.com" defer></script>
-
-        {/* ✅ Tailwind theme override */}
-        <script
-          defer
-          dangerouslySetInnerHTML={{
-            __html: `
-              tailwind.config = {
-                theme: {
-                  extend: {
-                    colors: {
-                      primary: '#2563EB',
-                      dark: '#2E3A59',
-                      midgray: '#4A5568',
-                    },
-                    fontFamily: {
-                      heading: ['Poppins', 'sans-serif'],
-                      body: ['Open Sans', 'sans-serif'],
-                    },
-                  },
-                },
-              }
-            `,
-          }}
-        />
 
         {/* ✅ Custom styling including background image */}
         <style>{`
