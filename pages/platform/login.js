@@ -1,4 +1,3 @@
-// pages/platform/login.js
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "../../lib/supabaseClient";
@@ -39,6 +38,8 @@ export default function PlatformLogin() {
     setMsg(null);
 
     try {
+      if (!email) throw new Error("Email is required.");
+
       if (mode === "magic") {
         const { error } = await supabase.auth.signInWithOtp({
           email,
@@ -49,20 +50,20 @@ export default function PlatformLogin() {
         return;
       }
 
-      // Password login (client)
+      // 1) Client login (works, but client-only)
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
 
-      // Bridge: write auth cookies server-side so middleware can see the session
       const session = data?.session;
       if (!session?.access_token || !session?.refresh_token) {
-        throw new Error("No session tokens returned from Supabase.");
+        throw new Error("No session returned from Supabase.");
       }
 
-      const r = await fetch("/api/auth/session", {
+      // 2) IMPORTANT: send tokens to server so it can set HttpOnly cookies (middleware can read them)
+      const resp = await fetch("/api/auth/set-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -71,11 +72,12 @@ export default function PlatformLogin() {
         }),
       });
 
-      if (!r.ok) {
-        const j = await r.json().catch(() => ({}));
-        throw new Error(j?.error || "Failed to establish session cookies.");
+      if (!resp.ok) {
+        const payload = await resp.json().catch(() => ({}));
+        throw new Error(payload?.error || "Failed to establish session cookies.");
       }
 
+      // 3) Now middleware will see cookies -> redirect will work
       router.replace(nextPath);
     } catch (err) {
       setMsg(err?.message || "Login failed.");
@@ -172,8 +174,8 @@ export default function PlatformLogin() {
         </form>
 
         <div className="mt-5 text-xs text-white/50">
-          If you don’t have credentials yet, you’ll need an invite (we’ll
-          automate this in onboarding).
+          If you don’t have credentials yet, you’ll need an invite (we’ll automate
+          this in onboarding).
         </div>
       </div>
     </div>
