@@ -157,7 +157,7 @@ export default function Navbar() {
 
         {/* Nav items */}
         <nav className="flex items-center flex-wrap gap-4 sm:gap-7 text-sm sm:text-base font-medium uppercase tracking-wide">
-          {/* Regular nav items (no Resources) */}
+          {/* Regular nav items */}
           {navItems.map(({ href, label, isCTA }) => {
             const isActive = pathname === href || pathname === `${href}/`;
 
@@ -190,7 +190,6 @@ export default function Navbar() {
               <span className="text-xs">▾</span>
             </button>
 
-            {/* Dropdown menu */}
             <div
               className={`
                 invisible opacity-0 group-hover:visible group-hover:opacity-100
@@ -204,7 +203,6 @@ export default function Navbar() {
               `}
             >
               <div className="py-2">
-                {/* Articles / Pillars */}
                 <Link
                   href={isFr ? "/fr/pillars" : "/pillars"}
                   className={`
@@ -219,7 +217,6 @@ export default function Navbar() {
                   {isFr ? "Articles & guides" : "Articles & guides"}
                 </Link>
 
-                {/* Lead Rescue Form */}
                 <Link
                   href={isFr ? "/fr/onboarding-rescue" : "/onboarding-rescue"}
                   className={`
@@ -236,7 +233,6 @@ export default function Navbar() {
                     : "Lead Rescue System form"}
                 </Link>
 
-                {/* Divider */}
                 <div
                   className={
                     isDarkPage
@@ -245,7 +241,6 @@ export default function Navbar() {
                   }
                 />
 
-                {/* Offers sub-section */}
                 <p
                   className={`
                     px-4 pt-1 pb-1 text-[11px] tracking-[0.18em] uppercase
@@ -277,6 +272,22 @@ export default function Navbar() {
               </div>
             </div>
           </div>
+
+          {/* ⭐ INSERTED PLATFORM BUTTON ⭐ */}
+          <Link
+            href="/platform/overview"
+            className={`
+              rounded-full border px-4 py-2 text-xs sm:text-sm font-semibold tracking-[0.18em]
+              ${
+                isDarkPage
+                  ? "border-blue-500/70 text-blue-200 hover:bg-blue-600/20 hover:text-blue-100"
+                  : "border-blue-600 text-blue-700 hover:bg-blue-50"
+              }
+            `}
+          >
+            {isFr ? "Plateforme" : "Platform"}
+          </Link>
+          {/* ⭐ END INSERT ⭐ */}
 
           {/* Language switch */}
           <Link

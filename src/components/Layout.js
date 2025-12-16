@@ -29,6 +29,14 @@ export default function Layout({ children }) {
 
   const isDarkPage = isMainDarkPage || isPillarsPage;
 
+    // 🔵 NEW: platform/dashboard pages use their own layout
+  const isPlatformPage = pathname.startsWith("/platform");
+
+  if (isPlatformPage) {
+    // Dashboard pages (we’ll wrap them in DashboardLayout directly)
+    return <>{children}</>;
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       <Navbar />
