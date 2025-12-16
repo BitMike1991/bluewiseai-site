@@ -1,3 +1,4 @@
+// pages/platform/login.js
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "../../lib/supabaseClient";
@@ -48,11 +49,32 @@ export default function PlatformLogin() {
         return;
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
+      // Password login (client)
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
+
+      // Bridge: write auth cookies server-side so middleware can see the session
+      const session = data?.session;
+      if (!session?.access_token || !session?.refresh_token) {
+        throw new Error("No session tokens returned from Supabase.");
+      }
+
+      const r = await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token,
+        }),
+      });
+
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j?.error || "Failed to establish session cookies.");
+      }
 
       router.replace(nextPath);
     } catch (err) {
@@ -150,8 +172,8 @@ export default function PlatformLogin() {
         </form>
 
         <div className="mt-5 text-xs text-white/50">
-          If you don’t have credentials yet, you’ll need an invite (we’ll automate
-          this in onboarding).
+          If you don’t have credentials yet, you’ll need an invite (we’ll
+          automate this in onboarding).
         </div>
       </div>
     </div>
