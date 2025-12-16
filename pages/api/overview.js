@@ -1,24 +1,19 @@
 // pages/api/overview.js
-import { createSupabaseServerClient } from "../../lib/supabaseServer";
-
-function getCustomerIdFromRequest(req) {
-  // 🔴 TEMP: hardcoded for YOUR own tenant while we’re wiring Auth.
-  return 1;
-}
+import { getAuthContext } from "../../lib/supabaseServer";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const customerId = getCustomerIdFromRequest(req);
-  if (!customerId) {
-    return res
-      .status(401)
-      .json({ error: "Not authenticated / no customer_id" });
-  }
+  const { supabase, customerId, user } = await getAuthContext(req, res);
 
-  const supabase = createSupabaseServerClient(req, res);
+  if (!user) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+  if (!customerId) {
+    return res.status(403).json({ error: "No customer mapping for this user" });
+  }
 
   try {
     const now = new Date();
@@ -42,7 +37,6 @@ export default async function handler(req, res) {
 
     //
     // 2) Tasks (followups): open + due today + overdue
-    // "Open" = anything NOT completed/cancelled
     //
     const { data: openTasksRows, error: openTasksError } = await supabase
       .from("followups")
@@ -108,10 +102,9 @@ export default async function handler(req, res) {
     if (recentLeadError) throw recentLeadError;
 
     const recentLeads = (recentLeadRows || []).map((l) => ({
-      id: l.id, // canonical lead.id for /platform/leads/[id]
+      id: l.id,
       name: l.name || l.email || l.phone || "Unknown lead",
       phone: l.phone || null,
-      // city not stored on leads yet – keep shape for UI
       city: null,
       source: l.source,
       status: l.status,
@@ -119,23 +112,23 @@ export default async function handler(req, res) {
     }));
 
     //
-    // 6) Activity from inbox_lead_events (calls, auto-SMS, etc.)
+    // 6) Activity from inbox_lead_events
     //
     const { data: eventRows, error: activityError } = await supabase
       .from("inbox_lead_events")
       .select("id, lead_id, event_type, created_at, payload")
       .eq("customer_id", customerId)
       .order("created_at", { ascending: false })
-      .limit(50); // we’ll merge & trim later
+      .limit(50);
 
     if (activityError) throw activityError;
 
     //
-    // 7) Activity from messages (email/SMS/etc.) – canonical leads
+    // 7) Activity from messages
     //
     const { data: messageRows, error: messageError } = await supabase
       .from("messages")
-      .select("*") // keep flexible; schema may evolve
+      .select("*")
       .eq("customer_id", customerId)
       .order("created_at", { ascending: false })
       .limit(50);
@@ -143,15 +136,10 @@ export default async function handler(req, res) {
     if (messageError) throw messageError;
 
     //
-    // 8) Build map: inbox_leads.id -> canonical leads.id
-    //    so events (which point to inbox_leads) can link to /platform/leads/[id]
+    // 8) Map: inbox_leads.id -> canonical leads.id
     //
     const inboxLeadIds = Array.from(
-      new Set(
-        (eventRows || [])
-          .map((row) => row.lead_id)
-          .filter((id) => id != null)
-      )
+      new Set((eventRows || []).map((row) => row.lead_id).filter((id) => id != null))
     );
 
     const inboxToCanonical = {};
@@ -165,37 +153,29 @@ export default async function handler(req, res) {
         console.error("[api/overview] inbox map error:", inboxMapError);
       } else {
         for (const r of inboxMapRows || []) {
-          if (r.id != null) {
-            inboxToCanonical[r.id] = r.lead_id || null;
-          }
+          if (r.id != null) inboxToCanonical[r.id] = r.lead_id || null;
         }
       }
     }
 
     //
-    // 9) Normalize inbox_lead_events → activity items (calls, auto-SMS)
+    // 9) Normalize inbox_lead_events → activity
     //
     const activityFromEvents = (eventRows || []).map((row) => {
       let label = row.event_type;
 
-      if (row.event_type === "missed_call") {
-        label = "Missed call";
-      } else if (row.event_type === "sms_sent_auto_reply") {
-        label = "AI sent SMS auto-reply";
-      } else if (row.event_type === "lead_created") {
-        label = "New lead created";
-      }
+      if (row.event_type === "missed_call") label = "Missed call";
+      else if (row.event_type === "sms_sent_auto_reply") label = "AI sent SMS auto-reply";
+      else if (row.event_type === "lead_created") label = "New lead created";
 
       const inboxLeadId = row.lead_id || null;
       const canonicalLeadId =
-        inboxLeadId && inboxToCanonical[inboxLeadId]
-          ? inboxToCanonical[inboxLeadId]
-          : null;
+        inboxLeadId && inboxToCanonical[inboxLeadId] ? inboxToCanonical[inboxLeadId] : null;
 
       return {
         id: `evt-${row.id}`,
         inboxLeadId,
-        leadId: canonicalLeadId, // canonical lead for /platform/leads/[id]
+        leadId: canonicalLeadId,
         type: row.event_type,
         label,
         timestamp: row.created_at,
@@ -204,7 +184,7 @@ export default async function handler(req, res) {
     });
 
     //
-    // 10) Normalize messages → activity items (email/SMS linked directly to leads)
+    // 10) Normalize messages → activity
     //
     const activityFromMessages = (messageRows || []).map((row) => {
       const kind = row.kind || row.channel || "message";
@@ -212,33 +192,22 @@ export default async function handler(req, res) {
 
       let baseLabel;
       if (kind === "sms" || kind === "text") {
-        baseLabel =
-          direction === "outbound" ? "You sent an SMS" : "Lead sent an SMS";
+        baseLabel = direction === "outbound" ? "You sent an SMS" : "Lead sent an SMS";
       } else if (kind === "email") {
-        baseLabel =
-          direction === "outbound" ? "You sent an email" : "Lead sent an email";
+        baseLabel = direction === "outbound" ? "You sent an email" : "Lead sent an email";
       } else {
-        baseLabel =
-          direction === "outbound"
-            ? "You sent a message"
-            : "Lead sent a message";
+        baseLabel = direction === "outbound" ? "You sent a message" : "Lead sent a message";
       }
 
       const preview =
-        row.snippet ||
-        row.subject ||
-        row.preview ||
-        row.body_preview ||
-        null;
+        row.snippet || row.subject || row.preview || row.body_preview || null;
 
-      const label = preview
-        ? `${baseLabel} – ${String(preview).slice(0, 80)}`
-        : baseLabel;
+      const label = preview ? `${baseLabel} – ${String(preview).slice(0, 80)}` : baseLabel;
 
       return {
         id: `msg-${row.id}`,
         inboxLeadId: null,
-        leadId: row.lead_id || null, // messages already point to canonical leads
+        leadId: row.lead_id || null,
         type: `message.${kind}`,
         label,
         timestamp: row.created_at,
@@ -251,39 +220,35 @@ export default async function handler(req, res) {
     });
 
     //
-    // 11) Merge + sort activity, then trim to latest 30
+    // 11) Merge + sort + trim
     //
     const combinedActivity = [...activityFromEvents, ...activityFromMessages];
 
     combinedActivity.sort((a, b) => {
       const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
       const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-      return tb - ta; // newest first
+      return tb - ta;
     });
 
     const activity = combinedActivity.slice(0, 30);
 
     //
-    // 12) Build final response
+    // 12) Response
     //
-    const response = {
+    return res.status(200).json({
       kpis: {
-        newLeadsThisWeek, // canonical leads
-        conversionRate: null, // TODO: compute from won vs total
+        newLeadsThisWeek,
+        conversionRate: null,
         openTasks,
         tasksDueToday,
         tasksOverdue,
-        pipelineValue: null, // TODO: sum of deal amounts once we add that
+        pipelineValue: null,
         missedCallsThisWeek,
         aiRepliesThisWeek,
       },
-      // Recent LEADS card uses canonical leads only
       recentLeads,
-      // Recent Activity card uses BOTH inbox_lead_events + messages
       activity,
-    };
-
-    return res.status(200).json(response);
+    });
   } catch (err) {
     console.error("[api/overview] Error:", err);
     return res.status(500).json({ error: "Internal server error" });

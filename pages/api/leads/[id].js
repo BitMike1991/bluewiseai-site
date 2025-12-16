@@ -1,31 +1,19 @@
 // pages/api/leads/[id].js
-
-import {
-  getSupabaseServerClient,
-  createSupabaseServerClient,
-} from '../../../lib/supabaseServer';
-
-// TODO: later: derive from auth / session
-function getCustomerIdFromRequest(req) {
-  return 1;
-}
+import { getAuthContext } from "../../../lib/supabaseServer";
 
 // --- helpers to clean HTML emails into readable text ---
-
 function decodeHtmlEntities(str) {
-  if (!str) return '';
+  if (!str) return "";
 
   let out = str;
 
-  // Named entities we care about most
   out = out
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'");
 
-  // Decimal numeric entities: &#233;
   out = out.replace(/&#(\d+);/g, (_match, dec) => {
     const code = parseInt(dec, 10);
     if (!Number.isFinite(code)) return _match;
@@ -36,7 +24,6 @@ function decodeHtmlEntities(str) {
     }
   });
 
-  // Hex numeric entities: &#xE9;
   out = out.replace(/&#x([0-9a-fA-F]+);/g, (_match, hex) => {
     const code = parseInt(hex, 16);
     if (!Number.isFinite(code)) return _match;
@@ -51,60 +38,45 @@ function decodeHtmlEntities(str) {
 }
 
 function stripHtmlToText(html) {
-  if (!html) return '';
+  if (!html) return "";
 
-  // 1) Insert line breaks after common block-level tags
-  let text = html.replace(/<\/(p|div|br|tr|li|h[1-6])>/gi, '\n');
-
-  // 2) Remove all remaining tags
-  text = text.replace(/<[^>]+>/g, '');
-
-  // 3) Decode HTML entities (e.g. &lt;, &#39;, &#233;)
+  let text = html.replace(/<\/(p|div|br|tr|li|h[1-6])>/gi, "\n");
+  text = text.replace(/<[^>]+>/g, "");
   text = decodeHtmlEntities(text);
 
-  // 4) Normalize whitespace / line breaks a bit
   text = text
-    .replace(/\r\n/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\r\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]{2,}/g, " ")
     .trim();
 
   return text;
 }
-
 // ---------------------------------------------------
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    res.setHeader('Allow', ['GET']);
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "GET") {
+    res.setHeader("Allow", ["GET"]);
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const customerId = getCustomerIdFromRequest(req);
-  if (!customerId) {
-    return res.status(401).json({ error: 'Not authenticated' });
-  }
+  const { supabase, customerId, user } = await getAuthContext(req, res);
+
+  if (!user) return res.status(401).json({ error: "Not authenticated" });
+  if (!customerId) return res.status(403).json({ error: "No customer mapping for this user" });
 
   const { id } = req.query;
   const leadId = Number(id);
   if (!leadId || Number.isNaN(leadId)) {
-    return res.status(400).json({ error: 'Invalid lead id' });
+    return res.status(400).json({ error: "Invalid lead id" });
   }
-
-  const supabase =
-    typeof getSupabaseServerClient === 'function'
-      ? getSupabaseServerClient()
-      : createSupabaseServerClient();
 
   try {
     //
-    // 1) Fetch canonical LEAD (from `leads`)
+    // 1) Fetch canonical LEAD
     //
-    const {
-      data: leadRow,
-      error: leadError,
-    } = await supabase
-      .from('leads')
+    const { data: leadRow, error: leadError } = await supabase
+      .from("leads")
       .select(
         `
         id,
@@ -128,17 +100,17 @@ export default async function handler(req, res) {
         updated_at
       `
       )
-      .eq('customer_id', customerId)
-      .eq('id', leadId)
+      .eq("customer_id", customerId)
+      .eq("id", leadId)
       .maybeSingle();
 
     if (leadError) {
-      console.error('[api/leads/[id]] leadError', leadError);
-      return res.status(500).json({ error: 'Failed to load lead' });
+      console.error("[api/leads/[id]] leadError", leadError);
+      return res.status(500).json({ error: "Failed to load lead" });
     }
 
     if (!leadRow) {
-      return res.status(404).json({ error: 'Lead not found' });
+      return res.status(404).json({ error: "Lead not found" });
     }
 
     const lead = {
@@ -155,8 +127,8 @@ export default async function handler(req, res) {
       phone: leadRow.phone,
       email: leadRow.email,
       city: leadRow.city,
-      status: leadRow.status || 'new',
-      source: leadRow.source || 'unknown',
+      status: leadRow.status || "new",
+      source: leadRow.source || "unknown",
       language: leadRow.language,
       first_seen_at: leadRow.first_seen_at,
       last_message_at: leadRow.last_message_at,
@@ -169,39 +141,28 @@ export default async function handler(req, res) {
     };
 
     //
-    // 2) Fetch PROFILE (from `lead_profiles`) if present
+    // 2) Fetch PROFILE
     //
     let profile = null;
     if (lead.profile_id) {
-      const {
-        data: profileRow,
-        error: profileError,
-      } = await supabase
-        .from('lead_profiles')
-        .select('*')
-        .eq('customer_id', customerId)
-        .eq('id', lead.profile_id)
+      const { data: profileRow, error: profileError } = await supabase
+        .from("lead_profiles")
+        .select("*")
+        .eq("customer_id", customerId)
+        .eq("id", lead.profile_id)
         .maybeSingle();
 
-      if (profileError) {
-        console.error('[api/leads/[id]] profileError', profileError);
-      }
-
-      if (profileRow) {
-        profile = profileRow;
-      }
+      if (profileError) console.error("[api/leads/[id]] profileError", profileError);
+      if (profileRow) profile = profileRow;
     }
 
     //
-    // 3) Fetch IDENTITIES (from `lead_identities`) for this profile
+    // 3) Fetch IDENTITIES
     //
     let identities = [];
     if (lead.profile_id) {
-      const {
-        data: identityRows,
-        error: identitiesError,
-      } = await supabase
-        .from('lead_identities')
+      const { data: identityRows, error: identitiesError } = await supabase
+        .from("lead_identities")
         .select(
           `
           id,
@@ -217,25 +178,20 @@ export default async function handler(req, res) {
           created_at
         `
         )
-        .eq('customer_id', customerId)
-        .eq('profile_id', lead.profile_id)
-        .order('is_primary', { ascending: false });
+        .eq("customer_id", customerId)
+        .eq("profile_id", lead.profile_id)
+        .order("is_primary", { ascending: false });
 
-      if (identitiesError) {
-        console.error('[api/leads/[id]] identitiesError', identitiesError);
-      }
-
+      if (identitiesError) console.error("[api/leads/[id]] identitiesError", identitiesError);
       identities = identityRows || [];
     }
 
     //
     // 4) Fetch primary INBOX_LEAD thread(s) for this lead
+    // NOTE: keep String(customerId) behavior as you already had it here
     //
-    const {
-      data: inboxRows,
-      error: inboxError,
-    } = await supabase
-      .from('inbox_leads')
+    const { data: inboxRows, error: inboxError } = await supabase
+      .from("inbox_leads")
       .select(
         `
         id,
@@ -258,28 +214,23 @@ export default async function handler(req, res) {
         updated_at
       `
       )
-      .eq('customer_id', String(customerId))
-      .eq('lead_id', leadId)
-      .order('last_contact_at', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false });
+      .eq("customer_id", String(customerId))
+      .eq("lead_id", leadId)
+      .order("last_contact_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false });
 
-    if (inboxError) {
-      console.error('[api/leads/[id]] inboxError', inboxError);
-    }
+    if (inboxError) console.error("[api/leads/[id]] inboxError", inboxError);
 
     const inbox_leads = inboxRows || [];
     const primaryInboxLead = inbox_leads.length > 0 ? inbox_leads[0] : null;
 
     //
-    // 5) Fetch EVENTS (from `inbox_lead_events`) for the primary inbox_lead
+    // 5) Fetch EVENTS for primary inbox_lead
     //
     let events = [];
     if (primaryInboxLead) {
-      const {
-        data: eventRows,
-        error: eventsError,
-      } = await supabase
-        .from('inbox_lead_events')
+      const { data: eventRows, error: eventsError } = await supabase
+        .from("inbox_lead_events")
         .select(
           `
           id,
@@ -291,13 +242,11 @@ export default async function handler(req, res) {
           created_at
         `
         )
-        .eq('customer_id', customerId)
-        .eq('lead_id', primaryInboxLead.id)
-        .order('created_at', { ascending: true });
+        .eq("customer_id", customerId)
+        .eq("lead_id", primaryInboxLead.id)
+        .order("created_at", { ascending: true });
 
-      if (eventsError) {
-        console.error('[api/leads/[id]] eventsError', eventsError);
-      }
+      if (eventsError) console.error("[api/leads/[id]] eventsError", eventsError);
 
       events =
         (eventRows || []).map((e) => ({
@@ -311,16 +260,14 @@ export default async function handler(req, res) {
     }
 
     //
-    // 6) Fetch MESSAGES:
-    //    - email-style from `messages`
-    //    - sms-style from `inbox_messages`
+    // 6) Fetch MESSAGES
     //
     const [
       { data: emailMessageRows, error: emailMessagesError },
       { data: inboxMessageRows, error: inboxMessagesError },
     ] = await Promise.all([
       supabase
-        .from('messages')
+        .from("messages")
         .select(
           `
           id,
@@ -332,10 +279,10 @@ export default async function handler(req, res) {
           created_at
         `
         )
-        .eq('lead_id', leadId)
-        .order('created_at', { ascending: true }),
+        .eq("lead_id", leadId)
+        .order("created_at", { ascending: true }),
       supabase
-        .from('inbox_messages')
+        .from("inbox_messages")
         .select(
           `
           id,
@@ -347,32 +294,22 @@ export default async function handler(req, res) {
           created_at
         `
         )
-        .eq('lead_id', leadId)
-        .order('created_at', { ascending: true }),
+        .eq("lead_id", leadId)
+        .order("created_at", { ascending: true }),
     ]);
 
-    if (emailMessagesError) {
-      console.error(
-        '[api/leads/[id]] emailMessagesError',
-        emailMessagesError
-      );
-    }
-    if (inboxMessagesError) {
-      console.error(
-        '[api/leads/[id]] inboxMessagesError',
-        inboxMessagesError
-      );
-    }
+    if (emailMessagesError) console.error("[api/leads/[id]] emailMessagesError", emailMessagesError);
+    if (inboxMessagesError) console.error("[api/leads/[id]] inboxMessagesError", inboxMessagesError);
 
     const emailMessages =
       (emailMessageRows || []).map((m) => ({
         id: m.id,
         lead_id: m.lead_id,
-        channel: 'email',
-        direction: m.direction || 'outbound',
-        message_type: m.message_type || 'email',
+        channel: "email",
+        direction: m.direction || "outbound",
+        message_type: m.message_type || "email",
         subject: m.subject || null,
-        body_text: stripHtmlToText(m.body || ''),
+        body_text: stripHtmlToText(m.body || ""),
         body_html: m.body || null,
         created_at: m.created_at,
       })) || [];
@@ -381,7 +318,7 @@ export default async function handler(req, res) {
       (inboxMessageRows || []).map((m) => ({
         id: m.id,
         lead_id: m.lead_id,
-        channel: 'sms',
+        channel: "sms",
         direction: m.direction,
         message_type: m.message_type,
         body_text: m.body,
@@ -397,14 +334,10 @@ export default async function handler(req, res) {
     });
 
     //
-    // 7) Fetch FOLLOWUPS / tasks associated with this lead
+    // 7) Fetch FOLLOWUPS
     //
-    let followups = [];
-    const {
-      data: followupRows,
-      error: followupsError,
-    } = await supabase
-      .from('followups')
+    const { data: followupRows, error: followupsError } = await supabase
+      .from("followups")
       .select(
         `
         id,
@@ -418,20 +351,18 @@ export default async function handler(req, res) {
         updated_at
       `
       )
-      .eq('customer_id', customerId)
-      .eq('lead_id', leadId)
-      .order('due_at', { ascending: true, nullsFirst: false });
+      .eq("customer_id", customerId)
+      .eq("lead_id", leadId)
+      .order("due_at", { ascending: true, nullsFirst: false });
 
-    if (followupsError) {
-      console.error('[api/leads/[id]] followupsError', followupsError);
-    }
+    if (followupsError) console.error("[api/leads/[id]] followupsError", followupsError);
 
-    followups =
+    const followups =
       (followupRows || []).map((f) => ({
         id: f.id,
         customer_id: f.customer_id,
         lead_id: f.lead_id,
-        status: f.status || 'open',
+        status: f.status || "open",
         followup_type: f.followup_type || null,
         sequence_stage: f.sequence_stage,
         due_at: f.due_at,
@@ -453,7 +384,7 @@ export default async function handler(req, res) {
       followups,
     });
   } catch (err) {
-    console.error('[api/leads/[id]] unexpected error', err);
-    return res.status(500).json({ error: 'Failed to load lead detail' });
+    console.error("[api/leads/[id]] unexpected error", err);
+    return res.status(500).json({ error: "Failed to load lead detail" });
   }
 }
