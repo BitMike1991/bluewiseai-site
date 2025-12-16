@@ -1,12 +1,12 @@
+// middleware.js
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(req) {
   let res = NextResponse.next();
+  const { pathname, search } = req.nextUrl;
 
-  const pathname = req.nextUrl.pathname;
-
-  // Allow login page
+  // Allow login page itself
   if (pathname === "/platform/login") return res;
 
   // Protect platform + sensitive APIs
@@ -40,14 +40,16 @@ export async function middleware(req) {
     }
   );
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const { data, error } = await supabase.auth.getSession();
 
-  if (!session) {
+  // If anything goes wrong, fail closed (redirect to login)
+  const session = data?.session || null;
+
+  if (!session || error) {
     const url = req.nextUrl.clone();
     url.pathname = "/platform/login";
-    url.searchParams.set("next", pathname);
+    // preserve full path, including querystring
+    url.searchParams.set("next", `${pathname}${search || ""}`);
     return NextResponse.redirect(url);
   }
 
