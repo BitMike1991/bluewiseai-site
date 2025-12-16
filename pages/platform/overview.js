@@ -1,4 +1,5 @@
 // pages/platform/overview.js
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import DashboardLayout from "../../src/components/dashboard/DashboardLayout";
 import StatCard from "../../src/components/dashboard/StatCard";
@@ -171,7 +172,10 @@ function normalizeAskResultForChat(askResult) {
       // de-dupe by body+subject
       .filter((v, idx, arr) => {
         const key = `${v.subject || ""}|||${v.body || ""}`;
-        return arr.findIndex((x) => `${x.subject || ""}|||${x.body || ""}` === key) === idx;
+        return (
+          arr.findIndex((x) => `${x.subject || ""}|||${x.body || ""}` === key) ===
+          idx
+        );
       });
 
     return {
@@ -263,10 +267,11 @@ function AssistantCard({
   onSendDraft, // ✅ Phase 4
   mounted,
 }) {
-  if (!payload) return null;
-
+  // ✅ FIX: Hooks must be called unconditionally (build was failing)
   const [sendingKey, setSendingKey] = useState(null); // e.g. "dr-0"
   const [sendNotice, setSendNotice] = useState(null); // { type: 'ok'|'err', text }
+
+  if (!payload) return null;
 
   async function copyToClipboard(text) {
     if (!text) return;
@@ -301,7 +306,10 @@ function AssistantCard({
     }
 
     if (channel === "email" && !variant?.subject) {
-      setSendNotice({ type: "err", text: "Email subject missing. Re-draft and try again." });
+      setSendNotice({
+        type: "err",
+        text: "Email subject missing. Re-draft and try again.",
+      });
       return;
     }
 
@@ -347,7 +355,9 @@ function AssistantCard({
 
         {(payload.nextSteps?.length || 0) > 0 ? (
           <div className="mt-3">
-            <p className="text-[11px] font-semibold text-slate-200">Next steps</p>
+            <p className="text-[11px] font-semibold text-slate-200">
+              Next steps
+            </p>
             <ul className="mt-1 list-disc pl-4 text-[12px] text-slate-200 space-y-1">
               {payload.nextSteps.map((s, i) => (
                 <li key={`ns-${i}`}>{s}</li>
@@ -358,7 +368,9 @@ function AssistantCard({
 
         {(payload.openQuestions?.length || 0) > 0 ? (
           <div className="mt-3">
-            <p className="text-[11px] font-semibold text-slate-200">Open questions</p>
+            <p className="text-[11px] font-semibold text-slate-200">
+              Open questions
+            </p>
             <ul className="mt-1 list-disc pl-4 text-[12px] text-slate-200 space-y-1">
               {payload.openQuestions.map((s, i) => (
                 <li key={`oq-${i}`}>{s}</li>
@@ -371,7 +383,9 @@ function AssistantCard({
         {payload.draftReply ? (
           <div className="mt-4 rounded-2xl border border-slate-800/80 bg-slate-950/40 p-3">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-[11px] font-semibold text-slate-200">Draft reply</p>
+              <p className="text-[11px] font-semibold text-slate-200">
+                Draft reply
+              </p>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -395,7 +409,8 @@ function AssistantCard({
             </p>
 
             <p className="mt-2 text-[11px] text-slate-500">
-              Tip: Click “Use” to drop this into the input box, then edit and send.
+              Tip: Click “Use” to drop this into the input box, then edit and
+              send.
             </p>
           </div>
         ) : null}
@@ -403,12 +418,14 @@ function AssistantCard({
         <div className="mt-3 flex items-center justify-between gap-3">
           {payload.leadId ? (
             <div className="flex items-center gap-2">
-              <a
+              {/* ✅ FIX: Use Link instead of <a> (Next ESLint build blocker) */}
+              <Link
                 href={`/platform/leads/${payload.leadId}`}
                 className="inline-flex items-center rounded-xl border border-sky-500/60 px-3 py-1.5 text-[12px] font-semibold text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10"
               >
                 View lead
-              </a>
+              </Link>
+
               <button
                 type="button"
                 onClick={() =>
@@ -426,7 +443,9 @@ function AssistantCard({
             <span className="text-[11px] text-slate-500">No lead link</span>
           )}
 
-          <span className="text-[11px] text-slate-500">{payload.metaLine ? payload.metaLine : ""}</span>
+          <span className="text-[11px] text-slate-500">
+            {payload.metaLine ? payload.metaLine : ""}
+          </span>
         </div>
 
         {payload.leadId && activeLeadId === payload.leadId ? (
@@ -451,7 +470,10 @@ function AssistantCard({
             <span className="text-slate-500"> · to {payload.suggestedSendTo}</span>
           ) : null}
           {payload.scheduledForLocal ? (
-            <span className="text-slate-500"> · follow-up {payload.scheduledForLocal}</span>
+            <span className="text-slate-500">
+              {" "}
+              · follow-up {payload.scheduledForLocal}
+            </span>
           ) : null}
         </p>
 
@@ -561,12 +583,14 @@ function AssistantCard({
         <div className="mt-3 flex items-center justify-between gap-3">
           {payload.leadId ? (
             <div className="flex items-center gap-2">
-              <a
+              {/* ✅ FIX: Use Link instead of <a> (Next ESLint build blocker) */}
+              <Link
                 href={`/platform/leads/${payload.leadId}`}
                 className="inline-flex items-center rounded-xl border border-sky-500/60 px-3 py-1.5 text-[12px] font-semibold text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10"
               >
                 View lead
-              </a>
+              </Link>
+
               <button
                 type="button"
                 onClick={() =>
@@ -584,7 +608,9 @@ function AssistantCard({
             <span className="text-[11px] text-slate-500">No lead link</span>
           )}
 
-          <span className="text-[11px] text-slate-500">{payload.metaLine ? payload.metaLine : ""}</span>
+          <span className="text-[11px] text-slate-500">
+            {payload.metaLine ? payload.metaLine : ""}
+          </span>
         </div>
 
         {payload.leadId && activeLeadId === payload.leadId ? (
@@ -629,7 +655,9 @@ function AssistantCard({
                       <p className="truncate text-sm text-slate-100">
                         {it.name}{" "}
                         {isActive ? (
-                          <span className="ml-2 text-[11px] text-sky-200">(active)</span>
+                          <span className="ml-2 text-[11px] text-sky-200">
+                            (active)
+                          </span>
                         ) : null}
                       </p>
                       <p className="truncate text-[11px] text-slate-400">
@@ -640,7 +668,9 @@ function AssistantCard({
                       <p className="mt-0.5 text-[11px] text-slate-500">
                         {it.source}
                         {it.lastContactAt && mounted ? (
-                          <span className="ml-2">· last contact {formatTimeAgo(it.lastContactAt)}</span>
+                          <span className="ml-2">
+                            · last contact {formatTimeAgo(it.lastContactAt)}
+                          </span>
                         ) : null}
                       </p>
                     </button>
@@ -648,15 +678,19 @@ function AssistantCard({
                     <div className="shrink-0 flex items-center gap-2">
                       {it.leadId ? (
                         <>
-                          <a
+                          {/* ✅ FIX: Use Link instead of <a> (Next ESLint build blocker) */}
+                          <Link
                             href={`/platform/leads/${it.leadId}`}
                             className="rounded-lg border border-sky-500/60 px-2 py-1 text-[11px] font-medium text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10"
                           >
                             View
-                          </a>
+                          </Link>
+
                           <button
                             type="button"
-                            onClick={() => onPickLead?.({ leadId: it.leadId, name: it.name })}
+                            onClick={() =>
+                              onPickLead?.({ leadId: it.leadId, name: it.name })
+                            }
                             className="rounded-lg border border-slate-700 px-2 py-1 text-[11px] font-medium text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
                           >
                             Set
@@ -682,15 +716,21 @@ function AssistantCard({
     return (
       <div>
         <p className="text-xs font-semibold text-slate-50">{payload.title}</p>
-        <p className="mt-1 text-sm text-slate-200 whitespace-pre-wrap">{payload.text}</p>
+        <p className="mt-1 text-sm text-slate-200 whitespace-pre-wrap">
+          {payload.text}
+        </p>
       </div>
     );
   }
 
   return (
     <div>
-      {payload.title ? <p className="text-xs font-semibold text-slate-50">{payload.title}</p> : null}
-      <p className="mt-1 text-sm text-slate-200 whitespace-pre-wrap">{payload.text || "—"}</p>
+      {payload.title ? (
+        <p className="text-xs font-semibold text-slate-50">{payload.title}</p>
+      ) : null}
+      <p className="mt-1 text-sm text-slate-200 whitespace-pre-wrap">
+        {payload.text || "—"}
+      </p>
     </div>
   );
 }
@@ -891,7 +931,10 @@ export default function OverviewPage() {
 
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        return { success: false, error: json.error || `Send failed with ${res.status}` };
+        return {
+          success: false,
+          error: json.error || `Send failed with ${res.status}`,
+        };
       }
 
       // Add a small assistant confirmation message into chat
@@ -936,7 +979,9 @@ export default function OverviewPage() {
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(json.error || json.details || `Ask failed with ${res.status}`);
+        throw new Error(
+          json.error || json.details || `Ask failed with ${res.status}`
+        );
       }
 
       const payload = normalizeAskResultForChat(json);
@@ -999,7 +1044,9 @@ export default function OverviewPage() {
       {
         kind: "action",
         title: "Active lead set",
-        text: `Now talking about lead #${lead.leadId}${lead.name ? ` (${lead.name})` : ""}.`,
+        text: `Now talking about lead #${lead.leadId}${
+          lead.name ? ` (${lead.name})` : ""
+        }.`,
       },
       null
     );
@@ -1012,13 +1059,39 @@ export default function OverviewPage() {
         <StatCard
           label="New leads"
           subLabel="Created in the last 7 days"
-          value={loading ? "…" : kpis.newLeadsThisWeek != null ? kpis.newLeadsThisWeek : "--"}
+          value={
+            loading
+              ? "…"
+              : kpis.newLeadsThisWeek != null
+              ? kpis.newLeadsThisWeek
+              : "--"
+          }
         />
-        <StatCard label="Open tasks" subLabel="Follow-ups not completed yet" value={loading ? "… " : kpis.openTasks ?? "--"} />
-        <StatCard label="Tasks due today" subLabel="Scheduled for today" value={loading ? "… " : kpis.tasksDueToday ?? "--"} />
-        <StatCard label="Overdue tasks" subLabel="Due date is in the past" value={loading ? "… " : kpis.tasksOverdue ?? "--"} />
-        <StatCard label="Missed calls" subLabel="In the last 7 days" value={loading ? "… " : kpis.missedCallsThisWeek ?? "--"} />
-        <StatCard label="AI replies" subLabel="Auto SMS replies in the last 7 days" value={loading ? "… " : kpis.aiRepliesThisWeek ?? "--"} />
+        <StatCard
+          label="Open tasks"
+          subLabel="Follow-ups not completed yet"
+          value={loading ? "… " : kpis.openTasks ?? "--"}
+        />
+        <StatCard
+          label="Tasks due today"
+          subLabel="Scheduled for today"
+          value={loading ? "… " : kpis.tasksDueToday ?? "--"}
+        />
+        <StatCard
+          label="Overdue tasks"
+          subLabel="Due date is in the past"
+          value={loading ? "… " : kpis.tasksOverdue ?? "--"}
+        />
+        <StatCard
+          label="Missed calls"
+          subLabel="In the last 7 days"
+          value={loading ? "… " : kpis.missedCallsThisWeek ?? "--"}
+        />
+        <StatCard
+          label="AI replies"
+          subLabel="Auto SMS replies in the last 7 days"
+          value={loading ? "… " : kpis.aiRepliesThisWeek ?? "--"}
+        />
       </div>
 
       {/* Chat Panel */}
@@ -1027,20 +1100,24 @@ export default function OverviewPage() {
         <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-800/80">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-slate-50">BlueWise Chat</p>
-            <p className="text-[11px] text-slate-400">Ask about leads, missed calls, conversations, and follow-ups.</p>
+            <p className="text-[11px] text-slate-400">
+              Ask about leads, missed calls, conversations, and follow-ups.
+            </p>
 
             {mounted && activeLead?.leadId ? (
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center rounded-full border border-sky-500/40 bg-sky-500/10 px-3 py-1 text-[11px] font-semibold text-sky-200">
-                  Active: {activeLead.name ? activeLead.name : "Lead"} #{activeLead.leadId}
+                  Active: {activeLead.name ? activeLead.name : "Lead"} #
+                  {activeLead.leadId}
                 </span>
 
-                <a
+                {/* ✅ FIX: Use Link instead of <a> */}
+                <Link
                   href={`/platform/leads/${activeLead.leadId}`}
                   className="inline-flex items-center rounded-full border border-slate-700 bg-slate-900/40 px-3 py-1 text-[11px] font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
                 >
                   Open
-                </a>
+                </Link>
 
                 <button
                   type="button"
@@ -1052,19 +1129,22 @@ export default function OverviewPage() {
               </div>
             ) : (
               <p className="mt-2 text-[11px] text-slate-500">
-                Tip: Summarize a lead or click “Set” on a lead result to lock context.
+                Tip: Summarize a lead or click “Set” on a lead result to lock
+                context.
               </p>
             )}
           </div>
 
           <div className="flex items-center gap-2">
-            <a
+            {/* ✅ FIX: Use Link instead of <a> (Next ESLint build blocker) */}
+            <Link
               href="/platform/ask"
               className="hidden sm:inline-flex items-center rounded-xl border border-slate-700 bg-slate-900/40 px-3 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
               title="Optional full Command Center (we can build it next)"
             >
               Command Center
-            </a>
+            </Link>
+
             <button
               type="button"
               onClick={clearChat}
@@ -1081,9 +1161,12 @@ export default function OverviewPage() {
           <div ref={listRef} className="px-4 py-4 overflow-y-auto space-y-3">
             {!hasChatHistory ? (
               <div className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-4">
-                <p className="text-sm font-semibold text-slate-50">Start with a quick prompt</p>
+                <p className="text-sm font-semibold text-slate-50">
+                  Start with a quick prompt
+                </p>
                 <p className="mt-1 text-[12px] text-slate-400">
-                  BlueWise will query your database (no guessing) and return actionable answers.
+                  BlueWise will query your database (no guessing) and return
+                  actionable answers.
                 </p>
 
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -1136,7 +1219,9 @@ export default function OverviewPage() {
               </ChatBubble>
             ) : null}
 
-            {askError ? <div className="text-[12px] text-rose-300">{askError}</div> : null}
+            {askError ? (
+              <div className="text-[12px] text-rose-300">{askError}</div>
+            ) : null}
           </div>
 
           {/* Input */}
@@ -1159,7 +1244,8 @@ export default function OverviewPage() {
                   className="w-full resize-none rounded-2xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
                 />
                 <p className="mt-1 text-[11px] text-slate-500">
-                  Enter to send · Shift+Enter for newline · Remembers Active lead + chat on this device
+                  Enter to send · Shift+Enter for newline · Remembers Active lead
+                  + chat on this device
                 </p>
               </div>
 
@@ -1175,7 +1261,9 @@ export default function OverviewPage() {
         </div>
       </div>
 
-      {error ? <p className="mt-4 text-xs text-red-400">Error loading overview: {error}</p> : null}
+      {error ? (
+        <p className="mt-4 text-xs text-red-400">Error loading overview: {error}</p>
+      ) : null}
     </DashboardLayout>
   );
 }

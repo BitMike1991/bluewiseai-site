@@ -1,4 +1,5 @@
 // pages/platform/ask.js
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import DashboardLayout from "../../src/components/dashboard/DashboardLayout";
 
@@ -138,12 +139,14 @@ export default function AskPage() {
 
   useEffect(() => {
     setHistory(loadJson(LS_HISTORY, []));
-    setSaved(loadJson(LS_SAVED, [
-      { id: "s1", label: "Summarize a lead", q: "Summarize Marc’s conversation" },
-      { id: "s2", label: "No reply 24h", q: "Which leads haven't replied in 24h?" },
-      { id: "s3", label: "Missed calls no follow-up", q: "Show missed calls without follow-up." },
-      { id: "s4", label: "Tasks due today", q: "Show tasks due today." },
-    ]));
+    setSaved(
+      loadJson(LS_SAVED, [
+        { id: "s1", label: "Summarize a lead", q: "Summarize Marc’s conversation" },
+        { id: "s2", label: "No reply 24h", q: "Which leads haven't replied in 24h?" },
+        { id: "s3", label: "Missed calls no follow-up", q: "Show missed calls without follow-up." },
+        { id: "s4", label: "Tasks due today", q: "Show tasks due today." },
+      ])
+    );
   }, []);
 
   useEffect(() => {
@@ -159,8 +162,7 @@ export default function AskPage() {
 
   const isEcho = result && intent === "echo";
   const isLeadList = result && resultType === "lead_list" && intent !== "echo";
-  const isConversationSummary =
-    result && resultType === "conversation_summary" && intent !== "echo";
+  const isConversationSummary = result && resultType === "conversation_summary" && intent !== "echo";
   const isTaskList = result && resultType === "task_list" && intent !== "echo";
   const isTaskCreated = result && resultType === "task_created" && intent !== "echo";
   const isTaskUpdated = result && resultType === "task_updated" && intent !== "echo";
@@ -270,7 +272,9 @@ export default function AskPage() {
   function quickCreateTask(leadId, followupType) {
     // Let the backend choose time if not specified.
     // Your backend will default to tomorrow 09:00 if model doesn't provide a date.
-    runAsk(`Create a ${followupType} follow-up for lead #${leadId} tomorrow at 9:00. Note: Auto-created from Command Center.`);
+    runAsk(
+      `Create a ${followupType} follow-up for lead #${leadId} tomorrow at 9:00. Note: Auto-created from Command Center.`
+    );
   }
 
   // Render helpers
@@ -326,19 +330,19 @@ export default function AskPage() {
           <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-slate-100">
-                  Ask BlueWise Command Center
-                </p>
+                <p className="text-sm font-semibold text-slate-100">Ask BlueWise Command Center</p>
                 <p className="mt-1 text-xs text-slate-400">
                   Natural language → deterministic tools → structured results.
                 </p>
               </div>
-              <a
+
+              {/* ✅ FIX: internal navigation uses Link */}
+              <Link
                 href="/platform/overview"
                 className="shrink-0 rounded-xl border border-slate-700 bg-slate-900/40 px-3 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
               >
                 Back to overview
-              </a>
+              </Link>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
@@ -431,14 +435,8 @@ export default function AskPage() {
                     key={s.id}
                     className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2"
                   >
-                    <button
-                      onClick={() => applyPrompt(s.q)}
-                      className="min-w-0 text-left"
-                      title="Insert into prompt"
-                    >
-                      <p className="truncate text-xs font-semibold text-slate-200">
-                        {s.label}
-                      </p>
+                    <button onClick={() => applyPrompt(s.q)} className="min-w-0 text-left" title="Insert into prompt">
+                      <p className="truncate text-xs font-semibold text-slate-200">{s.label}</p>
                       <p className="truncate text-[11px] text-slate-500">{s.q}</p>
                     </button>
                     <button
@@ -511,16 +509,12 @@ export default function AskPage() {
               </button>
             </form>
 
-            {error ? (
-              <p className="mt-3 text-xs text-rose-300">{error}</p>
-            ) : null}
+            {error ? <p className="mt-3 text-xs text-rose-300">{error}</p> : null}
 
             {result?.aiSummary && tab === "result" ? (
               <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
                 <SectionTitle>System note</SectionTitle>
-                <p className="mt-1 text-xs text-slate-300 whitespace-pre-line">
-                  {truncateText(result.aiSummary, 520)}
-                </p>
+                <p className="mt-1 text-xs text-slate-300 whitespace-pre-line">{truncateText(result.aiSummary, 520)}</p>
               </div>
             ) : null}
           </div>
@@ -529,18 +523,15 @@ export default function AskPage() {
           {tab === "result" && (
             <div className="space-y-4">
               {!result && !loading ? (
-                <EmptyState
-                  title="No result yet"
-                  desc="Run a query and BlueWise will return structured CRM output."
-                />
+                <EmptyState title="No result yet" desc="Run a query and BlueWise will return structured CRM output." />
               ) : null}
 
               {isEcho ? (
                 <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-6">
                   <p className="text-sm font-semibold text-slate-100">Not matched yet</p>
                   <p className="mt-1 text-xs text-slate-400">
-                    This question did not trigger a tool. Try a more specific request like:
-                    “Show open tasks”, “Summarize Marc’s conversation”, or “Leads no reply 24h”.
+                    This question did not trigger a tool. Try a more specific request like: “Show open tasks”,
+                    “Summarize Marc’s conversation”, or “Leads no reply 24h”.
                   </p>
                 </div>
               ) : null}
@@ -550,9 +541,7 @@ export default function AskPage() {
                 <div className="rounded-2xl border border-sky-700/30 bg-slate-950/60 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-100">
-                        {result.title || "Conversation summary"}
-                      </p>
+                      <p className="text-sm font-semibold text-slate-100">{result.title || "Conversation summary"}</p>
 
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         {convoItem?.urgency ? (
@@ -567,38 +556,35 @@ export default function AskPage() {
                         {convoItem?.messageCount != null ? (
                           <StatusPill label={`${convoItem.messageCount} msg`} tone="low" />
                         ) : null}
-                        {convoItem?.daysBack != null ? (
-                          <StatusPill label={`${convoItem.daysBack}d`} tone="low" />
-                        ) : null}
+                        {convoItem?.daysBack != null ? <StatusPill label={`${convoItem.daysBack}d`} tone="low" /> : null}
                       </div>
 
                       {convoItem?.summary ? (
-                        <p className="mt-3 text-sm text-slate-200 leading-relaxed">
-                          {safeText(convoItem.summary)}
-                        </p>
+                        <p className="mt-3 text-sm text-slate-200 leading-relaxed">{safeText(convoItem.summary)}</p>
                       ) : null}
 
                       {convoItem?.leadIntent ? (
                         <p className="mt-2 text-xs text-slate-400">
-                          <span className="font-semibold text-slate-300">Lead intent:</span>{" "}
-                          {safeText(convoItem.leadIntent)}
+                          <span className="font-semibold text-slate-300">Lead intent:</span> {safeText(convoItem.leadIntent)}
                         </p>
                       ) : null}
                     </div>
 
                     <div className="shrink-0 flex flex-col gap-2">
                       {convoItem?.leadId ? (
-                        <a
+                        <Link
                           href={`/platform/leads/${convoItem.leadId}`}
                           className="rounded-xl border border-sky-500/60 px-3 py-2 text-[11px] font-semibold text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10 text-center"
                         >
                           Open lead
-                        </a>
+                        </Link>
                       ) : null}
 
                       {convoItem?.leadId ? (
                         <button
-                          onClick={() => quickCreateTask(convoItem.leadId, convoItem.recommendedFollowUpType || "call")}
+                          onClick={() =>
+                            quickCreateTask(convoItem.leadId, convoItem.recommendedFollowUpType || "call")
+                          }
                           className="rounded-xl border border-slate-700 bg-slate-900/40 px-3 py-2 text-[11px] font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
                         >
                           Create follow-up
@@ -672,9 +658,7 @@ export default function AskPage() {
                 <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-slate-100">
-                        {result.title || "Lead list"}
-                      </p>
+                      <p className="text-sm font-semibold text-slate-100">{result.title || "Lead list"}</p>
                       <p className="mt-1 text-xs text-slate-400">
                         {leadRows.length} match{leadRows.length === 1 ? "" : "es"} · ranked by latest activity.
                       </p>
@@ -701,9 +685,7 @@ export default function AskPage() {
                             <tr key={r.key} className="text-xs text-slate-200 hover:bg-slate-900/40">
                               <td className="py-2 pr-3">
                                 <div className="min-w-0">
-                                  <p className="truncate font-semibold text-slate-100">
-                                    {r.name}
-                                  </p>
+                                  <p className="truncate font-semibold text-slate-100">{r.name}</p>
                                   <p className="truncate text-[11px] text-slate-500">
                                     {r.phone ? r.phone : ""}
                                     {r.phone && r.email ? " · " : ""}
@@ -719,29 +701,28 @@ export default function AskPage() {
                               </td>
                               <td className="py-2 pr-3">
                                 <span className="text-[11px] text-slate-300">
-                                  {r.lastContactAt ? `${formatWhen(r.lastContactAt)} (${formatTimeAgo(r.lastContactAt)})` : "—"}
+                                  {r.lastContactAt
+                                    ? `${formatWhen(r.lastContactAt)} (${formatTimeAgo(r.lastContactAt)})`
+                                    : "—"}
                                 </span>
                               </td>
                               <td className="py-2 pr-3">
                                 <span className="text-[11px] text-slate-300">
                                   {r.missedCallCount ? `${r.missedCallCount}` : "0"}
                                   {r.lastMissedCallAt ? (
-                                    <span className="text-slate-500">
-                                      {" "}
-                                      · {formatTimeAgo(r.lastMissedCallAt)}
-                                    </span>
+                                    <span className="text-slate-500"> · {formatTimeAgo(r.lastMissedCallAt)}</span>
                                   ) : null}
                                 </span>
                               </td>
                               <td className="py-2 pl-3">
                                 <div className="flex items-center justify-end gap-2">
                                   {r.leadId ? (
-                                    <a
+                                    <Link
                                       href={`/platform/leads/${r.leadId}`}
                                       className="rounded-lg border border-slate-700 bg-slate-900/40 px-2 py-1 text-[11px] font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
                                     >
                                       Open
-                                    </a>
+                                    </Link>
                                   ) : (
                                     <span className="text-[11px] text-slate-500">Unlinked</span>
                                   )}
@@ -770,9 +751,7 @@ export default function AskPage() {
                 <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-slate-100">
-                        {result.title || "Follow-up tasks"}
-                      </p>
+                      <p className="text-sm font-semibold text-slate-100">{result.title || "Follow-up tasks"}</p>
                       <p className="mt-1 text-xs text-slate-400">
                         {tasks.length} task{tasks.length === 1 ? "" : "s"}.
                       </p>
@@ -784,10 +763,7 @@ export default function AskPage() {
                   ) : (
                     <div className="mt-3 space-y-2">
                       {tasks.map((t) => (
-                        <div
-                          key={t.id}
-                          className="rounded-xl border border-slate-800 bg-slate-950/60 p-3"
-                        >
+                        <div key={t.id} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <p className="text-xs font-semibold text-slate-100">
@@ -800,20 +776,16 @@ export default function AskPage() {
                                 status: {t.status}
                                 {t.createdAt ? ` · created ${formatTimeAgo(t.createdAt)}` : ""}
                               </p>
-                              {t.note ? (
-                                <p className="mt-2 text-xs text-slate-300">
-                                  {safeText(t.note)}
-                                </p>
-                              ) : null}
+                              {t.note ? <p className="mt-2 text-xs text-slate-300">{safeText(t.note)}</p> : null}
                             </div>
 
                             {t.leadId ? (
-                              <a
+                              <Link
                                 href={`/platform/leads/${t.leadId}`}
                                 className="shrink-0 rounded-lg border border-sky-500/60 px-2 py-1 text-[11px] font-semibold text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10"
                               >
                                 Open lead
-                              </a>
+                              </Link>
                             ) : null}
                           </div>
                         </div>
@@ -833,12 +805,12 @@ export default function AskPage() {
                     {result.items?.[0]?.leadId ? (
                       <>
                         Lead{" "}
-                        <a
+                        <Link
                           href={`/platform/leads/${result.items[0].leadId}`}
                           className="text-sky-200 hover:text-sky-100 hover:underline underline-offset-4"
                         >
                           #{result.items[0].leadId}
-                        </a>{" "}
+                        </Link>{" "}
                         · {truncateText(result.aiSummary || "", 380)}
                       </>
                     ) : (
@@ -851,9 +823,7 @@ export default function AskPage() {
               {/* Other action */}
               {isActionOther && (
                 <div className="rounded-2xl border border-sky-700/30 bg-slate-950/50 p-4">
-                  <p className="text-sm font-semibold text-slate-100">
-                    {result.title || "Result"}
-                  </p>
+                  <p className="text-sm font-semibold text-slate-100">{result.title || "Result"}</p>
                   <p className="mt-2 text-sm text-slate-200 whitespace-pre-line">
                     {truncateText(result.aiSummary || "", 900)}
                   </p>
@@ -868,9 +838,7 @@ export default function AskPage() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-slate-100">History</p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Stored locally in your browser. Last 40 runs.
-                  </p>
+                  <p className="mt-1 text-xs text-slate-400">Stored locally in your browser. Last 40 runs.</p>
                 </div>
                 <button
                   onClick={clearHistory}
@@ -885,25 +853,16 @@ export default function AskPage() {
               ) : (
                 <div className="mt-4 space-y-2">
                   {history.map((h) => (
-                    <div
-                      key={h.id}
-                      className="rounded-xl border border-slate-800 bg-slate-950/60 p-3"
-                    >
+                    <div key={h.id} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-xs font-semibold text-slate-100">
-                            {h.q}
-                          </p>
+                          <p className="text-xs font-semibold text-slate-100">{h.q}</p>
                           <p className="mt-1 text-[11px] text-slate-500">
                             {formatWhen(h.at)} · {formatTimeAgo(h.at)}
                             {h.resultType ? ` · ${h.resultType}` : ""}
                             {h.intent ? ` · ${h.intent}` : ""}
                           </p>
-                          {h.snapshot ? (
-                            <p className="mt-2 text-xs text-slate-300">
-                              {h.snapshot}
-                            </p>
-                          ) : null}
+                          {h.snapshot ? <p className="mt-2 text-xs text-slate-300">{h.snapshot}</p> : null}
                         </div>
                         <div className="shrink-0 flex flex-col gap-2">
                           <button
