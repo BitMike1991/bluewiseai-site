@@ -279,7 +279,7 @@ export default function LeadRescueOnboardingFR() {
       'Ramoneur / inspection',
       'Installation poêle / foyer',
       'Réparation cheminée / gainage',
-      'Installation d'insert',
+      'Installation d\'insert',
       'Pare-étincelle / étanchéité',
     ],
     electrician: [

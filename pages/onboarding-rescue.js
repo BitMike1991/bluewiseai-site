@@ -273,20 +273,20 @@ export default function LeadRescueOnboardingEN() {
       'Roofing neuve / Réfection',
       'Gouttières',
       'Inspection de toit',
-      'Emergency – dégâts de tempête',
+      'Emergency – storm damage',
     ],
     chimney: [
-      'Ramoneur / inspection',
-      'Installation poêle / foyer',
-      'Repair cheminée / gainage',
-      'Installation d'insert',
-      'Pare-étincelle / étanchéité',
+      'Sweeping / inspection',
+      'Stove / fireplace installation',
+      'Chimney repair / lining',
+      'Insert installation',
+      'Spark guard / sealing',
     ],
     electrician: [
-      'Dépannage électrique',
-      'Panneau / disjoncteur',
-      'Éclairage / luminaires',
-      'Bornes recharge EV',
+      'Electrical troubleshooting',
+      'Panel / breaker',
+      'Lighting / fixtures',
+      'EV charging stations',
       'Câblage rénovation / construction',
       'Génératrice',
       'Emergency électrique',
@@ -587,7 +587,7 @@ export default function LeadRescueOnboardingEN() {
                     onChange={handleChange}
                     className="mt-1 w-full rounded-xl px-4 py-2 text-slate-900 bg-white/95"
                   >
-                    <option value="yes">Yes (ex: photos de dégâts, systèmes)</option>
+                    <option value="yes">Yes (e.g., damage photos, systems)</option>
                     <option value="no">No</option>
                   </select>
                 </div>
@@ -1124,7 +1124,7 @@ export default function LeadRescueOnboardingEN() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium">Emergencys / dégâts de tempête</label>
+                    <label className="block text-sm font-medium">Emergency / storm damage</label>
                     <select
                       name="roofingEmergencyStorm"
                       value={form.roofingEmergencyStorm}
