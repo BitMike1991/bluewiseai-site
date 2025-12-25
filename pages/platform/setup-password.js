@@ -49,9 +49,10 @@ export default function SetupPassword() {
         throw new Error("Passwords don't match");
       }
 
-      // Update password using Supabase
+      // Update password and set flag that password has been set
       const { error: updateError } = await supabase.auth.updateUser({
         password: password,
+        data: { password_set: true }
       });
 
       if (updateError) throw updateError;

@@ -51,8 +51,9 @@ export default function AuthCallback() {
 
         let redirectTo = "/platform/overview";
 
-        // First-time invite: redirect to password setup
-        if (user && user.invited_at && !user.confirmed_at) {
+        // First-time invite: check if they've set a password yet
+        // Use custom metadata flag instead of confirmed_at (which gets set immediately)
+        if (user && !user.user_metadata?.password_set) {
           redirectTo = "/platform/setup-password";
         }
 
