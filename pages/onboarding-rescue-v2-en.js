@@ -277,10 +277,10 @@ export default function LeadRescueOnboardingEN() {
     ],
     chimney: [
       'Sweeping / inspection',
-      'Installation poêle / foyer',
-      'Repair cheminée / gainage',
-      'Installation d'insert',
-      'Pare-étincelle / étanchéité',
+      'Stove / fireplace installation',
+      'Chimney repair / lining',
+      'Insert installation',
+      'Spark guard / sealing',
     ],
     electrician: [
       'Electrical troubleshooting',
