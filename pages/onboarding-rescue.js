@@ -292,11 +292,11 @@ export default function LeadRescueOnboardingEN() {
       'Emergency électrique',
     ],
     other: [
-      'Appel de service général',
-      'Petits travaux / handyman',
-      'Soumission / estimation',
-      'Contrats d'entretien',
-      'Other (décrire ci-dessous)',
+      'General service call',
+      'Small jobs / handyman',
+      'Quote / estimate',
+      'Maintenance contracts',
+      'Other (describe below)',
     ],
   };
 
