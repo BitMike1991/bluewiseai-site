@@ -24,8 +24,8 @@ export default function SetupPassword() {
         return;
       }
 
-      if (user.confirmed_at) {
-        // Already confirmed, go to dashboard
+      if (user.user_metadata?.password_set) {
+        // Already set password, go to dashboard
         window.location.href = "/platform/overview";
         return;
       }
