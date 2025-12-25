@@ -19,71 +19,97 @@ export default function AuthCallback() {
 
   async function handleAuthCallback() {
     try {
-      // Get the token hash and type from URL
       const { token_hash, type, next } = router.query;
 
-      if (!token_hash || !type) {
-        throw new Error("Missing authentication parameters in URL");
-      }
+      // Check if we already have a session (invite flow - Supabase verified token server-side)
+      const { data: sessionData } = await supabase.auth.getSession();
 
-      setStatus("verifying");
+      if (sessionData?.session) {
+        // Session already exists from invite/email confirmation flow
+        setStatus("creating_session");
+        const session = sessionData.session;
 
-      // For invite links, Supabase needs to verify the token
-      // This will exchange the token for a session
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
-        token_hash,
-        type: type,
-      });
+        // Set HttpOnly cookies via our API endpoint
+        const resp = await fetch("/api/auth/set-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+          }),
+        });
 
-      if (verifyError) throw verifyError;
-
-      const session = data?.session;
-      if (!session?.access_token || !session?.refresh_token) {
-        throw new Error("No valid session returned from token verification");
-      }
-
-      setStatus("creating_session");
-
-      // Set HttpOnly cookies via our API endpoint
-      const resp = await fetch("/api/auth/set-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          access_token: session.access_token,
-          refresh_token: session.refresh_token,
-        }),
-      });
-
-      if (!resp.ok) {
-        const payload = await resp.json().catch(() => ({}));
-        throw new Error(payload?.error || "Failed to set session cookies");
-      }
-
-      setStatus("success");
-
-      // Determine where to redirect
-      let redirectTo = "/platform/overview";
-
-      // If this is an invite, might need to set password
-      if (type === "invite") {
-        // Check if user needs to set password
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (user && !user.confirmed_at) {
-          // First time invite - redirect to password setup
-          redirectTo = "/platform/setup-password";
+        if (!resp.ok) {
+          const payload = await resp.json().catch(() => ({}));
+          throw new Error(payload?.error || "Failed to set session cookies");
         }
-      }
 
-      // Use next param if provided and valid
-      if (next && typeof next === "string" && next.startsWith("/platform/")) {
-        redirectTo = next;
-      }
+        setStatus("success");
 
-      // Full page navigation to ensure middleware runs
-      setTimeout(() => {
-        window.location.href = redirectTo;
-      }, 500);
+        // Determine where to redirect
+        let redirectTo = "/platform/overview";
+
+        // Use next param if provided and valid
+        if (next && typeof next === "string" && next.startsWith("/platform/")) {
+          redirectTo = next;
+        }
+
+        // Full page navigation to ensure middleware runs
+        setTimeout(() => {
+          window.location.href = redirectTo;
+        }, 500);
+
+      } else if (token_hash && type) {
+        // Magic link flow - verify the OTP token
+        setStatus("verifying");
+
+        const { data, error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash,
+          type: type,
+        });
+
+        if (verifyError) throw verifyError;
+
+        const session = data?.session;
+        if (!session?.access_token || !session?.refresh_token) {
+          throw new Error("No valid session returned from token verification");
+        }
+
+        setStatus("creating_session");
+
+        // Set HttpOnly cookies via our API endpoint
+        const resp = await fetch("/api/auth/set-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+          }),
+        });
+
+        if (!resp.ok) {
+          const payload = await resp.json().catch(() => ({}));
+          throw new Error(payload?.error || "Failed to set session cookies");
+        }
+
+        setStatus("success");
+
+        // Determine where to redirect
+        let redirectTo = "/platform/overview";
+
+        // Use next param if provided and valid
+        if (next && typeof next === "string" && next.startsWith("/platform/")) {
+          redirectTo = next;
+        }
+
+        // Full page navigation to ensure middleware runs
+        setTimeout(() => {
+          window.location.href = redirectTo;
+        }, 500);
+
+      } else {
+        throw new Error("No session found and no authentication parameters provided");
+      }
 
     } catch (err) {
       console.error("Auth callback error:", err);
