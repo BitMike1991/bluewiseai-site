@@ -46,11 +46,18 @@ export default function AuthCallback() {
 
         setStatus("success");
 
-        // Determine where to redirect
+        // Check if this is a first-time invite (user needs to set password)
+        const { data: { user } } = await supabase.auth.getUser();
+
         let redirectTo = "/platform/overview";
 
-        // Use next param if provided and valid
-        if (next && typeof next === "string" && next.startsWith("/platform/")) {
+        // First-time invite: redirect to password setup
+        if (user && user.invited_at && !user.confirmed_at) {
+          redirectTo = "/platform/setup-password";
+        }
+
+        // Use next param if provided and valid (but not for first-time setup)
+        if (next && typeof next === "string" && next.startsWith("/platform/") && user?.confirmed_at) {
           redirectTo = next;
         }
 
