@@ -159,18 +159,18 @@ export default function LeadRescueOnboardingFR() {
 
     // HARD GATE: Call forwarding
     if (form.canEnableCallForwarding === '') {
-      errs.push('Vous devez indiquer si vous pouvez activer la redirection d'appels');
+      errs.push('Vous devez indiquer si vous pouvez activer la redirection d\'appels');
     } else if (form.canEnableCallForwarding === 'no') {
-      errs.push('BLOCAGE: La redirection d'appels après X sonneries est REQUISE pour le système Lead Rescue. Veuillez contacter votre fournisseur télécom et revenir quand c\'est activé.');
+      errs.push('BLOCAGE: La redirection d\'appels après X sonneries est REQUISE pour le système Lead Rescue. Veuillez contacter votre fournisseur télécom et revenir quand c\'est activé.');
     } else if (!form.callForwardingAck) {
-      errs.push('Vous devez confirmer que vous comprenez comment fonctionne la redirection d'appels');
+      errs.push('Vous devez confirmer que vous comprenez comment fonctionne la redirection d\'appels');
     }
 
     // Required acknowledgments
     if (!form.smsConsentAck) errs.push('Vous devez confirmer le consentement SMS/MMS');
     if (!form.smsOptOutAck) errs.push('Vous devez confirmer l\'ajout d\'une ligne de désabonnement');
-    if (!form.noPricingAck) errs.push('Vous devez confirmer que l'IA ne citera jamais de prix');
-    if (!form.noTimingAck) errs.push('Vous devez confirmer que l'IA ne garantira jamais de délais');
+    if (!form.noPricingAck) errs.push('Vous devez confirmer que l\'IA ne citera jamais de prix');
+    if (!form.noTimingAck) errs.push('Vous devez confirmer que l\'IA ne garantira jamais de délais');
 
     // Daily summary email if delivery includes email
     if ((form.dailySummaryDelivery === 'email' || form.dailySummaryDelivery === 'both') && !form.dailySummaryEmail) {
@@ -279,7 +279,7 @@ export default function LeadRescueOnboardingFR() {
       'Ramoneur / inspection',
       'Installation poêle / foyer',
       'Réparation cheminée / gainage',
-      'Installation d'insert',
+      'Installation d\'insert',
       'Pare-étincelle / étanchéité',
     ],
     electrician: [
@@ -295,7 +295,7 @@ export default function LeadRescueOnboardingFR() {
       'Appel de service général',
       'Petits travaux / handyman',
       'Soumission / estimation',
-      'Contrats d'entretien',
+      'Contrats d\'entretien',
       'Autre (décrire ci-dessous)',
     ],
   };
