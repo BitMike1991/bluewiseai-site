@@ -147,7 +147,7 @@ export default function LeadRescueOnboardingFR() {
     const errs = [];
 
     // Required fields
-    if (!form.businessName) errs.push('Nom de l\'entreprise requis');
+    if (!form.businessName) errs.push('Nom de l'entreprise requis');
     if (!form.ownerName) errs.push('Nom du propriétaire requis');
     if (!form.ownerEmail) errs.push('Courriel du propriétaire requis');
     if (!form.ownerMobile) errs.push('Téléphone mobile du propriétaire requis');
@@ -159,18 +159,18 @@ export default function LeadRescueOnboardingFR() {
 
     // HARD GATE: Call forwarding
     if (form.canEnableCallForwarding === '') {
-      errs.push('Vous devez indiquer si vous pouvez activer la redirection d\'appels');
+      errs.push('Vous devez indiquer si vous pouvez activer la redirection d'appels');
     } else if (form.canEnableCallForwarding === 'no') {
-      errs.push('BLOCAGE: La redirection d\'appels après X sonneries est REQUISE pour le système Lead Rescue. Veuillez contacter votre fournisseur télécom et revenir quand c\'est activé.');
+      errs.push('BLOCAGE: La redirection d'appels après X sonneries est REQUISE pour le système Lead Rescue. Veuillez contacter votre fournisseur télécom et revenir quand c\'est activé.');
     } else if (!form.callForwardingAck) {
-      errs.push('Vous devez confirmer que vous comprenez comment fonctionne la redirection d\'appels');
+      errs.push('Vous devez confirmer que vous comprenez comment fonctionne la redirection d'appels');
     }
 
     // Required acknowledgments
     if (!form.smsConsentAck) errs.push('Vous devez confirmer le consentement SMS/MMS');
     if (!form.smsOptOutAck) errs.push('Vous devez confirmer l\'ajout d\'une ligne de désabonnement');
-    if (!form.noPricingAck) errs.push('Vous devez confirmer que l\'IA ne citera jamais de prix');
-    if (!form.noTimingAck) errs.push('Vous devez confirmer que l\'IA ne garantira jamais de délais');
+    if (!form.noPricingAck) errs.push('Vous devez confirmer que l'IA ne citera jamais de prix');
+    if (!form.noTimingAck) errs.push('Vous devez confirmer que l'IA ne garantira jamais de délais');
 
     // Daily summary email if delivery includes email
     if ((form.dailySummaryDelivery === 'email' || form.dailySummaryDelivery === 'both') && !form.dailySummaryEmail) {
@@ -279,7 +279,7 @@ export default function LeadRescueOnboardingFR() {
       'Ramoneur / inspection',
       'Installation poêle / foyer',
       'Réparation cheminée / gainage',
-      'Installation d\'insert',
+      'Installation d'insert',
       'Pare-étincelle / étanchéité',
     ],
     electrician: [
@@ -295,7 +295,7 @@ export default function LeadRescueOnboardingFR() {
       'Appel de service général',
       'Petits travaux / handyman',
       'Soumission / estimation',
-      'Contrats d\'entretien',
+      'Contrats d'entretien',
       'Autre (décrire ci-dessous)',
     ],
   };
@@ -311,7 +311,7 @@ export default function LeadRescueOnboardingFR() {
           </h1>
 
           <p className="text-center text-slate-100 drop-shadow-sm">
-            Remplissez ce formulaire complet pour configurer votre système d\'automatisation 24/7.
+            Remplissez ce formulaire complet pour configurer votre système d'automatisation 24/7.
             <br />
             <span className="text-sm text-slate-300">Setup en 72h. Tous les champs requis sont marqués *</span>
           </p>
@@ -358,7 +358,7 @@ export default function LeadRescueOnboardingFR() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium">Nom de l\'entreprise *</label>
+                  <label className="block text-sm font-medium">Nom de l'entreprise *</label>
                   <input
                     name="businessName"
                     value={form.businessName}
@@ -445,21 +445,21 @@ export default function LeadRescueOnboardingFR() {
                     onChange={handleChange}
                     className="w-4 h-4"
                   />
-                  <label className="text-sm">Répondre dans la langue de l\'appel/message entrant (recommandé)</label>
+                  <label className="text-sm">Répondre dans la langue de l'appel/message entrant (recommandé)</label>
                 </div>
               )}
             </div>
 
             {/* ====== SECTION B: Phone & Call Forwarding (HARD GATE) ====== */}
             <div className="space-y-4 border border-red-500/50 rounded-2xl p-6 bg-red-950/20">
-              <h2 className="text-xl font-semibold text-red-300">B. Téléphone & Redirection d\'appels * (REQUIS)</h2>
+              <h2 className="text-xl font-semibold text-red-300">B. Téléphone & Redirection d'appels * (REQUIS)</h2>
               <p className="text-sm text-slate-300">
                 Le système Lead Rescue nécessite que vos appels manqués soient redirigés vers un numéro IA après X sonneries.
               </p>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium">Numéro principal de l\'entreprise *</label>
+                  <label className="block text-sm font-medium">Numéro principal de l'entreprise *</label>
                   <input
                     type="tel"
                     name="businessPhone"
@@ -472,7 +472,7 @@ export default function LeadRescueOnboardingFR() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium">Pouvez-vous activer la redirection d\'appels après X sonneries ? *</label>
+                  <label className="block text-sm font-medium">Pouvez-vous activer la redirection d'appels après X sonneries ? *</label>
                   <select
                     name="canEnableCallForwarding"
                     value={form.canEnableCallForwarding}
@@ -481,7 +481,7 @@ export default function LeadRescueOnboardingFR() {
                     className="mt-1 w-full rounded-xl px-4 py-2 text-slate-900 bg-white/95"
                   >
                     <option value="">-- Sélectionner --</option>
-                    <option value="yes">Oui, je peux l\'activer</option>
+                    <option value="yes">Oui, je peux l'activer</option>
                     <option value="no">Non, impossible</option>
                   </select>
                 </div>
@@ -561,7 +561,7 @@ export default function LeadRescueOnboardingFR() {
                     className="w-4 h-4 mt-1"
                   />
                   <label className="text-sm">
-                    <strong>Je confirme :</strong> L\'IA n\'enverra de SMS/MMS qu'aux personnes qui nous ont contactés (appel manqué ou SMS entrant). Respect de la loi anti-spam canadienne.
+                    <strong>Je confirme :</strong> L\'IA n'enverra de SMS/MMS qu'aux personnes qui nous ont contactés (appel manqué ou SMS entrant). Respect de la loi anti-spam canadienne.
                   </label>
                 </div>
 
@@ -628,7 +628,7 @@ export default function LeadRescueOnboardingFR() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium">Méthode d\'intégration *</label>
+                  <label className="block text-sm font-medium">Méthode d'intégration *</label>
                   <select
                     name="emailIntegrationMethod"
                     value={form.emailIntegrationMethod}
@@ -752,7 +752,7 @@ export default function LeadRescueOnboardingFR() {
                   onChange={handleChange}
                   className="w-4 h-4"
                 />
-                <label className="text-sm">Si l\'appelant est un client existant, gardez l'échange bref et routez rapidement (recommandé)</label>
+                <label className="text-sm">Si l'appelant est un client existant, gardez l'échange bref et routez rapidement (recommandé)</label>
               </div>
             </div>
 
@@ -806,7 +806,7 @@ export default function LeadRescueOnboardingFR() {
 
             {/* ====== SECTION G: Brand Voice & Restrictions ====== */}
             <div className="space-y-4 border border-amber-500/50 rounded-2xl p-6 bg-amber-950/20">
-              <h2 className="text-xl font-semibold text-amber-300">G. Ton & Restrictions de l\'IA * (IMPORTANT)</h2>
+              <h2 className="text-xl font-semibold text-amber-300">G. Ton & Restrictions de l'IA * (IMPORTANT)</h2>
 
               <div>
                 <label className="block text-sm font-medium">Ton des réponses *</label>
@@ -866,7 +866,7 @@ export default function LeadRescueOnboardingFR() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium">Ce que l\'IA ne doit JAMAIS dire</label>
+                  <label className="block text-sm font-medium">Ce que l'IA ne doit JAMAIS dire</label>
                   <input
                     type="text"
                     name="neverSayText"
@@ -1138,7 +1138,7 @@ export default function LeadRescueOnboardingFR() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium">Limites d\'hauteur</label>
+                    <label className="block text-sm font-medium">Limites d'hauteur</label>
                     <input
                       name="roofingHeightLimits"
                       value={form.roofingHeightLimits}
