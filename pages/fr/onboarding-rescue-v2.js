@@ -147,7 +147,7 @@ export default function LeadRescueOnboardingFR() {
     const errs = [];
 
     // Required fields
-    if (!form.businessName) errs.push('Nom de l'entreprise requis');
+    if (!form.businessName) errs.push('Nom de l\'entreprise requis');
     if (!form.ownerName) errs.push('Nom du propriétaire requis');
     if (!form.ownerEmail) errs.push('Courriel du propriétaire requis');
     if (!form.ownerMobile) errs.push('Téléphone mobile du propriétaire requis');
