@@ -1,7 +1,12 @@
 // pages/fr/lead-rescue.js
+import { useState } from "react";
 import ConsultCTA from "@/components/ConsultCTA";
+import ROICalculator from "@/components/ROICalculator";
+import Link from "next/link";
 
 export default function LeadRescueOfferFr() {
+  const [selectedTier, setSelectedTier] = useState("pro");
+
   return (
     <div
       className="
@@ -14,7 +19,7 @@ export default function LeadRescueOfferFr() {
       <div className="min-h-screen py-16 px-4 backdrop-brightness-110">
         <section
           className="
-            max-w-5xl mx-auto space-y-10 px-6 sm:px-12 py-10
+            max-w-6xl mx-auto space-y-12 px-6 sm:px-12 py-10
             rounded-3xl
             bg-slate-950/80
             border border-white/10
@@ -23,523 +28,495 @@ export default function LeadRescueOfferFr() {
           "
         >
           {/* HERO */}
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl font-heading drop-shadow-md">
-              Système Lead Rescue pour métiers
+          <div className="text-center space-y-4 max-w-4xl mx-auto">
+            <h1 className="text-4xl sm:text-5xl font-heading drop-shadow-md">
+              Plateforme Lead Rescue
             </h1>
-            <p className="text-lg text-slate-100 drop-shadow-sm">
-              <span className="font-semibold text-blue-300">
-                Chaque appel manqué, c&apos;est un job de moins.
-              </span>{" "}
-              Arrête de laisser de l&apos;argent sur la table. Laisse un
-              assistant IA récupérer tes leads 24/7 pour ton entreprise
-              de chauffage, clim, plomberie, toiture, foyers ou électricité.
+            <p className="text-xl sm:text-2xl text-blue-300 font-semibold">
+              Récupération de leads propulsée par IA pour les métiers
             </p>
-            <p className="text-sm text-slate-300 drop-shadow-sm">
-              Offre spéciale pour petites entreprises de services&nbsp;:{" "}
-              <span className="font-semibold text-blue-300">
-                frais d&apos;installation unique de 497&nbsp;$ US
-              </span>{" "}
-              (au lieu de{" "}
-              <span className="font-semibold">1 997–3 500&nbsp;$</span>) quand
-              tu prends n&apos;importe quel plan mensuel.
+            <p className="text-lg text-slate-200 drop-shadow-sm">
+              Arrête de perdre 28 800 $/année+ sur des appels manqués. Lead Rescue répond
+              automatiquement à chaque lead par SMS, voix et courriel — capture des jobs pendant
+              que t'es sur le terrain.
             </p>
-            <ConsultCTA href="/fr/onboarding-rescue">
-              Activer mon système Lead Rescue
-            </ConsultCTA>
+
+            {/* Production Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8 max-w-3xl mx-auto">
+              <div className="bg-slate-900/60 rounded-xl p-3 border border-blue-500/30">
+                <div className="text-2xl font-bold text-blue-300">10 118</div>
+                <div className="text-xs text-slate-300">Opérations/semaine</div>
+              </div>
+              <div className="bg-slate-900/60 rounded-xl p-3 border border-emerald-500/30">
+                <div className="text-2xl font-bold text-emerald-300">97,6 %</div>
+                <div className="text-xs text-slate-300">Disponibilité</div>
+              </div>
+              <div className="bg-slate-900/60 rounded-xl p-3 border border-purple-500/30">
+                <div className="text-2xl font-bold text-purple-300">24/7</div>
+                <div className="text-xs text-slate-300">Automatisé</div>
+              </div>
+              <div className="bg-slate-900/60 rounded-xl p-3 border border-amber-500/30">
+                <div className="text-2xl font-bold text-amber-300">97</div>
+                <div className="text-xs text-slate-300">Leads qualifiés</div>
+              </div>
+            </div>
           </div>
 
-          {/* PROBLÈME + STATISTIQUES + MATH SIMPLE */}
-          <div
-            className="
-              space-y-5 p-5 md:p-6 rounded-2xl
-              bg-slate-900/80 border border-blue-500/25
-              shadow-[0_0_30px_rgba(15,23,42,0.9)]
-            "
-          >
-            <h2 className="text-2xl font-heading drop-shadow-sm flex items-center gap-2">
+          {/* PROBLEM SECTION */}
+          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25 shadow-[0_0_30px_rgba(15,23,42,0.9)]">
+            <h2 className="text-2xl sm:text-3xl font-heading flex items-center gap-2">
               <span>🚨</span>
-              <span>Pourquoi les petites entreprises de services perdent en cachette des milliers</span>
+              <span>Le problème à 28 800 $/année que chaque entreprise de métiers a</span>
             </h2>
 
-            <p className="text-slate-100 drop-shadow-sm">
-              Dans les métiers, la majorité des jobs se réservent par téléphone,
-              texto ou courriel. Quand t&apos;es sur un toit, dans un sous-sol
-              ou chez un client, tu peux tout simplement pas répondre à tout
-              en temps réel.
+            <p className="text-slate-200 text-lg">
+              Quand t'es sur un toit, en dessous d'un lavabo ou en face d'un client, tu peux pas
+              répondre à tous les appels. Pis chaque appel manqué c'est de l'argent qui te file
+              entre les doigts.
             </p>
 
-            <div className="grid md:grid-cols-2 gap-4 text-sm">
-              <div
-                className="
-                  rounded-2xl p-4
-                  bg-slate-950/80 border border-red-500/40
-                "
-              >
-                <h3 className="font-semibold text-red-300 mb-2">
-                  Sans Lead Rescue
-                </h3>
-                <ul className="space-y-1 text-slate-100">
-                  <li>❌ Les appels tombent sur la boîte vocale et tu n&apos;es jamais rappelé.</li>
-                  <li>❌ Les courriels s&apos;empilent jusqu&apos;à tard le soir.</li>
-                  <li>❌ Les urgences arrivent trop tard… ou vont chez un compétiteur.</li>
-                  <li>❌ Aucun suivi = des leads chauds qui refroidissent.</li>
-                  <li>❌ Tu n&apos;as jamais une vraie vue d&apos;ensemble sur tes opportunités.</li>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="rounded-xl p-5 bg-slate-950/80 border border-red-500/40">
+                <h3 className="font-semibold text-red-300 mb-3 text-lg">❌ Sans Lead Rescue</h3>
+                <ul className="space-y-2 text-slate-200">
+                  <li>• 60 % des appels vont sur la boîte vocale</li>
+                  <li>• 80 % des messages vocaux sont jamais retournés</li>
+                  <li>• Les leads appellent tes compétiteurs ensuite</li>
+                  <li>• <strong>28 800 $/année en revenus perdus</strong> (20 appels/semaine)</li>
+                  <li>• Le suivi manuel prend 2+ heures/jour</li>
                 </ul>
               </div>
 
-              <div
-                className="
-                  rounded-2xl p-4
-                  bg-slate-950/80 border border-emerald-500/40
-                "
-              >
-                <h3 className="font-semibold text-emerald-300 mb-2">
-                  Avec Lead Rescue
-                </h3>
-                <ul className="space-y-1 text-slate-100">
-                  <li>✅ Chaque appel manqué reçoit un texto instantané.</li>
-                  <li>✅ Les courriels sont triés automatiquement (lead vs bruit).</li>
-                  <li>✅ Les urgences sont détectées et mises en priorité.</li>
-                  <li>✅ Les suivis sont automatisés pour rester top of mind.</li>
-                  <li>✅ Un résumé quotidien te montre chaque opportunité.</li>
+              <div className="rounded-xl p-5 bg-slate-950/80 border border-emerald-500/40">
+                <h3 className="font-semibold text-emerald-300 mb-3 text-lg">✅ Avec Lead Rescue</h3>
+                <ul className="space-y-2 text-slate-200">
+                  <li>• 100 % de réponse en 5 minutes (automatisé)</li>
+                  <li>• L'IA qualifie les leads automatiquement</li>
+                  <li>• Les urgences sont détectées pis mises en priorité</li>
+                  <li>• <strong>Récupère 2 400 $+/mois</strong> en revenus perdus</li>
+                  <li>• Zéro suivi manuel requis</li>
                 </ul>
               </div>
             </div>
 
-            {/* BLOC STATISTIQUES – VRAIES TENDANCES DU MARCHÉ */}
-            <div
-              className="
-                mt-3 rounded-2xl p-4
-                bg-slate-950/80 border border-blue-500/40
-                text-sm text-slate-100
-              "
-            >
-              <h3 className="font-semibold text-blue-300 mb-1">
-                Ce que les chiffres montrent sur les appels manqués :
-              </h3>
-              <ul className="list-disc list-inside space-y-1">
-                <li>
-                  Les études de suivi d&apos;appels indiquent qu&apos;environ{" "}
-                  <span className="font-semibold">
-                    60–62&nbsp;% des appels vers des petites entreprises ne sont pas répondus
-                  </span>
-                  .
-                </li>
-                <li>
-                  Seulement environ{" "}
-                  <span className="font-semibold">1 client sur 5</span> laisse
-                  un message quand il tombe sur une boîte vocale — les autres
-                  raccrochent et appellent quelqu&apos;un d&apos;autre.
-                </li>
-                <li>
-                  Des rapports sur les leads montrent qu&apos;environ{" "}
-                  <span className="font-semibold">
-                    50&nbsp;% des clients choisissent la première entreprise qui répond
-                  </span>
-                  .
-                </li>
-                <li>
-                  Répondre à un nouveau lead en{" "}
-                  <span className="font-semibold">moins de 5 minutes</span>{" "}
-                  augmente énormément tes chances de gagner le contrat, comparé
-                  à une réponse des heures ou des jours plus tard.
-                </li>
-              </ul>
-              <p className="mt-2 text-slate-300">
-                En clair&nbsp;: si tu ne réponds pas vite, une grosse partie de
-                tes leads disparaissent… souvent directement chez tes compétiteurs.
+            {/* Real Testimonial */}
+            <div className="mt-6 rounded-xl p-5 bg-slate-950/60 border border-slate-700/50">
+              <p className="text-slate-200 italic text-sm sm:text-base">
+                "On a envoyé 90 messages Slybroadcast pis on a reçu notre premier rappel en dedans
+                de 24 heures. L'IA a géré ça automatiquement pendant que j'étais sur le terrain."
+              </p>
+              <p className="text-blue-300 text-sm mt-2">— Mikael, Ramoneur Multi-Services</p>
+            </div>
+          </div>
+
+          {/* PRICING TIERS */}
+          <div className="space-y-6">
+            <div className="text-center space-y-3">
+              <h2 className="text-3xl sm:text-4xl font-heading">Choisis ton système Lead Rescue</h2>
+              <p className="text-slate-300 text-lg max-w-3xl mx-auto">
+                Tous les systèmes incluent ton dashboard personnalisé, le monitoring de production
+                et le support continu. Choisis le niveau d'automatisation qui fit avec ta business.
               </p>
             </div>
 
-            {/* MATH SIMPLE & HONNÊTE */}
-            <div
-              className="
-                mt-3 rounded-2xl p-4
-                bg-slate-950/80 border border-slate-700/70
-                text-sm text-slate-100
-              "
-            >
-              <h3 className="font-semibold text-blue-300 mb-1">
-                Un peu de math simple (sans bullshit) :
-              </h3>
-              <p>
-                Si tu reçois seulement{" "}
-                <span className="font-semibold">20 appels par semaine</span> et
-                t&apos;en manques 8, et que seulement{" "}
-                <span className="font-semibold">3 de ces appels</span> auraient
-                pu devenir des jobs à{" "}
-                <span className="font-semibold">200&nbsp;$</span> chacun, ça
-                représente :
-              </p>
-              <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>
-                  <span className="font-semibold">600&nbsp;$ par semaine</span>{" "}
-                  en travail potentiel
-                </li>
-                <li>
-                  ≈ <span className="font-semibold">2 400&nbsp;$ par mois</span>{" "}
-                  en revenus manqués
-                </li>
-                <li>
-                  ≈ <span className="font-semibold">28 800&nbsp;$ par année</span>{" "}
-                  qui ne rentrent jamais
-                </li>
-              </ul>
-              <p className="mt-2 text-slate-300">
-                Récupérer juste{" "}
-                <span className="font-semibold">un seul job par mois</span>{" "}
-                avec un meilleur suivi paye souvent le système au complet.
+            <div className="grid md:grid-cols-3 gap-6">
+              {/* TIER 1: SMS LEAD RESCUE */}
+              <div className={`rounded-2xl p-6 border-2 transition-all duration-200 ${selectedTier === 'starter' ? 'border-blue-500/70 bg-slate-900/80' : 'border-slate-700/50 bg-slate-900/60'}`}>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-xl font-heading text-slate-200">Lead Rescue SMS</h3>
+                    <p className="text-sm text-slate-400 mt-1">Parfait pour commencer</p>
+                  </div>
+
+                  <div className="py-4">
+                    <div className="text-4xl font-bold text-blue-300">497 $</div>
+                    <div className="text-sm text-slate-400">Installation unique</div>
+                    <div className="text-sm text-slate-300 mt-2">+ 249 $/mois support</div>
+                  </div>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200">Appel manqué → SMS automatique</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200">Bot SMS de qualification</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200">Dashboard de suivi des leads</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200">Résumés quotidiens par courriel</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-slate-500 mt-0.5">✗</span>
+                      <span className="text-slate-500">Agent vocal IA</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-slate-500 mt-0.5">✗</span>
+                      <span className="text-slate-500">Moteur de courriels inbox</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedTier('starter')}
+                    className={`w-full py-3 rounded-xl font-semibold transition-all ${selectedTier === 'starter' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                  >
+                    {selectedTier === 'starter' ? 'Sélectionné' : 'Choisir ce plan'}
+                  </button>
+                </div>
+              </div>
+
+              {/* TIER 2: FULL LEAD RESCUE (RECOMMENDED) */}
+              <div className={`rounded-2xl p-6 border-2 relative ${selectedTier === 'pro' ? 'border-emerald-500/70 bg-gradient-to-br from-emerald-900/20 to-slate-900/80' : 'border-emerald-500/50 bg-slate-900/60'}`}>
+                {/* Most Popular Badge */}
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                  ⭐ Le plus populaire
+                </div>
+
+                <div className="space-y-4 mt-2">
+                  <div>
+                    <h3 className="text-xl font-heading text-slate-50">Lead Rescue Complet</h3>
+                    <p className="text-sm text-emerald-300 mt-1">Suite d'automatisation complète</p>
+                  </div>
+
+                  <div className="py-4">
+                    <div className="text-4xl font-bold text-emerald-300">2 997 $</div>
+                    <div className="text-sm text-slate-400">Installation unique</div>
+                    <div className="text-sm text-slate-300 mt-2">+ 799 $/mois support</div>
+                    <div className="text-xs text-emerald-300 mt-1">Sauve 3 000 $ vs compétiteurs</div>
+                  </div>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-100 font-semibold">Tout du plan SMS</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-100"><strong>Agent vocal VAPI</strong> (réponse 24/7)</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-100">Qualification vocale → lead</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-100">Multi-canal (voix + SMS + courriel)</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-100">Scoring avancé des leads</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-100">Support prioritaire (réponse 4 heures)</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedTier('pro')}
+                    className="w-full py-3 rounded-xl font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg shadow-emerald-500/30"
+                  >
+                    {selectedTier === 'pro' ? '✓ Sélectionné' : 'Choisir meilleur value'}
+                  </button>
+
+                  <div className="text-xs text-center text-slate-400 pt-2">
+                    ROI : Rentabilisé en 45-60 jours
+                  </div>
+                </div>
+              </div>
+
+              {/* TIER 3: ENTERPRISE */}
+              <div className={`rounded-2xl p-6 border-2 transition-all duration-200 ${selectedTier === 'enterprise' ? 'border-amber-500/70 bg-slate-900/80' : 'border-slate-700/50 bg-slate-900/60'}`}>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-xl font-heading text-slate-200">Entreprise</h3>
+                    <p className="text-sm text-slate-400 mt-1">Pour business multi-locations</p>
+                  </div>
+
+                  <div className="py-4">
+                    <div className="text-4xl font-bold text-amber-300">4 997 $</div>
+                    <div className="text-sm text-slate-400">Installation unique</div>
+                    <div className="text-sm text-slate-300 mt-2">+ 1 200 $/mois support</div>
+                  </div>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-100 font-semibold">Tout du plan Complet</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200"><strong>Moteur IA inbox</strong> (triage courriel)</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200">Support multi-locations</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200">Intégrations CRM custom</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200">Support prioritaire (réponse 2 heures)</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200">Calls stratégiques mensuels</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedTier('enterprise')}
+                    className={`w-full py-3 rounded-xl font-semibold transition-all ${selectedTier === 'enterprise' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                  >
+                    {selectedTier === 'enterprise' ? 'Sélectionné' : 'Choisir ce plan'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* CTA Below Pricing */}
+            <div className="text-center pt-4">
+              <Link
+                href="/fr/onboarding-rescue"
+                className="inline-block px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg rounded-xl shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
+              >
+                Commencer avec Lead Rescue →
+              </Link>
+              <p className="text-sm text-slate-400 mt-3">
+                Réserve un call de 15 minutes pour voir quel plan fit avec ta business
               </p>
             </div>
           </div>
 
-          {/* CE QUE LE SYSTÈME FAIT */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
+          {/* INTERACTIVE ROI CALCULATOR */}
+          <ROICalculator />
+
+          {/* WHAT'S INCLUDED */}
+          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25">
+            <h2 className="text-2xl sm:text-3xl font-heading flex items-center gap-2">
               <span>🤖</span>
-              <span>Concrètement, qu&apos;est-ce que Lead Rescue fait pour toi?</span>
-            </h2>
-            <p className="text-slate-100 drop-shadow-sm">
-              Pense-le comme une{" "}
-              <span className="font-semibold text-blue-300">
-                réceptionniste numérique
-              </span>{" "}
-              qui ne dort jamais et qui oublie jamais de faire un suivi.
-            </p>
-
-            <div className="grid md:grid-cols-2 gap-4 text-sm text-slate-100">
-              <div className="rounded-2xl p-4 bg-slate-900/80 border border-slate-700/70">
-                <h3 className="font-semibold mb-2 text-blue-200">
-                  Inclus dans chaque installation Lead Rescue :
-                </h3>
-                <ul className="space-y-1">
-                  <li>✅ Flow appel manqué → texto instantané</li>
-                  <li>✅ Tri automatique des courriels</li>
-                  <li>✅ Détection des urgences &amp; priorisation</li>
-                  <li>✅ Séquence de suivis automatiques pour les leads</li>
-                  <li>✅ Résumé quotidien des jobs &amp; opportunités à 8h</li>
-                  <li>✅ Journal des leads et des contacts pour tout voir d&apos;un coup</li>
-                </ul>
-              </div>
-
-              <div className="rounded-2xl p-4 bg-slate-900/80 border border-slate-700/70">
-                <h3 className="font-semibold mb-2 text-blue-200">
-                  Conçu spécifiquement pour les métiers :
-                </h3>
-                <ul className="space-y-1">
-                  <li>✅ Chauffage, clim, plomberie, toiture, foyers, électriciens</li>
-                  <li>✅ Fonctionne avec ton numéro de téléphone et ton courriel actuel</li>
-                  <li>✅ Aucun nouveau CRM compliqué à apprendre</li>
-                  <li>✅ Tu gardes le contrôle sur les textes et les règles</li>
-                  <li>✅ Je m&apos;occupe de tout le stack technique (n8n, IA, APIs…)</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {/* OFFRE + PRIX */}
-          <div
-            className="
-              space-y-5 p-5 md:p-6 rounded-2xl
-              bg-slate-900/80 border border-blue-500/35
-              shadow-[0_0_30px_rgba(15,23,42,0.9)]
-            "
-          >
-            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
-              <span>💼</span>
-              <span>L&apos;offre Lead Rescue pour métiers</span>
+              <span>Ce qui est inclus dans chaque système</span>
             </h2>
 
-            <p className="text-slate-100 drop-shadow-sm">
-              Normalement, bâtir un ensemble d&apos;automatisations intégrées
-              comme ça tomberait dans un{" "}
-              <span className="font-semibold text-blue-300">
-                projet entre 1 997 et 3 500&nbsp;$ US
-              </span>
-              . Pour les petites entreprises de services, je regroupe les
-              morceaux essentiels dans un Lead Rescue System ciblé.
-            </p>
-
-            <div
-              className="
-                rounded-2xl p-4 md:p-5
-                bg-slate-950/80 border border-emerald-500/60
-                shadow-[0_0_26px_rgba(16,185,129,0.4)]
-              "
-            >
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <div>
-                  <p className="text-sm uppercase tracking-wide text-emerald-300">
-                    Installation unique (Lead Rescue System)
-                  </p>
-                  <h3 className="text-2xl font-heading drop-shadow-sm">
-                    Forfait d&apos;installation Lead Rescue
-                  </h3>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm line-through text-slate-400">
-                    1 997 – 3 500&nbsp;$ US
-                  </p>
-                  <p className="text-xl font-semibold text-emerald-300">
-                    497&nbsp;$ US une seule fois
-                  </p>
-                  <p className="text-xs text-slate-300">
-                    avec n&apos;importe quel plan mensuel
-                  </p>
-                </div>
-              </div>
-
-              <p className="mt-3 text-sm text-slate-100">
-                Ça couvre la conception, la construction, les tests et le déploiement
-                de ton système Lead Rescue. Aucun tarif horaire caché. Si tu veux
-                plus tard des automatisations de soumission, de rendez-vous ou
-                des outils internes, on les ajoute comme projets séparés.
-              </p>
-            </div>
-
-            {/* BLOC ROI */}
-            <div
-              className="
-                rounded-2xl p-4
-                bg-slate-950/80 border border-slate-700/80
-                text-sm text-slate-100
-              "
-            >
-              <h3 className="font-semibold text-blue-300 mb-1">
-                Qu&apos;est-ce que ça doit récupérer pour se payer tout seul?
-              </h3>
-              <ul className="list-disc list-inside space-y-1">
-                <li>
-                  Récupère{" "}
-                  <span className="font-semibold">1 job par mois</span> à
-                  300&nbsp;$ → ton plan mensuel est payé.
-                </li>
-                <li>
-                  Récupère{" "}
-                  <span className="font-semibold">1 job par semaine</span> à
-                  250&nbsp;$ → tu es en avance d&apos;environ 700–900&nbsp;$ / mois.
-                </li>
-                <li>
-                  Récupère{" "}
-                  <span className="font-semibold">une seule urgence</span>{" "}
-                  à 500&nbsp;$+ → l&apos;installation à 497&nbsp;$ est déjà payée.
-                </li>
-              </ul>
-              <p className="mt-2 text-slate-300">
-                On construit ton système pour qu&apos;il suffise de récupérer{" "}
-                <span className="font-semibold">une petite partie</span> de ce que
-                tu perds déjà pour que ce soit rentable.
-              </p>
-            </div>
-          </div>
-
-          {/* PLANS MENSUELS – ENTRETIEN & OPTIMISATION */}
-          <div
-            className="
-              space-y-4 p-5 md:p-6 rounded-2xl
-              bg-slate-900/80 border border-blue-500/25
-              shadow-[0_0_30px_rgba(15,23,42,0.9)]
-            "
-          >
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
-                  <span>🛠️</span>
-                  <span>Entretien &amp; optimisation continue</span>
-                </h2>
-                <div className="text-right">
-                  <p className="text-sm uppercase tracking-wide text-slate-300">
-                    Plans mensuels
-                  </p>
-                  <p className="text-sm text-blue-300 font-semibold">
-                    À partir de 249&nbsp;$ / mois
-                  </p>
-                </div>
-              </div>
-
-              <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-                Une fois que ton système Lead Rescue est en place, tu ne veux
-                pas t&apos;inquiéter des outils, des clés API, des mises à jour
-                ou des pannes. Les plans mensuels gardent tes automatisations
-                en santé, à jour et en amélioration — et{" "}
-                <span className="font-semibold">
-                  regroupent les principaux outils et abonnements
-                </span>{" "}
-                dans un seul prix clair.
-              </p>
-
-              {/* Ce qui est inclus */}
-              <div className="bg-slate-950/60 border border-blue-500/40 p-4 rounded-xl text-sm text-slate-100">
-                <p className="text-blue-300 font-semibold mb-2">
-                  Chaque plan mensuel inclut :
-                </p>
-                <ul className="space-y-1">
-                  <li>• Hébergement &amp; monitoring (n8n, base de données, logs)</li>
-                  <li>• Abonnements coeur (IA, infra, outils de dev)</li>
-                  <li>• Setup et gestion de la messagerie via Telnyx</li>
-                  <li>• Création &amp; configuration de tous les comptes nécessaires</li>
-                  <li>• Debug &amp; correctifs quand les APIs ou plateformes changent</li>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <h3 className="font-semibold text-blue-300 text-lg">Stack technologique</h3>
+                <ul className="space-y-2 text-slate-200 text-sm">
+                  <li>✓ Workflows d'automatisation n8n custom</li>
+                  <li>✓ Base de données Supabase + authentification</li>
+                  <li>✓ OpenAI GPT-4 pour qualification des leads</li>
+                  <li>✓ Intégration SMS/Voix Telnyx</li>
+                  <li>✓ Agent vocal VAPI (plans Complet & Entreprise)</li>
+                  <li>✓ Monitoring de production & gestion d'erreurs</li>
                 </ul>
-                <p className="text-[11px] text-slate-400 mt-2">
-                  La plupart des entreprises paient 120–250&nbsp;$ / mois juste
-                  en outils — ici c&apos;est inclus dans ton plan.
-                </p>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-4">
-                {/* Basic */}
-                <div
-                  className="
-                    rounded-2xl p-4
-                    bg-slate-950/70 border border-slate-700/70
-                    shadow-[0_0_18px_rgba(15,23,42,0.8)]
-                  "
-                >
-                  <h3 className="font-heading text-lg drop-shadow-sm">Basic</h3>
-                  <p className="text-blue-300 font-semibold text-sm mb-2">
-                    249&nbsp;$ / mois
-                  </p>
-                  <ul className="text-sm space-y-1 text-slate-100 drop-shadow-sm">
-                    <li>• Surveillance des flows Lead Rescue critiques</li>
-                    <li>• Corrections &amp; petits ajustements inclus</li>
-                    <li>• Rapport de santé mensuel</li>
-                    <li>• Outils et infra couverts</li>
-                  </ul>
-                </div>
-
-                {/* Standard */}
-                <div
-                  className="
-                    rounded-2xl p-4
-                    bg-slate-950/80 border border-blue-500/60
-                    shadow-[0_0_24px_rgba(37,99,235,0.7)]
-                  "
-                >
-                  <h3 className="font-heading text-lg drop-shadow-sm">
-                    Standard
-                  </h3>
-                  <p className="text-blue-300 font-semibold text-sm mb-2">
-                    449&nbsp;$ / mois
-                  </p>
-                  <ul className="text-sm space-y-1 text-slate-100 drop-shadow-sm">
-                    <li>• Tout du plan Basic</li>
-                    <li>• 1–2 nouvelles étapes d&apos;automatisation par mois</li>
-                    <li>• Ajustement continu des suivis, tags, résumés</li>
-                    <li>• Priorité sur les nouvelles demandes</li>
-                  </ul>
-                </div>
-
-                {/* Premium */}
-                <div
-                  className="
-                    rounded-2xl p-4
-                    bg-slate-950/70 border border-amber-400/70
-                    shadow-[0_0_24px_rgba(251,191,36,0.6)]
-                  "
-                >
-                  <h3 className="font-heading text-lg drop-shadow-sm">
-                    Premium
-                  </h3>
-                  <p className="text-blue-300 font-semibold text-sm mb-2">
-                    799&nbsp;$ / mois
-                  </p>
-                  <ul className="text-sm space-y-1 text-slate-100 drop-shadow-sm">
-                    <li>• Tout du plan Standard</li>
-                    <li>• Ajustements Lead Rescue illimités (petits)</li>
-                    <li>• Délai de réponse rapide &amp; support prioritaire</li>
-                    <li>• Accompagnement stratégique à mesure que tes systèmes grandissent</li>
-                  </ul>
-                </div>
+              <div className="space-y-3">
+                <h3 className="font-semibold text-blue-300 text-lg">Ton dashboard</h3>
+                <ul className="space-y-2 text-slate-200 text-sm">
+                  <li>✓ Suivi des leads & conversations en temps réel</li>
+                  <li>✓ Scoring des leads & statut de qualification</li>
+                  <li>✓ Résumés quotidiens par courriel (8h)</li>
+                  <li>✓ Détection de jobs urgents & alertes</li>
+                  <li>✓ Historique complet des conversations</li>
+                  <li>✓ Design responsive mobile</li>
+                </ul>
               </div>
+            </div>
 
-              <p className="text-sm text-slate-300 drop-shadow-sm">
-                Les{" "}
-                <span className="font-semibold text-blue-300">
-                  497&nbsp;$ d&apos;installation
-                </span>{" "}
-                sont payés une seule fois pour bâtir et lancer ton système Lead
-                Rescue. Le plan mensuel garde tout ça stable, optimisé
-                et aligné avec ta business.
+            <div className="mt-6 p-4 rounded-xl bg-slate-950/60 border border-slate-700/50">
+              <p className="text-sm text-slate-300">
+                <strong className="text-blue-300">Toute l'infra incluse :</strong> T'as pas
+                besoin de gérer des clés API, de l'hébergement ou du setup technique. On gère
+                tout pour que tu puisses focus sur ta business.
               </p>
             </div>
           </div>
 
-          {/* POUR QUI C&apos;EST FAIT */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
+          {/* WHO THIS IS FOR */}
+          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25">
+            <h2 className="text-2xl sm:text-3xl font-heading flex items-center gap-2">
               <span>🎯</span>
-              <span>Pour qui c&apos;est fait?</span>
+              <span>Est-ce que Lead Rescue est pour ta business ?</span>
             </h2>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Cette offre est pensée pour les{" "}
-              <span className="font-semibold text-blue-300">
-                propriétaires de petites entreprises de services
-              </span>{" "}
-              qui portent encore la ceinture à outils et gèrent le bureau
-              en même temps.
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-slate-100 drop-shadow-sm">
-              <li>Chauffage, climatisation, plomberie, toiture, foyers, électricité.</li>
-              <li>Travailleurs solos ou petites équipes sans adjointe à temps plein.</li>
-              <li>
-                Propriétaires qui savent qu&apos;ils laissent filer du travail
-                faute de temps pour répondre à tout.
-              </li>
-            </ul>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-semibold text-emerald-300 mb-3">✓ Parfait pour :</h3>
+                <ul className="space-y-2 text-slate-200">
+                  <li>• CVC, plomberie, toiture, électricité, ramonage</li>
+                  <li>• 1-20 employés (300 k$ à 5 M$ revenus/année)</li>
+                  <li>• Reçois 15-50 appels/semaine</li>
+                  <li>• Manques 5-15 appels/semaine à cause du volume</li>
+                  <li>• Valeur moyenne de job 300 $+</li>
+                  <li>• Perds 20 k$ à 100 k$/année en opportunités manquées</li>
+                  <li>• <strong>Entreprises avec réceptionnistes/assistantes :</strong> Arrête de les payer 60 k$ pour répondre "Desservez-vous mon secteur ?" 50 fois par jour. Lead Rescue pré-qualifie les appels pour que ton équipe parle juste aux prospects chauds. T'as 4 assistantes ? Garde-en 2 pour du vrai travail pis sauve 120 k$/année.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-red-300 mb-3">✗ Pas pour :</h3>
+                <ul className="space-y-2 text-slate-200">
+                  <li>• Business qui reçoivent moins de 10 appels/semaine</li>
+                  <li>• Valeur moyenne de job en dessous de 150 $</li>
+                  <li>• Consultations complexes nécessitant expertise humaine immédiate (médical, légal, conseils financiers)</li>
+                  <li>• Pas prêt à investir 2 997 $+ d'avance</li>
+                  <li>• Veut "essayer ça cheap" — c'est une plateforme premium</li>
+                  <li>• Pas engagé à améliorer les systèmes de capture de leads</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/30">
+              <p className="text-slate-200">
+                <strong className="text-blue-300">Évaluation honnête :</strong> Si tu perds moins
+                de 10 000 $/année sur des appels manqués, le plan SMS (497 $) pourrait mieux fitter.
+                Si tu perds 20 000 $+/année, le plan Complet (2 997 $) se paye tout seul en 2 mois.
+              </p>
+            </div>
           </div>
 
-          {/* COMMENT ÇA FONCTIONNE */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
+          {/* PROCESS */}
+          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25">
+            <h2 className="text-2xl sm:text-3xl font-heading flex items-center gap-2">
               <span>📋</span>
-              <span>Comment ça se passe, étape par étape</span>
+              <span>Comment le processus fonctionne</span>
             </h2>
-            <ol className="list-decimal list-inside space-y-2 text-slate-100 drop-shadow-sm">
-              <li>
-                <span className="font-semibold">Appel rapide :</span> on regarde
-                comment tes appels, textos et courriels arrivent en ce moment.
-              </li>
-              <li>
-                <span className="font-semibold">Design :</span> on définit ce
-                qui est urgent, ce qu&apos;on ignore et comment les suivis
-                devraient fonctionner.
-              </li>
-              <li>
-                <span className="font-semibold">Construction :</span> je monte
-                le stack d&apos;automatisation (n8n, prompts, logs, résumés).
-              </li>
-              <li>
-                <span className="font-semibold">Tests &amp; lancement :</span>{" "}
-                on teste en vrai, on ajuste les textes et on passe en live.
-              </li>
-              <li>
-                <span className="font-semibold">Plan mensuel :</span> ton plan
-                d&apos;entretien garde le tout stable, à jour et en amélioration.
-              </li>
-            </ol>
+
+            <div className="space-y-4">
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">1</div>
+                <div>
+                  <h3 className="font-semibold text-blue-300">Call stratégique (15 min)</h3>
+                  <p className="text-slate-300 text-sm">On analyse ton flow de leads actuel pis on recommande le bon plan</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">2</div>
+                <div>
+                  <h3 className="font-semibold text-blue-300">Design custom (2-3 jours)</h3>
+                  <p className="text-slate-300 text-sm">On map tes workflows, triggers d'urgence et templates de réponse</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">3</div>
+                <div>
+                  <h3 className="font-semibold text-blue-300">Build & Test (1-2 semaines)</h3>
+                  <p className="text-slate-300 text-sm">On build tes automatisations, dashboard et scripts vocaux</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">4</div>
+                <div>
+                  <h3 className="font-semibold text-blue-300">Go Live (Jour 1)</h3>
+                  <p className="text-slate-300 text-sm">On lance avec monitoring live pis on ajuste based sur de vrais leads</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">5</div>
+                <div>
+                  <h3 className="font-semibold text-blue-300">Support continu (Mensuel)</h3>
+                  <p className="text-slate-300 text-sm">On monitor, optimise et améliore ton système continuellement</p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* CTA FINAL */}
-          <div className="pt-4 text-center space-y-3">
-            <p className="text-slate-100 drop-shadow-sm">
-              Si t&apos;es tanné de manquer des appels et de te demander
-              combien de jobs tu perds chaque semaine, c&apos;est le moment de
-              mettre en place un{" "}
-              <span className="font-semibold text-blue-300">
-                vrai système Lead Rescue
-              </span>{" "}
-              une fois pour toutes.
-            </p>
-            <ConsultCTA href="/fr/onboarding-rescue">
-              Réserver mon appel Lead Rescue
-            </ConsultCTA>
+          {/* FAQ */}
+          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25">
+            <h2 className="text-2xl sm:text-3xl font-heading">Questions fréquentes</h2>
 
-            <p className="text-xs text-slate-400">
-              Installation unique de 497&nbsp;$ avec n&apos;importe quel plan
-              mensuel. On peut toujours ajouter d&apos;autres automatisations
-              plus tard à mesure que ta business évolue.
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-blue-300 mb-2">Pourquoi le plan Complet est 2 997 $ quand d'autres chargent 6 000 $+ ?</h3>
+                <p className="text-slate-300 text-sm">
+                  La plupart des compétiteurs chargent 3 k$ à 6 k$ JUSTE pour l'agent vocal. On bundle
+                  voix, SMS, courriel, dashboard et monitoring dans un système parce qu'on l'a construit
+                  comme plateforme, pas du code custom pour chaque client. Tu reçois des features
+                  entreprise à moitié prix.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-blue-300 mb-2">Je peux upgrader du plan SMS au Complet plus tard ?</h3>
+                <p className="text-slate-300 text-sm">
+                  Oui ! Paye la différence (2 500 $) pis on va ajouter l'agent vocal et les features
+                  avancées. La plupart des clients commencent avec SMS pour tester, pis upgrade en dedans
+                  de 30 jours après avoir vu les résultats.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-blue-300 mb-2">Qu'est-ce qui est inclus dans le support mensuel ?</h3>
+                <p className="text-slate-300 text-sm">
+                  Tous les abonnements (n8n, OpenAI, Telnyx, hosting), monitoring, bug fixes, petits
+                  ajustements et optimisation. Tu payes pas pour notre temps — tu payes pour la peace
+                  of mind que ça marche tout le temps.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-blue-300 mb-2">Combien de leads le système peut gérer ?</h3>
+                <p className="text-slate-300 text-sm">
+                  On traite présentement 10 118 opérations/semaine à travers tous nos clients avec
+                  97,6 % de disponibilité. Ton système peut gérer 100-500 leads/mois facilement. Pour
+                  plus de volume, on passe au plan Entreprise.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-blue-300 mb-2">Et si ça marche pas pour ma business ?</h3>
+                <p className="text-slate-300 text-sm">
+                  Réponse honnête : Si tu reçois pas au moins 10-15 appels/semaine, y'a pas assez de
+                  volume pour justifier le coût. C'est pourquoi on fait un call stratégique avant —
+                  pour s'assurer que c'est un bon fit avant que t'investisses.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* FINAL CTA */}
+          <div className="text-center space-y-6 pt-8">
+            <h2 className="text-3xl sm:text-4xl font-heading">Prêt à arrêter de perdre des leads ?</h2>
+            <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+              Réserve un call stratégique de 15 minutes. On va analyser ton flow de leads actuel
+              pis recommander le bon plan pour ta business.
             </p>
+
+            <Link
+              href="/fr/onboarding-rescue"
+              className="inline-block px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xl rounded-xl shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5"
+            >
+              Réserve ton call stratégique →
+            </Link>
+
+            <div className="pt-6 space-y-2">
+              <p className="text-sm text-slate-400">
+                On accepte présentement 5 nouveaux clients ce mois
+              </p>
+              <div className="flex items-center justify-center gap-4 text-xs text-slate-500">
+                <span>✓ Aucune carte de crédit requise</span>
+                <span>✓ Call stratégique gratuit</span>
+                <span>✓ Recommandations custom</span>
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-slate-800">
+              <Link href="/fr/portfolio" className="text-blue-400 hover:text-blue-300 text-sm">
+                Voir les détails complets de la plateforme & métriques de production →
+              </Link>
+            </div>
           </div>
         </section>
       </div>
