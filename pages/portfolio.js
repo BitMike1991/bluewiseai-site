@@ -177,7 +177,7 @@ export default function Portfolio() {
               {/* CTA Buttons */}
               <div className="flex flex-wrap gap-3 pt-2">
                 <Link
-                  href="/platform/overview"
+                  href="/contact"
                   className="
                     inline-flex items-center gap-2 px-5 py-3 rounded-xl
                     bg-blue-600 hover:bg-blue-500
@@ -187,7 +187,7 @@ export default function Portfolio() {
                     hover:-translate-y-0.5
                   "
                 >
-                  View Live Platform →
+                  Book Live Platform Demo →
                 </Link>
                 <Link
                   href="/lead-rescue"
