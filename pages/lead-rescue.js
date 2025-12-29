@@ -1,6 +1,7 @@
 // pages/lead-rescue.js
 import { useState } from "react";
 import ConsultCTA from "@/components/ConsultCTA";
+import ROICalculator from "@/components/ROICalculator";
 import Link from "next/link";
 
 export default function LeadRescueOffer() {
@@ -292,83 +293,8 @@ export default function LeadRescueOffer() {
             </div>
           </div>
 
-          {/* ROI CALCULATOR SECTION */}
-          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-emerald-500/25">
-            <h2 className="text-2xl sm:text-3xl font-heading flex items-center gap-2">
-              <span>💰</span>
-              <span>ROI: How Fast Does It Pay For Itself?</span>
-            </h2>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-blue-300">The Math (Conservative Estimate)</h3>
-                <div className="space-y-3 text-slate-200">
-                  <div className="flex justify-between border-b border-slate-700 pb-2">
-                    <span>Calls per week:</span>
-                    <strong>20</strong>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-700 pb-2">
-                    <span>Calls going to voicemail (60%):</span>
-                    <strong>12</strong>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-700 pb-2">
-                    <span>Lost leads per week (25%):</span>
-                    <strong>3</strong>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-700 pb-2">
-                    <span>Average job value:</span>
-                    <strong>$500</strong>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold text-red-300 pt-2">
-                    <span>Lost revenue per month:</span>
-                    <strong>$6,000</strong>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold text-red-400">
-                    <span>Lost revenue per year:</span>
-                    <strong>$72,000</strong>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-emerald-300">With Lead Rescue (Full Tier)</h3>
-                <div className="space-y-3 text-slate-200">
-                  <div className="flex justify-between border-b border-slate-700 pb-2">
-                    <span>Setup cost:</span>
-                    <strong>$2,997</strong>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-700 pb-2">
-                    <span>Monthly support:</span>
-                    <strong>$799</strong>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-700 pb-2">
-                    <span>First year total cost:</span>
-                    <strong>$12,585</strong>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-700 pb-2">
-                    <span>Recovered revenue (50% of lost):</span>
-                    <strong>$36,000</strong>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold text-emerald-300 pt-2">
-                    <span>Net profit first year:</span>
-                    <strong>$23,415</strong>
-                  </div>
-                  <div className="flex justify-between text-sm text-emerald-400">
-                    <span>Break even:</span>
-                    <strong>45-60 days</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
-              <p className="text-slate-200 text-sm sm:text-base">
-                <strong className="text-emerald-300">Bottom line:</strong> Recovering just
-                <strong> 6 lost jobs</strong> per month at $500 each covers the entire system
-                and support cost. Everything after that is <strong className="text-emerald-300">pure profit</strong>.
-              </p>
-            </div>
-          </div>
+          {/* INTERACTIVE ROI CALCULATOR */}
+          <ROICalculator />
 
           {/* WHAT'S INCLUDED */}
           <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25">

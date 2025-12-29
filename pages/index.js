@@ -404,6 +404,16 @@ export default function Home() {
                   Companies where average job value is $300+ and missed calls = lost revenue
                 </span>
               </li>
+              <li className="flex items-start gap-3">
+                <span className="text-emerald-400 mt-1">→</span>
+                <span>
+                  <strong className="text-white">Businesses with receptionists/assistants:</strong>{" "}
+                  Stop paying them $60K to answer "Do you work in my area?" 50 times per day.
+                  Lead Rescue pre-qualifies calls so your team only talks to hot leads.
+                  Turn your receptionist from a call screener into a closer. Have 4 assistants?
+                  Keep 2 for serious work and save $120K/year.
+                </span>
+              </li>
             </ul>
           </div>
 
@@ -417,13 +427,7 @@ export default function Home() {
                 <span className="text-red-400 mt-1">→</span>
                 <span>
                   Businesses where most calls are complex consultations requiring
-                  human expertise immediately
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-red-400 mt-1">→</span>
-                <span>
-                  Companies with full-time receptionists and excellent phone coverage
+                  human expertise immediately (medical, legal, financial advice, etc.)
                 </span>
               </li>
               <li className="flex items-start gap-3">
