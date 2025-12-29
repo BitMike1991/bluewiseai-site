@@ -46,31 +46,32 @@ export default function Contact() {
         >
           {/* Page Title */}
           <h1 className="text-4xl font-heading text-center drop-shadow-md">
-            🧠 Free 15-Minute AI Automation Audit
+            📞 Free 15-Minute Lead Rescue Strategy Call
           </h1>
 
           {/* Intro message */}
           <div className="space-y-4 text-center drop-shadow-sm text-slate-100">
             <p className="text-lg">
-              Let&apos;s see exactly how many hours you can save each week.
+              See exactly how much revenue you're losing to missed calls—and how Lead Rescue can recover it.
             </p>
             <p>
-              Share a bit about your business and where you feel the most
-              overloaded (emails, leads, follow-ups, booking, etc.). I&apos;ll map
-              out 1–3 concrete automations you can implement right away — no
-              fluff, no pressure, just a clear plan.
+              Tell me about your business: How many calls do you get per week? How many do you miss?
+              What's your average job value? I'll calculate your exact revenue loss and show you
+              which Lead Rescue tier makes sense for your business.
             </p>
             <p className="text-sm text-slate-300">
-              In 15 minutes we&apos;ll:
+              In 15 minutes we'll:
               <br />
-              • Spot where you&apos;re losing time every day
+              • Calculate your current revenue loss from missed calls
               <br />
-              • Identify quick-win automations tailored to your business
+              • Show you how Lead Rescue captures those leads automatically
               <br />
-              • Decide the best next step to implement (DIY or done-for-you)
+              • Recommend the right tier (SMS, Full, or Enterprise)
+              <br />
+              • Map out your break-even timeline and ROI
             </p>
             <p className="text-xl font-semibold">
-              Tell me where it hurts. I&apos;ll show you what we can automate.
+              No sales pitch. Just honest numbers and a clear recommendation.
             </p>
           </div>
 
@@ -122,12 +123,12 @@ export default function Contact() {
 
             <div>
               <label className="block text-sm font-medium drop-shadow-sm">
-                What do you want to automate first?
+                Tell me about your business
               </label>
               <textarea
                 name="message"
                 rows="5"
-                placeholder="Example: Too many client emails, can’t keep up with quote requests, missed calls, follow-ups, etc."
+                placeholder="Example: HVAC company, get 30 calls/week, miss about 10 while on jobs, average job is $500. Looking to capture more leads without hiring another person."
                 value={form.message}
                 onChange={handleChange}
                 required
@@ -157,7 +158,7 @@ export default function Contact() {
                 transition-all duration-300
               "
             >
-              Request My Free 15-Min Audit
+              Book My Free Strategy Call
             </button>
 
             {status && (
@@ -181,7 +182,7 @@ export default function Contact() {
                 </a>
               </li>
               <li>
-                📅 Book your free 15-min audit:{' '}
+                📅 Book directly:{' '}
                 <a
                   href="https://calendly.com/mikael-bluewiseai"
                   target="_blank"

@@ -46,31 +46,32 @@ export default function ContactFr() {
         >
           {/* Titre de page */}
           <h1 className="text-4xl font-heading text-center drop-shadow-md">
-            🧠 Audit IA gratuit de 15 minutes
+            📞 Call stratégique Lead Rescue gratuit de 15 minutes
           </h1>
 
-          {/* Message d’intro */}
+          {/* Message d'intro */}
           <div className="space-y-4 text-center drop-shadow-sm text-slate-100">
             <p className="text-lg">
-              Voyons ensemble combien d&apos;heures vous pouvez gagner chaque semaine grâce à l&apos;automatisation.
+              Vois exactement combien de revenus tu perds sur des appels manqués — pis comment Lead Rescue peut les récupérer.
             </p>
             <p>
-              Parlez-moi de votre entreprise et des tâches qui vous épuisent le plus
-              (emails clients, demandes de soumission, suivis, prise de rendez-vous, etc.).
-              Je vous proposerai 1 à 3 automatisations concrètes à mettre en place rapidement —
-              sans blabla, sans pression, juste un plan clair pour votre PME.
+              Parle-moi de ta business : Combien d'appels tu reçois par semaine ? Combien t'en manques ?
+              C'est quoi ta valeur moyenne de job ? Je vais calculer ta perte de revenus exacte pis te montrer
+              quel plan Lead Rescue fait du sens pour ta business.
             </p>
             <p className="text-sm text-slate-300">
-              En 15 minutes, nous allons :
+              En 15 minutes on va :
               <br />
-              • Repérer où vous perdez du temps au quotidien
+              • Calculer ta perte de revenus actuelle sur des appels manqués
               <br />
-              • Identifier des automatisations rapides adaptées à votre activité
+              • Te montrer comment Lead Rescue capture ces leads automatiquement
               <br />
-              • Choisir le meilleur prochain pas (en autonomie ou clé en main avec BlueWise AI)
+              • Recommander le bon plan (SMS, Complet ou Entreprise)
+              <br />
+              • Mapper ton timeline de rentabilité pis ton ROI
             </p>
             <p className="text-xl font-semibold">
-              Dites-moi où ça bloque. Je vous montre ce que l&apos;IA peut automatiser pour vous.
+              Pas de pitch de vente. Juste des chiffres honnêtes pis une recommandation claire.
             </p>
           </div>
 
@@ -122,12 +123,12 @@ export default function ContactFr() {
 
             <div>
               <label className="block text-sm font-medium drop-shadow-sm">
-                Qu&apos;est-ce que vous aimeriez automatiser en premier ?
+                Parle-moi de ta business
               </label>
               <textarea
                 name="message"
                 rows="5"
-                placeholder="Exemple : Trop d’emails clients, difficile de suivre les demandes de soumission, appels manqués, suivis, etc."
+                placeholder="Exemple : Compagnie CVC, reçois 30 appels/semaine, en manque environ 10 quand j'suis sur des jobs, job moyen de 500 $. Je cherche à capturer plus de leads sans engager une autre personne."
                 value={form.message}
                 onChange={handleChange}
                 required
@@ -157,7 +158,7 @@ export default function ContactFr() {
                 transition-all duration-300
               "
             >
-              Demander mon audit gratuit de 15 min
+              Réserver mon call stratégique gratuit
             </button>
 
             {status && (
@@ -183,7 +184,7 @@ export default function ContactFr() {
                 </a>
               </li>
               <li>
-                📅 Réserver votre audit gratuit de 15 min :{' '}
+                📅 Réserver directement :{' '}
                 <a
                   href="https://calendly.com/mikael-bluewiseai"
                   target="_blank"
@@ -238,7 +239,7 @@ export default function ContactFr() {
                 </a>
               </li>
               <li>
-                🕐 Délai de réponse : je réponds généralement sous 24–48 h (lundi à vendredi).
+                🕐 Délai de réponse : je réponds généralement en dedans de 24–48 h (lundi à vendredi).
               </li>
             </ul>
           </div>
