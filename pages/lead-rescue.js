@@ -1,7 +1,11 @@
 // pages/lead-rescue.js
+import { useState } from "react";
 import ConsultCTA from "@/components/ConsultCTA";
+import Link from "next/link";
 
 export default function LeadRescueOffer() {
+  const [selectedTier, setSelectedTier] = useState("pro");
+
   return (
     <div
       className="
@@ -14,7 +18,7 @@ export default function LeadRescueOffer() {
       <div className="min-h-screen py-16 px-4 backdrop-brightness-110">
         <section
           className="
-            max-w-5xl mx-auto space-y-10 px-6 sm:px-12 py-10
+            max-w-6xl mx-auto space-y-12 px-6 sm:px-12 py-10
             rounded-3xl
             bg-slate-950/80
             border border-white/10
@@ -23,516 +27,564 @@ export default function LeadRescueOffer() {
           "
         >
           {/* HERO */}
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl font-heading drop-shadow-md">
-              Trade Lead Rescue System
+          <div className="text-center space-y-4 max-w-4xl mx-auto">
+            <h1 className="text-4xl sm:text-5xl font-heading drop-shadow-md">
+              Lead Rescue Platform
             </h1>
-            <p className="text-lg text-slate-100 drop-shadow-sm">
-              <span className="font-semibold text-blue-300">
-                Every missed call is a lost job.
-              </span>{" "}
-              Stop leaving money on the table. Let an AI assistant rescue your
-              leads 24/7 for your HVAC, plumbing, roofing, chimney or
-              electrical business.
+            <p className="text-xl sm:text-2xl text-blue-300 font-semibold">
+              AI-Powered Lead Recovery for Trade Businesses
             </p>
-            <p className="text-sm text-slate-300 drop-shadow-sm">
-              Special offer for small trades:{" "}
-              <span className="font-semibold text-blue-300">
-                one-time setup fee $497
-              </span>{" "}
-              (instead of{" "}
-              <span className="font-semibold">$1,997–$3,500</span>) when you
-              choose any monthly care plan.
+            <p className="text-lg text-slate-200 drop-shadow-sm">
+              Stop losing $28,800+/year to missed calls. Lead Rescue automatically responds to every lead
+              via SMS, voice, and email—capturing jobs while you're on-site.
             </p>
-            <ConsultCTA href="/onboarding-rescue">
-              Start My Lead Rescue System
-            </ConsultCTA>
+
+            {/* Production Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8 max-w-3xl mx-auto">
+              <div className="bg-slate-900/60 rounded-xl p-3 border border-blue-500/30">
+                <div className="text-2xl font-bold text-blue-300">10,118</div>
+                <div className="text-xs text-slate-300">Operations/Week</div>
+              </div>
+              <div className="bg-slate-900/60 rounded-xl p-3 border border-emerald-500/30">
+                <div className="text-2xl font-bold text-emerald-300">97.6%</div>
+                <div className="text-xs text-slate-300">Uptime</div>
+              </div>
+              <div className="bg-slate-900/60 rounded-xl p-3 border border-purple-500/30">
+                <div className="text-2xl font-bold text-purple-300">24/7</div>
+                <div className="text-xs text-slate-300">Automated</div>
+              </div>
+              <div className="bg-slate-900/60 rounded-xl p-3 border border-amber-500/30">
+                <div className="text-2xl font-bold text-amber-300">97</div>
+                <div className="text-xs text-slate-300">Leads Qualified</div>
+              </div>
+            </div>
           </div>
 
-          {/* PROBLEM + STATS + SIMPLE MATH */}
-          <div
-            className="
-              space-y-5 p-5 md:p-6 rounded-2xl
-              bg-slate-900/80 border border-blue-500/25
-              shadow-[0_0_30px_rgba(15,23,42,0.9)]
-            "
-          >
-            <h2 className="text-2xl font-heading drop-shadow-sm flex items-center gap-2">
+          {/* PROBLEM SECTION */}
+          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25 shadow-[0_0_30px_rgba(15,23,42,0.9)]">
+            <h2 className="text-2xl sm:text-3xl font-heading flex items-center gap-2">
               <span>🚨</span>
-              <span>Why small trade businesses quietly lose thousands</span>
+              <span>The $28,800/Year Problem Every Trade Business Has</span>
             </h2>
 
-            <p className="text-slate-100 drop-shadow-sm">
-              Most trades are booked by phone, text or email. When you&apos;re
-              on a roof, under a sink or in front of a customer, you simply
-              can&apos;t answer everything in time.
+            <p className="text-slate-200 text-lg">
+              When you're on a roof, under a sink, or in front of a customer, you can't answer every call.
+              And every missed call is money walking out the door.
             </p>
 
-            <div className="grid md:grid-cols-2 gap-4 text-sm">
-              <div
-                className="
-                  rounded-2xl p-4
-                  bg-slate-950/80 border border-red-500/40
-                "
-              >
-                <h3 className="font-semibold text-red-300 mb-2">
-                  Without Lead Rescue
-                </h3>
-                <ul className="space-y-1 text-slate-100">
-                  <li>❌ Calls go to voicemail and never call back.</li>
-                  <li>❌ Emails sit unread until late at night.</li>
-                  <li>❌ Emergencies get missed or answered too late.</li>
-                  <li>❌ No follow-up means warm leads go cold.</li>
-                  <li>❌ You never see the full picture of your leads.</li>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="rounded-xl p-5 bg-slate-950/80 border border-red-500/40">
+                <h3 className="font-semibold text-red-300 mb-3 text-lg">❌ Without Lead Rescue</h3>
+                <ul className="space-y-2 text-slate-200">
+                  <li>• 60% of calls go to voicemail</li>
+                  <li>• 80% of voicemails never get returned</li>
+                  <li>• Leads call your competitors next</li>
+                  <li>• <strong>$28,800/year in lost revenue</strong> (20 calls/week)</li>
+                  <li>• Manual follow-up takes 2+ hours/day</li>
                 </ul>
               </div>
 
-              <div
-                className="
-                  rounded-2xl p-4
-                  bg-slate-950/80 border border-emerald-500/40
-                "
-              >
-                <h3 className="font-semibold text-emerald-300 mb-2">
-                  With Lead Rescue
-                </h3>
-                <ul className="space-y-1 text-slate-100">
-                  <li>✅ Every missed call gets an instant text back.</li>
-                  <li>✅ Email is auto-sorted by lead vs noise.</li>
-                  <li>✅ Emergencies are flagged and prioritized.</li>
-                  <li>✅ Auto follow-up keeps you top of mind.</li>
-                  <li>✅ Daily summary shows every opportunity.</li>
+              <div className="rounded-xl p-5 bg-slate-950/80 border border-emerald-500/40">
+                <h3 className="font-semibold text-emerald-300 mb-3 text-lg">✅ With Lead Rescue</h3>
+                <ul className="space-y-2 text-slate-200">
+                  <li>• 100% response within 5 minutes (automated)</li>
+                  <li>• AI qualifies leads automatically</li>
+                  <li>• Emergencies flagged and prioritized</li>
+                  <li>• <strong>Recover $2,400+/month</strong> in lost revenue</li>
+                  <li>• Zero manual follow-up required</li>
                 </ul>
               </div>
             </div>
 
-            {/* STATS BLOCK – REAL, SOURCE-BASED NUMBERS */}
-            <div
-              className="
-                mt-3 rounded-2xl p-4
-                bg-slate-950/80 border border-blue-500/40
-                text-sm text-slate-100
-              "
-            >
-              <h3 className="font-semibold text-blue-300 mb-1">
-                What the data says about missed calls:
-              </h3>
-              <ul className="list-disc list-inside space-y-1">
-                <li>
-                  Industry call-tracking studies show that around{" "}
-                  <span className="font-semibold">
-                    60–62% of calls to small businesses go unanswered
-                  </span>
-                  .
-                </li>
-                <li>
-                  Only about{" "}
-                  <span className="font-semibold">1 in 5 callers</span> who hit
-                  voicemail actually leave a message — the rest just hang up.
-                </li>
-                <li>
-                  Research from InsideSales / HubSpot-style reports shows{" "}
-                  <span className="font-semibold">
-                    roughly 50% of buyers choose the vendor that responds first
-                  </span>
-                  .
-                </li>
-                <li>
-                  Responding to a new lead within{" "}
-                  <span className="font-semibold">5 minutes</span> can make you
-                  dramatically more likely to qualify and win that job compared
-                  to waiting hours or days.
-                </li>
-              </ul>
-              <p className="mt-2 text-slate-300">
-                In plain language: if you don&apos;t answer or follow up fast,
-                a huge percentage of those leads simply disappear — and often go
-                straight to your competitors.
+            {/* Real Testimonial */}
+            <div className="mt-6 rounded-xl p-5 bg-slate-950/60 border border-slate-700/50">
+              <p className="text-slate-200 italic text-sm sm:text-base">
+                "We sent 90 Slybroadcast messages and got our first callback within 24 hours.
+                The AI handled it automatically while I was working on site."
+              </p>
+              <p className="text-blue-300 text-sm mt-2">— Mikael, Ramoneur Multi-Services</p>
+            </div>
+          </div>
+
+          {/* PRICING TIERS */}
+          <div className="space-y-6">
+            <div className="text-center space-y-3">
+              <h2 className="text-3xl sm:text-4xl font-heading">Choose Your Lead Rescue System</h2>
+              <p className="text-slate-300 text-lg max-w-3xl mx-auto">
+                All systems include your custom dashboard, production monitoring, and ongoing support.
+                Choose the level of automation that fits your business.
               </p>
             </div>
 
-            {/* SIMPLE, HONEST MATH */}
-            <div
-              className="
-                mt-3 rounded-2xl p-4
-                bg-slate-950/80 border border-slate-700/70
-                text-sm text-slate-100
-              "
-            >
-              <h3 className="font-semibold text-blue-300 mb-1">
-                Simple, honest math (no hype):
-              </h3>
-              <p>
-                If you get just{" "}
-                <span className="font-semibold">20 calls per week</span> and
-                miss 8 of them, and if only{" "}
-                <span className="font-semibold">3 of those could become jobs</span>{" "}
-                at a conservative{" "}
-                <span className="font-semibold">$200 per job</span>, that&apos;s:
-              </p>
-              <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>
-                  <span className="font-semibold">$600 / week</span> in possible
-                  work
-                </li>
-                <li>
-                  ≈ <span className="font-semibold">$2,400 / month</span> in
-                  missed revenue
-                </li>
-                <li>
-                  ≈ <span className="font-semibold">$28,800 / year</span> left
-                  on the table
-                </li>
-              </ul>
-              <p className="mt-2 text-slate-300">
-                Recovering even <span className="font-semibold">one job</span>{" "}
-                per month usually pays for the system by itself.
+            <div className="grid md:grid-cols-3 gap-6">
+              {/* TIER 1: SMS LEAD RESCUE */}
+              <div className={`rounded-2xl p-6 border-2 transition-all duration-200 ${selectedTier === 'starter' ? 'border-blue-500/70 bg-slate-900/80' : 'border-slate-700/50 bg-slate-900/60'}`}>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-xl font-heading text-slate-200">SMS Lead Rescue</h3>
+                    <p className="text-sm text-slate-400 mt-1">Perfect for getting started</p>
+                  </div>
+
+                  <div className="py-4">
+                    <div className="text-4xl font-bold text-blue-300">$497</div>
+                    <div className="text-sm text-slate-400">One-time setup</div>
+                    <div className="text-sm text-slate-300 mt-2">+ $249/mo support</div>
+                  </div>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200">Missed call → SMS automation</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200">SMS lead qualifier bot</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200">Lead tracking dashboard</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200">Daily lead summary emails</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-slate-500 mt-0.5">✗</span>
+                      <span className="text-slate-500">Voice AI agent</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-slate-500 mt-0.5">✗</span>
+                      <span className="text-slate-500">Inbox email engine</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedTier('starter')}
+                    className={`w-full py-3 rounded-xl font-semibold transition-all ${selectedTier === 'starter' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                  >
+                    {selectedTier === 'starter' ? 'Selected' : 'Select Plan'}
+                  </button>
+                </div>
+              </div>
+
+              {/* TIER 2: FULL LEAD RESCUE (RECOMMENDED) */}
+              <div className={`rounded-2xl p-6 border-2 relative ${selectedTier === 'pro' ? 'border-emerald-500/70 bg-gradient-to-br from-emerald-900/20 to-slate-900/80' : 'border-emerald-500/50 bg-slate-900/60'}`}>
+                {/* Most Popular Badge */}
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                  ⭐ Most Popular
+                </div>
+
+                <div className="space-y-4 mt-2">
+                  <div>
+                    <h3 className="text-xl font-heading text-slate-50">Full Lead Rescue</h3>
+                    <p className="text-sm text-emerald-300 mt-1">Complete automation suite</p>
+                  </div>
+
+                  <div className="py-4">
+                    <div className="text-4xl font-bold text-emerald-300">$2,997</div>
+                    <div className="text-sm text-slate-400">One-time setup</div>
+                    <div className="text-sm text-slate-300 mt-2">+ $799/mo support</div>
+                    <div className="text-xs text-emerald-300 mt-1">Save $3,000 vs competitors</div>
+                  </div>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-100 font-semibold">Everything in SMS tier</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-100"><strong>VAPI Voice AI agent</strong> (24/7 call answering)</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-100">Voice-to-lead qualification</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-100">Multi-channel (voice + SMS + email)</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-100">Advanced lead scoring</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-100">Priority support (4-hour response)</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedTier('pro')}
+                    className="w-full py-3 rounded-xl font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg shadow-emerald-500/30"
+                  >
+                    {selectedTier === 'pro' ? '✓ Selected' : 'Select Best Value'}
+                  </button>
+
+                  <div className="text-xs text-center text-slate-400 pt-2">
+                    ROI: Break even in 45-60 days
+                  </div>
+                </div>
+              </div>
+
+              {/* TIER 3: ENTERPRISE */}
+              <div className={`rounded-2xl p-6 border-2 transition-all duration-200 ${selectedTier === 'enterprise' ? 'border-amber-500/70 bg-slate-900/80' : 'border-slate-700/50 bg-slate-900/60'}`}>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-xl font-heading text-slate-200">Enterprise</h3>
+                    <p className="text-sm text-slate-400 mt-1">For multi-location businesses</p>
+                  </div>
+
+                  <div className="py-4">
+                    <div className="text-4xl font-bold text-amber-300">$4,997</div>
+                    <div className="text-sm text-slate-400">One-time setup</div>
+                    <div className="text-sm text-slate-300 mt-2">+ $1,200/mo support</div>
+                  </div>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-100 font-semibold">Everything in Full tier</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200"><strong>Inbox AI engine</strong> (email triage)</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200">Multi-location support</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200">Custom CRM integrations</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200">Priority support (2-hour response)</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span className="text-slate-200">Monthly strategy calls</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedTier('enterprise')}
+                    className={`w-full py-3 rounded-xl font-semibold transition-all ${selectedTier === 'enterprise' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                  >
+                    {selectedTier === 'enterprise' ? 'Selected' : 'Select Plan'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* CTA Below Pricing */}
+            <div className="text-center pt-4">
+              <Link
+                href="/onboarding-rescue"
+                className="inline-block px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg rounded-xl shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
+              >
+                Get Started with Lead Rescue →
+              </Link>
+              <p className="text-sm text-slate-400 mt-3">
+                Book a 15-minute call to see which tier is right for your business
               </p>
             </div>
           </div>
 
-          {/* WHAT THE SYSTEM DOES */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
+          {/* ROI CALCULATOR SECTION */}
+          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-emerald-500/25">
+            <h2 className="text-2xl sm:text-3xl font-heading flex items-center gap-2">
+              <span>💰</span>
+              <span>ROI: How Fast Does It Pay For Itself?</span>
+            </h2>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-blue-300">The Math (Conservative Estimate)</h3>
+                <div className="space-y-3 text-slate-200">
+                  <div className="flex justify-between border-b border-slate-700 pb-2">
+                    <span>Calls per week:</span>
+                    <strong>20</strong>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-700 pb-2">
+                    <span>Calls going to voicemail (60%):</span>
+                    <strong>12</strong>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-700 pb-2">
+                    <span>Lost leads per week (25%):</span>
+                    <strong>3</strong>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-700 pb-2">
+                    <span>Average job value:</span>
+                    <strong>$500</strong>
+                  </div>
+                  <div className="flex justify-between text-lg font-bold text-red-300 pt-2">
+                    <span>Lost revenue per month:</span>
+                    <strong>$6,000</strong>
+                  </div>
+                  <div className="flex justify-between text-lg font-bold text-red-400">
+                    <span>Lost revenue per year:</span>
+                    <strong>$72,000</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-emerald-300">With Lead Rescue (Full Tier)</h3>
+                <div className="space-y-3 text-slate-200">
+                  <div className="flex justify-between border-b border-slate-700 pb-2">
+                    <span>Setup cost:</span>
+                    <strong>$2,997</strong>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-700 pb-2">
+                    <span>Monthly support:</span>
+                    <strong>$799</strong>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-700 pb-2">
+                    <span>First year total cost:</span>
+                    <strong>$12,585</strong>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-700 pb-2">
+                    <span>Recovered revenue (50% of lost):</span>
+                    <strong>$36,000</strong>
+                  </div>
+                  <div className="flex justify-between text-lg font-bold text-emerald-300 pt-2">
+                    <span>Net profit first year:</span>
+                    <strong>$23,415</strong>
+                  </div>
+                  <div className="flex justify-between text-sm text-emerald-400">
+                    <span>Break even:</span>
+                    <strong>45-60 days</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+              <p className="text-slate-200 text-sm sm:text-base">
+                <strong className="text-emerald-300">Bottom line:</strong> Recovering just
+                <strong> 6 lost jobs</strong> per month at $500 each covers the entire system
+                and support cost. Everything after that is <strong className="text-emerald-300">pure profit</strong>.
+              </p>
+            </div>
+          </div>
+
+          {/* WHAT'S INCLUDED */}
+          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25">
+            <h2 className="text-2xl sm:text-3xl font-heading flex items-center gap-2">
               <span>🤖</span>
-              <span>What your Lead Rescue System actually does</span>
-            </h2>
-            <p className="text-slate-100 drop-shadow-sm">
-              Think of it as a{" "}
-              <span className="font-semibold text-blue-300">
-                digital front-desk assistant
-              </span>{" "}
-              that never sleeps and never forgets to follow up.
-            </p>
-
-            <div className="grid md:grid-cols-2 gap-4 text-sm text-slate-100">
-              <div className="rounded-2xl p-4 bg-slate-900/80 border border-slate-700/70">
-                <h3 className="font-semibold mb-2 text-blue-200">
-                  Included in every Lead Rescue setup:
-                </h3>
-                <ul className="space-y-1">
-                  <li>✅ Missed-call → instant text-back flow</li>
-                  <li>✅ Automatic email triage</li>
-                  <li>✅ Emergency job detection &amp; priority tagging</li>
-                  <li>✅ Auto follow-up sequence for leads</li>
-                  <li>✅ Daily 8AM job &amp; lead summary</li>
-                  <li>✅ Lead tracking + logs for every contact</li>
-                </ul>
-              </div>
-
-              <div className="rounded-2xl p-4 bg-slate-900/80 border border-slate-700/70">
-                <h3 className="font-semibold mb-2 text-blue-200">
-                  Built specifically for small trades:
-                </h3>
-                <ul className="space-y-1">
-                  <li>✅ HVAC, plumbing, roofing, chimney, electricians</li>
-                  <li>✅ Works with your existing phone &amp; email</li>
-                  <li>✅ No need to learn a new app or CRM</li>
-                  <li>✅ You stay in control of approvals &amp; changes</li>
-                  <li>✅ I handle the technical stack (n8n, LLM, APIs…)</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {/* OFFER + PRICING */}
-          <div
-            className="
-              space-y-5 p-5 md:p-6 rounded-2xl
-              bg-slate-900/80 border border-blue-500/35
-              shadow-[0_0_30px_rgba(15,23,42,0.9)]
-            "
-          >
-            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
-              <span>💼</span>
-              <span>The Trade Lead Rescue Offer</span>
+              <span>What's Included In Every System</span>
             </h2>
 
-            <p className="text-slate-100 drop-shadow-sm">
-              Normally, building a set of integrated automations like this would
-              sit inside a{" "}
-              <span className="font-semibold text-blue-300">
-                $1,997–$3,500 system project
-              </span>
-              . For small trade businesses, I&apos;m packaging the essential
-              pieces into a focused Lead Rescue System instead.
-            </p>
-
-            <div
-              className="
-                rounded-2xl p-4 md:p-5
-                bg-slate-950/80 border border-emerald-500/60
-                shadow-[0_0_26px_rgba(16,185,129,0.4)]
-              "
-            >
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <div>
-                  <p className="text-sm uppercase tracking-wide text-emerald-300">
-                    One-time setup (Lead Rescue System)
-                  </p>
-                  <h3 className="text-2xl font-heading drop-shadow-sm">
-                    Trade Lead Rescue Setup
-                  </h3>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm line-through text-slate-400">
-                    $1,997 – $3,500 USD
-                  </p>
-                  <p className="text-xl font-semibold text-emerald-300">
-                    $497 USD one-time
-                  </p>
-                  <p className="text-xs text-slate-300">
-                    with any monthly care plan
-                  </p>
-                </div>
-              </div>
-
-              <p className="mt-3 text-sm text-slate-100">
-                This covers design, build, testing and deployment of your Lead
-                Rescue System. No hidden hourly fees. If you later want more
-                custom automations (quotes, scheduling, internal tools, etc.),
-                we can scope those as separate projects.
-              </p>
-            </div>
-
-            {/* ROI BLOCK */}
-            <div
-              className="
-                rounded-2xl p-4
-                bg-slate-950/80 border border-slate-700/80
-                text-sm text-slate-100
-              "
-            >
-              <h3 className="font-semibold text-blue-300 mb-1">
-                What does it need to recover to pay for itself?
-              </h3>
-              <ul className="list-disc list-inside space-y-1">
-                <li>
-                  Recover <span className="font-semibold">1 job / month</span>{" "}
-                  at $300 → your monthly plan is covered.
-                </li>
-                <li>
-                  Recover <span className="font-semibold">1 job / week</span> at
-                  $250 → you&apos;re up roughly $700–$900 / month.
-                </li>
-                <li>
-                  Recover{" "}
-                  <span className="font-semibold">a single emergency job</span>{" "}
-                  at $500+ → you&apos;ve already paid for the $497 setup.
-                </li>
-              </ul>
-              <p className="mt-2 text-slate-300">
-                We design your system so it only takes a{" "}
-                <span className="font-semibold">small fraction</span> of your
-                lost leads to make it profitable.
-              </p>
-            </div>
-          </div>
-
-          {/* ONGOING CARE & OPTIMIZATION (MONTHLY RETAINERS) */}
-          <div
-            className="
-              space-y-4 p-5 md:p-6 rounded-2xl
-              bg-slate-900/80 border border-blue-500/25
-              shadow-[0_0_30px_rgba(15,23,42,0.9)]
-            "
-          >
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
-                  <span>🛠️</span>
-                  <span>Ongoing Care &amp; Optimization</span>
-                </h2>
-                <div className="text-right">
-                  <p className="text-sm uppercase tracking-wide text-slate-300">
-                    Monthly retainers
-                  </p>
-                  <p className="text-sm text-blue-300 font-semibold">
-                    From $249 / month
-                  </p>
-                </div>
-              </div>
-
-              <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-                Once your Lead Rescue System is live, you don&apos;t want to
-                worry about tools, API keys, updates or breakage. These
-                retainers keep your automations healthy, up to date and
-                improving — and they bundle{" "}
-                <span className="font-semibold">
-                  the core tools and subscriptions
-                </span>{" "}
-                into one predictable fee.
-              </p>
-
-              {/* What’s included in monthly plans */}
-              <div className="bg-slate-950/60 border border-blue-500/40 p-4 rounded-xl text-sm text-slate-100">
-                <p className="text-blue-300 font-semibold mb-2">
-                  Every monthly plan includes:
-                </p>
-                <ul className="space-y-1">
-                  <li>• Hosting & monitoring of your automations (n8n, DB, logs)</li>
-                  <li>• Core subscriptions (OpenAI usage, infra, dev tools)</li>
-                  <li>• Telnyx messaging setup and management</li>
-                  <li>• Account creation & configuration for all needed tools</li>
-                  <li>• Debugging and fixes when APIs or platforms change</li>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <h3 className="font-semibold text-blue-300 text-lg">Technology Stack</h3>
+                <ul className="space-y-2 text-slate-200 text-sm">
+                  <li>✓ Custom n8n automation workflows</li>
+                  <li>✓ Supabase database + authentication</li>
+                  <li>✓ OpenAI GPT-4 for lead qualification</li>
+                  <li>✓ Telnyx SMS/Voice integration</li>
+                  <li>✓ VAPI Voice AI (Full & Enterprise tiers)</li>
+                  <li>✓ Production monitoring & error handling</li>
                 </ul>
-                <p className="text-[11px] text-slate-400 mt-2">
-                  Most businesses spend $120–$250/month on these tools alone —
-                  here they&apos;re bundled inside your plan.
-                </p>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-4">
-                {/* Basic */}
-                <div
-                  className="
-                    rounded-2xl p-4
-                    bg-slate-950/70 border border-slate-700/70
-                    shadow-[0_0_18px_rgba(15,23,42,0.8)]
-                  "
-                >
-                  <h3 className="font-heading text-lg drop-shadow-sm">Basic</h3>
-                  <p className="text-blue-300 font-semibold text-sm mb-2">
-                    $249 / month
-                  </p>
-                  <ul className="text-sm space-y-1 text-slate-100 drop-shadow-sm">
-                    <li>• Monitoring of key Lead Rescue flows</li>
-                    <li>• Fixes & small tweaks included</li>
-                    <li>• Monthly health check summary</li>
-                    <li>• Core infra & tools covered</li>
-                  </ul>
-                </div>
-
-                {/* Standard */}
-                <div
-                  className="
-                    rounded-2xl p-4
-                    bg-slate-950/80 border border-blue-500/60
-                    shadow-[0_0_24px_rgba(37,99,235,0.7)]
-                  "
-                >
-                  <h3 className="font-heading text-lg drop-shadow-sm">
-                    Standard
-                  </h3>
-                  <p className="text-blue-300 font-semibold text-sm mb-2">
-                    $449 / month
-                  </p>
-                  <ul className="text-sm space-y-1 text-slate-100 drop-shadow-sm">
-                    <li>• Everything in Basic</li>
-                    <li>• 1–2 new automation steps each month</li>
-                    <li>• Ongoing tuning of follow-up, tagging, summaries</li>
-                    <li>• Priority for new feature requests</li>
-                  </ul>
-                </div>
-
-                {/* Premium */}
-                <div
-                  className="
-                    rounded-2xl p-4
-                    bg-slate-950/70 border border-amber-400/70
-                    shadow-[0_0_24px_rgba(251,191,36,0.6)]
-                  "
-                >
-                  <h3 className="font-heading text-lg drop-shadow-sm">
-                    Premium
-                  </h3>
-                  <p className="text-blue-300 font-semibold text-sm mb-2">
-                    $799 / month
-                  </p>
-                  <ul className="text-sm space-y-1 text-slate-100 drop-shadow-sm">
-                    <li>• Everything in Standard</li>
-                    <li>• Unlimited small Lead Rescue tweaks & variants</li>
-                    <li>• Fast turnaround & priority support</li>
-                    <li>• Strategy input as your systems expand</li>
-                  </ul>
-                </div>
+              <div className="space-y-3">
+                <h3 className="font-semibold text-blue-300 text-lg">Your Dashboard</h3>
+                <ul className="space-y-2 text-slate-200 text-sm">
+                  <li>✓ Real-time lead tracking & conversations</li>
+                  <li>✓ Lead scoring & qualification status</li>
+                  <li>✓ Daily summary emails (8 AM)</li>
+                  <li>✓ Emergency job detection & alerts</li>
+                  <li>✓ Full conversation history</li>
+                  <li>✓ Mobile-responsive design</li>
+                </ul>
               </div>
+            </div>
 
-              <p className="text-sm text-slate-300 drop-shadow-sm">
-                Your{" "}
-                <span className="font-semibold text-blue-300">
-                  $497 setup fee
-                </span>{" "}
-                is paid once to build and launch your Lead Rescue System. The
-                monthly plan keeps everything running smoothly and evolving with
-                your business.
+            <div className="mt-6 p-4 rounded-xl bg-slate-950/60 border border-slate-700/50">
+              <p className="text-sm text-slate-300">
+                <strong className="text-blue-300">All infrastructure included:</strong> You don't need
+                to manage API keys, hosting, or technical setup. We handle everything so you can focus
+                on running your business.
               </p>
             </div>
           </div>
 
           {/* WHO THIS IS FOR */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
+          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25">
+            <h2 className="text-2xl sm:text-3xl font-heading flex items-center gap-2">
               <span>🎯</span>
-              <span>Who this is for</span>
+              <span>Is Lead Rescue Right For Your Business?</span>
             </h2>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              This offer is designed for{" "}
-              <span className="font-semibold text-blue-300">
-                small trade business owners
-              </span>{" "}
-              who are still wearing the tool belt and running the office at the
-              same time.
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-slate-100 drop-shadow-sm">
-              <li>HVAC techs, plumbers, roofers, chimney pros, electricians.</li>
-              <li>Solo operators and small teams with no full-time office staff.</li>
-              <li>
-                Owners who know they&apos;re losing work when they&apos;re too
-                busy to answer everything.
-              </li>
-            </ul>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-semibold text-emerald-300 mb-3">✓ Perfect For:</h3>
+                <ul className="space-y-2 text-slate-200">
+                  <li>• HVAC, plumbing, roofing, electrical, chimney businesses</li>
+                  <li>• 3-10 employees ($500k-2M revenue/year)</li>
+                  <li>• Getting 15-50 calls/week</li>
+                  <li>• Missing 5-15 calls/week due to workload</li>
+                  <li>• Losing $20k-100k/year to missed opportunities</li>
+                  <li>• Ready to invest in growth</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-red-300 mb-3">✗ Not For:</h3>
+                <ul className="space-y-2 text-slate-200">
+                  <li>• Businesses getting &lt;10 calls/week</li>
+                  <li>• Already have full-time receptionist</li>
+                  <li>• Not ready to invest $2,997+ upfront</li>
+                  <li>• Want to "try it out" for cheap</li>
+                  <li>• Need results yesterday (setup takes 2-3 weeks)</li>
+                  <li>• Industries outside trades (for now)</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/30">
+              <p className="text-slate-200">
+                <strong className="text-blue-300">Honest assessment:</strong> If you're losing less than
+                $10,000/year to missed calls, the SMS tier ($497) might be a better fit. If you're losing
+                $20,000+/year, the Full tier ($2,997) pays for itself in 2 months.
+              </p>
+            </div>
           </div>
 
-          {/* HOW IT WORKS */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
+          {/* PROCESS */}
+          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25">
+            <h2 className="text-2xl sm:text-3xl font-heading flex items-center gap-2">
               <span>📋</span>
-              <span>How the process works</span>
+              <span>How The Process Works</span>
             </h2>
-            <ol className="list-decimal list-inside space-y-2 text-slate-100 drop-shadow-sm">
-              <li>
-                <span className="font-semibold">Quick call:</span> we map your
-                current calls, texts and emails.
-              </li>
-              <li>
-                <span className="font-semibold">Design:</span> we define what
-                counts as an emergency, what to ignore, and how follow-up should
-                work.
-              </li>
-              <li>
-                <span className="font-semibold">Build:</span> I set up the
-                automation stack (n8n, prompts, logs, summaries).
-              </li>
-              <li>
-                <span className="font-semibold">Test &amp; launch:</span> we run
-                live tests, tweak language, and then go fully live.
-              </li>
-              <li>
-                <span className="font-semibold">Care plan:</span> your monthly
-                retainer keeps it monitored, updated and improving.
-              </li>
-            </ol>
+
+            <div className="space-y-4">
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">1</div>
+                <div>
+                  <h3 className="font-semibold text-blue-300">Strategy Call (15 min)</h3>
+                  <p className="text-slate-300 text-sm">We analyze your current lead flow and recommend the right tier</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">2</div>
+                <div>
+                  <h3 className="font-semibold text-blue-300">Custom Design (2-3 days)</h3>
+                  <p className="text-slate-300 text-sm">We map your workflows, emergency triggers, and response templates</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">3</div>
+                <div>
+                  <h3 className="font-semibold text-blue-300">Build & Test (1-2 weeks)</h3>
+                  <p className="text-slate-300 text-sm">We build your automations, dashboard, and voice scripts</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">4</div>
+                <div>
+                  <h3 className="font-semibold text-blue-300">Go Live (Day 1)</h3>
+                  <p className="text-slate-300 text-sm">We launch with live monitoring and fine-tune based on real leads</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">5</div>
+                <div>
+                  <h3 className="font-semibold text-blue-300">Ongoing Support (Monthly)</h3>
+                  <p className="text-slate-300 text-sm">We monitor, optimize, and improve your system continuously</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* FAQ */}
+          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25">
+            <h2 className="text-2xl sm:text-3xl font-heading">Frequently Asked Questions</h2>
+
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-blue-300 mb-2">Why is the Full tier $2,997 when others charge $6,000+?</h3>
+                <p className="text-slate-300 text-sm">
+                  Most competitors charge $3k-6k for JUST the voice agent. We bundle voice, SMS, email,
+                  dashboard, and monitoring into one system because we've built it as a platform, not
+                  custom code for each client. You get enterprise features at half the price.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-blue-300 mb-2">Can I upgrade from SMS to Full tier later?</h3>
+                <p className="text-slate-300 text-sm">
+                  Yes! Pay the difference ($2,500) and we'll add the voice agent and advanced features.
+                  Most clients start with SMS to test, then upgrade within 30 days after seeing results.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-blue-300 mb-2">What's included in monthly support?</h3>
+                <p className="text-slate-300 text-sm">
+                  All the subscriptions (n8n, OpenAI, Telnyx, hosting), monitoring, bug fixes, small
+                  tweaks, and optimization. You're not paying for our time—you're paying for peace of
+                  mind that it just works.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-blue-300 mb-2">How many leads can the system handle?</h3>
+                <p className="text-slate-300 text-sm">
+                  Currently processing 10,118 operations/week across all clients with 97.6% uptime.
+                  Your system can handle 100-500 leads/month easily. For higher volume, we move to Enterprise tier.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-blue-300 mb-2">What if it doesn't work for my business?</h3>
+                <p className="text-slate-300 text-sm">
+                  Honest answer: If you're not getting at least 10-15 calls/week, there's not enough
+                  volume to justify the cost. That's why we do a strategy call first—to make sure it's
+                  a good fit before you invest.
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* FINAL CTA */}
-          <div className="pt-4 text-center space-y-3">
-            <p className="text-slate-100 drop-shadow-sm">
-              If you&apos;re tired of missing calls and guessing how much work
-              you&apos;re losing, this is your chance to put a{" "}
-              <span className="font-semibold text-blue-300">
-                Lead Rescue System
-              </span>{" "}
-              in place once and for all.
+          <div className="text-center space-y-6 pt-8">
+            <h2 className="text-3xl sm:text-4xl font-heading">Ready to Stop Losing Leads?</h2>
+            <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+              Book a 15-minute strategy call. We'll analyze your current lead flow and recommend
+              the right tier for your business.
             </p>
-            <ConsultCTA href="/onboarding-rescue">
-              Book My Lead Rescue Call
-            </ConsultCTA>
 
-            <p className="text-xs text-slate-400">
-              One-time setup $497 with any monthly plan. Additional custom
-              automations can be added later as your systems grow.
-            </p>
+            <Link
+              href="/onboarding-rescue"
+              className="inline-block px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xl rounded-xl shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5"
+            >
+              Book Your Strategy Call →
+            </Link>
+
+            <div className="pt-6 space-y-2">
+              <p className="text-sm text-slate-400">
+                Currently accepting 5 new clients this month
+              </p>
+              <div className="flex items-center justify-center gap-4 text-xs text-slate-500">
+                <span>✓ No credit card required</span>
+                <span>✓ Free strategy call</span>
+                <span>✓ Custom recommendations</span>
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-slate-800">
+              <Link href="/portfolio" className="text-blue-400 hover:text-blue-300 text-sm">
+                View full platform details & production metrics →
+              </Link>
+            </div>
           </div>
         </section>
       </div>

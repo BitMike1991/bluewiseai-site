@@ -31,22 +31,22 @@ export default function HeroV2() {
 
   // 🧠 Bilingual text content
   const tagline = isFr
-    ? "BLUEWISE AI – AGENCE D'AUTOMATISATION"
-    : "BLUEWISE AI – AUTOMATION AGENCY";
+    ? "BLUEWISE AI – PLATEFORME LEAD RESCUE"
+    : "BLUEWISE AI – LEAD RESCUE PLATFORM";
 
   const titleLine1 = isFr
-    ? "Automatisez votre entreprise."
-    : "Automate Your Business.";
+    ? "Ne perdez plus jamais un prospect."
+    : "Never Miss Another Lead.";
 
   const titleLine2 = isFr ? null : (
     <>
-      Save <span className="text-blue-300">5–10 Hours</span> Every Week.
+      Capture <span className="text-blue-300">Every Call</span>. Qualify <span className="text-blue-300">24/7</span>.
     </>
   );
 
   const bodyText = isFr
-    ? "Petites automatisations IA livrées en 24–48 heures. Agents email, bots de qualification de prospects, rappels SMS après appels manqués et workflows sur mesure — conçus pour de vraies petites entreprises."
-    : "Small AI automations delivered in 24–48 hours. Email agents, lead bots, missed-call text-back, and custom workflows — built for real small businesses.";
+    ? "Plateforme SaaS complète qui capture les appels manqués, qualifie les prospects via IA vocale et SMS, gère votre inbox et livre tout sur un tableau de bord en temps réel."
+    : "Complete SaaS platform that captures missed calls, qualifies leads via AI voice & SMS, manages your inbox, and delivers everything to a real-time dashboard.";
 
   const headingClassName = isFr
     ? "text-[2.3rem] sm:text-[2.7rem] lg:text-[3.1rem] font-bold leading-tight text-white mb-3 max-w-[34rem]"
@@ -91,15 +91,15 @@ export default function HeroV2() {
         <h1 className={headingClassName}>
           {isFr ? (
             <>
-              {"Automatisez votre entreprise."}
+              {"Ne perdez plus jamais un prospect."}
               <br />
               <span className="text-white whitespace-normal sm:whitespace-nowrap">
-                {"Gagnez "}
-                <span className="text-blue-300">{"5–10 heures"}</span>
-                {" chaque"}
+                {"Capturez "}
+                <span className="text-blue-300">{"chaque appel"}</span>
+                {". Qualifiez "}
+                <span className="text-blue-300">{"24/7"}</span>
+                {"."}
               </span>
-              <br />
-              <span className="text-white">{"semaine."}</span>
             </>
           ) : (
             <>
