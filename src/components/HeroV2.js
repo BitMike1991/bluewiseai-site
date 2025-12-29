@@ -92,11 +92,9 @@ export default function HeroV2() {
             <>
               {"Ne perdez plus jamais un prospect."}
               <br />
-              <span className="text-white whitespace-normal sm:whitespace-nowrap">
+              <span className="text-white">
                 {"Capturez "}
                 <span className="text-blue-300">{"chaque appel"}</span>
-                {". Qualifiez "}
-                <span className="text-blue-300">{"24/7"}</span>
                 {"."}
               </span>
             </>
