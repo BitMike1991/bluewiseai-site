@@ -210,7 +210,7 @@ export default function Portfolio() {
               {/* Development Timeline */}
               <div className="pt-4 border-t border-slate-700/50">
                 <p className="text-xs text-slate-400">
-                  <span className="font-semibold text-slate-300">Développement :</span> 4 mois (août-déc 2025) •
+                  <span className="font-semibold text-slate-300">Développement :</span> 2 mois (oct-déc 2025) •
                   <span className="font-semibold text-slate-300"> Statut :</span> Production (intégration clients bêta en cours) •
                   <span className="font-semibold text-slate-300"> Prochain jalon :</span> 10 clients payants d'ici T1 2026
                 </p>
@@ -392,7 +392,7 @@ export default function Portfolio() {
             </h2>
             <div className="space-y-3 text-slate-200">
               <p className="leading-relaxed">
-                Après 4 mois de développement, <strong>Lead Rescue est maintenant en production</strong> avec
+                Après 2 mois de développement intensif, <strong>Lead Rescue est maintenant en production</strong> avec
                 des clients bêta. La plateforme gère 10 000+ exécutions d'automation par semaine avec
                 une fiabilité de 97,6%.
               </p>

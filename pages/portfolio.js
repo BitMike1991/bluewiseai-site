@@ -207,7 +207,7 @@ export default function Portfolio() {
               {/* Development Timeline */}
               <div className="pt-4 border-t border-slate-700/50">
                 <p className="text-xs text-slate-400">
-                  <span className="font-semibold text-slate-300">Development:</span> 4 months (Aug-Dec 2025) •
+                  <span className="font-semibold text-slate-300">Development:</span> 2 months (Oct-Dec 2025) •
                   <span className="font-semibold text-slate-300"> Status:</span> Production (currently onboarding beta clients) •
                   <span className="font-semibold text-slate-300"> Next milestone:</span> 10 paying customers by Q1 2026
                 </p>
@@ -389,7 +389,7 @@ export default function Portfolio() {
             </h2>
             <div className="space-y-3 text-slate-200">
               <p className="leading-relaxed">
-                After 4 months of development, <strong>Lead Rescue is now in production</strong> with
+                After 2 months of intensive development, <strong>Lead Rescue is now in production</strong> with
                 beta clients. The platform is handling 10,000+ automation executions per week with
                 97.6% reliability.
               </p>
