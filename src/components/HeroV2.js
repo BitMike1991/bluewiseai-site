@@ -25,9 +25,9 @@ export default function HeroV2() {
   const bgOffset = scrollY * 0.12;
   const glowOffset = scrollY * 0.18;
 
-  // Background placement – EN is perfect, FR a bit further right
-  const bgPosX = isFr ? "83%" : "80%";
-  const baseY = isFr ? -40 : -60;
+  // Background placement – use same for both languages
+  const bgPosX = "80%";
+  const baseY = -60;
 
   // 🧠 Bilingual text content
   const tagline = isFr
@@ -48,9 +48,8 @@ export default function HeroV2() {
     ? "Plateforme SaaS complète qui capture les appels manqués, qualifie les prospects via IA vocale et SMS, gère votre inbox et livre tout sur un tableau de bord en temps réel."
     : "Complete SaaS platform that captures missed calls, qualifies leads via AI voice & SMS, manages your inbox, and delivers everything to a real-time dashboard.";
 
-  const headingClassName = isFr
-    ? "text-[2.3rem] sm:text-[2.7rem] lg:text-[3.1rem] font-bold leading-tight text-white mb-3 max-w-[34rem]"
-    : "text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white mb-3 max-w-3xl";
+  // Use same heading size for both languages
+  const headingClassName = "text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white mb-3 max-w-3xl";
 
   return (
     <section
@@ -111,14 +110,10 @@ export default function HeroV2() {
         </h1>
 
         {/* Spacer */}
-        <div className={isFr ? "h-12 sm:h-14 lg:h-16" : "h-24 sm:h-28 lg:h-32"} />
+        <div className="h-24 sm:h-28 lg:h-32" />
 
         {/* Subtext */}
-        <p
-          className={`text-base sm:text-lg text-slate-200/85 mb-12 ${
-            isFr ? "max-w-lg" : "max-w-xl"
-          }`}
-        >
+        <p className="text-base sm:text-lg text-slate-200/85 mb-12 max-w-xl">
           {bodyText}
         </p>
 
