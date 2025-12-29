@@ -350,11 +350,12 @@ export default function LeadRescueOffer() {
                 <h3 className="font-semibold text-emerald-300 mb-3">✓ Perfect For:</h3>
                 <ul className="space-y-2 text-slate-200">
                   <li>• HVAC, plumbing, roofing, electrical, chimney businesses</li>
-                  <li>• 3-10 employees ($500k-2M revenue/year)</li>
+                  <li>• 1-20 employees ($300k-5M revenue/year)</li>
                   <li>• Getting 15-50 calls/week</li>
                   <li>• Missing 5-15 calls/week due to workload</li>
+                  <li>• Average job value $300+</li>
                   <li>• Losing $20k-100k/year to missed opportunities</li>
-                  <li>• Ready to invest in growth</li>
+                  <li>• <strong>Businesses with receptionists/assistants:</strong> Stop paying them $60K to answer "Do you work in my area?" 50 times per day. Lead Rescue pre-qualifies calls so your team only talks to hot leads. Have 4 assistants? Keep 2 for serious work and save $120K/year.</li>
                 </ul>
               </div>
 
@@ -362,11 +363,11 @@ export default function LeadRescueOffer() {
                 <h3 className="font-semibold text-red-300 mb-3">✗ Not For:</h3>
                 <ul className="space-y-2 text-slate-200">
                   <li>• Businesses getting &lt;10 calls/week</li>
-                  <li>• Already have full-time receptionist</li>
+                  <li>• Average job value under $150</li>
+                  <li>• Complex consultations requiring immediate human expertise (medical, legal, financial advice)</li>
                   <li>• Not ready to invest $2,997+ upfront</li>
-                  <li>• Want to "try it out" for cheap</li>
-                  <li>• Need results yesterday (setup takes 2-3 weeks)</li>
-                  <li>• Industries outside trades (for now)</li>
+                  <li>• Want to "try it out" for cheap — this is a premium platform</li>
+                  <li>• Not committed to improving lead capture systems</li>
                 </ul>
               </div>
             </div>
