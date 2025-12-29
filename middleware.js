@@ -18,7 +18,9 @@ export async function middleware(req) {
     pathname.startsWith("/api/leads") ||
     pathname.startsWith("/api/overview") ||
     pathname.startsWith("/api/tasks") ||
-    pathname.startsWith("/api/followups");
+    pathname.startsWith("/api/followups") ||
+    pathname.startsWith("/api/settings") ||
+    pathname.startsWith("/api/calls");
 
   if (!isProtected) return res;
 
@@ -64,5 +66,7 @@ export const config = {
     "/api/overview/:path*",
     "/api/tasks/:path*",
     "/api/followups/:path*",
+    "/api/settings/:path*",
+    "/api/calls/:path*",
   ],
 };
