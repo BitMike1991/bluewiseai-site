@@ -144,7 +144,7 @@ export default function LeadsPage() {
           </div>
           <button
             type="submit"
-            className="px-3 py-2 rounded-xl text-xs font-medium bg-sky-500 hover:bg-sky-400 text-white shadow-sm shadow-sky-500/40 transition"
+            className="px-4 py-2.5 md:py-2 rounded-xl text-xs font-medium bg-sky-500 hover:bg-sky-400 text-white shadow-sm shadow-sky-500/40 transition min-h-[44px] md:min-h-0"
           >
             Search
           </button>
@@ -294,14 +294,14 @@ export default function LeadsPage() {
               <button
                 onClick={handlePrev}
                 disabled={page <= 1}
-                className="px-3 py-1 rounded-lg border border-slate-700/80 text-xs disabled:opacity-40 disabled:cursor-default hover:bg-slate-800/80 transition"
+                className="px-4 py-2 md:py-1 rounded-lg border border-slate-700/80 text-xs disabled:opacity-40 disabled:cursor-default hover:bg-slate-800/80 transition min-h-[44px] md:min-h-0"
               >
                 Prev
               </button>
               <button
                 onClick={handleNext}
                 disabled={page >= totalPages}
-                className="px-3 py-1 rounded-lg border border-slate-700/80 text-xs disabled:opacity-40 disabled:cursor-default hover:bg-slate-800/80 transition"
+                className="px-4 py-2 md:py-1 rounded-lg border border-slate-700/80 text-xs disabled:opacity-40 disabled:cursor-default hover:bg-slate-800/80 transition min-h-[44px] md:min-h-0"
               >
                 Next
               </button>

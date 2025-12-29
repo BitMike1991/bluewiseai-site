@@ -193,8 +193,10 @@ export default function Navbar() {
             <div
               className={`
                 invisible opacity-0 group-hover:visible group-hover:opacity-100
-                absolute right-0 mt-2 min-w-[230px] rounded-xl border
-                shadow-lg transition-all duration-150
+                absolute right-0 sm:right-0 left-0 sm:left-auto mt-2
+                w-[calc(100vw-2rem)] sm:w-auto sm:min-w-[230px] max-w-sm
+                mx-4 sm:mx-0
+                rounded-xl border shadow-lg transition-all duration-150
                 ${
                   isDarkPage
                     ? "bg-slate-900/95 border-white/10"

@@ -160,7 +160,7 @@ export default function InboxPage() {
           </div>
           <button
             type="submit"
-            className="px-3 py-2 rounded-xl text-xs font-medium bg-sky-500 hover:bg-sky-400 text-white shadow-sm shadow-sky-500/40 transition"
+            className="px-4 py-2.5 md:py-2 rounded-xl text-xs font-medium bg-sky-500 hover:bg-sky-400 text-white shadow-sm shadow-sky-500/40 transition min-h-[44px] md:min-h-0"
           >
             Search
           </button>
