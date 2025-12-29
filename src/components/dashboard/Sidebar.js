@@ -94,5 +94,6 @@ export default function Sidebar({ isOpen, onClose }) {
         })}
       </nav>
     </aside>
+    </>
   );
 }
