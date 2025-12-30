@@ -36,11 +36,11 @@ export default async function handler(req, res) {
     const newLeadsThisWeek = newLeadsRows?.length || 0;
 
     //
-    // 2) Tasks (followups): open + due today + overdue
+    // 2) Tasks: open + due today + overdue
     //
     const { data: openTasksRows, error: openTasksError } = await supabase
-      .from("followups")
-      .select("id, status, scheduled_for")
+      .from("tasks")
+      .select("id, status, due_at")
       .eq("customer_id", customerId)
       .not("status", "in", "(completed,cancelled)");
 
@@ -50,47 +50,79 @@ export default async function handler(req, res) {
 
     const tasksDueToday =
       openTasksRows?.filter((t) => {
-        if (!t.scheduled_for) return false;
-        const d = new Date(t.scheduled_for);
+        if (!t.due_at) return false;
+        const d = new Date(t.due_at);
         return d.toISOString().slice(0, 10) === todayStr;
       }).length || 0;
 
     const tasksOverdue =
       openTasksRows?.filter((t) => {
-        if (!t.scheduled_for) return false;
-        const d = new Date(t.scheduled_for);
+        if (!t.due_at) return false;
+        const d = new Date(t.due_at);
         const iso = d.toISOString().slice(0, 10);
         return iso < todayStr;
       }).length || 0;
 
     //
-    // 3) Missed calls this week (via inbox_lead_events)
+    // 3) Missed calls this week (via leads table)
     //
     const { data: missedRows, error: missedError } = await supabase
-      .from("inbox_lead_events")
+      .from("leads")
       .select("id")
       .eq("customer_id", customerId)
-      .eq("event_type", "missed_call")
-      .gte("created_at", sinceIso);
+      .not("last_missed_call_at", "is", null)
+      .gte("last_missed_call_at", sinceIso);
 
     if (missedError) throw missedError;
     const missedCallsThisWeek = missedRows?.length || 0;
 
     //
-    // 4) AI auto-replies this week
+    // 4) Voice AI answered calls this week (call transcripts)
     //
-    const { data: aiRows, error: aiError } = await supabase
-      .from("inbox_lead_events")
+    const { data: voiceRows, error: voiceError } = await supabase
+      .from("messages")
       .select("id")
       .eq("customer_id", customerId)
-      .eq("event_type", "sms_sent_auto_reply")
+      .eq("channel", "call")
+      .eq("message_type", "call_transcript")
+      .gte("created_at", sinceIso);
+
+    if (voiceError) throw voiceError;
+    const voiceCallsThisWeek = voiceRows?.length || 0;
+
+    //
+    // 5) AI auto-replies this week (SMS outbound)
+    //
+    const { data: aiRows, error: aiError } = await supabase
+      .from("messages")
+      .select("id")
+      .eq("customer_id", customerId)
+      .eq("channel", "sms")
+      .eq("direction", "outbound")
       .gte("created_at", sinceIso);
 
     if (aiError) throw aiError;
     const aiRepliesThisWeek = aiRows?.length || 0;
 
     //
-    // 5) Recent LEADS (canonical) – last 10 leads
+    // 6) Hot leads (leads with hot_score > 0 or >= 40)
+    //
+    const { data: hotRows, error: hotError } = await supabase
+      .from("leads")
+      .select("id")
+      .eq("customer_id", customerId)
+      .gte("hot_score", 40);
+
+    if (hotError) throw hotError;
+    const hotLeadsCount = hotRows?.length || 0;
+
+    //
+    // 7) Revenue protected calculation ($300 per voice call answered)
+    //
+    const revenueProtected = voiceCallsThisWeek * 300;
+
+    //
+    // 8) Recent LEADS (canonical) – last 10 leads
     //
     const { data: recentLeadRows, error: recentLeadError } = await supabase
       .from("leads")
@@ -112,7 +144,7 @@ export default async function handler(req, res) {
     }));
 
     //
-    // 6) Activity from inbox_lead_events
+    // 9) Activity from inbox_lead_events
     //
     const { data: eventRows, error: activityError } = await supabase
       .from("inbox_lead_events")
@@ -124,7 +156,7 @@ export default async function handler(req, res) {
     if (activityError) throw activityError;
 
     //
-    // 7) Activity from messages
+    // 10) Activity from messages
     //
     const { data: messageRows, error: messageError } = await supabase
       .from("messages")
@@ -136,7 +168,7 @@ export default async function handler(req, res) {
     if (messageError) throw messageError;
 
     //
-    // 8) Map: inbox_leads.id -> canonical leads.id
+    // 11) Map: inbox_leads.id -> canonical leads.id
     //
     const inboxLeadIds = Array.from(
       new Set((eventRows || []).map((row) => row.lead_id).filter((id) => id != null))
@@ -159,7 +191,7 @@ export default async function handler(req, res) {
     }
 
     //
-    // 9) Normalize inbox_lead_events → activity
+    // 12) Normalize inbox_lead_events → activity
     //
     const activityFromEvents = (eventRows || []).map((row) => {
       let label = row.event_type;
@@ -184,17 +216,19 @@ export default async function handler(req, res) {
     });
 
     //
-    // 10) Normalize messages → activity
+    // 13) Normalize messages → activity
     //
     const activityFromMessages = (messageRows || []).map((row) => {
-      const kind = row.kind || row.channel || "message";
+      const kind = row.channel || "message";
       const direction = row.direction || "inbound";
 
       let baseLabel;
-      if (kind === "sms" || kind === "text") {
+      if (kind === "sms") {
         baseLabel = direction === "outbound" ? "You sent an SMS" : "Lead sent an SMS";
       } else if (kind === "email") {
         baseLabel = direction === "outbound" ? "You sent an email" : "Lead sent an email";
+      } else if (kind === "call") {
+        baseLabel = "Voice AI call";
       } else {
         baseLabel = direction === "outbound" ? "You sent a message" : "Lead sent a message";
       }
@@ -219,7 +253,7 @@ export default async function handler(req, res) {
     });
 
     //
-    // 11) Merge + sort + trim
+    // 14) Merge + sort + trim
     //
     const combinedActivity = [...activityFromEvents, ...activityFromMessages];
 
@@ -232,18 +266,20 @@ export default async function handler(req, res) {
     const activity = combinedActivity.slice(0, 30);
 
     //
-    // 12) Response
+    // 15) Response
     //
     return res.status(200).json({
       kpis: {
+        missedCallsThisWeek,
+        voiceCallsThisWeek,
+        aiRepliesThisWeek,
         newLeadsThisWeek,
-        conversionRate: null,
+        hotLeadsCount,
+        revenueProtected,
+        // Legacy KPIs (kept for backwards compatibility)
         openTasks,
         tasksDueToday,
         tasksOverdue,
-        pipelineValue: null,
-        missedCallsThisWeek,
-        aiRepliesThisWeek,
       },
       recentLeads,
       activity,

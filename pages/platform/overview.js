@@ -1054,43 +1054,43 @@ export default function OverviewPage() {
 
   return (
     <DashboardLayout title="Overview">
-      {/* KPI row */}
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-6">
+      {/* KPI row - Lead Rescue Value Metrics */}
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <StatCard
-          label="New leads"
-          subLabel="Created in the last 7 days"
+          label="Missed Calls"
+          subLabel="Calls to capture this week"
+          value={loading ? "…" : kpis.missedCallsThisWeek ?? "--"}
+        />
+        <StatCard
+          label="Voice AI Answered"
+          subLabel="Calls handled by AI"
+          value={loading ? "…" : kpis.voiceCallsThisWeek ?? "--"}
+        />
+        <StatCard
+          label="Auto-Replies"
+          subLabel="SMS responses sent"
+          value={loading ? "…" : kpis.aiRepliesThisWeek ?? "--"}
+        />
+        <StatCard
+          label="New Leads"
+          subLabel="Qualified this week"
+          value={loading ? "…" : kpis.newLeadsThisWeek ?? "--"}
+        />
+        <StatCard
+          label="Hot Leads"
+          subLabel="High-priority to chase"
+          value={loading ? "…" : kpis.hotLeadsCount ?? "--"}
+        />
+        <StatCard
+          label="Revenue Protected"
+          subLabel="Estimated value saved"
           value={
             loading
               ? "…"
-              : kpis.newLeadsThisWeek != null
-              ? kpis.newLeadsThisWeek
+              : kpis.revenueProtected != null
+              ? `$${kpis.revenueProtected.toLocaleString()}`
               : "--"
           }
-        />
-        <StatCard
-          label="Open tasks"
-          subLabel="Follow-ups not completed yet"
-          value={loading ? "… " : kpis.openTasks ?? "--"}
-        />
-        <StatCard
-          label="Tasks due today"
-          subLabel="Scheduled for today"
-          value={loading ? "… " : kpis.tasksDueToday ?? "--"}
-        />
-        <StatCard
-          label="Overdue tasks"
-          subLabel="Due date is in the past"
-          value={loading ? "… " : kpis.tasksOverdue ?? "--"}
-        />
-        <StatCard
-          label="Missed calls"
-          subLabel="In the last 7 days"
-          value={loading ? "… " : kpis.missedCallsThisWeek ?? "--"}
-        />
-        <StatCard
-          label="AI replies"
-          subLabel="Auto SMS replies in the last 7 days"
-          value={loading ? "… " : kpis.aiRepliesThisWeek ?? "--"}
         />
       </div>
 

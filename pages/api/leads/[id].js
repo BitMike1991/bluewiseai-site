@@ -343,19 +343,22 @@ export default async function handler(req, res) {
     });
 
     //
-    // 7) Fetch FOLLOWUPS
+    // 7) Fetch TASKS
     //
-    const { data: followupRows, error: followupsError } = await supabase
-      .from("followups")
+    const { data: taskRows, error: tasksError } = await supabase
+      .from("tasks")
       .select(
         `
         id,
         customer_id,
         lead_id,
         status,
-        followup_type,
-        sequence_stage,
+        type,
+        title,
+        description,
+        priority,
         due_at,
+        completed_at,
         created_at,
         updated_at
       `
@@ -364,20 +367,23 @@ export default async function handler(req, res) {
       .eq("lead_id", leadId)
       .order("due_at", { ascending: true, nullsFirst: false });
 
-    if (followupsError)
-      console.error("[api/leads/[id]] followupsError", followupsError);
+    if (tasksError)
+      console.error("[api/leads/[id]] tasksError", tasksError);
 
-    const followups =
-      (followupRows || []).map((f) => ({
-        id: f.id,
-        customer_id: f.customer_id,
-        lead_id: f.lead_id,
-        status: f.status || "open",
-        followup_type: f.followup_type || null,
-        sequence_stage: f.sequence_stage,
-        due_at: f.due_at,
-        created_at: f.created_at,
-        updated_at: f.updated_at,
+    const tasks =
+      (taskRows || []).map((t) => ({
+        id: t.id,
+        customer_id: t.customer_id,
+        lead_id: t.lead_id,
+        status: t.status || "pending",
+        task_type: t.type || null,
+        title: t.title || null,
+        description: t.description || null,
+        priority: t.priority || "normal",
+        due_at: t.due_at,
+        completed_at: t.completed_at,
+        created_at: t.created_at,
+        updated_at: t.updated_at,
       })) || [];
 
     //
@@ -391,7 +397,7 @@ export default async function handler(req, res) {
       inbox_leads,
       events,
       messages,
-      followups,
+      tasks,
     });
   } catch (err) {
     console.error("[api/leads/[id]] unexpected error", err);

@@ -30,20 +30,22 @@ export default async function handler(req, res) {
   const tenantCustomerId = customerId;
 
   try {
-    // Base query: followups + joined lead
+    // Base query: tasks + joined lead
     let query = supabase
-      .from("followups")
+      .from("tasks")
       .select(
         `
         id,
         lead_id,
-        followup_type,
-        scheduled_for,
+        type,
+        title,
+        description,
+        due_at,
         status,
-        payload,
+        priority,
         created_at,
         updated_at,
-        sequence_stage,
+        completed_at,
         customer_id,
         leads:lead_id (
           id,
@@ -57,7 +59,7 @@ export default async function handler(req, res) {
       )
       // Tenant filter is ALWAYS applied
       .eq("customer_id", tenantCustomerId)
-      .order("scheduled_for", { ascending: true, nullsFirst: false })
+      .order("due_at", { ascending: true, nullsFirst: false })
       .order("id", { ascending: true })
       .range(from, to);
 
@@ -74,7 +76,7 @@ export default async function handler(req, res) {
 
     const tasks = (data || []).map((row) => {
       const lead = row.leads || {};
-      const dueAt = row.scheduled_for;
+      const dueAt = row.due_at;
 
       // Simple overdue logic:
       // - has a due date
@@ -86,7 +88,6 @@ export default async function handler(req, res) {
         if (!Number.isNaN(dueTs) && dueTs < now) {
           const status = (row.status || "").toLowerCase();
           if (
-            status !== "done" &&
             status !== "completed" &&
             status !== "cancelled"
           ) {
@@ -99,13 +100,15 @@ export default async function handler(req, res) {
         id: row.id,
         leadId: row.lead_id,
         customerId: row.customer_id,
-        followupType: row.followup_type,
+        taskType: row.type,
+        title: row.title || null,
+        description: row.description || null,
         status: row.status || null,
+        priority: row.priority || "normal",
         dueAt,
-        sequenceStage: row.sequence_stage,
+        completedAt: row.completed_at || null,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
-        payload: row.payload || null,
 
         // Lead-facing fields for deep-linking and display
         leadName: lead.name || null,

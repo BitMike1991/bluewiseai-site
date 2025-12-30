@@ -276,8 +276,8 @@ export default function TasksPage() {
                   <Th>Due</Th>
                   <Th>Lead</Th>
                   <Th>Contact</Th>
+                  <Th>Task</Th>
                   <Th>Type</Th>
-                  <Th>Stage</Th>
                   <Th>Status</Th>
                   <Th>Source</Th>
                   <Th>Actions</Th>
@@ -336,10 +336,12 @@ function TaskRow({ task, onComplete, isCompleting }) {
   const {
     id,
     leadId,
-    followupType,
+    taskType,
+    title,
+    description,
+    priority,
     status,
     dueAt,
-    sequenceStage,
     leadName,
     leadEmail,
     leadPhone,
@@ -363,7 +365,7 @@ function TaskRow({ task, onComplete, isCompleting }) {
       })
     : "No date";
 
-  const statusLabel = (status || "open").toLowerCase();
+  const statusLabel = (status || "pending").toLowerCase();
   const isCompleted = statusLabel === "completed";
 
   const statusBadge = (() => {
@@ -393,14 +395,14 @@ function TaskRow({ task, onComplete, isCompleting }) {
 
     return (
       <span className="inline-flex rounded-full bg-sky-500/20 px-2 py-0.5 text-[11px] text-sky-200">
-        Open
+        Pending
       </span>
     );
   })();
 
-  const typeLabel = followupType || "Follow-up";
-  const stageLabel =
-    typeof sequenceStage === "number" ? `Step ${sequenceStage}` : "—";
+  const typeLabel = taskType || "General";
+  const titleLabel = title || `${typeLabel} task`;
+  const priorityBadge = priority === "high" ? "🔴" : priority === "urgent" ? "🔥" : "";
 
   const contactSnippet =
     leadEmail || leadPhone
@@ -444,11 +446,21 @@ function TaskRow({ task, onComplete, isCompleting }) {
       <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-300 sm:px-6">
         {contactSnippet}
       </td>
-      <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-200 sm:px-6">
-        {typeLabel}
+      <td className="px-4 py-3 text-xs text-slate-200 sm:px-6">
+        <div className="flex items-center gap-1">
+          {priorityBadge && <span>{priorityBadge}</span>}
+          <span className="truncate max-w-xs">{titleLabel}</span>
+        </div>
+        {description && (
+          <div className="text-[10px] text-slate-400 mt-0.5 truncate max-w-xs">
+            {description}
+          </div>
+        )}
       </td>
       <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-200 sm:px-6">
-        {stageLabel}
+        <span className="inline-flex rounded-full bg-slate-700/40 px-2 py-0.5 text-[10px] text-slate-300">
+          {typeLabel}
+        </span>
       </td>
       <td className="whitespace-nowrap px-4 py-3 text-xs sm:px-6">
         {statusBadge}

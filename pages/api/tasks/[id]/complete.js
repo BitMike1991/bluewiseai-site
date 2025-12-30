@@ -18,33 +18,36 @@ export default async function handler(req, res) {
   }
 
   const { id } = req.query;
-  const followupId = Number(id);
+  const taskId = Number(id);
 
-  if (!followupId || Number.isNaN(followupId)) {
-    return res.status(400).json({ error: "Invalid followup id" });
+  if (!taskId || Number.isNaN(taskId)) {
+    return res.status(400).json({ error: "Invalid task id" });
   }
 
   try {
     const nowIso = new Date().toISOString();
 
-    // 1) Mark followup as completed (scoped to this customer)
+    // 1) Mark task as completed (scoped to this customer)
     const { data: updated, error: updateError } = await supabase
-      .from("followups")
+      .from("tasks")
       .update({
         status: "completed",
+        completed_at: nowIso,
         updated_at: nowIso,
       })
-      .eq("id", followupId)
+      .eq("id", taskId)
       .eq("customer_id", customerId)
       .select(
         `
         id,
         lead_id,
         customer_id,
-        followup_type,
-        sequence_stage,
-        scheduled_for,
+        type,
+        title,
+        description,
+        due_at,
         status,
+        completed_at,
         created_at,
         updated_at
       `
@@ -84,10 +87,10 @@ export default async function handler(req, res) {
 
     // 3) Log an event in inbox_lead_events so it appears in the timeline
     const payload = {
-      followup_id: updated.id,
-      followup_type: updated.followup_type,
-      sequence_stage: updated.sequence_stage,
-      scheduled_for: updated.scheduled_for,
+      task_id: updated.id,
+      task_type: updated.type,
+      title: updated.title,
+      due_at: updated.due_at,
       completed_at: nowIso,
     };
 
@@ -95,7 +98,7 @@ export default async function handler(req, res) {
       // Canonical thread linkage (if we found one)
       lead_id: inboxLeadId,
       customer_id: updated.customer_id,
-      event_type: "followup.completed",
+      event_type: "task.completed",
       payload,
       created_at: nowIso,
     };
@@ -114,7 +117,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      followup: updated,
+      task: updated,
     });
   } catch (err) {
     console.error("[api/tasks/[id]/complete] unexpected error", err);

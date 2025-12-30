@@ -561,15 +561,17 @@ async function runGetTasksTool(supabase, customerId, args) {
   const { status, lead_id } = args || {};
 
   let q = supabase
-    .from("followups")
+    .from("tasks")
     .select(
       `
       id,
       lead_id,
-      followup_type,
-      scheduled_for,
+      type,
+      due_at,
       status,
-      payload,
+      title,
+      description,
+      priority,
       created_at
     `
     )
@@ -583,7 +585,7 @@ async function runGetTasksTool(supabase, customerId, args) {
     q = q.eq("lead_id", lead_id);
   }
 
-  q = q.order("scheduled_for", { ascending: true }).limit(50);
+  q = q.order("due_at", { ascending: true }).limit(50);
 
   const { data: rows, error } = await q;
 
@@ -596,17 +598,19 @@ async function runGetTasksTool(supabase, customerId, args) {
     rows?.map((row) => ({
       id: row.id,
       leadId: row.lead_id,
-      followupType: row.followup_type || "general",
-      scheduledFor: row.scheduled_for,
+      taskType: row.type || "general",
+      dueAt: row.due_at,
       status: row.status,
-      note: row.payload?.note || null,
+      title: row.title || null,
+      description: row.description || null,
+      priority: row.priority || "normal",
       createdAt: row.created_at,
     })) || [];
 
   return {
     intent: "get_tasks",
     resultType: "task_list",
-    title: "Follow-up tasks",
+    title: "Tasks",
     items,
   };
 }
@@ -792,7 +796,6 @@ async function resolveLeadIdForTask(supabase, customerId, args) {
 // -----------------------------
 
 async function runCreateTaskTool(supabase, customerId, args) {
-  // your existing implementation (as pasted)...
   const {
     lead_id,
     lead_name,
@@ -812,7 +815,7 @@ async function runCreateTaskTool(supabase, customerId, args) {
 
   if (!resolved.leadId) {
     throw new Error(
-      "Could not resolve which lead to attach this follow-up to. " +
+      "Could not resolve which lead to attach this task to. " +
         "Please mention the lead's name, email, or phone."
     );
   }
@@ -851,29 +854,37 @@ async function runCreateTaskTool(supabase, customerId, args) {
     scheduledDate = d;
   }
 
+  const taskType = followup_type || "general";
+  const taskTitle = note
+    ? note.length > 100
+      ? note.substring(0, 100) + "..."
+      : note
+    : `${taskType.charAt(0).toUpperCase() + taskType.slice(1)} task`;
+
   const insertPayload = {
     customer_id: Number(customerId),
     lead_id: resolved.leadId,
-    followup_type: followup_type || "general",
-    scheduled_for: scheduledDate.toISOString(),
-    status: "open",
-    payload: note ? { note } : {},
+    type: taskType,
+    title: taskTitle,
+    description: note || null,
+    due_at: scheduledDate.toISOString(),
+    status: "pending",
+    priority: "normal",
   };
 
   const { data, error } = await supabase
-    .from("followups")
-    .upsert(insertPayload, {
-      onConflict: "lead_id,followup_type",
-      ignoreDuplicates: false,
-    })
+    .from("tasks")
+    .insert(insertPayload)
     .select(
       `
       id,
       lead_id,
-      followup_type,
-      scheduled_for,
+      type,
+      title,
+      description,
+      due_at,
       status,
-      payload,
+      priority,
       created_at
     `
     )
@@ -881,20 +892,22 @@ async function runCreateTaskTool(supabase, customerId, args) {
 
   if (error) {
     console.error("[/api/ask] create_task error:", error);
-    throw new Error("Failed to create follow-up task.");
+    throw new Error("Failed to create task.");
   }
 
   const item = {
     id: data.id,
     leadId: data.lead_id,
-    followupType: data.followup_type || "general",
-    scheduledFor: data.scheduled_for,
+    taskType: data.type || "general",
+    title: data.title,
+    description: data.description,
+    dueAt: data.due_at,
     status: data.status,
-    note: data.payload?.note || null,
+    priority: data.priority,
     createdAt: data.created_at,
   };
 
-  const localScheduled = new Date(item.scheduledFor).toLocaleString("en-CA", {
+  const localScheduled = new Date(item.dueAt).toLocaleString("en-CA", {
     timeZone: "America/Toronto",
     year: "numeric",
     month: "2-digit",
@@ -908,12 +921,12 @@ async function runCreateTaskTool(supabase, customerId, args) {
       ? ` (matched by ${resolved.matchReason})`
       : "";
 
-  const aiSummary = `Created or updated an open ${item.followupType} follow-up for lead #${item.leadId}${chosenReason} on ${localScheduled}.`;
+  const aiSummary = `Created ${item.taskType} task for lead #${item.leadId}${chosenReason} due ${localScheduled}.`;
 
   return {
     intent: "create_task",
     resultType: "task_created",
-    title: "Follow-up created",
+    title: "Task created",
     items: [item],
     aiSummary,
   };
@@ -925,7 +938,6 @@ async function runCreateTaskTool(supabase, customerId, args) {
 // (UNCHANGED — keep your runUpdateTaskTool)
 // -----------------------------
 async function runUpdateTaskTool(supabase, customerId, args) {
-  // your existing implementation (as pasted)...
   const {
     task_id,
     lead_id,
@@ -946,20 +958,22 @@ async function runUpdateTaskTool(supabase, customerId, args) {
 
   if (!task_id && !effectiveLeadId) {
     throw new Error(
-      "To update a follow-up, I need either the task id or the lead id / lead name."
+      "To update a task, I need either the task id or the lead id / lead name."
     );
   }
 
   let q = supabase
-    .from("followups")
+    .from("tasks")
     .select(
       `
       id,
       lead_id,
-      followup_type,
-      scheduled_for,
+      type,
+      title,
+      description,
+      due_at,
       status,
-      payload,
+      priority,
       created_at
     `
     )
@@ -970,19 +984,19 @@ async function runUpdateTaskTool(supabase, customerId, args) {
     q = q.eq("id", task_id);
   } else if (effectiveLeadId) {
     q = q.eq("lead_id", effectiveLeadId);
-    if (followup_type) q = q.eq("followup_type", followup_type);
-    q = q.order("scheduled_for", { ascending: false });
+    if (followup_type) q = q.eq("type", followup_type);
+    q = q.order("due_at", { ascending: false });
   }
 
   const { data: rows, error: fetchError } = await q;
 
   if (fetchError) {
     console.error("[/api/ask] update_task fetch error:", fetchError);
-    throw new Error("Failed to locate follow-up task to update.");
+    throw new Error("Failed to locate task to update.");
   }
 
   if (!rows || rows.length === 0) {
-    throw new Error("No matching follow-up task found to update.");
+    throw new Error("No matching task found to update.");
   }
 
   const existing = rows[0];
@@ -1015,24 +1029,33 @@ async function runUpdateTaskTool(supabase, customerId, args) {
       }
     }
 
-    if (scheduledDate) updates.scheduled_for = scheduledDate.toISOString();
+    if (scheduledDate) updates.due_at = scheduledDate.toISOString();
   }
 
-  if (new_status) updates.status = new_status;
+  if (new_status) {
+    // Map old status values to new ones
+    if (new_status === "open") {
+      updates.status = "pending";
+    } else if (new_status === "completed") {
+      updates.status = "completed";
+      updates.completed_at = new Date().toISOString();
+    } else {
+      updates.status = new_status;
+    }
+  }
 
   if (note) {
-    const existingPayload = existing.payload || {};
-    updates.payload = { ...existingPayload, note };
+    updates.description = note;
   }
 
   if (Object.keys(updates).length === 0) {
     throw new Error(
-      "Nothing to update on this follow-up. Provide a new status or a new date."
+      "Nothing to update on this task. Provide a new status or a new date."
     );
   }
 
   const { data, error: updateError } = await supabase
-    .from("followups")
+    .from("tasks")
     .update(updates)
     .eq("id", existing.id)
     .eq("customer_id", customerId)
@@ -1040,10 +1063,12 @@ async function runUpdateTaskTool(supabase, customerId, args) {
       `
       id,
       lead_id,
-      followup_type,
-      scheduled_for,
+      type,
+      title,
+      description,
+      due_at,
       status,
-      payload,
+      priority,
       created_at
     `
     )
@@ -1051,21 +1076,23 @@ async function runUpdateTaskTool(supabase, customerId, args) {
 
   if (updateError) {
     console.error("[/api/ask] update_task update error:", updateError);
-    throw new Error("Failed to update follow-up task.");
+    throw new Error("Failed to update task.");
   }
 
   const item = {
     id: data.id,
     leadId: data.lead_id,
-    followupType: data.followup_type || "general",
-    scheduledFor: data.scheduled_for,
+    taskType: data.type || "general",
+    title: data.title,
+    description: data.description,
+    dueAt: data.due_at,
     status: data.status,
-    note: data.payload?.note || null,
+    priority: data.priority,
     createdAt: data.created_at,
   };
 
-  const localScheduled = item.scheduledFor
-    ? new Date(item.scheduledFor).toLocaleString("en-CA", {
+  const localScheduled = item.dueAt
+    ? new Date(item.dueAt).toLocaleString("en-CA", {
         timeZone: "America/Toronto",
         year: "numeric",
         month: "2-digit",
@@ -1075,16 +1102,16 @@ async function runUpdateTaskTool(supabase, customerId, args) {
       })
     : null;
 
-  let summaryParts = [`Follow-up #${item.id} for lead #${item.leadId}`];
+  let summaryParts = [`Task #${item.id} for lead #${item.leadId}`];
 
   if (resolvedMeta?.matchReason) summaryParts.push(`(matched by ${resolvedMeta.matchReason})`);
   if (new_status) summaryParts.push(`status set to "${item.status}"`);
-  if (localScheduled) summaryParts.push(`scheduled for ${localScheduled}`);
+  if (localScheduled) summaryParts.push(`due ${localScheduled}`);
 
   return {
     intent: "update_task",
     resultType: "task_updated",
-    title: "Follow-up updated",
+    title: "Task updated",
     items: [item],
     aiSummary: summaryParts.join(" · "),
   };
@@ -1458,16 +1485,16 @@ async function runDraftReplyTool(supabase, customerId, args) {
       : "sms";
 
   const { data: fuRows, error: fuErr } = await supabase
-    .from("followups")
-    .select("id, followup_type, scheduled_for, status, payload, created_at")
+    .from("tasks")
+    .select("id, type, due_at, status, title, description, created_at")
     .eq("customer_id", customerId)
     .eq("lead_id", resolved.leadId)
-    .eq("status", "open")
-    .order("scheduled_for", { ascending: true })
+    .eq("status", "pending")
+    .order("due_at", { ascending: true })
     .limit(1);
 
   if (fuErr) {
-    console.warn("[/api/ask] draft_reply followups load warning:", fuErr);
+    console.warn("[/api/ask] draft_reply tasks load warning:", fuErr);
   }
 
   const followup = (fuRows || [])[0] || null;
@@ -2163,7 +2190,7 @@ export default async function handler(req, res) {
     type: "function",
     function: {
       name: "create_task",
-      description: "Create a new follow-up task for a lead in the 'followups' table.",
+      description: "Create a new task for a lead in the 'tasks' table.",
       parameters: {
         type: "object",
         properties: {
@@ -2185,7 +2212,7 @@ export default async function handler(req, res) {
     type: "function",
     function: {
       name: "update_task",
-      description: "Update an existing follow-up task in the 'followups' table.",
+      description: "Update an existing task in the 'tasks' table.",
       parameters: {
         type: "object",
         properties: {
