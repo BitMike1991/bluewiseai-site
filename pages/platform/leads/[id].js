@@ -76,7 +76,6 @@ function truncateText(str, max = 900) {
   return s.slice(0, max - 1) + "\u2026";
 }
 
-// \u2705 robust channel classification
 function classifyChannel(channelValue) {
   const s = (channelValue || "").toString().toLowerCase();
 
@@ -88,7 +87,6 @@ function classifyChannel(channelValue) {
   return s || "unknown";
 }
 
-// \u2705 UI-safe email cleanup to prevent "huge blank space" + signature preview cut
 function normalizeMessageBody(raw) {
   if (!raw) return "";
   let s = raw.toString();
@@ -99,7 +97,6 @@ function normalizeMessageBody(raw) {
   return s;
 }
 
-// Heuristic: signature separators (preview only)
 function splitSignaturePreview(body) {
   const s = body || "";
   if (!s) return { preview: "", hasSig: false };
@@ -204,9 +201,7 @@ function Modal({ open, title, children, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50">
-      {/* overlay */}
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      {/* panel */}
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div className="w-full max-w-2xl rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl shadow-black/60">
           <div className="flex items-center justify-between gap-3 border-b border-slate-800 px-5 py-4">
@@ -240,13 +235,12 @@ export default function LeadDetailPage() {
 
   const [timelineFilter, setTimelineFilter] = useState("all");
 
-  // --- Send modal state ---
   const [sendOpen, setSendOpen] = useState(false);
-  const [sendChannel, setSendChannel] = useState("sms"); // sms | email
+  const [sendChannel, setSendChannel] = useState("sms");
   const [sendTo, setSendTo] = useState("");
   const [sendSubject, setSendSubject] = useState("");
   const [sendBody, setSendBody] = useState("");
-  const [sendHtml, setSendHtml] = useState(""); // optional
+  const [sendHtml, setSendHtml] = useState("");
   const [sendMeta, setSendMeta] = useState({ source: "manual_ui", context: "lead_detail" });
 
   const [sendLoading, setSendLoading] = useState(false);
@@ -395,17 +389,12 @@ export default function LeadDetailPage() {
   function openSendModal(channel) {
     const ch = channel || "sms";
     setSendChannel(ch);
-
-    // default recipient
     const defaultTo = ch === "sms" ? lead?.phone || "" : lead?.email || "";
     setSendTo(defaultTo);
-
-    // default content
     setSendSubject(ch === "email" ? `Re: ${lead?.name || "Your request"}` : "");
     setSendBody("");
     setSendHtml("");
     setSendMeta({ source: "manual_ui", context: "lead_detail", lead_id: Number(id) });
-
     setSendError(null);
     setSendSuccess(null);
     setSendOpen(true);
@@ -453,7 +442,6 @@ export default function LeadDetailPage() {
         created_at: json.created_at,
       });
 
-      // Refresh timeline so outbound message shows up
       await loadLead();
     } catch (e) {
       setSendError(e?.message || "Failed to send");
@@ -464,7 +452,6 @@ export default function LeadDetailPage() {
 
   return (
     <DashboardLayout title="Lead details">
-      {/* Photo Lightbox */}
       {lightboxUrl && (
         <div
           className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
@@ -576,10 +563,7 @@ export default function LeadDetailPage() {
 
           <div className="space-y-4">
             <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
-              <h2 className="text-sm font-semibold text-slate-100 mb-2 tracking-wide">Quick actions</h2>
-              <p className="text-xs text-slate-400 mb-4">
-                Manual sending is now enabled. Later these will also trigger n8n sequences (AI drafts, follow-ups, etc.).
-              </p>
+              <h2 className="text-sm font-semibold text-slate-100 mb-3 tracking-wide">Quick actions</h2>
 
               <div className="flex flex-wrap gap-3">
                 <button
@@ -612,20 +596,6 @@ export default function LeadDetailPage() {
                   Send email
                 </button>
 
-                <button
-                  type="button"
-                  className="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800 transition cursor-not-allowed"
-                  disabled
-                >
-                  Create follow-up task (next)
-                </button>
-              </div>
-
-              <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
-                <p className="text-[11px] text-slate-500">
-                  Tip: after sending, the message is written to the <span className="text-slate-300">messages</span>{" "}
-                  table and will appear in the timeline automatically.
-                </p>
               </div>
             </div>
 
@@ -659,7 +629,6 @@ export default function LeadDetailPage() {
               </dl>
             </div>
 
-            {/* Photos */}
             {photos.length > 0 && (
               <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
                 <h2 className="text-sm font-semibold text-slate-100 mb-3 tracking-wide">
@@ -683,7 +652,6 @@ export default function LeadDetailPage() {
               </div>
             )}
 
-            {/* Linked Jobs */}
             {jobs.length > 0 && (
               <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
                 <h2 className="text-sm font-semibold text-slate-100 mb-3 tracking-wide">
@@ -787,7 +755,6 @@ export default function LeadDetailPage() {
           </div>
         </div>
 
-        {/* Send Modal */}
         <Modal
           open={sendOpen}
           title={`Send ${sendChannel === "sms" ? "SMS" : "Email"} to ${lead?.name || "lead"}`}

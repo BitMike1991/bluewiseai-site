@@ -12,6 +12,31 @@ const STATUS_OPTIONS = [
   { value: 'lost', label: 'Lost' },
 ];
 
+const AVATAR_COLORS = [
+  'bg-blue-500/20 text-blue-300',
+  'bg-emerald-500/20 text-emerald-300',
+  'bg-violet-500/20 text-violet-300',
+  'bg-amber-500/20 text-amber-300',
+  'bg-rose-500/20 text-rose-300',
+  'bg-cyan-500/20 text-cyan-300',
+  'bg-pink-500/20 text-pink-300',
+  'bg-indigo-500/20 text-indigo-300',
+];
+
+function getAvatarColor(name) {
+  let hash = 0;
+  const str = (name || '').toString();
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function getInitial(name) {
+  if (!name || name === 'null' || name === 'undefined') return '?';
+  return name.charAt(0).toUpperCase();
+}
+
 function statusBadgeClasses(status) {
   const base =
     'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
@@ -123,7 +148,7 @@ export default function LeadsPage() {
           </p>
         </div>
         <div className="text-xs text-slate-500">
-          {total} lead{total === 1 ? '' : 's'} · Page {page} of {totalPages}
+          {total} lead{total === 1 ? '' : 's'} \u00b7 Page {page} of {totalPages}
         </div>
       </div>
 
@@ -136,7 +161,7 @@ export default function LeadsPage() {
           <div className="flex-1 relative">
             <input
               type="text"
-              placeholder="Search by name, email, or phone…"
+              placeholder="Search by name, email, or phone\u2026"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-slate-900/70 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
@@ -177,22 +202,20 @@ export default function LeadsPage() {
 
         {loading && (
           <div className="px-4 py-6 text-sm text-slate-400">
-            Loading leads…
+            Loading leads\u2026
           </div>
         )}
 
         {!loading && leads.length === 0 && (
           <div className="px-4 py-6 text-sm text-slate-400">
-            No leads found. Once your automations capture calls or emails, they’ll appear here.
+            No leads found. Once your automations capture calls or emails, they'll appear here.
           </div>
         )}
 
         <ul className="divide-y divide-slate-800/80">
           {leads.map((lead) => {
-            // IDs coming from API
             const leadId = lead.lead_id ?? lead.id;
 
-            // Safe display name, avoiding literal "null"/"undefined"
             let displayName = lead?.name;
             if (
               !displayName ||
@@ -205,7 +228,6 @@ export default function LeadsPage() {
                 (leadId ? `Lead #${leadId}` : 'Unknown lead');
             }
 
-            // Last contact fallback: last_contact_at -> last_message_at -> first_seen_at
             const lastContactRaw =
               lead.last_contact_at ||
               lead.last_message_at ||
@@ -214,7 +236,7 @@ export default function LeadsPage() {
 
             const lastContactLabel = lastContactRaw
               ? new Date(lastContactRaw).toLocaleString()
-              : '—';
+              : '\u2014';
 
             return (
               <li
@@ -223,53 +245,54 @@ export default function LeadsPage() {
                 className="cursor-pointer hover:bg-slate-900/80 transition-colors"
               >
                 <div className="px-4 py-3 grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-center">
-                  {/* Lead main info */}
                   <div className="md:col-span-4">
-                    <div className="flex items-center justify-between md:block">
-                      <div>
-                        <p className="text-sm font-medium text-slate-50">
-                          {displayName}
-                        </p>
-                        <p className="text-xs text-slate-400 truncate">
-                          {lead.phone && <span>{lead.phone}</span>}
-                          {lead.phone && lead.email && <span> · </span>}
-                          {lead.email && <span>{lead.email}</span>}
-                        </p>
+                    <div className="flex items-center gap-3">
+                      <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold ${getAvatarColor(displayName)}`}>
+                        {getInitial(displayName)}
                       </div>
-                      {/* Mobile badge */}
-                      <span
-                        className={`md:hidden mt-1 ${statusBadgeClasses(
-                          lead.status
-                        )}`}
-                      >
-                        {lead.status || 'new'}
-                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between md:block">
+                          <div>
+                            <p className="text-sm font-medium text-slate-50">
+                              {displayName}
+                            </p>
+                            <p className="text-xs text-slate-400 truncate">
+                              {lead.phone && <span>{lead.phone}</span>}
+                              {lead.phone && lead.email && <span> \u00b7 </span>}
+                              {lead.email && <span>{lead.email}</span>}
+                            </p>
+                          </div>
+                          <span
+                            className={`md:hidden mt-1 ${statusBadgeClasses(
+                              lead.status
+                            )}`}
+                          >
+                            {lead.status || 'new'}
+                          </span>
+                        </div>
+                        {lead.city && (
+                          <p className="hidden md:block text-xs text-slate-500 mt-0.5">
+                            {lead.city}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    {lead.city && (
-                      <p className="hidden md:block text-xs text-slate-500 mt-0.5">
-                        {lead.city}
-                      </p>
-                    )}
                   </div>
 
-                  {/* Source */}
                   <div className="md:col-span-2 text-xs text-slate-400">
                     {lead.source || 'unknown'}
                   </div>
 
-                  {/* Status */}
                   <div className="hidden md:block md:col-span-2">
                     <span className={statusBadgeClasses(lead.status)}>
                       {lead.status || 'new'}
                     </span>
                   </div>
 
-                  {/* Last contact */}
                   <div className="md:col-span-2 text-xs text-slate-400">
                     {lastContactLabel}
                   </div>
 
-                  {/* Summary */}
                   <div className="md:col-span-2 text-xs text-slate-400 text-right md:text-right">
                     {lead.summary ? (
                       <span className="line-clamp-1">{lead.summary}</span>
@@ -283,11 +306,10 @@ export default function LeadsPage() {
           })}
         </ul>
 
-        {/* Pagination footer */}
         {!loading && leads.length > 0 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-slate-800/80 text-xs text-slate-400">
             <div>
-              Showing {(page - 1) * pageSize + 1}–
+              Showing {(page - 1) * pageSize + 1}\u2013
               {Math.min(page * pageSize, total)} of {total}
             </div>
             <div className="space-x-2">

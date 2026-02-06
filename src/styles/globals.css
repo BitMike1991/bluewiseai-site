@@ -14,30 +14,26 @@ body {
     "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  /* 🔥 Added: background gradient to match BlueWise vibe */
   background: linear-gradient(to bottom, #020617, #0f172a);
 }
 
-/* ✨ Global smooth transitions for most UI changes */
-* {
-  transition-property: color, background-color, border-color, box-shadow, transform;
-  transition-duration: 200ms;
-  transition-timing-function: ease;
-}
-
-/* ✨ Focus ring: accessible + on-brand glow */
-*:focus {
+/* Focus ring: accessible + on-brand glow (only on interactive elements via keyboard) */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.6);
 }
 
 /* Selection color matches your neon blue brand */
 ::selection {
-  background-color: rgba(59, 130, 246, 0.4); /* blue-500-ish */
-  color: #f9fafb; /* near-white */
+  background-color: rgba(59, 130, 246, 0.4);
+  color: #f9fafb;
 }
 
-/* 🎵 HERO / GHOST BREATHING ANIMATION */
 @keyframes breath {
   0%, 100% {
     opacity: 0.45;
@@ -47,7 +43,6 @@ body {
   }
 }
 
-/* 🌫 Global fade-in for pages / sections (used in Layout) */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -59,22 +54,17 @@ body {
   }
 }
 
-/* Optional: reusable helpers you can use with className */
-
-/* Glassy panel (for cards, sections, etc.) */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.72);        /* slate-900-ish */
+  background: rgba(15, 23, 42, 0.72);
   backdrop-filter: blur(18px);
   border-radius: 1.25rem;
-  border: 1px solid rgba(148, 163, 184, 0.3); /* slate-400-ish border */
+  border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
-/* Neon outline state (if you want a reusable glow style) */
 .neon-outline {
   box-shadow: 0 0 24px rgba(59, 130, 246, 0.85);
 }
 
-/* Optional: slightly nicer scrollbars on desktop (ignored on mobile) */
 ::-webkit-scrollbar {
   width: 8px;
 }

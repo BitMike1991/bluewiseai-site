@@ -26,6 +26,31 @@ const STATUS_COLORS = {
   cancelled: 'bg-rose-500/10 text-rose-300 border-rose-500/40',
 };
 
+const AVATAR_COLORS = [
+  'bg-blue-500/20 text-blue-300',
+  'bg-emerald-500/20 text-emerald-300',
+  'bg-violet-500/20 text-violet-300',
+  'bg-amber-500/20 text-amber-300',
+  'bg-rose-500/20 text-rose-300',
+  'bg-cyan-500/20 text-cyan-300',
+  'bg-pink-500/20 text-pink-300',
+  'bg-indigo-500/20 text-indigo-300',
+];
+
+function getAvatarColor(name) {
+  let hash = 0;
+  const str = (name || '').toString();
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function getInitial(name) {
+  if (!name || name === 'null' || name === 'undefined') return '?';
+  return name.charAt(0).toUpperCase();
+}
+
 function statusBadge(status) {
   const base = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border';
   const colors = STATUS_COLORS[(status || '').toLowerCase()] || STATUS_COLORS.draft;
@@ -129,9 +154,7 @@ export default function JobsPage() {
     loadJobs({ page: page + 1 });
   };
 
-  // Pipeline summary counts
   const statusCounts = {};
-  // We'll compute from current page only for display (total counts would need separate API)
 
   return (
     <DashboardLayout title="Jobs">
@@ -147,7 +170,6 @@ export default function JobsPage() {
         </div>
       </div>
 
-      {/* Filters row */}
       <div className="flex flex-col md:flex-row md:items-center md:space-x-3 space-y-3 md:space-y-0 mb-4">
         <form
           onSubmit={handleSearchSubmit}
@@ -185,7 +207,6 @@ export default function JobsPage() {
         </div>
       </div>
 
-      {/* Jobs table */}
       <div className="rounded-2xl bg-slate-900/60 border border-slate-800/80 shadow-lg shadow-slate-950/60 overflow-hidden">
         <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 text-xs font-semibold text-slate-400 border-b border-slate-800/80">
           <div className="col-span-1">Job ID</div>
@@ -221,40 +242,41 @@ export default function JobsPage() {
                 className="cursor-pointer hover:bg-slate-900/80 transition-colors"
               >
                 <div className="px-4 py-3 grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-center">
-                  {/* Job ID */}
                   <div className="md:col-span-1">
                     <p className="text-xs font-mono text-sky-400">{job.job_id || `#${jobPk}`}</p>
                   </div>
 
-                  {/* Client */}
                   <div className="md:col-span-3">
-                    <div className="flex items-center justify-between md:block">
-                      <div>
-                        <p className="text-sm font-medium text-slate-50">{displayName}</p>
-                        <p className="text-xs text-slate-400 truncate">
-                          {job.client_phone && <span>{job.client_phone}</span>}
-                          {job.client_phone && job.client_email && <span> \u00b7 </span>}
-                          {job.client_email && <span>{job.client_email}</span>}
-                        </p>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold ${getAvatarColor(displayName)}`}>
+                        {getInitial(displayName)}
                       </div>
-                      {/* Mobile status badge */}
-                      <span className={`md:hidden ${statusBadge(job.status)}`}>
-                        {statusLabel(job.status)}
-                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between md:block">
+                          <div>
+                            <p className="text-sm font-medium text-slate-50">{displayName}</p>
+                            <p className="text-xs text-slate-400 truncate">
+                              {job.client_phone && <span>{job.client_phone}</span>}
+                              {job.client_phone && job.client_email && <span> \u00b7 </span>}
+                              {job.client_email && <span>{job.client_email}</span>}
+                            </p>
+                          </div>
+                          <span className={`md:hidden ${statusBadge(job.status)}`}>
+                            {statusLabel(job.status)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Project type */}
                   <div className="md:col-span-2 text-xs text-slate-400">
                     {(job.project_type || 'N/A').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                   </div>
 
-                  {/* Quote */}
                   <div className="md:col-span-1 text-xs text-slate-300 font-medium">
                     {formatCurrency(job.quote_amount)}
                   </div>
 
-                  {/* Status */}
                   <div className="hidden md:block md:col-span-2">
                     <span className={statusBadge(job.status)}>
                       {statusLabel(job.status)}
@@ -266,7 +288,6 @@ export default function JobsPage() {
                     )}
                   </div>
 
-                  {/* Paid */}
                   <div className="md:col-span-1 text-xs">
                     {job.total_paid > 0 ? (
                       <span className="text-emerald-400">{formatCurrency(job.total_paid)}</span>
@@ -275,7 +296,6 @@ export default function JobsPage() {
                     )}
                   </div>
 
-                  {/* Date */}
                   <div className="md:col-span-2 text-xs text-slate-400 text-right">
                     {formatDate(job.created_at)}
                   </div>
@@ -285,7 +305,6 @@ export default function JobsPage() {
           })}
         </ul>
 
-        {/* Pagination */}
         {!loading && jobs.length > 0 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-slate-800/80 text-xs text-slate-400">
             <div>
