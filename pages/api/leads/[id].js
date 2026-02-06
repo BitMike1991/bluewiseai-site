@@ -191,6 +191,7 @@ export default async function handler(req, res) {
 
     //
     // 4) Fetch primary INBOX_LEAD thread(s) for this lead
+    // NOTE: keep String(customerId) behavior as you already had it here
     //
     const { data: inboxRows, error: inboxError } = await supabase
       .from("inbox_leads")
@@ -282,9 +283,12 @@ export default async function handler(req, res) {
           created_at
         `
         )
+        // tenant-safe (messages is multi-tenant)
         .eq("customer_id", customerId)
         .eq("lead_id", leadId)
         .order("created_at", { ascending: true }),
+      // inbox_messages uses inbox_leads.id as lead_id (not leads.id)
+      // so we need the primaryInboxLead.id to query it
       primaryInboxLead
         ? supabase
             .from("inbox_messages")
@@ -391,6 +395,8 @@ export default async function handler(req, res) {
 
     //
     // 8) Fetch PHOTOS (inbox_attachments linked via inbox_messages)
+    //    inbox_messages.lead_id = inbox_leads.id (NOT leads.id)
+    //    so we use primaryInboxLead.id to find the right messages
     //
     let photos = [];
     if (primaryInboxLead) {
