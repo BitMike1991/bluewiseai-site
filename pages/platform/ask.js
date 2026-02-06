@@ -53,7 +53,7 @@ function truncateText(str, max = 420) {
   const s = (str || "").toString().replace(/\s+/g, " ").trim();
   if (!s) return "";
   if (s.length <= max) return s;
-  return s.slice(0, max - 1) + "…";
+  return s.slice(0, max - 1) + "\u2026";
 }
 
 function badgeTone(kind) {
@@ -152,7 +152,7 @@ export default function AskPage() {
     setHistory(loadJson(LS_HISTORY, []));
     setSaved(
       loadJson(LS_SAVED, [
-        { id: "s1", label: "Summarize a lead", q: "Summarize Marc’s conversation" },
+        { id: "s1", label: "Summarize a lead", q: "Summarize Marc's conversation" },
         { id: "s2", label: "No reply 24h", q: "Which leads haven't replied in 24h?" },
         { id: "s3", label: "Missed calls no follow-up", q: "Show missed calls without follow-up." },
         { id: "s4", label: "Tasks due today", q: "Show tasks due today." },
@@ -213,7 +213,7 @@ export default function AskPage() {
     setDraftChannelOverride("auto");
   }, [isDraftReply, draftItem?.leadId]);
 
-  // --- smart “ask” -----------------------------------
+  // --- smart "ask" -----------------------------------
   async function runAsk(q) {
     const cleaned = (q || "").trim();
     if (!cleaned) return;
@@ -282,7 +282,7 @@ export default function AskPage() {
     const q = (question || "").trim();
     if (!q) return;
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const label = q.length > 40 ? q.slice(0, 40) + "…" : q;
+    const label = q.length > 40 ? q.slice(0, 40) + "\u2026" : q;
     setSaved((prev) => [{ id, label, q }, ...prev].slice(0, 12));
   }
 
@@ -295,7 +295,7 @@ export default function AskPage() {
     saveJson(LS_HISTORY, []);
   }
 
-  // --- “power actions” built on your existing /api/ask tools -----------
+  // --- "power actions" built on your existing /api/ask tools -----------
   function quickSummarizeLead(leadId) {
     runAsk(`Summarize the conversation for lead #${leadId}`);
   }
@@ -455,16 +455,10 @@ export default function AskPage() {
               <div>
                 <p className="text-sm font-semibold text-slate-100">Ask BlueWise Command Center</p>
                 <p className="mt-1 text-xs text-slate-400">
-                  Natural language → deterministic tools → structured results.
+                  Natural language \u2192 deterministic tools \u2192 structured results.
                 </p>
               </div>
 
-              <Link
-                href="/platform/overview"
-                className="shrink-0 rounded-xl border border-slate-700 bg-slate-900/40 px-3 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
-              >
-                Back to overview
-              </Link>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
@@ -493,7 +487,7 @@ export default function AskPage() {
               <SectionTitle>Examples</SectionTitle>
               <div className="mt-2 flex flex-col gap-2">
                 {[
-                  `Summarize Marc’s conversation`,
+                  `Summarize Marc's conversation`,
                   `Show missed calls without follow-up`,
                   `Which leads haven't replied in 24h?`,
                   `Draft an email reply to confirm the follow-up for lead #1`,
@@ -506,7 +500,7 @@ export default function AskPage() {
                     className="text-left text-[11px] text-slate-300 hover:text-sky-200"
                     title="Insert into prompt"
                   >
-                    “{q}”
+                    \"{q}\"
                   </button>
                 ))}
               </div>
@@ -595,7 +589,7 @@ export default function AskPage() {
                 type="text"
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                placeholder='Example: "Summarize Marc’s conversation"'
+                placeholder='Example: "Summarize Marc\'s conversation"'
                 className="flex-1 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
               />
               <button
@@ -603,7 +597,7 @@ export default function AskPage() {
                 disabled={loading}
                 className="inline-flex items-center justify-center rounded-xl bg-sky-500 px-4 py-2 text-xs font-semibold text-white shadow shadow-sky-500/40 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
               >
-                {loading ? "Thinking…" : "Ask"}
+                {loading ? "Thinking\u2026" : "Ask"}
               </button>
             </form>
 
@@ -628,13 +622,13 @@ export default function AskPage() {
                 <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-6">
                   <p className="text-sm font-semibold text-slate-100">Not matched yet</p>
                   <p className="mt-1 text-xs text-slate-400">
-                    This question did not trigger a tool. Try: “Show open tasks”, “Summarize Marc’s conversation”, or
-                    “Leads no reply 24h”.
+                    This question did not trigger a tool. Try: "Show open tasks", "Summarize Marc's conversation", or
+                    "Leads no reply 24h".
                   </p>
                 </div>
               ) : null}
 
-              {/* ✅ Draft Reply */}
+              {/* Draft Reply */}
               {isDraftReply && (
                 <div className="rounded-2xl border border-sky-700/30 bg-slate-950/60 p-4">
                   <div className="flex items-start justify-between gap-3">
@@ -642,7 +636,7 @@ export default function AskPage() {
                       <p className="text-sm font-semibold text-slate-100">{result.title || "Draft reply"}</p>
                       <p className="mt-1 text-xs text-slate-400">
                         Lead #{draftItem?.leadId}
-                        {draftItem?.leadName ? ` · ${draftItem.leadName}` : ""} · channel:{" "}
+                        {draftItem?.leadName ? ` \u00b7 ${draftItem.leadName}` : ""} \u00b7 channel:{" "}
                         <span className="text-slate-200 font-semibold">{computedDraftChannel}</span>
                       </p>
 
@@ -699,7 +693,7 @@ export default function AskPage() {
                       </div>
 
                       <p className="mt-2 text-[11px] text-slate-400">
-                        To: <span className="text-slate-200 font-semibold">{computedSendTo || "—"}</span>
+                        To: <span className="text-slate-200 font-semibold">{computedSendTo || "\u2014"}</span>
                       </p>
 
                       {computedDraftChannel === "email" ? (
@@ -740,7 +734,7 @@ export default function AskPage() {
                           disabled={sending}
                           className="rounded-xl bg-sky-500 px-4 py-2 text-xs font-semibold text-white shadow shadow-sky-500/40 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
                         >
-                          {sending ? "Sending…" : `Send ${computedDraftChannel === "sms" ? "SMS" : "Email"}`}
+                          {sending ? "Sending\u2026" : `Send ${computedDraftChannel === "sms" ? "SMS" : "Email"}`}
                         </button>
                       </div>
 
@@ -750,7 +744,7 @@ export default function AskPage() {
                         <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
                           <p className="text-xs font-semibold text-emerald-200">Sent</p>
                           <p className="mt-1 text-[11px] text-slate-200">
-                            provider: {sendResult.provider || "—"} · message_id: {sendResult.message_id || "—"} ·{" "}
+                            provider: {sendResult.provider || "\u2014"} \u00b7 message_id: {sendResult.message_id || "\u2014"} \u00b7{" "}
                             {sendResult.created_at ? formatWhen(sendResult.created_at) : ""}
                           </p>
                         </div>
@@ -894,7 +888,7 @@ export default function AskPage() {
                     <div>
                       <p className="text-sm font-semibold text-slate-100">{result.title || "Lead list"}</p>
                       <p className="mt-1 text-xs text-slate-400">
-                        {leadRows.length} match{leadRows.length === 1 ? "" : "es"} · ranked by latest activity.
+                        {leadRows.length} match{leadRows.length === 1 ? "" : "es"} \u00b7 ranked by latest activity.
                       </p>
                     </div>
                   </div>
@@ -922,7 +916,7 @@ export default function AskPage() {
                                   <p className="truncate font-semibold text-slate-100">{r.name}</p>
                                   <p className="truncate text-[11px] text-slate-500">
                                     {r.phone ? r.phone : ""}
-                                    {r.phone && r.email ? " · " : ""}
+                                    {r.phone && r.email ? " \u00b7 " : ""}
                                     {r.email ? r.email : ""}
                                   </p>
                                 </div>
@@ -937,14 +931,14 @@ export default function AskPage() {
                                 <span className="text-[11px] text-slate-300">
                                   {r.lastContactAt
                                     ? `${formatWhen(r.lastContactAt)} (${formatTimeAgo(r.lastContactAt)})`
-                                    : "—"}
+                                    : "\u2014"}
                                 </span>
                               </td>
                               <td className="py-2 pr-3">
                                 <span className="text-[11px] text-slate-300">
                                   {r.missedCallCount ? `${r.missedCallCount}` : "0"}
                                   {r.lastMissedCallAt ? (
-                                    <span className="text-slate-500"> · {formatTimeAgo(r.lastMissedCallAt)}</span>
+                                    <span className="text-slate-500"> \u00b7 {formatTimeAgo(r.lastMissedCallAt)}</span>
                                   ) : null}
                                 </span>
                               </td>
@@ -1010,14 +1004,14 @@ export default function AskPage() {
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <p className="text-xs font-semibold text-slate-100">
-                                #{t.id} · {t.followupType.toUpperCase()} ·{" "}
+                                #{t.id} \u00b7 {t.followupType.toUpperCase()} \u00b7{" "}
                                 <span className="text-slate-300">
                                   {t.scheduledFor ? formatWhen(t.scheduledFor) : "No date"}
                                 </span>
                               </p>
                               <p className="mt-1 text-[11px] text-slate-500">
                                 status: {t.status}
-                                {t.createdAt ? ` · created ${formatTimeAgo(t.createdAt)}` : ""}
+                                {t.createdAt ? ` \u00b7 created ${formatTimeAgo(t.createdAt)}` : ""}
                               </p>
                               {t.note ? <p className="mt-2 text-xs text-slate-300">{safeText(t.note)}</p> : null}
                             </div>
@@ -1054,7 +1048,7 @@ export default function AskPage() {
                         >
                           #{result.items[0].leadId}
                         </Link>{" "}
-                        · {truncateText(result.aiSummary || "", 380)}
+                        \u00b7 {truncateText(result.aiSummary || "", 380)}
                       </>
                     ) : (
                       truncateText(result.aiSummary || "", 520)
@@ -1101,9 +1095,9 @@ export default function AskPage() {
                         <div className="min-w-0">
                           <p className="text-xs font-semibold text-slate-100">{h.q}</p>
                           <p className="mt-1 text-[11px] text-slate-500">
-                            {formatWhen(h.at)} · {formatTimeAgo(h.at)}
-                            {h.resultType ? ` · ${h.resultType}` : ""}
-                            {h.intent ? ` · ${h.intent}` : ""}
+                            {formatWhen(h.at)} \u00b7 {formatTimeAgo(h.at)}
+                            {h.resultType ? ` \u00b7 ${h.resultType}` : ""}
+                            {h.intent ? ` \u00b7 ${h.intent}` : ""}
                           </p>
                           {h.snapshot ? <p className="mt-2 text-xs text-slate-300">{h.snapshot}</p> : null}
                         </div>
