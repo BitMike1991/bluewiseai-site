@@ -269,6 +269,49 @@ export default function OverviewPage() {
         />
       </div>
 
+      {/* ── Ask BlueWise Widget ── */}
+      <div className="mb-6 rounded-2xl border border-sky-700/40 bg-slate-950/80 px-4 py-4 shadow-[0_0_28px_rgba(56,189,248,0.12)]">
+        <form onSubmit={handleAskSubmit} className="flex items-center gap-2">
+          <label className="sr-only">Ask BlueWise</label>
+          <input
+            type="text"
+            value={askInput}
+            onChange={(e) => setAskInput(e.target.value)}
+            placeholder="Ask BlueWise anything…"
+            className="flex-1 rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+          />
+          <button
+            type="submit"
+            disabled={!askInput.trim()}
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-semibold text-white shadow shadow-sky-500/40 hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
+          >
+            <Send className="h-4 w-4" />
+            Ask
+          </button>
+        </form>
+
+        <div className="mt-3 flex items-center justify-between">
+          <div className="flex flex-wrap gap-2">
+            {QUICK_PROMPTS.map((p) => (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => handleQuickPrompt(p.q)}
+                className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-1.5 text-xs text-slate-300 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <Link
+            href="/platform/ask"
+            className="shrink-0 ml-3 text-xs font-medium text-sky-400 hover:text-sky-300"
+          >
+            Command Center →
+          </Link>
+        </div>
+      </div>
+
       {/* ── Activity Feed + Recent Leads (side by side) ── */}
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Activity Feed */}
@@ -373,41 +416,6 @@ export default function OverviewPage() {
               ))}
             </ul>
           )}
-        </div>
-      </div>
-
-      {/* ── Ask BlueWise Widget ── */}
-      <div className="rounded-2xl border border-sky-700/40 bg-slate-950/80 px-4 py-4 shadow-[0_0_28px_rgba(56,189,248,0.12)]">
-        <form onSubmit={handleAskSubmit} className="flex items-center gap-2">
-          <label className="sr-only">Ask BlueWise</label>
-          <input
-            type="text"
-            value={askInput}
-            onChange={(e) => setAskInput(e.target.value)}
-            placeholder="Ask BlueWise anything…"
-            className="flex-1 rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
-          />
-          <button
-            type="submit"
-            disabled={!askInput.trim()}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-semibold text-white shadow shadow-sky-500/40 hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
-          >
-            <Send className="h-4 w-4" />
-            Ask
-          </button>
-        </form>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          {QUICK_PROMPTS.map((p) => (
-            <button
-              key={p.label}
-              type="button"
-              onClick={() => handleQuickPrompt(p.q)}
-              className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-1.5 text-xs text-slate-300 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
-            >
-              {p.label}
-            </button>
-          ))}
         </div>
       </div>
 
