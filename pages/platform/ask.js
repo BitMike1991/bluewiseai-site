@@ -68,30 +68,23 @@ function badgeTone(kind) {
   return "border-slate-700 bg-slate-900/40 text-slate-200";
 }
 
-function StatusPill({ label, tone }) {
-  return (
-    <span
-      className={cx(
-        "inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold",
-        badgeTone(tone || label)
-      )}
-    >
-      {label}
-    </span>
-  );
+// Color avatar (deterministic by name)
+const AVATAR_COLORS = [
+  "bg-sky-500", "bg-emerald-500", "bg-violet-500", "bg-amber-500",
+  "bg-rose-500", "bg-teal-500", "bg-indigo-500", "bg-pink-500",
+];
+
+function avatarColor(name) {
+  let hash = 0;
+  const s = (name || "?").toString();
+  for (let i = 0; i < s.length; i++) hash = s.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
-function SectionTitle({ children }) {
-  return <p className="text-[11px] font-semibold text-slate-200">{children}</p>;
-}
-
-function EmptyState({ title, desc }) {
-  return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-6">
-      <p className="text-sm font-semibold text-slate-100">{title}</p>
-      {desc ? <p className="mt-1 text-xs text-slate-400">{desc}</p> : null}
-    </div>
-  );
+function avatarInitials(name) {
+  const parts = (name || "?").trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return (parts[0]?.[0] || "?").toUpperCase();
 }
 
 // -----------------------------
@@ -122,6 +115,661 @@ function saveJson(key, value) {
 }
 
 // -----------------------------
+// Sub-components
+// -----------------------------
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-4 animate-pulse">
+      <div className="rounded-2xl border border-slate-800 bg-slate-800/40 p-6">
+        <div className="h-5 w-48 rounded-lg bg-slate-700/60" />
+        <div className="mt-4 space-y-3">
+          <div className="h-4 w-full rounded-lg bg-slate-700/40" />
+          <div className="h-4 w-5/6 rounded-lg bg-slate-700/40" />
+          <div className="h-4 w-3/4 rounded-lg bg-slate-700/40" />
+        </div>
+        <div className="mt-6 flex gap-3">
+          <div className="h-10 w-28 rounded-xl bg-slate-700/40" />
+          <div className="h-10 w-28 rounded-xl bg-slate-700/40" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatusPill({ label, tone }) {
+  return (
+    <span
+      className={cx(
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
+        badgeTone(tone || label)
+      )}
+    >
+      {label}
+    </span>
+  );
+}
+
+function MetricPill({ label, value, color }) {
+  const colorMap = {
+    rose: "bg-rose-500/15 border-rose-500/30 text-rose-200",
+    amber: "bg-amber-500/15 border-amber-500/30 text-amber-200",
+    emerald: "bg-emerald-500/15 border-emerald-500/30 text-emerald-200",
+    violet: "bg-violet-500/15 border-violet-500/30 text-violet-200",
+    sky: "bg-sky-500/15 border-sky-500/30 text-sky-200",
+    slate: "bg-slate-800/60 border-slate-700 text-slate-200",
+  };
+  return (
+    <div className={cx("rounded-xl border px-4 py-2.5 text-center", colorMap[color] || colorMap.slate)}>
+      <p className="text-lg font-bold">{value}</p>
+      <p className="text-xs uppercase tracking-wide text-slate-400 mt-0.5">{label}</p>
+    </div>
+  );
+}
+
+function SectionLabel({ children }) {
+  return <p className="text-xs uppercase tracking-wide font-semibold text-slate-400">{children}</p>;
+}
+
+function DetailSection({ title, items }) {
+  const [open, setOpen] = useState(false);
+  if (!items || items.length === 0) return null;
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-900/40 overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-800/40 transition-colors"
+      >
+        <span className="text-sm font-semibold text-slate-200">{title}</span>
+        <svg
+          className={cx("w-4 h-4 text-slate-400 transition-transform", open && "rotate-180")}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="px-4 pb-3 border-t border-slate-800">
+          <ul className="mt-2 space-y-1.5">
+            {items.slice(0, 8).map((s, i) => (
+              <li key={i} className="flex gap-2 text-sm text-slate-300">
+                <span className="text-slate-500 shrink-0">&#8226;</span>
+                <span>{safeText(s)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HistoryPanel({ open, onClose, history, onReuse, onView, onClear }) {
+  if (!open) return null;
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
+      <div className="fixed inset-y-0 right-0 w-full max-w-md bg-slate-950 border-l border-slate-800 z-50 flex flex-col shadow-2xl">
+        <div className="flex items-center justify-between p-4 border-b border-slate-800">
+          <div>
+            <p className="text-base font-semibold text-slate-100">History</p>
+            <p className="text-xs text-slate-400 mt-0.5">Last 40 queries, stored locally</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {history.length > 0 && (
+              <button
+                onClick={onClear}
+                className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-rose-500/40 hover:text-rose-200 hover:bg-rose-500/10"
+              >
+                Clear
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="rounded-lg border border-slate-700 p-1.5 text-slate-400 hover:text-slate-200 hover:border-slate-600"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          {history.length === 0 ? (
+            <p className="text-sm text-slate-500 text-center mt-8">No history yet.</p>
+          ) : (
+            history.map((h) => (
+              <div key={h.id} className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
+                <p className="text-sm font-semibold text-slate-100 leading-snug">{h.q}</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {formatTimeAgo(h.at)}
+                  {h.resultType ? ` \u00b7 ${h.resultType}` : ""}
+                </p>
+                {h.snapshot ? <p className="mt-2 text-sm text-slate-400 line-clamp-2">{h.snapshot}</p> : null}
+                <div className="mt-2 flex gap-2">
+                  <button
+                    onClick={() => onReuse(h.q)}
+                    className="rounded-lg border border-slate-700 bg-slate-900/40 px-2.5 py-1 text-xs font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200"
+                  >
+                    Reuse
+                  </button>
+                  <button
+                    onClick={() => onView(h.raw)}
+                    className="rounded-lg border border-sky-500/60 px-2.5 py-1 text-xs font-semibold text-sky-200 hover:border-sky-400 hover:bg-sky-500/10"
+                  >
+                    View
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function SavedDropdown({ saved, onApply, onRemove, onSave, question }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className={cx(
+          "rounded-xl border px-3 py-2 text-sm font-semibold transition-colors",
+          open
+            ? "border-sky-500/60 bg-sky-500/10 text-sky-200"
+            : "border-slate-700 bg-slate-900/60 text-slate-300 hover:border-sky-500/40 hover:text-sky-200"
+        )}
+        title="Saved prompts"
+      >
+        <svg className="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+        </svg>
+        Saved
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-72 rounded-xl border border-slate-800 bg-slate-950 shadow-xl z-30">
+          <div className="p-3 border-b border-slate-800 flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-300">Saved prompts</span>
+            {question?.trim() && (
+              <button
+                onClick={() => { onSave(); setOpen(false); }}
+                className="text-xs font-semibold text-sky-300 hover:text-sky-200"
+              >
+                + Save current
+              </button>
+            )}
+          </div>
+          <div className="max-h-64 overflow-y-auto p-2 space-y-1">
+            {saved.length === 0 ? (
+              <p className="text-xs text-slate-500 text-center py-3">No saved prompts yet.</p>
+            ) : (
+              saved.map((s) => (
+                <div
+                  key={s.id}
+                  className="flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 hover:bg-slate-800/60 group"
+                >
+                  <button
+                    onClick={() => { onApply(s.q); setOpen(false); }}
+                    className="min-w-0 text-left flex-1"
+                  >
+                    <p className="text-sm font-medium text-slate-200 truncate">{s.label}</p>
+                  </button>
+                  <button
+                    onClick={() => onRemove(s.id)}
+                    className="shrink-0 text-xs text-slate-500 hover:text-rose-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// -----------------------------
+// Result renderers
+// -----------------------------
+
+function ResultEcho() {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 text-center">
+      <div className="mx-auto w-12 h-12 rounded-full bg-slate-800/80 flex items-center justify-center mb-4">
+        <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+        </svg>
+      </div>
+      <p className="text-base font-semibold text-slate-100">Couldn&apos;t match a tool</p>
+      <p className="mt-2 text-sm text-slate-400 max-w-sm mx-auto">
+        Try a more specific query like &quot;Show open tasks&quot;, &quot;Summarize Marc&apos;s conversation&quot;, or &quot;Leads no reply 24h&quot;.
+      </p>
+    </div>
+  );
+}
+
+function ResultLeadList({ result, leadRows, onSummarize, onDraft }) {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <p className="text-lg font-semibold text-slate-100">{result.title || "Lead list"}</p>
+          <p className="text-sm text-slate-400 mt-0.5">
+            {leadRows.length} match{leadRows.length === 1 ? "" : "es"}
+          </p>
+        </div>
+      </div>
+
+      {leadRows.length === 0 ? (
+        <p className="text-sm text-slate-500">No matching leads.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {leadRows.map((r) => (
+            <div key={r.key} className="rounded-xl border border-slate-800 bg-slate-950/50 p-4 flex gap-3">
+              <div className={cx("w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-bold text-white", avatarColor(r.name))}>
+                {avatarInitials(r.name)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-semibold text-slate-100 truncate">{r.name}</p>
+                  <StatusPill label={r.status} tone="low" />
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5 truncate">
+                  {r.phone || ""}{r.phone && r.email ? " \u00b7 " : ""}{r.email || ""}
+                </p>
+                {r.lastContactAt && (
+                  <p className="text-xs text-slate-500 mt-1">Last contact: {formatTimeAgo(r.lastContactAt)}</p>
+                )}
+                {r.missedCallCount > 0 && (
+                  <p className="text-xs text-rose-300 mt-0.5">{r.missedCallCount} missed call{r.missedCallCount > 1 ? "s" : ""}</p>
+                )}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {r.leadId && (
+                    <Link
+                      href={`/platform/leads/${r.leadId}`}
+                      className="rounded-lg border border-slate-700 px-2.5 py-1 text-xs font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
+                    >
+                      Open
+                    </Link>
+                  )}
+                  {r.leadId && (
+                    <button
+                      onClick={() => onSummarize(r.leadId)}
+                      className="rounded-lg border border-sky-500/50 px-2.5 py-1 text-xs font-semibold text-sky-200 hover:border-sky-400 hover:bg-sky-500/10"
+                    >
+                      Summarize
+                    </button>
+                  )}
+                  {r.leadId && (
+                    <button
+                      onClick={() => onDraft(r.leadId)}
+                      className="rounded-lg border border-sky-500/50 px-2.5 py-1 text-xs font-semibold text-sky-200 hover:border-sky-400 hover:bg-sky-500/10"
+                    >
+                      Draft
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResultSummary({ result, convoItem, onCreateTask, onDraft }) {
+  const sentimentColor = {
+    positive: "emerald", negative: "rose", mixed: "violet", neutral: "slate",
+  };
+  const urgencyColor = {
+    high: "rose", medium: "amber", low: "slate",
+  };
+
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+      <p className="text-lg font-semibold text-slate-100">{result.title || "Conversation summary"}</p>
+
+      {/* Metric pills */}
+      <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {convoItem?.sentiment && (
+          <MetricPill label="Sentiment" value={convoItem.sentiment} color={sentimentColor[convoItem.sentiment] || "slate"} />
+        )}
+        {convoItem?.urgency && (
+          <MetricPill label="Urgency" value={convoItem.urgency} color={urgencyColor[convoItem.urgency] || "slate"} />
+        )}
+        {convoItem?.messageCount != null && (
+          <MetricPill label="Messages" value={convoItem.messageCount} color="sky" />
+        )}
+        {convoItem?.daysBack != null && (
+          <MetricPill label="Days back" value={`${convoItem.daysBack}d`} color="slate" />
+        )}
+      </div>
+
+      {/* Summary text */}
+      {convoItem?.summary && (
+        <p className="mt-5 text-base text-slate-200 leading-relaxed">{safeText(convoItem.summary)}</p>
+      )}
+
+      {convoItem?.leadIntent && (
+        <p className="mt-3 text-sm text-slate-400">
+          <span className="font-semibold text-slate-300">Lead intent:</span> {safeText(convoItem.leadIntent)}
+        </p>
+      )}
+
+      {/* Action buttons */}
+      <div className="mt-5 flex flex-wrap gap-2">
+        {convoItem?.leadId && (
+          <Link
+            href={`/platform/leads/${convoItem.leadId}`}
+            className="rounded-xl border border-sky-500/60 px-4 py-2 text-sm font-semibold text-sky-200 hover:border-sky-400 hover:bg-sky-500/10"
+          >
+            Open lead
+          </Link>
+        )}
+        {convoItem?.leadId && (
+          <button
+            onClick={() => onCreateTask(convoItem.leadId, convoItem.recommendedFollowUpType || "call")}
+            className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
+          >
+            Create follow-up
+          </button>
+        )}
+        {convoItem?.leadId && (
+          <button
+            onClick={() => onDraft(convoItem.leadId)}
+            className="rounded-xl border border-sky-500/60 px-4 py-2 text-sm font-semibold text-sky-200 hover:border-sky-400 hover:bg-sky-500/10"
+          >
+            Draft reply
+          </button>
+        )}
+      </div>
+
+      {/* Collapsible details */}
+      <div className="mt-5 space-y-2">
+        <DetailSection title="Key details" items={convoItem?.keyDetails} />
+        <DetailSection title="Objections" items={convoItem?.objections} />
+        <DetailSection title="Next steps" items={convoItem?.nextSteps} />
+        <DetailSection title="Open questions" items={convoItem?.openQuestions} />
+      </div>
+    </div>
+  );
+}
+
+function ResultDraft({
+  result, draftItem, computedDraftChannel, computedSendTo,
+  draftSubject, setDraftSubject, draftBody, setDraftBody,
+  draftChannelOverride, setDraftChannelOverride,
+  draftVariantId, applyVariant,
+  sending, sendDraftNow, sendError, sendResult,
+}) {
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const variants = Array.isArray(draftItem?.variants) ? draftItem.variants : [];
+
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <p className="text-lg font-semibold text-slate-100">{result.title || "Draft reply"}</p>
+          <p className="text-sm text-slate-400 mt-0.5">
+            Lead #{draftItem?.leadId}
+            {draftItem?.leadName ? ` \u00b7 ${draftItem.leadName}` : ""}
+          </p>
+        </div>
+        {draftItem?.leadId && (
+          <Link
+            href={`/platform/leads/${draftItem.leadId}`}
+            className="shrink-0 rounded-xl border border-sky-500/60 px-3 py-2 text-sm font-semibold text-sky-200 hover:border-sky-400 hover:bg-sky-500/10"
+          >
+            Open lead
+          </Link>
+        )}
+      </div>
+
+      {/* To + Channel */}
+      <div className="rounded-xl border border-slate-800 bg-slate-950/40 px-4 py-3 flex items-center justify-between gap-3">
+        <p className="text-sm text-slate-300">
+          To: <span className="font-semibold text-slate-100">{computedSendTo || "\u2014"}</span>
+        </p>
+        <span className={cx(
+          "rounded-full border px-2.5 py-1 text-xs font-semibold",
+          computedDraftChannel === "sms"
+            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+            : "border-sky-500/40 bg-sky-500/10 text-sky-200"
+        )}>
+          {computedDraftChannel === "sms" ? "SMS" : "Email"}
+        </span>
+      </div>
+
+      {/* Subject (email only) */}
+      {computedDraftChannel === "email" && (
+        <div className="mt-3">
+          <SectionLabel>Subject</SectionLabel>
+          <input
+            value={draftSubject}
+            onChange={(e) => setDraftSubject(e.target.value)}
+            className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+            placeholder="Email subject"
+          />
+        </div>
+      )}
+
+      {/* Body */}
+      <div className="mt-3">
+        <SectionLabel>Message</SectionLabel>
+        <textarea
+          value={draftBody}
+          onChange={(e) => setDraftBody(e.target.value)}
+          rows={computedDraftChannel === "sms" ? 4 : 6}
+          className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+          placeholder={computedDraftChannel === "sms" ? "SMS message..." : "Email body..."}
+        />
+        {computedDraftChannel === "sms" && (
+          <p className="mt-1 text-xs text-slate-500">{draftBody?.length || 0} characters</p>
+        )}
+      </div>
+
+      {/* Advanced toggle */}
+      <button
+        onClick={() => setShowAdvanced(!showAdvanced)}
+        className="mt-3 text-xs font-semibold text-slate-400 hover:text-slate-300"
+      >
+        {showAdvanced ? "Hide advanced" : "Advanced options"}
+      </button>
+
+      {showAdvanced && (
+        <div className="mt-2 flex flex-wrap items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/40 p-3">
+          <div>
+            <label className="text-xs text-slate-500 block mb-1">Channel</label>
+            <select
+              value={draftChannelOverride}
+              onChange={(e) => setDraftChannelOverride(e.target.value)}
+              className="rounded-lg border border-slate-700 bg-slate-900/70 px-2.5 py-1.5 text-xs text-slate-200"
+            >
+              <option value="auto">Auto</option>
+              <option value="email">Email</option>
+              <option value="sms">SMS</option>
+            </select>
+          </div>
+          {variants.length > 1 && (
+            <div>
+              <label className="text-xs text-slate-500 block mb-1">Variant</label>
+              <select
+                value={draftVariantId}
+                onChange={(e) => applyVariant(e.target.value)}
+                className="rounded-lg border border-slate-700 bg-slate-900/70 px-2.5 py-1.5 text-xs text-slate-200"
+              >
+                {variants.map((v) => (
+                  <option key={v.id} value={v.id}>Variant {v.id}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className="flex-1" />
+          {draftItem?.matchReason && <StatusPill label={`matched: ${draftItem.matchReason}`} tone="low" />}
+          {draftItem?.tone && <StatusPill label={`tone: ${draftItem.tone}`} tone="low" />}
+          {draftItem?.language && <StatusPill label={`lang: ${draftItem.language}`} tone="low" />}
+        </div>
+      )}
+
+      {/* Send button */}
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <div className="text-xs text-slate-500">
+          {draftItem?.scheduledForLocal ? `Follow-up time: ${draftItem.scheduledForLocal}` : ""}
+        </div>
+        <button
+          onClick={sendDraftNow}
+          disabled={sending}
+          className="rounded-xl bg-sky-500 px-5 py-2.5 text-sm font-semibold text-white shadow shadow-sky-500/40 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+        >
+          {sending ? "Sending\u2026" : `Send ${computedDraftChannel === "sms" ? "SMS" : "Email"}`}
+        </button>
+      </div>
+
+      {/* Send feedback */}
+      {sendError && <p className="mt-3 text-sm text-rose-300">{sendError}</p>}
+
+      {sendResult?.success && (
+        <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+          <p className="text-sm font-semibold text-emerald-200">Sent successfully</p>
+          <p className="mt-1 text-xs text-slate-300">
+            Provider: {sendResult.provider || "\u2014"} \u00b7 ID: {sendResult.message_id || "\u2014"}
+          </p>
+        </div>
+      )}
+
+      {sendResult && sendResult.success === false && (
+        <div className="mt-3 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4">
+          <p className="text-sm font-semibold text-rose-200">Send failed</p>
+          <p className="mt-1 text-xs text-slate-300">{safeText(sendResult.error || "Unknown error")}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResultTaskList({ result, tasks }) {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+      <div className="mb-4">
+        <p className="text-lg font-semibold text-slate-100">{result.title || "Follow-up tasks"}</p>
+        <p className="text-sm text-slate-400 mt-0.5">
+          {tasks.length} task{tasks.length === 1 ? "" : "s"}
+        </p>
+      </div>
+
+      {tasks.length === 0 ? (
+        <p className="text-sm text-slate-500">No matching tasks.</p>
+      ) : (
+        <div className="space-y-3">
+          {tasks.map((t) => (
+            <div key={t.id} className="rounded-xl border border-slate-800 bg-slate-950/50 p-4 flex items-start gap-4">
+              <div className={cx(
+                "w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold",
+                t.status === "completed"
+                  ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
+                  : "bg-sky-500/15 text-sky-300 border border-sky-500/30"
+              )}>
+                {t.status === "completed" ? (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-semibold text-slate-100">
+                    {t.followupType.charAt(0).toUpperCase() + t.followupType.slice(1)} follow-up
+                  </p>
+                  <StatusPill label={t.status} tone={t.status === "completed" ? "positive" : "low"} />
+                </div>
+                <p className="text-sm text-slate-400 mt-0.5">
+                  {t.scheduledFor ? formatWhen(t.scheduledFor) : "No date"}
+                  {t.createdAt ? ` \u00b7 Created ${formatTimeAgo(t.createdAt)}` : ""}
+                </p>
+                {t.note && <p className="mt-2 text-sm text-slate-300">{safeText(t.note)}</p>}
+              </div>
+              {t.leadId && (
+                <Link
+                  href={`/platform/leads/${t.leadId}`}
+                  className="shrink-0 rounded-lg border border-sky-500/50 px-2.5 py-1 text-xs font-semibold text-sky-200 hover:border-sky-400 hover:bg-sky-500/10"
+                >
+                  Lead #{t.leadId}
+                </Link>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResultTaskConfirm({ result, isCreated }) {
+  return (
+    <div className="rounded-2xl border border-emerald-500/30 bg-slate-900/60 p-5">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-10 h-10 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+          <svg className="w-5 h-5 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <p className="text-lg font-semibold text-slate-100">
+          {result.title || (isCreated ? "Follow-up created" : "Follow-up updated")}
+        </p>
+      </div>
+      <p className="text-sm text-slate-200 leading-relaxed">
+        {result.items?.[0]?.leadId ? (
+          <>
+            Lead{" "}
+            <Link
+              href={`/platform/leads/${result.items[0].leadId}`}
+              className="text-sky-200 hover:text-sky-100 hover:underline underline-offset-4"
+            >
+              #{result.items[0].leadId}
+            </Link>
+            {" "}\u00b7 {truncateText(result.aiSummary || "", 380)}
+          </>
+        ) : (
+          truncateText(result.aiSummary || "", 520)
+        )}
+      </p>
+    </div>
+  );
+}
+
+function ResultOther({ result }) {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+      <p className="text-lg font-semibold text-slate-100">{result.title || "Result"}</p>
+      <p className="mt-3 text-sm text-slate-200 whitespace-pre-line leading-relaxed">
+        {truncateText(result.aiSummary || "", 900)}
+      </p>
+    </div>
+  );
+}
+
+// -----------------------------
 // Main page
 // -----------------------------
 export default function AskPage() {
@@ -135,18 +783,17 @@ export default function AskPage() {
 
   const [result, setResult] = useState(null);
 
-  const [tab, setTab] = useState("result"); // result | history
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [history, setHistory] = useState([]);
   const [saved, setSaved] = useState([]);
 
-  const [mode, setMode] = useState("auto"); // auto | leads | summary | tasks
   const inputRef = useRef(null);
 
   // Draft UI state
   const [draftVariantId, setDraftVariantId] = useState("v1");
   const [draftSubject, setDraftSubject] = useState("");
   const [draftBody, setDraftBody] = useState("");
-  const [draftChannelOverride, setDraftChannelOverride] = useState("auto"); // auto | email | sms
+  const [draftChannelOverride, setDraftChannelOverride] = useState("auto");
 
   useEffect(() => {
     setHistory(loadJson(LS_HISTORY, []));
@@ -222,26 +869,16 @@ export default function AskPage() {
     setError(null);
 
     try {
-      const hint =
-        mode === "leads"
-          ? "INTENT: list leads.\n"
-          : mode === "summary"
-          ? "INTENT: summarize conversation.\n"
-          : mode === "tasks"
-          ? "INTENT: tasks.\n"
-          : "";
-
       const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: hint + cleaned }),
+        body: JSON.stringify({ question: cleaned }),
       });
 
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || json.details || `Ask failed with ${res.status}`);
 
       setResult(json);
-      setTab("result");
 
       const entry = {
         id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -306,6 +943,10 @@ export default function AskPage() {
     );
   }
 
+  function quickDraftReply(leadId) {
+    applyPrompt(`Draft a reply for lead #${leadId} to confirm next steps`);
+  }
+
   // --- Draft actions ---------------------------------
   function applyVariant(variantId) {
     if (!draftItem) return;
@@ -327,7 +968,6 @@ export default function AskPage() {
 
   const computedSendTo = useMemo(() => {
     if (!draftItem) return null;
-    // Ask API tries to give suggestedSendTo; fallback to meta.to.{email/phone}
     const direct = draftItem.suggestedSendTo || draftItem.suggestedSuggestedSendTo || null;
     if (direct) return direct;
 
@@ -388,10 +1028,6 @@ export default function AskPage() {
       if (!res.ok) throw new Error(json.error || json.details || `Send failed with ${res.status}`);
 
       setSendResult(json);
-
-      // Optional: show fresh timeline right away (ask tool will read from messages)
-      // runAsk(`Summarize the conversation for lead #${draftItem.leadId}`);
-
     } catch (err) {
       console.error("[/platform/ask] send error:", err);
       setSendError(err.message || "Failed to send.");
@@ -445,688 +1081,163 @@ export default function AskPage() {
     }));
   }, [isTaskList, result]);
 
+  // Example chips
+  const examples = [
+    { label: "Summarize a lead", q: "Summarize Marc's conversation" },
+    { label: "No reply 24h", q: "Which leads haven't replied in 24h?" },
+    { label: "Missed calls", q: "Show missed calls without follow-up." },
+    { label: "Tasks due today", q: "Show tasks due today." },
+    { label: "Draft reply", q: "Draft an email reply to confirm the follow-up for lead #1" },
+    { label: "Open tasks", q: "Show open tasks" },
+  ];
+
   return (
     <DashboardLayout title="Command Center">
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-        {/* Left column */}
-        <div className="xl:col-span-4 space-y-4">
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-100">Ask BlueWise Command Center</p>
-                <p className="mt-1 text-xs text-slate-400">
-                  Natural language \u2192 deterministic tools \u2192 structured results.
-                </p>
-              </div>
+      <div className="max-w-3xl mx-auto space-y-6">
 
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              {[
-                ["auto", "Auto"],
-                ["leads", "Leads"],
-                ["summary", "Summaries"],
-                ["tasks", "Tasks"],
-              ].map(([k, label]) => (
-                <button
-                  key={k}
-                  onClick={() => setMode(k)}
-                  className={cx(
-                    "rounded-full border px-3 py-1 text-[11px] font-semibold",
-                    mode === k
-                      ? "border-sky-500/60 bg-sky-500/10 text-sky-200"
-                      : "border-slate-800 bg-slate-950/40 text-slate-300 hover:border-sky-500/40"
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/60 p-3">
-              <SectionTitle>Examples</SectionTitle>
-              <div className="mt-2 flex flex-col gap-2">
-                {[
-                  `Summarize Marc\u2019s conversation`,
-                  `Show missed calls without follow-up`,
-                  `Which leads haven\u2019t replied in 24h?`,
-                  `Draft an email reply to confirm the follow-up for lead #1`,
-                  `Draft an SMS to ask for photos for lead #12`,
-                  `Show open tasks`,
-                ].map((q) => (
-                  <button
-                    key={q}
-                    onClick={() => applyPrompt(q)}
-                    className="text-left text-[11px] text-slate-300 hover:text-sky-200"
-                    title="Insert into prompt"
-                  >
-                    \u201c{q}\u201d
-                  </button>
-                ))}
-              </div>
-            </div>
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-lg font-semibold text-slate-100">Command Center</h1>
+            <p className="text-sm text-slate-400 mt-0.5">Ask anything about your leads and tasks</p>
           </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-100">Saved prompts</p>
-              <button
-                onClick={saveCurrentPrompt}
-                className="rounded-xl border border-slate-700 bg-slate-900/40 px-3 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
-              >
-                Save current
-              </button>
-            </div>
-
-            <div className="mt-3 space-y-2">
-              {saved.length === 0 ? (
-                <p className="text-xs text-slate-500">No saved prompts yet.</p>
-              ) : (
-                saved.map((s) => (
-                  <div
-                    key={s.id}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2"
-                  >
-                    <button onClick={() => applyPrompt(s.q)} className="min-w-0 text-left" title="Insert into prompt">
-                      <p className="truncate text-xs font-semibold text-slate-200">{s.label}</p>
-                      <p className="truncate text-[11px] text-slate-500">{s.q}</p>
-                    </button>
-                    <button
-                      onClick={() => removeSaved(s.id)}
-                      className="shrink-0 text-[11px] font-semibold text-slate-400 hover:text-rose-200"
-                      title="Remove"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
+          <div className="flex items-center gap-2">
+            <SavedDropdown
+              saved={saved}
+              onApply={applyPrompt}
+              onRemove={removeSaved}
+              onSave={saveCurrentPrompt}
+              question={question}
+            />
+            <button
+              onClick={() => setHistoryOpen(true)}
+              className="rounded-xl border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-slate-300 hover:border-sky-500/40 hover:text-sky-200"
+            >
+              <svg className="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              History
+            </button>
           </div>
         </div>
 
-        {/* Right column */}
-        <div className="xl:col-span-8 space-y-4">
-          {/* Composer */}
-          <div className="rounded-2xl border border-sky-700/40 bg-slate-950/80 p-4 shadow-[0_0_24px_rgba(56,189,248,0.22)]">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-100">Ask</p>
-                <p className="mt-1 text-xs text-slate-400">
-                  Output is designed to be client-ready: readable, structured, and actionable.
-                </p>
-              </div>
+        {/* Query composer */}
+        <div className="rounded-2xl border border-sky-700/40 bg-slate-950/80 p-5 shadow-[0_0_24px_rgba(56,189,248,0.15)]">
+          <form onSubmit={handleSubmit} className="flex gap-3">
+            <input
+              ref={inputRef}
+              type="text"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="Ask a question..."
+              className="flex-1 rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded-xl bg-sky-500 px-5 py-3 text-sm font-semibold text-white shadow shadow-sky-500/40 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+            >
+              {loading ? "Thinking\u2026" : "Ask"}
+            </button>
+          </form>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setTab("result")}
-                  className={cx(
-                    "rounded-xl border px-3 py-1.5 text-[11px] font-semibold",
-                    tab === "result"
-                      ? "border-sky-500/60 bg-sky-500/10 text-sky-200"
-                      : "border-slate-800 bg-slate-950/40 text-slate-300 hover:border-sky-500/40"
-                  )}
-                >
-                  Result
-                </button>
-                <button
-                  onClick={() => setTab("history")}
-                  className={cx(
-                    "rounded-xl border px-3 py-1.5 text-[11px] font-semibold",
-                    tab === "history"
-                      ? "border-sky-500/60 bg-sky-500/10 text-sky-200"
-                      : "border-slate-800 bg-slate-950/40 text-slate-300 hover:border-sky-500/40"
-                  )}
-                >
-                  History
-                </button>
-              </div>
-            </div>
+          {error && <p className="mt-3 text-sm text-rose-300">{error}</p>}
 
-            <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <input
-                ref={inputRef}
-                type="text"
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                placeholder={"Example: \u201cSummarize Marc\u2019s conversation\u201d"}
-                className="flex-1 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
-              />
+          {/* Example chips */}
+          <div className="mt-4 flex flex-wrap gap-2">
+            {examples.map((ex) => (
               <button
-                type="submit"
-                disabled={loading}
-                className="inline-flex items-center justify-center rounded-xl bg-sky-500 px-4 py-2 text-xs font-semibold text-white shadow shadow-sky-500/40 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+                key={ex.label}
+                onClick={() => applyPrompt(ex.q)}
+                className="rounded-full border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-sm text-slate-300 hover:border-sky-500/40 hover:text-sky-200 transition-colors"
               >
-                {loading ? "Thinking\u2026" : "Ask"}
+                {ex.label}
               </button>
-            </form>
-
-            {error ? <p className="mt-3 text-xs text-rose-300">{error}</p> : null}
-
-            {result?.aiSummary && tab === "result" ? (
-              <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
-                <SectionTitle>System note</SectionTitle>
-                <p className="mt-1 text-xs text-slate-300 whitespace-pre-line">{truncateText(result.aiSummary, 520)}</p>
-              </div>
-            ) : null}
+            ))}
           </div>
-
-          {/* RESULTS */}
-          {tab === "result" && (
-            <div className="space-y-4">
-              {!result && !loading ? (
-                <EmptyState title="No result yet" desc="Run a query and BlueWise will return structured CRM output." />
-              ) : null}
-
-              {isEcho ? (
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-6">
-                  <p className="text-sm font-semibold text-slate-100">Not matched yet</p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    This question did not trigger a tool. Try: \u201cShow open tasks\u201d, \u201cSummarize Marc\u2019s conversation\u201d, or
-                    \u201cLeads no reply 24h\u201d.
-                  </p>
-                </div>
-              ) : null}
-
-              {/* Draft Reply */}
-              {isDraftReply && (
-                <div className="rounded-2xl border border-sky-700/30 bg-slate-950/60 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-100">{result.title || "Draft reply"}</p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        Lead #{draftItem?.leadId}
-                        {draftItem?.leadName ? ` \u00b7 ${draftItem.leadName}` : ""} \u00b7 channel:{" "}
-                        <span className="text-slate-200 font-semibold">{computedDraftChannel}</span>
-                      </p>
-
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        {draftItem?.matchReason ? <StatusPill label={`matched: ${draftItem.matchReason}`} tone="low" /> : null}
-                        {draftItem?.purpose ? <StatusPill label={`purpose: ${draftItem.purpose}`} tone="low" /> : null}
-                        {draftItem?.tone ? <StatusPill label={`tone: ${draftItem.tone}`} tone="low" /> : null}
-                        {draftItem?.language ? <StatusPill label={`lang: ${draftItem.language}`} tone="low" /> : null}
-                      </div>
-                    </div>
-
-                    <div className="shrink-0 flex flex-col gap-2">
-                      {draftItem?.leadId ? (
-                        <Link
-                          href={`/platform/leads/${draftItem.leadId}`}
-                          className="rounded-xl border border-sky-500/60 px-3 py-2 text-[11px] font-semibold text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10 text-center"
-                        >
-                          Open lead
-                        </Link>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-1 gap-4">
-                    <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <SectionTitle>Send settings</SectionTitle>
-
-                        <div className="flex flex-wrap items-center gap-2">
-                          <select
-                            value={draftChannelOverride}
-                            onChange={(e) => setDraftChannelOverride(e.target.value)}
-                            className="rounded-lg border border-slate-700 bg-slate-900/70 px-2 py-1 text-[11px] text-slate-200"
-                            title="Override channel"
-                          >
-                            <option value="auto">Channel: auto</option>
-                            <option value="email">Channel: email</option>
-                            <option value="sms">Channel: sms</option>
-                          </select>
-
-                          <select
-                            value={draftVariantId}
-                            onChange={(e) => applyVariant(e.target.value)}
-                            className="rounded-lg border border-slate-700 bg-slate-900/70 px-2 py-1 text-[11px] text-slate-200"
-                            title="Draft variant"
-                          >
-                            {(Array.isArray(draftItem?.variants) ? draftItem.variants : []).map((v) => (
-                              <option key={v.id} value={v.id}>
-                                Variant {v.id}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      <p className="mt-2 text-[11px] text-slate-400">
-                        To: <span className="text-slate-200 font-semibold">{computedSendTo || "\u2014"}</span>
-                      </p>
-
-                      {computedDraftChannel === "email" ? (
-                        <div className="mt-3">
-                          <SectionTitle>Subject</SectionTitle>
-                          <input
-                            value={draftSubject}
-                            onChange={(e) => setDraftSubject(e.target.value)}
-                            className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
-                            placeholder="Email subject"
-                          />
-                        </div>
-                      ) : null}
-
-                      <div className="mt-3">
-                        <SectionTitle>Body</SectionTitle>
-                        <textarea
-                          value={draftBody}
-                          onChange={(e) => setDraftBody(e.target.value)}
-                          rows={computedDraftChannel === "sms" ? 5 : 7}
-                          className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
-                          placeholder={computedDraftChannel === "sms" ? "SMS message..." : "Email body..."}
-                        />
-                        {computedDraftChannel === "sms" ? (
-                          <p className="mt-1 text-[11px] text-slate-500">
-                            {draftBody?.length || 0} chars (Telnyx cap enforced server-side)
-                          </p>
-                        ) : null}
-                      </div>
-
-                      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-                        <div className="text-[11px] text-slate-500">
-                          {draftItem?.scheduledForLocal ? `Follow-up time: ${draftItem.scheduledForLocal}` : null}
-                        </div>
-
-                        <button
-                          onClick={sendDraftNow}
-                          disabled={sending}
-                          className="rounded-xl bg-sky-500 px-4 py-2 text-xs font-semibold text-white shadow shadow-sky-500/40 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
-                        >
-                          {sending ? "Sending\u2026" : `Send ${computedDraftChannel === "sms" ? "SMS" : "Email"}`}
-                        </button>
-                      </div>
-
-                      {sendError ? <p className="mt-3 text-xs text-rose-300">{sendError}</p> : null}
-
-                      {sendResult?.success ? (
-                        <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
-                          <p className="text-xs font-semibold text-emerald-200">Sent</p>
-                          <p className="mt-1 text-[11px] text-slate-200">
-                            provider: {sendResult.provider || "\u2014"} \u00b7 message_id: {sendResult.message_id || "\u2014"} \u00b7{" "}
-                            {sendResult.created_at ? formatWhen(sendResult.created_at) : ""}
-                          </p>
-                        </div>
-                      ) : null}
-
-                      {sendResult && sendResult.success === false ? (
-                        <div className="mt-3 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3">
-                          <p className="text-xs font-semibold text-rose-200">Failed</p>
-                          <p className="mt-1 text-[11px] text-slate-200">{safeText(sendResult.error || "Unknown error")}</p>
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Conversation Summary */}
-              {isConversationSummary && (
-                <div className="rounded-2xl border border-sky-700/30 bg-slate-950/60 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-100">{result.title || "Conversation summary"}</p>
-
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        {convoItem?.urgency ? (
-                          <StatusPill label={`urgency: ${convoItem.urgency}`} tone={convoItem.urgency} />
-                        ) : null}
-                        {convoItem?.sentiment ? (
-                          <StatusPill label={`sentiment: ${convoItem.sentiment}`} tone={convoItem.sentiment} />
-                        ) : null}
-                        {convoItem?.recommendedFollowUpType ? (
-                          <StatusPill label={`follow-up: ${convoItem.recommendedFollowUpType}`} tone="low" />
-                        ) : null}
-                        {convoItem?.messageCount != null ? (
-                          <StatusPill label={`${convoItem.messageCount} msg`} tone="low" />
-                        ) : null}
-                        {convoItem?.daysBack != null ? <StatusPill label={`${convoItem.daysBack}d`} tone="low" /> : null}
-                      </div>
-
-                      {convoItem?.summary ? (
-                        <p className="mt-3 text-sm text-slate-200 leading-relaxed">{safeText(convoItem.summary)}</p>
-                      ) : null}
-
-                      {convoItem?.leadIntent ? (
-                        <p className="mt-2 text-xs text-slate-400">
-                          <span className="font-semibold text-slate-300">Lead intent:</span> {safeText(convoItem.leadIntent)}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    <div className="shrink-0 flex flex-col gap-2">
-                      {convoItem?.leadId ? (
-                        <Link
-                          href={`/platform/leads/${convoItem.leadId}`}
-                          className="rounded-xl border border-sky-500/60 px-3 py-2 text-[11px] font-semibold text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10 text-center"
-                        >
-                          Open lead
-                        </Link>
-                      ) : null}
-
-                      {convoItem?.leadId ? (
-                        <button
-                          onClick={() => quickCreateTask(convoItem.leadId, convoItem.recommendedFollowUpType || "call")}
-                          className="rounded-xl border border-slate-700 bg-slate-900/40 px-3 py-2 text-[11px] font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
-                        >
-                          Create follow-up
-                        </button>
-                      ) : null}
-
-                      {convoItem?.leadId ? (
-                        <button
-                          onClick={() => applyPrompt(`Draft a reply for lead #${convoItem.leadId} to confirm the follow-up`)}
-                          className="rounded-xl border border-sky-500/60 px-3 py-2 text-[11px] font-semibold text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10"
-                        >
-                          Draft reply
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
-                      <SectionTitle>Key details</SectionTitle>
-                      {(convoItem?.keyDetails || []).length ? (
-                        <ul className="mt-2 list-disc pl-4 text-xs text-slate-300 space-y-1">
-                          {(convoItem.keyDetails || []).slice(0, 8).map((s, i) => (
-                            <li key={`kd-${i}`}>{safeText(s)}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="mt-2 text-xs text-slate-500">No key details extracted.</p>
-                      )}
-                    </div>
-
-                    <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
-                      <SectionTitle>Objections</SectionTitle>
-                      {(convoItem?.objections || []).length ? (
-                        <ul className="mt-2 list-disc pl-4 text-xs text-slate-300 space-y-1">
-                          {(convoItem.objections || []).slice(0, 8).map((s, i) => (
-                            <li key={`ob-${i}`}>{safeText(s)}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="mt-2 text-xs text-slate-500">No objections detected.</p>
-                      )}
-                    </div>
-
-                    <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
-                      <SectionTitle>Next steps</SectionTitle>
-                      {(convoItem?.nextSteps || []).length ? (
-                        <ul className="mt-2 list-disc pl-4 text-xs text-slate-300 space-y-1">
-                          {(convoItem.nextSteps || []).slice(0, 8).map((s, i) => (
-                            <li key={`ns-${i}`}>{safeText(s)}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="mt-2 text-xs text-slate-500">No next steps proposed.</p>
-                      )}
-                    </div>
-
-                    <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
-                      <SectionTitle>Open questions</SectionTitle>
-                      {(convoItem?.openQuestions || []).length ? (
-                        <ul className="mt-2 list-disc pl-4 text-xs text-slate-300 space-y-1">
-                          {(convoItem.openQuestions || []).slice(0, 8).map((s, i) => (
-                            <li key={`oq-${i}`}>{safeText(s)}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="mt-2 text-xs text-slate-500">No open questions listed.</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Lead list */}
-              {isLeadList && (
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-100">{result.title || "Lead list"}</p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        {leadRows.length} match{leadRows.length === 1 ? "" : "es"} \u00b7 ranked by latest activity.
-                      </p>
-                    </div>
-                  </div>
-
-                  {leadRows.length === 0 ? (
-                    <p className="mt-3 text-xs text-slate-500">No matching leads.</p>
-                  ) : (
-                    <div className="mt-3 overflow-x-auto">
-                      <table className="w-full text-left">
-                        <thead>
-                          <tr className="text-[11px] text-slate-400 border-b border-slate-800">
-                            <th className="py-2 pr-3">Lead</th>
-                            <th className="py-2 pr-3">Status</th>
-                            <th className="py-2 pr-3">Source</th>
-                            <th className="py-2 pr-3">Last contact</th>
-                            <th className="py-2 pr-3">Missed calls</th>
-                            <th className="py-2 pr-3 text-right">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800">
-                          {leadRows.map((r) => (
-                            <tr key={r.key} className="text-xs text-slate-200 hover:bg-slate-900/40">
-                              <td className="py-2 pr-3">
-                                <div className="min-w-0">
-                                  <p className="truncate font-semibold text-slate-100">{r.name}</p>
-                                  <p className="truncate text-[11px] text-slate-500">
-                                    {r.phone ? r.phone : ""}
-                                    {r.phone && r.email ? " \u00b7 " : ""}
-                                    {r.email ? r.email : ""}
-                                  </p>
-                                </div>
-                              </td>
-                              <td className="py-2 pr-3">
-                                <StatusPill label={r.status} tone="low" />
-                              </td>
-                              <td className="py-2 pr-3">
-                                <span className="text-[11px] text-slate-400">{r.source}</span>
-                              </td>
-                              <td className="py-2 pr-3">
-                                <span className="text-[11px] text-slate-300">
-                                  {r.lastContactAt
-                                    ? `${formatWhen(r.lastContactAt)} (${formatTimeAgo(r.lastContactAt)})`
-                                    : "\u2014"}
-                                </span>
-                              </td>
-                              <td className="py-2 pr-3">
-                                <span className="text-[11px] text-slate-300">
-                                  {r.missedCallCount ? `${r.missedCallCount}` : "0"}
-                                  {r.lastMissedCallAt ? (
-                                    <span className="text-slate-500"> \u00b7 {formatTimeAgo(r.lastMissedCallAt)}</span>
-                                  ) : null}
-                                </span>
-                              </td>
-                              <td className="py-2 pl-3">
-                                <div className="flex items-center justify-end gap-2">
-                                  {r.leadId ? (
-                                    <Link
-                                      href={`/platform/leads/${r.leadId}`}
-                                      className="rounded-lg border border-slate-700 bg-slate-900/40 px-2 py-1 text-[11px] font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
-                                    >
-                                      Open
-                                    </Link>
-                                  ) : (
-                                    <span className="text-[11px] text-slate-500">Unlinked</span>
-                                  )}
-
-                                  {r.leadId ? (
-                                    <button
-                                      onClick={() => quickSummarizeLead(r.leadId)}
-                                      className="rounded-lg border border-sky-500/60 px-2 py-1 text-[11px] font-semibold text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10"
-                                    >
-                                      Summarize
-                                    </button>
-                                  ) : null}
-
-                                  {r.leadId ? (
-                                    <button
-                                      onClick={() => applyPrompt(`Draft a reply for lead #${r.leadId} to confirm next steps`)}
-                                      className="rounded-lg border border-sky-500/60 px-2 py-1 text-[11px] font-semibold text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10"
-                                    >
-                                      Draft
-                                    </button>
-                                  ) : null}
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Task list */}
-              {isTaskList && (
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-100">{result.title || "Follow-up tasks"}</p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        {tasks.length} task{tasks.length === 1 ? "" : "s"}.
-                      </p>
-                    </div>
-                  </div>
-
-                  {tasks.length === 0 ? (
-                    <p className="mt-3 text-xs text-slate-500">No matching tasks.</p>
-                  ) : (
-                    <div className="mt-3 space-y-2">
-                      {tasks.map((t) => (
-                        <div key={t.id} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <p className="text-xs font-semibold text-slate-100">
-                                #{t.id} \u00b7 {t.followupType.toUpperCase()} \u00b7{" "}
-                                <span className="text-slate-300">
-                                  {t.scheduledFor ? formatWhen(t.scheduledFor) : "No date"}
-                                </span>
-                              </p>
-                              <p className="mt-1 text-[11px] text-slate-500">
-                                status: {t.status}
-                                {t.createdAt ? ` \u00b7 created ${formatTimeAgo(t.createdAt)}` : ""}
-                              </p>
-                              {t.note ? <p className="mt-2 text-xs text-slate-300">{safeText(t.note)}</p> : null}
-                            </div>
-
-                            {t.leadId ? (
-                              <Link
-                                href={`/platform/leads/${t.leadId}`}
-                                className="shrink-0 rounded-lg border border-sky-500/60 px-2 py-1 text-[11px] font-semibold text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10"
-                              >
-                                Open lead
-                              </Link>
-                            ) : null}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Task created/updated confirmations */}
-              {(isTaskCreated || isTaskUpdated) && (
-                <div className="rounded-2xl border border-emerald-500/30 bg-slate-950/50 p-4">
-                  <p className="text-sm font-semibold text-slate-100">
-                    {result.title || (isTaskCreated ? "Follow-up created" : "Follow-up updated")}
-                  </p>
-                  <p className="mt-2 text-sm text-slate-200">
-                    {result.items?.[0]?.leadId ? (
-                      <>
-                        Lead{" "}
-                        <Link
-                          href={`/platform/leads/${result.items[0].leadId}`}
-                          className="text-sky-200 hover:text-sky-100 hover:underline underline-offset-4"
-                        >
-                          #{result.items[0].leadId}
-                        </Link>{" "}
-                        \u00b7 {truncateText(result.aiSummary || "", 380)}
-                      </>
-                    ) : (
-                      truncateText(result.aiSummary || "", 520)
-                    )}
-                  </p>
-                </div>
-              )}
-
-              {/* Other action */}
-              {isActionOther && (
-                <div className="rounded-2xl border border-sky-700/30 bg-slate-950/50 p-4">
-                  <p className="text-sm font-semibold text-slate-100">{result.title || "Result"}</p>
-                  <p className="mt-2 text-sm text-slate-200 whitespace-pre-line">
-                    {truncateText(result.aiSummary || "", 900)}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* HISTORY */}
-          {tab === "history" && (
-            <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-slate-100">History</p>
-                  <p className="mt-1 text-xs text-slate-400">Stored locally in your browser. Last 40 runs.</p>
-                </div>
-                <button
-                  onClick={clearHistory}
-                  className="rounded-xl border border-slate-700 bg-slate-900/40 px-3 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-rose-500/40 hover:text-rose-200 hover:bg-rose-500/10"
-                >
-                  Clear
-                </button>
-              </div>
-
-              {history.length === 0 ? (
-                <p className="mt-4 text-xs text-slate-500">No history yet.</p>
-              ) : (
-                <div className="mt-4 space-y-2">
-                  {history.map((h) => (
-                    <div key={h.id} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold text-slate-100">{h.q}</p>
-                          <p className="mt-1 text-[11px] text-slate-500">
-                            {formatWhen(h.at)} \u00b7 {formatTimeAgo(h.at)}
-                            {h.resultType ? ` \u00b7 ${h.resultType}` : ""}
-                            {h.intent ? ` \u00b7 ${h.intent}` : ""}
-                          </p>
-                          {h.snapshot ? <p className="mt-2 text-xs text-slate-300">{h.snapshot}</p> : null}
-                        </div>
-                        <div className="shrink-0 flex flex-col gap-2">
-                          <button
-                            onClick={() => applyPrompt(h.q)}
-                            className="rounded-lg border border-slate-700 bg-slate-900/40 px-2 py-1 text-[11px] font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
-                          >
-                            Reuse
-                          </button>
-                          <button
-                            onClick={() => {
-                              setResult(h.raw);
-                              setTab("result");
-                            }}
-                            className="rounded-lg border border-sky-500/60 px-2 py-1 text-[11px] font-semibold text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10"
-                          >
-                            View
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </div>
+
+        {/* AI Summary (system note) */}
+        {result?.aiSummary && !isConversationSummary && !isDraftReply && (
+          <div className="rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3">
+            <p className="text-sm text-slate-300 whitespace-pre-line">{truncateText(result.aiSummary, 520)}</p>
+          </div>
+        )}
+
+        {/* Results area */}
+        {loading && <LoadingSkeleton />}
+
+        {!result && !loading && (
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-8 text-center">
+            <div className="mx-auto w-14 h-14 rounded-full bg-slate-800/80 flex items-center justify-center mb-4">
+              <svg className="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+              </svg>
+            </div>
+            <p className="text-base font-semibold text-slate-100">Ready to assist</p>
+            <p className="text-sm text-slate-400 mt-1">Ask a question or pick an example above to get started.</p>
+          </div>
+        )}
+
+        {isEcho && <ResultEcho />}
+
+        {isDraftReply && (
+          <ResultDraft
+            result={result}
+            draftItem={draftItem}
+            computedDraftChannel={computedDraftChannel}
+            computedSendTo={computedSendTo}
+            draftSubject={draftSubject}
+            setDraftSubject={setDraftSubject}
+            draftBody={draftBody}
+            setDraftBody={setDraftBody}
+            draftChannelOverride={draftChannelOverride}
+            setDraftChannelOverride={setDraftChannelOverride}
+            draftVariantId={draftVariantId}
+            applyVariant={applyVariant}
+            sending={sending}
+            sendDraftNow={sendDraftNow}
+            sendError={sendError}
+            sendResult={sendResult}
+          />
+        )}
+
+        {isConversationSummary && (
+          <ResultSummary
+            result={result}
+            convoItem={convoItem}
+            onCreateTask={quickCreateTask}
+            onDraft={quickDraftReply}
+          />
+        )}
+
+        {isLeadList && (
+          <ResultLeadList
+            result={result}
+            leadRows={leadRows}
+            onSummarize={quickSummarizeLead}
+            onDraft={quickDraftReply}
+          />
+        )}
+
+        {isTaskList && <ResultTaskList result={result} tasks={tasks} />}
+
+        {(isTaskCreated || isTaskUpdated) && (
+          <ResultTaskConfirm result={result} isCreated={isTaskCreated} />
+        )}
+
+        {isActionOther && <ResultOther result={result} />}
       </div>
+
+      {/* History slide-over */}
+      <HistoryPanel
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        history={history}
+        onReuse={(q) => { applyPrompt(q); setHistoryOpen(false); }}
+        onView={(raw) => { setResult(raw); setHistoryOpen(false); }}
+        onClear={clearHistory}
+      />
     </DashboardLayout>
   );
 }
