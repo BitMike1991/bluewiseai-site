@@ -2,6 +2,7 @@
 import { useRouter } from "next/router";
 import { LogOut, Menu } from "lucide-react";
 
+// Map route segments to readable breadcrumbs
 function getBreadcrumb(pathname) {
   const segments = pathname.replace("/platform/", "").split("/").filter(Boolean);
   if (segments.length === 0) return "Overview";
@@ -23,6 +24,7 @@ export default function TopNav({ onLogout, onToggleSidebar, userName, customerNa
   return (
     <header className="flex items-center justify-between border-b border-slate-800 bg-slate-950/80 px-4 md:px-6 py-3 backdrop-blur">
       <div className="flex items-center gap-3">
+        {/* Hamburger menu button (mobile only) */}
         <button
           onClick={onToggleSidebar}
           className="md:hidden p-2 rounded-lg hover:bg-slate-800/70 transition-colors"
@@ -37,6 +39,7 @@ export default function TopNav({ onLogout, onToggleSidebar, userName, customerNa
       </div>
 
       <div className="flex items-center gap-3">
+        {/* User avatar + name */}
         <div className="flex items-center gap-2">
           <div className="h-7 w-7 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center">
             <span className="text-xs font-semibold text-blue-400">{initials}</span>

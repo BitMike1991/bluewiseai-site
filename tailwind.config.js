@@ -12,8 +12,8 @@ module.exports = {
       },
       colors: {
         brand: {
-          blue: "#3B82F6",
-          neon: "#60A5FA",
+          blue: "#3B82F6",   // blue-500
+          neon: "#60A5FA",   // blue-400
         },
       },
       animation: {

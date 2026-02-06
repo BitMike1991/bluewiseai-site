@@ -31,6 +31,7 @@ export default function DashboardLayout({ children }) {
     try {
       await supabase.auth.signOut();
     } finally {
+      // Middleware will also protect, but we proactively route
       router.push("/platform/login");
     }
   }
@@ -45,12 +46,14 @@ export default function DashboardLayout({ children }) {
 
   return (
     <div className="flex h-screen bg-slate-950 text-slate-50">
+      {/* Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}
         onClose={closeSidebar}
         customerName={userInfo.customerName}
       />
 
+      {/* Main area */}
       <div className="flex flex-col flex-1 min-w-0">
         <TopNav
           onLogout={handleLogout}
