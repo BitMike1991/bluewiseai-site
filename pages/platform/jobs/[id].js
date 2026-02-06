@@ -122,7 +122,7 @@ export default function JobDetailPage() {
         <div className="py-12 text-center">
           <p className="text-rose-400 text-sm mb-4">{error || 'Job not found'}</p>
           <Link href="/platform/jobs" className="text-sky-400 text-sm hover:underline">
-            Back to Jobs
+            Go to Jobs
           </Link>
         </div>
       </DashboardLayout>
@@ -170,12 +170,6 @@ export default function JobDetailPage() {
 
       {/* Header */}
       <div className="mb-6">
-        <Link
-          href="/platform/jobs"
-          className="text-xs text-slate-500 hover:text-slate-300 transition mb-2 inline-block"
-        >
-          \u2190 Back to Jobs
-        </Link>
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center space-x-3">

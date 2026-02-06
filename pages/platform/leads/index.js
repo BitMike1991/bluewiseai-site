@@ -148,7 +148,7 @@ export default function LeadsPage() {
           </p>
         </div>
         <div className="text-xs text-slate-500">
-          {total} lead{total === 1 ? '' : 's'} \u00b7 Page {page} of {totalPages}
+          {total} lead{total === 1 ? '' : 's'} · Page {page} of {totalPages}
         </div>
       </div>
 
@@ -214,8 +214,10 @@ export default function LeadsPage() {
 
         <ul className="divide-y divide-slate-800/80">
           {leads.map((lead) => {
+            // IDs coming from API
             const leadId = lead.lead_id ?? lead.id;
 
+            // Safe display name, avoiding literal "null"/"undefined"
             let displayName = lead?.name;
             if (
               !displayName ||
@@ -228,6 +230,7 @@ export default function LeadsPage() {
                 (leadId ? `Lead #${leadId}` : 'Unknown lead');
             }
 
+            // Last contact fallback: last_contact_at -> last_message_at -> first_seen_at
             const lastContactRaw =
               lead.last_contact_at ||
               lead.last_message_at ||
@@ -245,6 +248,7 @@ export default function LeadsPage() {
                 className="cursor-pointer hover:bg-slate-900/80 transition-colors"
               >
                 <div className="px-4 py-3 grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-center">
+                  {/* Lead main info */}
                   <div className="md:col-span-4">
                     <div className="flex items-center gap-3">
                       <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold ${getAvatarColor(displayName)}`}>
@@ -262,6 +266,7 @@ export default function LeadsPage() {
                               {lead.email && <span>{lead.email}</span>}
                             </p>
                           </div>
+                          {/* Mobile badge */}
                           <span
                             className={`md:hidden mt-1 ${statusBadgeClasses(
                               lead.status
@@ -279,20 +284,24 @@ export default function LeadsPage() {
                     </div>
                   </div>
 
+                  {/* Source */}
                   <div className="md:col-span-2 text-xs text-slate-400">
                     {lead.source || 'unknown'}
                   </div>
 
+                  {/* Status */}
                   <div className="hidden md:block md:col-span-2">
                     <span className={statusBadgeClasses(lead.status)}>
                       {lead.status || 'new'}
                     </span>
                   </div>
 
+                  {/* Last contact */}
                   <div className="md:col-span-2 text-xs text-slate-400">
                     {lastContactLabel}
                   </div>
 
+                  {/* Summary */}
                   <div className="md:col-span-2 text-xs text-slate-400 text-right md:text-right">
                     {lead.summary ? (
                       <span className="line-clamp-1">{lead.summary}</span>
@@ -306,6 +315,7 @@ export default function LeadsPage() {
           })}
         </ul>
 
+        {/* Pagination footer */}
         {!loading && leads.length > 0 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-slate-800/80 text-xs text-slate-400">
             <div>
