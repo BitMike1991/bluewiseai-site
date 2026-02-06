@@ -56,26 +56,37 @@ export default async function handler(req, res) {
         : Promise.resolve({ data: null }),
     ]);
 
-    // If lead exists, fetch their photos
+    // If lead exists, fetch their photos via inbox_leads -> inbox_messages -> inbox_attachments
+    // inbox_messages.lead_id = inbox_leads.id (NOT leads.id)
     let photos = [];
     if (job.lead_id) {
-      // Get inbox_messages for this lead that have attachments
-      const { data: messages } = await supabase
-        .from("inbox_messages")
+      const { data: inboxLead } = await supabase
+        .from("inbox_leads")
         .select("id")
-        .eq("lead_id", job.lead_id);
+        .eq("customer_id", String(customerId))
+        .eq("lead_id", job.lead_id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (messages && messages.length > 0) {
-        const messageIds = messages.map((m) => m.id);
-        const { data: attachments } = await supabase
-          .from("inbox_attachments")
-          .select("id, message_id, file_url, content_type, created_at")
-          .in("message_id", messageIds)
-          .order("created_at", { ascending: false });
+      if (inboxLead) {
+        const { data: inboxMsgIds } = await supabase
+          .from("inbox_messages")
+          .select("id")
+          .eq("lead_id", inboxLead.id);
 
-        photos = (attachments || []).filter((a) =>
-          (a.content_type || "").startsWith("image/")
-        );
+        if (inboxMsgIds && inboxMsgIds.length > 0) {
+          const messageIds = inboxMsgIds.map((m) => m.id);
+          const { data: attachments } = await supabase
+            .from("inbox_attachments")
+            .select("id, message_id, file_url, content_type, created_at")
+            .in("message_id", messageIds)
+            .order("created_at", { ascending: false });
+
+          photos = (attachments || []).filter((a) =>
+            (a.content_type || "").startsWith("image/")
+          );
+        }
       }
     }
 

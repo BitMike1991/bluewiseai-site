@@ -276,6 +276,7 @@ export default async function handler(req, res) {
           id,
           lead_id,
           direction,
+          channel,
           message_type,
           subject,
           body,
@@ -286,23 +287,25 @@ export default async function handler(req, res) {
         .eq("customer_id", customerId)
         .eq("lead_id", leadId)
         .order("created_at", { ascending: true }),
-      supabase
-        .from("inbox_messages")
-        .select(
-          `
-          id,
-          lead_id,
-          direction,
-          message_type,
-          body,
-          telnyx_message_id,
-          created_at
-        `
-        )
-        // tenant-safe if customer_id exists; no logic change otherwise since lead_id is canonical per-tenant in your model
-        .eq("customer_id", customerId)
-        .eq("lead_id", leadId)
-        .order("created_at", { ascending: true }),
+      // inbox_messages uses inbox_leads.id as lead_id (not leads.id)
+      // so we need the primaryInboxLead.id to query it
+      primaryInboxLead
+        ? supabase
+            .from("inbox_messages")
+            .select(
+              `
+              id,
+              lead_id,
+              direction,
+              message_type,
+              body,
+              telnyx_message_id,
+              created_at
+            `
+            )
+            .eq("lead_id", primaryInboxLead.id)
+            .order("created_at", { ascending: true })
+        : Promise.resolve({ data: [], error: null }),
     ]);
 
     if (emailMessagesError)
@@ -310,18 +313,22 @@ export default async function handler(req, res) {
     if (inboxMessagesError)
       console.error("[api/leads/[id]] inboxMessagesError", inboxMessagesError);
 
-    const emailMessages =
-      (emailMessageRows || []).map((m) => ({
-        id: m.id,
-        lead_id: m.lead_id,
-        channel: "email",
-        direction: m.direction || "outbound",
-        message_type: m.message_type || "email",
-        subject: m.subject || null,
-        body_text: stripHtmlToText(m.body || ""),
-        body_html: m.body || null,
-        created_at: m.created_at,
-      })) || [];
+    const generalMessages =
+      (emailMessageRows || []).map((m) => {
+        const ch = (m.channel || m.message_type || "email").toLowerCase();
+        const isSms = ch === "sms" || ch === "mms";
+        return {
+          id: m.id,
+          lead_id: m.lead_id,
+          channel: isSms ? "sms" : "email",
+          direction: m.direction || "outbound",
+          message_type: m.message_type || ch,
+          subject: m.subject || null,
+          body_text: isSms ? (m.body || "") : stripHtmlToText(m.body || ""),
+          body_html: isSms ? null : (m.body || null),
+          created_at: m.created_at,
+        };
+      }) || [];
 
     const smsMessages =
       (inboxMessageRows || []).map((m) => ({
@@ -336,7 +343,7 @@ export default async function handler(req, res) {
         created_at: m.created_at,
       })) || [];
 
-    const messages = [...emailMessages, ...smsMessages].sort((a, b) => {
+    const messages = [...generalMessages, ...smsMessages].sort((a, b) => {
       const aMs = a.created_at ? new Date(a.created_at).getTime() : 0;
       const bMs = b.created_at ? new Date(b.created_at).getTime() : 0;
       return aMs - bMs;
@@ -387,23 +394,32 @@ export default async function handler(req, res) {
       })) || [];
 
     //
-    // 8) Fetch PHOTOS (inbox_attachments for this lead's messages)
+    // 8) Fetch PHOTOS (inbox_attachments linked via inbox_messages)
+    //    inbox_messages.lead_id = inbox_leads.id (NOT leads.id)
+    //    so we use primaryInboxLead.id to find the right messages
     //
     let photos = [];
-    if (inboxMessageRows && inboxMessageRows.length > 0) {
-      const messageIds = inboxMessageRows.map((m) => m.id);
-      const { data: attachments, error: attachError } = await supabase
-        .from("inbox_attachments")
-        .select("id, message_id, file_url, content_type, created_at")
-        .in("message_id", messageIds)
-        .order("created_at", { ascending: false });
+    if (primaryInboxLead) {
+      const { data: inboxMsgIds } = await supabase
+        .from("inbox_messages")
+        .select("id")
+        .eq("lead_id", primaryInboxLead.id);
 
-      if (attachError)
-        console.error("[api/leads/[id]] attachError", attachError);
+      if (inboxMsgIds && inboxMsgIds.length > 0) {
+        const messageIds = inboxMsgIds.map((m) => m.id);
+        const { data: attachments, error: attachError } = await supabase
+          .from("inbox_attachments")
+          .select("id, message_id, file_url, content_type, created_at")
+          .in("message_id", messageIds)
+          .order("created_at", { ascending: false });
 
-      photos = (attachments || []).filter((a) =>
-        (a.content_type || "").startsWith("image/")
-      );
+        if (attachError)
+          console.error("[api/leads/[id]] attachError", attachError);
+
+        photos = (attachments || []).filter((a) =>
+          (a.content_type || "").startsWith("image/")
+        );
+      }
     }
 
     //
