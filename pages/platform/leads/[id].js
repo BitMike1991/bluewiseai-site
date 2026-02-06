@@ -2,10 +2,11 @@
 
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
 
 function formatDate(dateString) {
-  if (!dateString) return "—";
+  if (!dateString) return "\u2014";
   const d = new Date(dateString);
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
@@ -72,10 +73,10 @@ function truncateText(str, max = 900) {
   const s = (str || "").toString();
   if (!s) return "";
   if (s.length <= max) return s;
-  return s.slice(0, max - 1) + "…";
+  return s.slice(0, max - 1) + "\u2026";
 }
 
-// ✅ robust channel classification
+// \u2705 robust channel classification
 function classifyChannel(channelValue) {
   const s = (channelValue || "").toString().toLowerCase();
 
@@ -87,7 +88,7 @@ function classifyChannel(channelValue) {
   return s || "unknown";
 }
 
-// ✅ UI-safe email cleanup to prevent “huge blank space” + signature preview cut
+// \u2705 UI-safe email cleanup to prevent "huge blank space" + signature preview cut
 function normalizeMessageBody(raw) {
   if (!raw) return "";
   let s = raw.toString();
@@ -104,7 +105,7 @@ function splitSignaturePreview(body) {
   if (!s) return { preview: "", hasSig: false };
 
   const sigRegex =
-    /(\n--\s*\n|\n—\s*\n|\n___+\s*\n|\nSent from my (iPhone|Android).*\n|\nBest regards,|\nRegards,|\nSincerely,|\nCordialement,|\nMerci,)/i;
+    /(\n--\s*\n|\n\u2014\s*\n|\n___+\s*\n|\nSent from my (iPhone|Android).*\n|\nBest regards,|\nRegards,|\nSincerely,|\nCordialement,|\nMerci,)/i;
 
   const m = s.match(sigRegex);
   if (!m || typeof m.index !== "number") return { preview: s, hasSig: false };
@@ -340,7 +341,10 @@ export default function LeadDetailPage() {
         source: "automation",
       }));
 
-      setData({ lead, inboxLead, timeline, stats, tasks });
+      const photos = json.photos || [];
+      const jobs = json.jobs || [];
+
+      setData({ lead, inboxLead, timeline, stats, tasks, photos, jobs });
     } catch (err) {
       console.error("Lead detail fetch error", err);
       setError(err.message || "Failed to load lead");
@@ -358,6 +362,10 @@ export default function LeadDetailPage() {
   const timeline = data?.timeline || [];
   const stats = data?.stats || { totalMessages: 0, inboundMessages: 0, outboundMessages: 0 };
   const tasks = data?.tasks || [];
+  const photos = data?.photos || [];
+  const jobs = data?.jobs || [];
+
+  const [lightboxUrl, setLightboxUrl] = useState(null);
 
   const openTasks = tasks.filter((t) => (t.status || "open").toLowerCase() !== "completed");
   const completedTasks = tasks.filter((t) => (t.status || "open").toLowerCase() === "completed");
@@ -456,6 +464,26 @@ export default function LeadDetailPage() {
 
   return (
     <DashboardLayout title="Lead details">
+      {/* Photo Lightbox */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <img
+            src={lightboxUrl}
+            alt="Photo"
+            className="max-w-full max-h-[90vh] rounded-xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            onClick={() => setLightboxUrl(null)}
+            className="absolute top-4 right-4 text-white/80 hover:text-white text-2xl"
+          >
+            \u2715
+          </button>
+        </div>
+      )}
       <div className="h-full w-full px-6 py-6 text-slate-100">
         <div className="flex items-center justify-between mb-6">
           <div className="flex flex-col gap-2">
@@ -464,7 +492,7 @@ export default function LeadDetailPage() {
               onClick={() => router.push("/platform/leads")}
               className="inline-flex items-center text-xs font-medium text-slate-400 hover:text-slate-200 transition"
             >
-              <span className="mr-1.5 text-lg">←</span>
+              <span className="mr-1.5 text-lg">\u2190</span>
               Back to leads
             </button>
 
@@ -530,7 +558,7 @@ export default function LeadDetailPage() {
               </div>
             </div>
 
-            {loading && <p className="text-sm text-slate-400">Loading timeline…</p>}
+            {loading && <p className="text-sm text-slate-400">Loading timeline\u2026</p>}
             {error && !loading && <p className="text-sm text-rose-300">{error}</p>}
 
             {!loading && !error && filteredTimeline.length === 0 && (
@@ -606,11 +634,11 @@ export default function LeadDetailPage() {
               <dl className="grid grid-cols-1 gap-y-2 text-sm text-slate-200">
                 <div className="flex justify-between gap-4">
                   <dt className="text-slate-400 text-xs uppercase tracking-wide">Phone</dt>
-                  <dd className="font-medium">{lead?.phone || "—"}</dd>
+                  <dd className="font-medium">{lead?.phone || "\u2014"}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
                   <dt className="text-slate-400 text-xs uppercase tracking-wide">Email</dt>
-                  <dd className="font-medium">{lead?.email || "—"}</dd>
+                  <dd className="font-medium">{lead?.email || "\u2014"}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
                   <dt className="text-slate-400 text-xs uppercase tracking-wide">First seen</dt>
@@ -622,7 +650,7 @@ export default function LeadDetailPage() {
                 </div>
                 <div className="flex justify-between gap-4">
                   <dt className="text-slate-400 text-xs uppercase tracking-wide">Source</dt>
-                  <dd className="capitalize">{lead?.source || "—"}</dd>
+                  <dd className="capitalize">{lead?.source || "\u2014"}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
                   <dt className="text-slate-400 text-xs uppercase tracking-wide">Missed calls</dt>
@@ -630,6 +658,72 @@ export default function LeadDetailPage() {
                 </div>
               </dl>
             </div>
+
+            {/* Photos */}
+            {photos.length > 0 && (
+              <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
+                <h2 className="text-sm font-semibold text-slate-100 mb-3 tracking-wide">
+                  Photos ({photos.length})
+                </h2>
+                <div className="grid grid-cols-2 gap-2">
+                  {photos.map((photo) => (
+                    <button
+                      key={photo.id}
+                      onClick={() => setLightboxUrl(photo.file_url)}
+                      className="aspect-square rounded-lg overflow-hidden border border-slate-700/60 hover:border-sky-500/60 transition group"
+                    >
+                      <img
+                        src={photo.file_url}
+                        alt="Lead photo"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Linked Jobs */}
+            {jobs.length > 0 && (
+              <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
+                <h2 className="text-sm font-semibold text-slate-100 mb-3 tracking-wide">
+                  Jobs ({jobs.length})
+                </h2>
+                <ul className="space-y-2">
+                  {jobs.map((job) => (
+                    <li key={job.id}>
+                      <Link
+                        href={`/platform/jobs/${job.id}`}
+                        className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-2 hover:border-sky-500/40 transition"
+                      >
+                        <div className="flex flex-col text-xs">
+                          <span className="font-mono text-sky-400">{job.job_id}</span>
+                          <span className="text-slate-400">
+                            {(job.project_type || "N/A").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className={cx(
+                            "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border",
+                            job.status === "completed" ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/40" :
+                            job.status === "signed" || job.status === "scheduled" ? "bg-sky-500/15 text-sky-300 border-sky-500/40" :
+                            job.status === "cancelled" ? "bg-rose-500/10 text-rose-300 border-rose-500/40" :
+                            "bg-slate-700/60 text-slate-100 border-slate-500/40"
+                          )}>
+                            {(job.status || "draft").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                          </span>
+                          {job.quote_amount && (
+                            <p className="text-[10px] text-slate-500 mt-0.5">
+                              {new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(job.quote_amount)}
+                            </p>
+                          )}
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
               <div className="flex items-center justify-between mb-2">
@@ -644,11 +738,11 @@ export default function LeadDetailPage() {
                 </div>
               </div>
 
-              {loading && <p className="text-xs text-slate-400">Loading tasks…</p>}
+              {loading && <p className="text-xs text-slate-400">Loading tasks\u2026</p>}
 
               {!loading && tasks.length === 0 && (
                 <p className="text-xs text-slate-400">
-                  No follow-up tasks yet for this lead. When your AI creates follow-ups, they’ll appear here.
+                  No follow-up tasks yet for this lead. When your AI creates follow-ups, they'll appear here.
                 </p>
               )}
 
@@ -659,7 +753,7 @@ export default function LeadDetailPage() {
                     const isCompleted = statusLabel === "completed";
                     const dueText = task.dueAt ? formatDate(task.dueAt) : "No due date";
                     const stageLabel =
-                      typeof task.sequenceStage === "number" ? `Step ${task.sequenceStage}` : "—";
+                      typeof task.sequenceStage === "number" ? `Step ${task.sequenceStage}` : "\u2014";
 
                     const badge = isCompleted ? (
                       <span className="inline-flex rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] text-emerald-200">
@@ -679,7 +773,7 @@ export default function LeadDetailPage() {
                         <div className="flex flex-col text-xs">
                           <span className="font-medium text-slate-100">{task.followupType || "Follow-up"}</span>
                           <span className="text-slate-400">
-                            {stageLabel} · {dueText}
+                            {stageLabel} \u00b7 {dueText}
                           </span>
                           <span className="text-slate-500">Source: {task.source || "unknown"}</span>
                         </div>
@@ -739,7 +833,7 @@ export default function LeadDetailPage() {
                 className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
               />
               <p className="mt-1 text-[11px] text-slate-500">
-                Default is the lead’s phone/email. You can override if needed.
+                Default is the lead's phone/email. You can override if needed.
               </p>
             </div>
 
@@ -795,7 +889,7 @@ export default function LeadDetailPage() {
               <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
                 <p className="text-xs font-semibold text-emerald-200">Sent successfully</p>
                 <p className="mt-1 text-[11px] text-emerald-100">
-                  Provider: {sendSuccess.provider} · Message ID: {sendSuccess.message_id}
+                  Provider: {sendSuccess.provider} \u00b7 Message ID: {sendSuccess.message_id}
                 </p>
               </div>
             ) : null}
@@ -815,7 +909,7 @@ export default function LeadDetailPage() {
                 disabled={sendLoading}
                 className="rounded-xl bg-sky-500 px-4 py-2 text-[11px] font-semibold text-white shadow shadow-sky-500/40 hover:bg-sky-400 disabled:opacity-60"
               >
-                {sendLoading ? "Sending…" : "Send"}
+                {sendLoading ? "Sending\u2026" : "Send"}
               </button>
             </div>
           </div>

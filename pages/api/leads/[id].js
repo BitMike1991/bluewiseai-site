@@ -387,7 +387,52 @@ export default async function handler(req, res) {
       })) || [];
 
     //
-    // 8) Unified payload
+    // 8) Fetch PHOTOS (inbox_attachments for this lead's messages)
+    //
+    let photos = [];
+    if (inboxMessageRows && inboxMessageRows.length > 0) {
+      const messageIds = inboxMessageRows.map((m) => m.id);
+      const { data: attachments, error: attachError } = await supabase
+        .from("inbox_attachments")
+        .select("id, message_id, file_url, content_type, created_at")
+        .in("message_id", messageIds)
+        .order("created_at", { ascending: false });
+
+      if (attachError)
+        console.error("[api/leads/[id]] attachError", attachError);
+
+      photos = (attachments || []).filter((a) =>
+        (a.content_type || "").startsWith("image/")
+      );
+    }
+
+    //
+    // 9) Fetch JOBS linked to this lead
+    //
+    const { data: jobRows, error: jobsError } = await supabase
+      .from("jobs")
+      .select(
+        `
+        id,
+        job_id,
+        client_name,
+        project_type,
+        quote_amount,
+        status,
+        created_at
+      `
+      )
+      .eq("customer_id", customerId)
+      .eq("lead_id", leadId)
+      .order("created_at", { ascending: false });
+
+    if (jobsError)
+      console.error("[api/leads/[id]] jobsError", jobsError);
+
+    const jobs = jobRows || [];
+
+    //
+    // 10) Unified payload
     //
     return res.status(200).json({
       lead,
@@ -398,6 +443,8 @@ export default async function handler(req, res) {
       events,
       messages,
       tasks,
+      photos,
+      jobs,
     });
   } catch (err) {
     console.error("[api/leads/[id]] unexpected error", err);

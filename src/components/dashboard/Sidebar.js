@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 const navItems = [
   { href: "/platform/overview", label: "Overview" },
   { href: "/platform/leads", label: "Leads" },
+  { href: "/platform/jobs", label: "Jobs" },
   { href: "/platform/inbox", label: "Inbox" },
   { href: "/platform/calls", label: "Calls" },
   { href: "/platform/campaigns", label: "Campaigns" },
