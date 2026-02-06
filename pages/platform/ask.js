@@ -487,9 +487,9 @@ export default function AskPage() {
               <SectionTitle>Examples</SectionTitle>
               <div className="mt-2 flex flex-col gap-2">
                 {[
-                  `Summarize Marc's conversation`,
+                  `Summarize Marc\u2019s conversation`,
                   `Show missed calls without follow-up`,
-                  `Which leads haven't replied in 24h?`,
+                  `Which leads haven\u2019t replied in 24h?`,
                   `Draft an email reply to confirm the follow-up for lead #1`,
                   `Draft an SMS to ask for photos for lead #12`,
                   `Show open tasks`,
@@ -500,7 +500,7 @@ export default function AskPage() {
                     className="text-left text-[11px] text-slate-300 hover:text-sky-200"
                     title="Insert into prompt"
                   >
-                    \"{q}\"
+                    \u201c{q}\u201d
                   </button>
                 ))}
               </div>
@@ -589,7 +589,7 @@ export default function AskPage() {
                 type="text"
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                placeholder='Example: "Summarize Marc\'s conversation"'
+                placeholder={"Example: \u201cSummarize Marc\u2019s conversation\u201d"}
                 className="flex-1 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
               />
               <button
@@ -622,8 +622,8 @@ export default function AskPage() {
                 <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-6">
                   <p className="text-sm font-semibold text-slate-100">Not matched yet</p>
                   <p className="mt-1 text-xs text-slate-400">
-                    This question did not trigger a tool. Try: "Show open tasks", "Summarize Marc's conversation", or
-                    "Leads no reply 24h".
+                    This question did not trigger a tool. Try: \u201cShow open tasks\u201d, \u201cSummarize Marc\u2019s conversation\u201d, or
+                    \u201cLeads no reply 24h\u201d.
                   </p>
                 </div>
               ) : null}
