@@ -6,7 +6,7 @@ import Link from "next/link";
 import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
 
 function formatDate(dateString) {
-  if (!dateString) return "\u2014";
+  if (!dateString) return "—";
   const d = new Date(dateString);
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
@@ -603,6 +603,30 @@ export default function LeadDetailPage() {
               </div>
             </div>
 
+            {/* Photos - right after quick actions for fast access */}
+            {photos.length > 0 && (
+              <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
+                <h2 className="text-sm font-semibold text-slate-100 mb-3 tracking-wide">
+                  Photos ({photos.length})
+                </h2>
+                <div className="grid grid-cols-3 gap-2">
+                  {photos.map((photo) => (
+                    <button
+                      key={photo.id}
+                      onClick={() => setLightboxUrl(photo.file_url)}
+                      className="aspect-square rounded-lg overflow-hidden border border-slate-700/60 hover:border-sky-500/60 transition group"
+                    >
+                      <img
+                        src={photo.file_url}
+                        alt="Lead photo"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
               <h2 className="text-sm font-semibold text-slate-100 mb-3 tracking-wide">Lead details</h2>
               <dl className="grid grid-cols-1 gap-y-2 text-sm text-slate-200">
@@ -632,30 +656,6 @@ export default function LeadDetailPage() {
                 </div>
               </dl>
             </div>
-
-            {/* Photos */}
-            {photos.length > 0 && (
-              <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
-                <h2 className="text-sm font-semibold text-slate-100 mb-3 tracking-wide">
-                  Photos ({photos.length})
-                </h2>
-                <div className="grid grid-cols-2 gap-2">
-                  {photos.map((photo) => (
-                    <button
-                      key={photo.id}
-                      onClick={() => setLightboxUrl(photo.file_url)}
-                      className="aspect-square rounded-lg overflow-hidden border border-slate-700/60 hover:border-sky-500/60 transition group"
-                    >
-                      <img
-                        src={photo.file_url}
-                        alt="Lead photo"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Linked Jobs */}
             {jobs.length > 0 && (
