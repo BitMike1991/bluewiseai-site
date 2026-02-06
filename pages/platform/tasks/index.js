@@ -153,15 +153,6 @@ export default function TasksPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Back to Overview */}
-            <Link
-              href="/platform/overview"
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs font-medium text-slate-200 shadow transition hover:border-sky-500 hover:text-sky-300 hover:shadow-[0_0_12px_rgba(56,189,248,0.45)]"
-            >
-              <span className="text-sm">←</span>
-              <span>Back to overview</span>
-            </Link>
-
             {/* Status filter pills */}
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/60 px-1 py-1 text-xs sm:text-sm">
               <button
@@ -216,7 +207,7 @@ export default function TasksPage() {
               </h2>
               <p className="mt-1 text-xs text-slate-400">
                 {loading
-                  ? "Loading tasks…"
+                  ? "Loading tasks\u2026"
                   : `Showing ${filteredTasks.length} tasks on page ${
                       pagination?.page ?? 1
                     }${
@@ -290,7 +281,7 @@ export default function TasksPage() {
                       colSpan={8}
                       className="px-4 py-8 text-center text-slate-400 sm:px-6"
                     >
-                      Loading tasks…
+                      Loading tasks\u2026
                     </td>
                   </tr>
                 ) : filteredTasks.length === 0 ? (
@@ -402,12 +393,12 @@ function TaskRow({ task, onComplete, isCompleting }) {
 
   const typeLabel = taskType || "General";
   const titleLabel = title || `${typeLabel} task`;
-  const priorityBadge = priority === "high" ? "🔴" : priority === "urgent" ? "🔥" : "";
+  const priorityBadge = priority === "high" ? "\ud83d\udd34" : priority === "urgent" ? "\ud83d\udd25" : "";
 
   const contactSnippet =
     leadEmail || leadPhone
-      ? [leadEmail, leadPhone].filter(Boolean).join(" · ")
-      : "—";
+      ? [leadEmail, leadPhone].filter(Boolean).join(" \u00b7 ")
+      : "\u2014";
 
   // For now, only inbox / missed-call leads are viewable on /platform/leads/[id].
   // Cold outreach tasks use ids from cold_recipients, so linking would 404.
@@ -466,7 +457,7 @@ function TaskRow({ task, onComplete, isCompleting }) {
         {statusBadge}
       </td>
       <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-300 sm:px-6">
-        {leadSource || "—"}
+        {leadSource || "\u2014"}
       </td>
       <td className="whitespace-nowrap px-4 py-3 text-xs sm:px-6">
         {isCompleted ? (
@@ -483,7 +474,7 @@ function TaskRow({ task, onComplete, isCompleting }) {
                 : "border-sky-500/70 text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10"
             )}
           >
-            {isCompleting ? "Completing…" : "Complete"}
+            {isCompleting ? "Completing\u2026" : "Complete"}
           </button>
         )}
       </td>

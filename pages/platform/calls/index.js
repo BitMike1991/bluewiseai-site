@@ -95,17 +95,8 @@ export default function CallsPage() {
             </p>
           </div>
 
-          {/* RIGHT SIDE: Back button + Filter pills */}
+          {/* RIGHT SIDE: Filter pills */}
           <div className="flex items-center gap-3">
-            {/* Back to Overview */}
-            <Link
-              href="/platform/overview"
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs font-medium text-slate-200 shadow transition hover:border-sky-500 hover:text-sky-300 hover:shadow-[0_0_12px_rgba(56,189,248,0.45)]"
-            >
-              <span className="text-sm">←</span>
-              <span>Back to overview</span>
-            </Link>
-
             {/* Simple filter pill group */}
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/60 px-1 py-1 text-xs sm:text-sm">
               <button
@@ -167,7 +158,7 @@ export default function CallsPage() {
               <h2 className="text-sm font-medium text-slate-100">Call log</h2>
               <p className="mt-1 text-xs text-slate-400">
                 {loading
-                  ? "Loading calls…"
+                  ? "Loading calls\u2026"
                   : `Showing ${calls.length} calls on page ${
                       pagination?.page ?? 1
                     }${
@@ -241,7 +232,7 @@ export default function CallsPage() {
                       colSpan={8}
                       className="px-4 py-8 text-center text-slate-400 sm:px-6"
                     >
-                      Loading calls…
+                      Loading calls\u2026
                     </td>
                   </tr>
                 ) : calls.length === 0 ? (
@@ -293,7 +284,7 @@ function CallRow({ call }) {
         dateStyle: "short",
         timeStyle: "short",
       })
-    : "—";
+    : "\u2014";
 
   const outcomeBadge = (() => {
     const label = (outcome || "").toString().toLowerCase();
@@ -347,7 +338,7 @@ function CallRow({ call }) {
     if (!label) {
       return (
         <span className="inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-300">
-          —
+          \u2014
         </span>
       );
     }
@@ -386,7 +377,7 @@ function CallRow({ call }) {
   );
 
   const durationLabel = (() => {
-    if (!durationSeconds || isNaN(durationSeconds)) return "—";
+    if (!durationSeconds || isNaN(durationSeconds)) return "\u2014";
     const total = Math.max(0, Math.floor(durationSeconds));
     const minutes = Math.floor(total / 60);
     const seconds = total % 60;
@@ -405,10 +396,10 @@ function CallRow({ call }) {
         {directionBadge}
       </td>
       <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-200 sm:px-6">
-        {fromNumber || "—"}
+        {fromNumber || "\u2014"}
       </td>
       <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-200 sm:px-6">
-        {toNumber || "—"}
+        {toNumber || "\u2014"}
       </td>
       <td className="whitespace-nowrap px-4 py-3 text-xs sm:px-6">
         {outcomeBadge}
