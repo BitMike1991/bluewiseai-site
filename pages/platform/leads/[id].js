@@ -6,7 +6,7 @@ import Link from "next/link";
 import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
 
 function formatDate(dateString) {
-  if (!dateString) return "—";
+  if (!dateString) return "\u2014";
   const d = new Date(dateString);
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
@@ -76,7 +76,6 @@ function truncateText(str, max = 900) {
   return s.slice(0, max - 1) + "\u2026";
 }
 
-// robust channel classification
 function classifyChannel(channelValue) {
   const s = (channelValue || "").toString().toLowerCase();
 
@@ -88,7 +87,6 @@ function classifyChannel(channelValue) {
   return s || "unknown";
 }
 
-// UI-safe email cleanup to prevent "huge blank space" + signature preview cut
 function normalizeMessageBody(raw) {
   if (!raw) return "";
   let s = raw.toString();
@@ -99,7 +97,6 @@ function normalizeMessageBody(raw) {
   return s;
 }
 
-// Heuristic: signature separators (preview only)
 function splitSignaturePreview(body) {
   const s = body || "";
   if (!s) return { preview: "", hasSig: false };
@@ -204,9 +201,7 @@ function Modal({ open, title, children, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50">
-      {/* overlay */}
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      {/* panel */}
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div className="w-full max-w-2xl rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl shadow-black/60">
           <div className="flex items-center justify-between gap-3 border-b border-slate-800 px-5 py-4">
@@ -240,13 +235,12 @@ export default function LeadDetailPage() {
 
   const [timelineFilter, setTimelineFilter] = useState("all");
 
-  // --- Send modal state ---
   const [sendOpen, setSendOpen] = useState(false);
-  const [sendChannel, setSendChannel] = useState("sms"); // sms | email
+  const [sendChannel, setSendChannel] = useState("sms");
   const [sendTo, setSendTo] = useState("");
   const [sendSubject, setSendSubject] = useState("");
   const [sendBody, setSendBody] = useState("");
-  const [sendHtml, setSendHtml] = useState(""); // optional
+  const [sendHtml, setSendHtml] = useState("");
   const [sendMeta, setSendMeta] = useState({ source: "manual_ui", context: "lead_detail" });
 
   const [sendLoading, setSendLoading] = useState(false);
@@ -396,11 +390,9 @@ export default function LeadDetailPage() {
     const ch = channel || "sms";
     setSendChannel(ch);
 
-    // default recipient
     const defaultTo = ch === "sms" ? lead?.phone || "" : lead?.email || "";
     setSendTo(defaultTo);
 
-    // default content
     setSendSubject(ch === "email" ? `Re: ${lead?.name || "Your request"}` : "");
     setSendBody("");
     setSendHtml("");
@@ -453,7 +445,6 @@ export default function LeadDetailPage() {
         created_at: json.created_at,
       });
 
-      // Refresh timeline so outbound message shows up
       await loadLead();
     } catch (e) {
       setSendError(e?.message || "Failed to send");
@@ -512,7 +503,7 @@ export default function LeadDetailPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(0,1.3fr)] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-6">
           <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
             <div className="flex items-center justify-between mb-4 gap-4">
               <div className="min-w-0">
