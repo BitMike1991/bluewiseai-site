@@ -25,8 +25,14 @@ export default function PlatformLogin() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // If we arrived here with ?next=, middleware already rejected us.
+      // The client-side session is stale — clear it to break the loop.
+      const hasNext = new URLSearchParams(window.location.search).has("next");
+      if (hasNext) {
+        await supabase.auth.signOut();
+        return;
+      }
       const { data } = await supabase.auth.getSession();
-      // IMPORTANT: use a full navigation so middleware runs (not router.replace)
       if (!cancelled && data?.session) window.location.href = nextPath;
     })();
     return () => {
@@ -176,7 +182,7 @@ export default function PlatformLogin() {
         </form>
 
         <div className="mt-5 text-xs text-white/50">
-          If you don’t have credentials yet, you’ll need an invite (we’ll automate
+          If you don't have credentials yet, you'll need an invite (we'll automate
           this in onboarding).
         </div>
       </div>
