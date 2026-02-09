@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contrat Peinture Extrême LGP inc - SP-410215</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      color: #1f2937; line-height: 1.7; font-size: 13px;
+      padding: 0; margin: 0; background: #fff;
+    }
+    .page { max-width: 800px; margin: 0 auto; padding: 40px 50px; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 50%, #2563eb 100%);
+      color: white; padding: 35px 50px; margin-bottom: 0;
+    }
+    .header h1 { font-size: 32px; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; }
+    .header .subtitle { font-size: 14px; opacity: 0.9; font-weight: 400; }
+
+    /* Contract info bar */
+    .contract-bar {
+      background: #f0f4ff; border-left: 4px solid #2563eb;
+      padding: 14px 20px; margin: 25px 0;
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    }
+    .contract-bar p { margin: 2px 0; font-size: 13px; }
+
+    /* Sections */
+    .section { margin-bottom: 22px; page-break-inside: avoid; }
+    .section h2 {
+      color: #1e40af; font-size: 14px; text-transform: uppercase;
+      letter-spacing: 0.8px; border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 6px; margin-bottom: 12px; font-weight: 700;
+    }
+    .section h3 { font-size: 13px; font-weight: 700; color: #1f2937; margin: 14px 0 6px 0; }
+
+    /* Two column grid */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+    .info-box {
+      background: #f9fafb; padding: 16px; border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    .info-box .label {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+      color: #6b7280; font-weight: 700; margin-bottom: 8px;
+    }
+    .info-box p { margin: 3px 0; font-size: 13px; }
+
+    /* Payment table */
+    .pay-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    .pay-table th, .pay-table td {
+      padding: 10px 14px; text-align: left;
+      border-bottom: 1px solid #e5e7eb; font-size: 13px;
+    }
+    .pay-table th { background: #f9fafb; font-weight: 700; color: #374151; }
+    .pay-table .amt { text-align: right; font-weight: 600; }
+    .pay-table .tax-row td { font-size: 12px; color: #6b7280; }
+    .pay-table .total-row { background: #1e40af; color: white; }
+    .pay-table .total-row td { font-weight: 700; font-size: 14px; border: none; }
+
+    /* Warranty box */
+    .warranty-box {
+      background: #ecfdf5; border: 1px solid #10b981;
+      padding: 16px; border-radius: 6px; margin: 10px 0;
+    }
+    .warranty-box h3 { color: #047857; margin: 0 0 8px 0; }
+    .warranty-box p, .warranty-box li { font-size: 12px; margin-bottom: 4px; }
+
+    /* Annex box */
+    .annex-box {
+      background: #fefce8; border: 1px solid #eab308;
+      padding: 16px; border-radius: 6px; margin: 10px 0;
+    }
+
+    /* Terms */
+    .terms p, .terms li { font-size: 12px; color: #374151; margin-bottom: 6px; }
+    .terms ul { padding-left: 20px; }
+    .terms li { margin-bottom: 4px; }
+
+    /* Signature */
+    .sig-section { margin-top: 35px; padding-top: 25px; border-top: 2px solid #e5e7eb; }
+    .accept-box {
+      background: #fef3c7; border: 1px solid #f59e0b;
+      padding: 16px; border-radius: 6px; margin: 16px 0;
+    }
+    .accept-box li { font-size: 12px; margin-bottom: 4px; }
+    .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-top: 25px; }
+    .sig-block .sig-line { border-bottom: 1px solid #1f2937; height: 45px; margin-bottom: 4px; }
+    .sig-block .sig-label { font-size: 11px; color: #6b7280; }
+    .sig-block p { margin: 3px 0; }
+
+    /* Footer */
+    .footer {
+      margin-top: 30px; padding-top: 15px; border-top: 1px solid #e5e7eb;
+      font-size: 10px; color: #9ca3af; text-align: center;
+    }
+    .footer p { margin: 2px 0; }
+
+    /* Page break for Annex */
+    .page-break { page-break-before: always; margin-top: 40px; padding-top: 20px; }
+
+    @media print {
+      body { padding: 0; }
+      .page { max-width: 100%; padding: 20px 40px; }
+      .header { padding: 25px 40px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>PEINTURE EXTRÊME LGP INC</h1>
+    <div class="subtitle">Contrat de service résidentiel — Conditions générales</div>
+  </div>
+
+  <!-- CONTRACT INFO -->
+  <div class="contract-bar">
+    <div>
+      <p><strong>Contrat nº :</strong> SP-410215</p>
+      <p><strong>Date d'émission :</strong> 8 février 2026</p>
+    </div>
+    <div>
+      <p><strong>Validité :</strong> 30 jours</p>
+      <p><strong>Type :</strong> Résidentiel — Province de Québec</p>
+    </div>
+  </div>
+
+  <!-- PARTIES -->
+  <div class="section">
+    <h2>1. Parties au contrat</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <div class="label">Entrepreneur</div>
+        <p><strong>Peinture Extrême LGP inc</strong></p>
+        <p>NEQ : 1179276754</p>
+        <p>526, rue Duquette Ouest</p>
+        <p>Gatineau (Québec) J8P 3A9</p>
+        <p>&nbsp;</p>
+        <p>&nbsp;</p>
+        <p>&nbsp;</p>
+      </div>
+      <div class="info-box">
+        <div class="label">Client</div>
+        <p><strong>Fides Paulin Nteziryayo</strong></p>
+        <p>2845, des Buses</p>
+        <p>Mascouche (Québec) J7K 3Y1</p>
+        <p>&nbsp;</p>
+        <p>&nbsp;</p>
+        <p>&nbsp;</p>
+        <p>&nbsp;</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DESCRIPTION -->
+  <div class="section">
+    <h2>2. Description générale des travaux</h2>
+    <div class="info-box">
+      <p><strong>Projet :</strong> Rénovation complète — peinture d'armoires, revêtement époxy (cuisine et salles de bain), sablage de plancher, peinture intérieure complète</p>
+      <p><strong>Adresse des travaux :</strong> 2845, des Buses, Mascouche (Québec) J7K 3Y1</p>
+      <p style="margin-top: 8px;">Les travaux sont décrits en détail à l'<strong>Annexe A — Étendue des travaux</strong>, laquelle fait partie intégrante du présent contrat. Seuls les travaux explicitement décrits à l'Annexe A sont inclus.</p>
+    </div>
+  </div>
+
+  <!-- PAYMENT TERMS -->
+  <div class="section">
+    <h2>3. Conditions financières</h2>
+
+    <table class="pay-table">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Échéance</th>
+          <th class="amt">Montant</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Dépôt initial (25 %)</td>
+          <td>À la signature du contrat</td>
+          <td class="amt">2 375,00 $</td>
+        </tr>
+        <tr>
+          <td>Paiement intermédiaire (50 %)</td>
+          <td>Lorsque 75 % des travaux sont complétés</td>
+          <td class="amt">4 750,00 $</td>
+        </tr>
+        <tr>
+          <td>Solde final (25 %)</td>
+          <td>À la fin des travaux et à la satisfaction du client</td>
+          <td class="amt">2 375,00 $</td>
+        </tr>
+        <tr style="border-top: 2px solid #e5e7eb;">
+          <td colspan="2"><strong>Sous-total avant taxes</strong></td>
+          <td class="amt"><strong>9 500,00 $</strong></td>
+        </tr>
+        <tr class="tax-row">
+          <td colspan="2">TPS (5 %)</td>
+          <td class="amt">475,00 $</td>
+        </tr>
+        <tr class="tax-row">
+          <td colspan="2">TVQ (9,975 %)</td>
+          <td class="amt">947,63 $</td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="2">TOTAL</td>
+          <td class="amt">10 922,63 $ CAD</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="font-size: 11px; color: #6b7280; margin-top: 8px;">
+      Les taxes (TPS et TVQ) s'appliquent proportionnellement à chaque paiement. Le dépôt inclut donc les taxes applicables sur sa portion (2 730,66 $ TTC).
+      Paiement accepté par virement Interac, carte de crédit (Stripe) ou chèque.
+    </p>
+
+    <h3>3.1 Conditions de paiement</h3>
+    <div class="terms">
+      <ul>
+        <li><strong>Aucun travail ne débute</strong> avant la réception du contrat signé et du dépôt initial.</li>
+        <li>Le dépôt devient non remboursable une fois que les travaux ont débuté ou que les matériaux ont été commandés spécifiquement pour ce projet.</li>
+        <li>Tout retard de paiement de plus de 15 jours entraîne des frais d'intérêt au taux annuel de 2 %, calculés mensuellement sur le solde impayé.</li>
+        <li>Peinture Extrême LGP inc se réserve le droit de suspendre les travaux en cas de non-paiement selon l'échéancier convenu.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- WARRANTY -->
+  <div class="section">
+    <h2>4. Garantie</h2>
+    <div class="warranty-box">
+      <h3>Garanties applicables</h3>
+
+      <h3 style="margin-top: 12px;">A) Garantie de 25 ans — Peinture d'armoires de cuisine (système époxy)</h3>
+      <p>Peinture Extrême LGP inc garantit l'adhérence du revêtement époxy appliqué sur les armoires de cuisine pour une période de vingt-cinq (25) ans à compter de la date de fin des travaux.</p>
+
+      <h3 style="margin-top: 12px;">B) Garantie de 25 ans — Revêtement époxy sur céramique et surfaces de salle de bain</h3>
+      <p>Peinture Extrême LGP inc garantit l'adhérence du revêtement époxy appliqué sur la céramique de cuisine et les surfaces de salle de bain (bain, céramique, comptoir, lavabo) pour une période de vingt-cinq (25) ans.</p>
+
+      <h3 style="margin-top: 12px;">C) Garantie de 1 an — Peinture (murs, plafonds, plinthes, portes) et sablage/vernis de plancher</h3>
+      <p>Les travaux de peinture intérieure et de sablage/vernissage de plancher sont garantis un (1) an contre tout défaut de main-d'œuvre (décollement, écaillage anormal, défaut d'application).</p>
+
+      <h3 style="margin-top: 12px;">Les garanties de 25 ans couvrent exclusivement :</h3>
+      <ul>
+        <li>Le décollement (peeling) du revêtement</li>
+        <li>La délamination du revêtement</li>
+        <li>Le défaut d'adhérence du revêtement au substrat</li>
+      </ul>
+
+      <h3 style="margin-top: 12px;">Les garanties NE couvrent PAS :</h3>
+      <ul>
+        <li>L'usure normale liée à l'utilisation quotidienne</li>
+        <li>Les égratignures, éraflures ou marques d'impact</li>
+        <li>Les dommages causés par la chaleur (casseroles, fours, etc.)</li>
+        <li>Les dommages causés par l'humidité excessive ou l'infiltration d'eau</li>
+        <li>Les dommages causés par des produits chimiques, solvants ou nettoyants abrasifs</li>
+        <li>Les dommages causés par un nettoyage inapproprié ou l'utilisation de produits non recommandés</li>
+        <li>Les problèmes structurels préexistants (déformation, mouvement, gonflement)</li>
+        <li>Les défauts préexistants reconnus par le client avant le début des travaux</li>
+        <li>Toute modification effectuée par le client ou un tiers après les travaux</li>
+        <li>L'utilisation commerciale ou extérieure</li>
+      </ul>
+
+      <h3 style="margin-top: 12px;">Conditions de la garantie :</h3>
+      <ul>
+        <li>La garantie est <strong>non transférable</strong> et valide uniquement pour le propriétaire original.</li>
+        <li>La preuve d'achat (contrat ou facture) est requise pour toute réclamation.</li>
+        <li>Peinture Extrême LGP inc se réserve le droit d'inspecter les surfaces avant toute intervention sous garantie.</li>
+        <li>L'obligation de Peinture Extrême LGP inc se limite, à sa discrétion, à la réparation ou au recouvrement de la zone affectée.</li>
+        <li>Aucun remboursement, compensation monétaire ou mise à niveau n'est offert sous cette garantie.</li>
+        <li>Le client doit signaler tout défaut dans les 30 jours suivant sa découverte.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CLIENT RESPONSIBILITIES -->
+  <div class="section">
+    <h2>5. Responsabilités du client</h2>
+    <div class="terms">
+      <ul>
+        <li><strong>Vider entièrement les armoires</strong> de cuisine et de salle de bain avant le début des travaux. Peinture Extrême LGP inc n'est pas responsable des objets laissés dans les armoires.</li>
+        <li><strong>Déplacer les meubles</strong> des pièces où la peinture des murs, plafonds et plinthes sera effectuée. Les gros meubles impossibles à déplacer seront protégés sur place.</li>
+        <li>Assurer un accès raisonnable, sécuritaire et dégagé à toutes les zones de travail.</li>
+        <li>Sécuriser les animaux domestiques et les enfants en bas âge pendant les travaux.</li>
+        <li>Informer Peinture Extrême LGP inc de toute condition particulière (allergies, problèmes structurels connus, etc.).</li>
+        <li>Assurer l'accès à l'électricité et à l'eau courante.</li>
+        <li>Comprendre que la cuisine et les salles de bain seront <strong>inaccessibles</strong> pendant la durée des travaux et durant la période de séchage (minimum 24 à 48 heures après la dernière couche d'époxy).</li>
+        <li><strong>Le client fournit et paye :</strong> la douche de la salle de bain à l'étage, le lavabo, les poignées d'armoires de salle de bain (×2) et les poignées d'armoires de cuisine. <strong>L'installation de ces éléments par Peinture Extrême LGP inc est disponible au tarif horaire en vigueur (voir section A.2).</strong></li>
+        <li>Tout retard causé par le non-respect de ces obligations ne sera pas attribuable à Peinture Extrême LGP inc.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CANCELLATION -->
+  <div class="section">
+    <h2>6. Annulation et résiliation</h2>
+    <div class="terms">
+      <h3>6.1 Annulation par le client</h3>
+      <ul>
+        <li>Annulation avant la commande des matériaux : remboursement du dépôt moins 10 % de frais administratifs.</li>
+        <li>Annulation après la commande des matériaux : dépôt non remboursable.</li>
+        <li>Annulation après le début des travaux : le client est responsable du paiement des travaux complétés et des matériaux utilisés.</li>
+      </ul>
+
+      <h3>6.2 Résiliation par Peinture Extrême LGP inc</h3>
+      <p>Peinture Extrême LGP inc peut résilier le contrat dans les cas suivants :</p>
+      <ul>
+        <li>Non-paiement selon l'échéancier convenu après un avis écrit de 5 jours.</li>
+        <li>Conditions de travail dangereuses ou insalubres sur le site.</li>
+        <li>Impossibilité d'accéder au site malgré les demandes répétées.</li>
+      </ul>
+      <p>En cas de résiliation, les travaux complétés et les matériaux utilisés demeurent payables.</p>
+    </div>
+  </div>
+
+  <!-- LIABILITY -->
+  <div class="section">
+    <h2>7. Limitation de responsabilité</h2>
+    <div class="terms">
+      <ul>
+        <li>La responsabilité totale de Peinture Extrême LGP inc, toutes causes confondues, est limitée au montant total du présent contrat (avant taxes).</li>
+        <li>Peinture Extrême LGP inc n'est pas responsable des dommages indirects, consécutifs ou accessoires, incluant mais sans s'y limiter : perte d'usage, frais d'hébergement, frais de restauration, perte de revenus ou inconvénients.</li>
+        <li>Peinture Extrême LGP inc n'est pas responsable des retards causés par : l'humidité ambiante affectant le séchage, les délais de livraison des fournisseurs, les conditions météorologiques, ou le manque d'accès au site.</li>
+        <li>Les travaux de Peinture Extrême LGP inc consistent en une refinition de surface et en peinture. Peinture Extrême LGP inc ne garantit pas l'état structurel des éléments existants ni ne s'engage à corriger des défauts préexistants non identifiés dans l'Annexe A.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PHOTOS / MARKETING -->
+  <div class="section">
+    <h2>8. Documentation photographique et marketing</h2>
+    <div class="terms">
+      <p>Le client autorise Peinture Extrême LGP inc à prendre des photographies et vidéos avant, pendant et après les travaux. Ces images pourront être utilisées à des fins de marketing, de portfolio et de réseaux sociaux, <strong>sans identification du client ni de l'adresse précise</strong>. Le client peut retirer cette autorisation par écrit en tout temps, sans affecter les autres termes du contrat.</p>
+    </div>
+  </div>
+
+  <!-- GENERAL PROVISIONS -->
+  <div class="section">
+    <h2>9. Dispositions générales</h2>
+    <div class="terms">
+      <h3>9.1 Force majeure</h3>
+      <p>Peinture Extrême LGP inc ne peut être tenu responsable des retards ou de l'impossibilité d'exécuter les travaux en raison de circonstances hors de son contrôle, incluant : conditions météorologiques extrêmes, pandémies, grèves, retards de fournisseurs ou actes gouvernementaux.</p>
+
+      <h3>9.2 Modifications au contrat</h3>
+      <p>Toute modification aux travaux ou aux conditions du présent contrat doit faire l'objet d'un avenant écrit signé par les deux parties. Aucun travail supplémentaire ne sera effectué sans accord écrit préalable.</p>
+
+      <h3>9.3 Loi applicable et juridiction</h3>
+      <p>Le présent contrat est régi par les lois de la province de Québec et les lois fédérales du Canada qui y sont applicables. En cas de litige, les parties s'engagent d'abord à tenter une résolution à l'amiable. À défaut, les tribunaux du district judiciaire compétent au Québec auront juridiction exclusive.</p>
+
+      <h3>9.4 Intégralité de l'accord</h3>
+      <p>Le présent contrat, incluant l'Annexe A, constitue l'entente complète entre les parties et remplace toute discussion, négociation ou accord antérieur, verbal ou écrit.</p>
+
+      <h3>9.5 Divisibilité</h3>
+      <p>Si une clause du présent contrat est jugée invalide ou inapplicable par un tribunal compétent, les autres clauses demeurent pleinement en vigueur.</p>
+    </div>
+  </div>
+
+  <!-- SIGNATURE -->
+  <div class="section sig-section">
+    <h2>10. Acceptation du contrat</h2>
+
+    <div class="accept-box">
+      <p><strong>En signant le présent contrat, le client confirme :</strong></p>
+      <ul>
+        <li>Avoir lu et compris l'ensemble des termes et conditions, incluant l'Annexe A.</li>
+        <li>Accepter les conditions de paiement spécifiées à la section 3.</li>
+        <li>Accepter les termes et limitations de la garantie à la section 4.</li>
+        <li>Autoriser Peinture Extrême LGP inc à effectuer les travaux décrits à l'Annexe A.</li>
+        <li>Reconnaître que les exclusions à l'Annexe A ont été clairement communiquées.</li>
+        <li>Reconnaître que le client fournit et paye le matériel (douche, lavabo, poignées d'armoires) et que l'installation par Peinture Extrême LGP inc est facturée au tarif horaire, séparément du présent contrat.</li>
+      </ul>
+    </div>
+
+    <div class="sig-grid">
+      <div class="sig-block">
+        <p><strong>Le Client :</strong></p>
+        <div class="sig-line"></div>
+        <p class="sig-label">Signature</p>
+        <p style="margin-top: 14px;"><strong>Fides Paulin Nteziryayo</strong></p>
+        <p class="sig-label">Nom en lettres moulées</p>
+        <div class="sig-line" style="margin-top: 14px;"></div>
+        <p class="sig-label">Date</p>
+      </div>
+      <div class="sig-block">
+        <p><strong>Pour Peinture Extrême LGP inc :</strong></p>
+        <div class="sig-line"></div>
+        <p class="sig-label">Signature</p>
+        <div class="sig-line" style="margin-top: 14px;"></div>
+        <p class="sig-label">Nom en lettres moulées</p>
+        <div class="sig-line" style="margin-top: 14px;"></div>
+        <p class="sig-label">Date</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- ANNEXE A -->
+  <!-- ============================================ -->
+  <div class="page-break">
+    <div class="header" style="margin-bottom: 0;">
+      <h1>ANNEXE A</h1>
+      <div class="subtitle">Étendue détaillée des travaux — Contrat nº SP-410215</div>
+    </div>
+  </div>
+
+  <div class="contract-bar" style="margin-top: 25px;">
+    <div>
+      <p><strong>Client :</strong> Fides Paulin Nteziryayo</p>
+      <p><strong>Adresse des travaux :</strong> 2845, des Buses, Mascouche (Québec) J7K 3Y1</p>
+    </div>
+    <div>
+      <p><strong>Contrat nº :</strong> SP-410215</p>
+      <p><strong>Date :</strong> 8 février 2026</p>
+    </div>
+  </div>
+
+  <div class="section" style="margin-top: 20px;">
+    <h2>A.1 Travaux inclus</h2>
+    <div class="annex-box">
+      <h3 style="color: #92400e; margin-bottom: 10px;">Rénovation complète — Détail par zone</h3>
+
+      <h3>1. Armoires de cuisine — Peinture époxy (garantie 25 ans) :</h3>
+      <ul style="padding-left: 20px; font-size: 12px; margin-bottom: 12px;">
+        <li>Nettoyage complet et dégraissage au TSP de toutes les surfaces d'armoires</li>
+        <li>Sablage complet de toutes les surfaces</li>
+        <li>Application d'un promoteur d'adhérence</li>
+        <li>Application de <strong>5 couches de finition</strong> avec le système époxy</li>
+        <li>Refinition des surfaces intérieures et extérieures des armoires de cuisine</li>
+      </ul>
+
+      <h3>2. Céramique de cuisine — Revêtement époxy deux composants avec couleur (garantie 25 ans) :</h3>
+      <ul style="padding-left: 20px; font-size: 12px; margin-bottom: 12px;">
+        <li>Préparation et nettoyage des surfaces de céramique</li>
+        <li>Application du revêtement époxy deux composants avec couleur sur la céramique de cuisine</li>
+      </ul>
+
+      <h3>3. Comptoir de cuisine — Revêtement époxy deux composants avec couleur (garantie 25 ans) :</h3>
+      <ul style="padding-left: 20px; font-size: 12px; margin-bottom: 12px;">
+        <li>Préparation et nettoyage de la surface du comptoir</li>
+        <li>Application du revêtement époxy deux composants avec couleur sur le comptoir de cuisine</li>
+      </ul>
+
+      <h3>4. Salle de bain nº 1 — Revêtement époxy (garantie 25 ans) :</h3>
+      <ul style="padding-left: 20px; font-size: 12px; margin-bottom: 12px;">
+        <li>Revêtement époxy blanc sur le bain</li>
+        <li>Revêtement époxy deux composants avec couleur sur la céramique</li>
+        <li>Revêtement époxy blanc sur le comptoir</li>
+        <li>Revêtement époxy blanc sur le lavabo</li>
+      </ul>
+
+      <h3>5. Salle de bain nº 2 — Revêtement époxy (garantie 25 ans) :</h3>
+      <ul style="padding-left: 20px; font-size: 12px; margin-bottom: 12px;">
+        <li>Revêtement époxy blanc sur le bain</li>
+        <li>Revêtement époxy deux composants avec couleur sur la céramique</li>
+        <li>Revêtement époxy blanc sur le comptoir</li>
+        <li>Revêtement époxy blanc sur le lavabo</li>
+      </ul>
+
+      <h3>6. Plancher de bois — Sablage et vernis :</h3>
+      <ul style="padding-left: 20px; font-size: 12px; margin-bottom: 12px;">
+        <li>Sablage complet du plancher de bois</li>
+        <li>Application de vernis (nombre de couches selon les standards de l'industrie)</li>
+      </ul>
+
+      <h3>7. Peinture des plafonds :</h3>
+      <ul style="padding-left: 20px; font-size: 12px; margin-bottom: 12px;">
+        <li>Peinture de <strong>tous les plafonds</strong> de la résidence</li>
+        <li>Couleur : blanc / Fini : mat</li>
+      </ul>
+
+      <h3>8. Peinture des murs :</h3>
+      <ul style="padding-left: 20px; font-size: 12px; margin-bottom: 12px;">
+        <li>Peinture de <strong>tous les murs</strong> de la résidence</li>
+        <li><strong>2 couches de finition</strong> incluses</li>
+        <li><strong>Important :</strong> Si une troisième couche est nécessaire, elle constitue un extra facturable séparément</li>
+      </ul>
+
+      <h3>9. Peinture des boiseries :</h3>
+      <ul style="padding-left: 20px; font-size: 12px; margin-bottom: 12px;">
+        <li>Peinture de <strong>toutes les plinthes de porte</strong> (cadres de porte)</li>
+        <li>Peinture de <strong>toutes les portes</strong></li>
+        <li>Peinture de <strong>toutes les plinthes du bas</strong> (baseboards)</li>
+      </ul>
+
+      <h3>10. Matériaux :</h3>
+      <ul style="padding-left: 20px; font-size: 12px; margin-bottom: 12px;">
+        <li><strong>Peinture Extrême LGP inc fournit tout le matériel</strong> nécessaire à l'exécution des travaux décrits ci-dessus</li>
+      </ul>
+
+      <h3>Protection du chantier :</h3>
+      <ul style="padding-left: 20px; font-size: 12px; margin-bottom: 12px;">
+        <li>Protection des surfaces non traitées dans les zones de travail</li>
+        <li>Masquage complet des zones adjacentes</li>
+        <li>Nettoyage de base à la fin des travaux</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>A.2 Fournitures du client et installation au tarif horaire</h2>
+    <div class="info-box" style="background: #eff6ff; border-color: #3b82f6;">
+      <p style="font-size: 12px; margin-bottom: 8px;"><strong>Le client fournit et paye les éléments suivants (matériel) :</strong></p>
+      <ul style="padding-left: 20px; font-size: 12px;">
+        <li>Douche de la salle de bain à l'étage</li>
+        <li>Lavabo</li>
+        <li>Poignées d'armoires de salle de bain (×2 salles de bain)</li>
+        <li>Poignées d'armoires de cuisine</li>
+      </ul>
+      <p style="font-size: 12px; margin-top: 12px;"><strong>Installation par Peinture Extrême LGP inc — Tarif à l'heure :</strong></p>
+      <p style="font-size: 12px;">L'installation de la douche, du lavabo, des poignées d'armoires de salle de bain et des poignées d'armoires de cuisine sera effectuée par Peinture Extrême LGP inc au <strong>tarif horaire en vigueur</strong>, facturé séparément du présent contrat. Le temps d'installation sera comptabilisé à partir du début de l'intervention jusqu'à la fin, arrondi à la demi-heure supérieure.</p>
+      <p style="font-size: 12px; margin-top: 8px;">Le matériel fourni par le client n'est pas couvert par la garantie de Peinture Extrême LGP inc. Seule la main-d'œuvre d'installation est garantie 1 an contre tout défaut d'exécution.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>A.3 Travaux exclus</h2>
+    <div class="info-box" style="background: #fef2f2; border-color: #ef4444;">
+      <p style="font-size: 12px; margin-bottom: 8px;"><strong>Les travaux suivants ne sont PAS inclus dans le présent contrat :</strong></p>
+      <ul style="padding-left: 20px; font-size: 12px;">
+        <li>Troisième couche de peinture sur les murs (si nécessaire, facturée en extra)</li>
+        <li>Réparations structurelles (armoires, murs, plancher)</li>
+        <li>Réparations de dommages causés par l'eau ou l'humidité</li>
+        <li>Travaux de plomberie, d'électricité ou de ventilation</li>
+        <li>Installation de la douche, du lavabo et des poignées (responsabilité du client)</li>
+        <li>Déménagement de meubles lourds (le client doit dégager les pièces)</li>
+        <li>Tout travail non explicitement décrit à la section A.1</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>A.4 Reconnaissance du client</h2>
+    <div class="terms">
+      <p>Le client reconnaît et accepte que :</p>
+      <ul>
+        <li>Les surfaces existantes seront inspectées par Peinture Extrême LGP inc avant le début des travaux. Tout défaut préexistant sera documenté et communiqué au client.</li>
+        <li>La refinition de surface ne corrige pas les défauts structurels.</li>
+        <li>Le résultat final dépend en partie de l'état initial des surfaces. Des imperfections mineures peuvent subsister si les surfaces originales présentent des dommages importants.</li>
+        <li>La cuisine et les salles de bain seront inaccessibles pendant la durée des travaux et pour une période de séchage de 24 à 48 heures minimum après la dernière couche d'époxy.</li>
+        <li>Le plancher sera inaccessible pendant la période de séchage du vernis (24 à 48 heures minimum).</li>
+        <li>La couleur des murs sera déterminée d'un commun accord avant le début des travaux. Tout changement de couleur en cours de travaux constitue un extra.</li>
+        <li>La peinture des murs inclut 2 couches de finition. Une troisième couche, si requise, sera facturée en extra.</li>
+        <li>Le client est responsable de la fourniture et de l'installation de la douche (salle de bain à l'étage), du lavabo et des poignées d'armoires (cuisine et salles de bain).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section" style="margin-top: 25px;">
+    <p style="font-size: 12px;"><strong>La présente Annexe A fait partie intégrante du Contrat nº SP-410215 et a la même force obligatoire.</strong></p>
+
+    <div class="sig-grid" style="margin-top: 30px;">
+      <div class="sig-block">
+        <p><strong>Le Client :</strong></p>
+        <div class="sig-line"></div>
+        <p class="sig-label">Signature — Date</p>
+      </div>
+      <div class="sig-block">
+        <p><strong>Pour Peinture Extrême LGP inc :</strong></p>
+        <div class="sig-line"></div>
+        <p class="sig-label">Signature — Date</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <p>Peinture Extrême LGP inc | NEQ 1179276754 | 526, rue Duquette Ouest, Gatineau (Québec) J8P 3A9</p>
+    <p>Contrat généré le 8 février 2026. Ce document est valide avec signature manuscrite ou électronique.</p>
+  </div>
+
+</div>
+
+</body>
+</html>
