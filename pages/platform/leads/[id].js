@@ -14,6 +14,63 @@ function formatDate(dateString) {
   }).format(d);
 }
 
+const STATUS_OPTIONS = [
+  { value: "new", label: "New", color: "bg-sky-500/10 text-sky-300 border-sky-500/40" },
+  { value: "active", label: "Active", color: "bg-emerald-500/10 text-emerald-300 border-emerald-500/40" },
+  { value: "in_convo", label: "In convo", color: "bg-indigo-500/10 text-indigo-300 border-indigo-500/40" },
+  { value: "quoted", label: "Quoted", color: "bg-amber-500/10 text-amber-300 border-amber-500/40" },
+  { value: "won", label: "Won", color: "bg-emerald-500/15 text-emerald-200 border-emerald-500/60" },
+  { value: "lost", label: "Lost", color: "bg-rose-500/10 text-rose-300 border-rose-500/40" },
+  { value: "dead", label: "Dead", color: "bg-slate-600/60 text-slate-200 border-slate-500/60" },
+];
+
+function StatusSelector({ status, onChange, loading }) {
+  const [open, setOpen] = useState(false);
+  const current = STATUS_OPTIONS.find((s) => s.value === status) || STATUS_OPTIONS[0];
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => !loading && setOpen(!open)}
+        disabled={loading}
+        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border shadow-sm shadow-slate-900/40 transition hover:ring-2 hover:ring-sky-500/40 ${current.color} ${loading ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
+      >
+        {loading ? "Saving\u2026" : current.label}
+        {!loading && (
+          <svg className="h-3 w-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        )}
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full mt-1 z-50 w-40 rounded-xl border border-slate-700 bg-slate-900 shadow-xl shadow-black/60 py-1">
+            {STATUS_OPTIONS.map((s) => (
+              <button
+                key={s.value}
+                type="button"
+                onClick={() => {
+                  if (s.value !== status) onChange(s.value);
+                  setOpen(false);
+                }}
+                className={`w-full text-left px-3 py-1.5 text-xs hover:bg-slate-800 transition flex items-center gap-2 ${
+                  s.value === status ? "font-semibold text-sky-300" : "text-slate-300"
+                }`}
+              >
+                <span className={`inline-block w-2 h-2 rounded-full border ${s.color}`} />
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function StatusBadge({ status }) {
   if (!status)
     return <span className="px-2 py-1 rounded-full text-xs bg-slate-700/60">unknown</span>;
@@ -232,6 +289,7 @@ export default function LeadDetailPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [statusLoading, setStatusLoading] = useState(false);
 
   const [timelineFilter, setTimelineFilter] = useState("all");
 
@@ -263,7 +321,7 @@ export default function LeadDetailPage() {
 
       const rawMessages = json.messages || [];
       const rawEvents = json.events || [];
-      const rawFollowups = json.followups || [];
+      const rawFollowups = json.tasks || json.followups || [];
 
       const lastContactAt =
         inboxLead?.last_contact_at ||
@@ -329,7 +387,7 @@ export default function LeadDetailPage() {
       const tasks = rawFollowups.map((f) => ({
         id: f.id,
         status: f.status || "open",
-        followupType: f.followup_type || "Follow-up",
+        followupType: f.followup_type || f.type || "Follow-up",
         sequenceStage: f.sequence_stage,
         dueAt: f.due_at,
         source: "automation",
@@ -344,6 +402,37 @@ export default function LeadDetailPage() {
       setError(err.message || "Failed to load lead");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleStatusChange(newStatus) {
+    if (!id || statusLoading) return;
+    setStatusLoading(true);
+
+    try {
+      const res = await fetch(`/api/leads/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to update status");
+
+      // Optimistic update
+      setData((prev) => {
+        if (!prev?.lead) return prev;
+        return {
+          ...prev,
+          lead: { ...prev.lead, status: newStatus },
+        };
+      });
+    } catch (err) {
+      console.error("Status update error:", err);
+      // Reload to get correct state
+      await loadLead();
+    } finally {
+      setStatusLoading(false);
     }
   }
 
@@ -496,7 +585,13 @@ export default function LeadDetailPage() {
           </div>
 
           <div className="flex flex-col items-end gap-2">
-            {lead && <StatusBadge status={lead.status || "active"} />}
+            {lead && (
+              <StatusSelector
+                status={lead.status || "new"}
+                onChange={handleStatusChange}
+                loading={statusLoading}
+              />
+            )}
             <p className="text-xs text-slate-400">
               Last contact: <span className="text-slate-200">{formatDate(lead?.lastContactAt)}</span>
             </p>
@@ -594,7 +689,7 @@ export default function LeadDetailPage() {
               </div>
             </div>
 
-            {/* Photos - right after quick actions for fast access */}
+            {/* Photos */}
             {photos.length > 0 && (
               <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
                 <h2 className="text-sm font-semibold text-slate-100 mb-3 tracking-wide">
