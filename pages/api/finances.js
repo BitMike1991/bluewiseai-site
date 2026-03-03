@@ -19,34 +19,32 @@ export default async function handler(req, res) {
       return d.toISOString();
     })();
 
-    // Revenue this month
-    const { data: monthPayments } = await supabase
+    // ALL payments (succeeded) — single query, filter in JS for time ranges
+    const { data: allPayments } = await supabase
       .from("payments")
-      .select("amount, method, created_at, job_id, payment_type")
+      .select("amount, created_at, job_id, payment_type")
       .eq("customer_id", customerId)
-      .eq("status", "succeeded")
-      .gte("created_at", monthStart);
+      .eq("status", "succeeded");
 
-    const revenueMtd = (monthPayments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
-
-    // Revenue this week
-    const weekPayments = (monthPayments || []).filter(p => p.created_at >= weekStart);
+    const totalRevenue = (allPayments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
+    const monthPayments = (allPayments || []).filter(p => p.created_at >= monthStart);
+    const revenueMtd = monthPayments.reduce((s, p) => s + Number(p.amount || 0), 0);
+    const weekPayments = (allPayments || []).filter(p => p.created_at >= weekStart);
     const revenueWtd = weekPayments.reduce((s, p) => s + Number(p.amount || 0), 0);
 
-    // Expenses this month
-    const { data: monthExpenses } = await supabase
+    // ALL expenses — single query, filter in JS
+    const { data: allExpenses } = await supabase
       .from("expenses")
       .select("total, category, vendor, paid_at, receipt_url, description, job_id")
-      .eq("customer_id", customerId)
-      .gte("paid_at", monthStart);
+      .eq("customer_id", customerId);
 
-    const expensesMtd = (monthExpenses || []).reduce((s, e) => s + Number(e.total || 0), 0);
-
-    // Expenses this week
-    const weekExpenses = (monthExpenses || []).filter(e => e.paid_at >= weekStart);
+    const totalExpenses = (allExpenses || []).reduce((s, e) => s + Number(e.total || 0), 0);
+    const monthExpenses = (allExpenses || []).filter(e => e.paid_at >= monthStart);
+    const expensesMtd = monthExpenses.reduce((s, e) => s + Number(e.total || 0), 0);
+    const weekExpenses = (allExpenses || []).filter(e => e.paid_at >= weekStart);
     const expensesWtd = weekExpenses.reduce((s, e) => s + Number(e.total || 0), 0);
 
-    // Monthly trend (last 6 months)
+    // Monthly trend (last 6 months) — computed from already-fetched data
     const monthlyTrend = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -54,41 +52,24 @@ export default async function handler(req, res) {
       const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 1).toISOString();
       const monthName = d.toLocaleDateString("fr-CA", { month: "short" });
 
-      const { data: mPay } = await supabase
-        .from("payments")
-        .select("amount")
-        .eq("customer_id", customerId)
-        .eq("status", "succeeded")
-        .gte("created_at", mStart)
-        .lt("created_at", mEnd);
-
-      const { data: mExp } = await supabase
-        .from("expenses")
-        .select("total")
-        .eq("customer_id", customerId)
-        .gte("paid_at", mStart)
-        .lt("paid_at", mEnd);
-
-      const rev = (mPay || []).reduce((s, p) => s + Number(p.amount || 0), 0);
-      const exp = (mExp || []).reduce((s, e) => s + Number(e.total || 0), 0);
+      const rev = (allPayments || [])
+        .filter(p => p.created_at >= mStart && p.created_at < mEnd)
+        .reduce((s, p) => s + Number(p.amount || 0), 0);
+      const exp = (allExpenses || [])
+        .filter(e => e.paid_at >= mStart && e.paid_at < mEnd)
+        .reduce((s, e) => s + Number(e.total || 0), 0);
       monthlyTrend.push({ month: monthName, revenue: rev, expenses: exp, profit: rev - exp });
     }
 
-    // Payment methods breakdown
+    // Payment methods breakdown (all time, by payment_type)
     const methods = {};
-    for (const p of monthPayments || []) {
-      const m = p.method || "other";
+    for (const p of allPayments || []) {
+      const m = (p.payment_type || "other").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
       methods[m] = (methods[m] || 0) + Number(p.amount || 0);
     }
     const paymentMethods = Object.entries(methods).map(([name, value]) => ({ name, value }));
 
     // Top clients by revenue (all time)
-    const { data: allPayments } = await supabase
-      .from("payments")
-      .select("amount, job_id")
-      .eq("customer_id", customerId)
-      .eq("status", "succeeded");
-
     const jobRevenue = {};
     for (const p of allPayments || []) {
       jobRevenue[p.job_id] = (jobRevenue[p.job_id] || 0) + Number(p.amount || 0);
@@ -113,6 +94,38 @@ export default async function handler(req, res) {
       })).sort((a, b) => b.revenue - a.revenue);
     }
 
+    // Outstanding balance (TTC owed - total paid across non-cancelled jobs)
+    const { data: jobsWithQuotes } = await supabase
+      .from("jobs")
+      .select("id, quote_amount, status")
+      .eq("customer_id", customerId)
+      .not("status", "in", "(cancelled,lost)");
+
+    let totalTtcOwed = 0;
+    const activeJobIds = [];
+    for (const j of jobsWithQuotes || []) {
+      if (j.quote_amount) {
+        totalTtcOwed += Number(j.quote_amount) * 1.14975;
+        activeJobIds.push(j.id);
+      }
+    }
+
+    let totalPaidOnJobs = 0;
+    if (activeJobIds.length > 0) {
+      const { data: jobPayments } = await supabase
+        .from("payments")
+        .select("amount")
+        .eq("customer_id", customerId)
+        .eq("status", "succeeded")
+        .in("job_id", activeJobIds);
+
+      totalPaidOnJobs = (jobPayments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
+    }
+    const outstandingBalance = Math.max(0, totalTtcOwed - totalPaidOnJobs);
+
+    // Collection rate
+    const collectionRate = totalTtcOwed > 0 ? Math.round((totalPaidOnJobs / totalTtcOwed) * 100) : 0;
+
     // Pending payments
     const { data: pendingRows } = await supabase
       .from("payments")
@@ -135,7 +148,7 @@ export default async function handler(req, res) {
       pendingPayments = pendingRows.map(p => ({
         id: p.id,
         client: jobMap[p.job_id]?.client_name || "Unknown",
-        jobNumber: jobMap[p.job_id]?.job_id || "—",
+        jobNumber: jobMap[p.job_id]?.job_id || "\u2014",
         jobDbId: p.job_id,
         amount: Number(p.amount || 0),
         type: p.payment_type,
@@ -143,37 +156,30 @@ export default async function handler(req, res) {
       }));
     }
 
-    // Recent expenses
-    const recentExpenses = (monthExpenses || [])
+    // Recent expenses (all time, latest 10)
+    const recentExpenses = (allExpenses || [])
       .sort((a, b) => new Date(b.paid_at) - new Date(a.paid_at))
       .slice(0, 10)
       .map(e => ({
-        vendor: e.vendor || "—",
+        vendor: e.vendor || "\u2014",
         amount: Number(e.total || 0),
-        category: e.category || "—",
+        category: e.category || "\u2014",
         description: e.description || "",
         receiptUrl: e.receipt_url || null,
         date: e.paid_at,
       }));
 
-    // Collection rate
-    const { data: allJobs } = await supabase
-      .from("jobs")
-      .select("id, quote_amount")
-      .eq("customer_id", customerId)
-      .not("quote_amount", "is", null);
-
-    const totalInvoiced = (allJobs || []).reduce((s, j) => s + Number(j.quote_amount || 0) * 1.14975, 0);
-    const totalCollected = (allPayments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
-    const collectionRate = totalInvoiced > 0 ? Math.round((totalCollected / totalInvoiced) * 100) : 0;
-
     return res.status(200).json({
+      totalRevenue,
+      totalExpenses,
+      totalProfit: totalRevenue - totalExpenses,
       revenueMtd,
       revenueWtd,
       expensesMtd,
       expensesWtd,
       profitMtd: revenueMtd - expensesMtd,
       profitWtd: revenueWtd - expensesWtd,
+      outstandingBalance: Math.round(outstandingBalance),
       collectionRate,
       monthlyTrend,
       paymentMethods,
