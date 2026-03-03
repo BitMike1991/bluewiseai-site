@@ -7,16 +7,20 @@ import StatCard from "../../src/components/dashboard/StatCard";
 import { supabase } from "../../lib/supabaseClient";
 import {
   DollarSign,
+  TrendingDown,
+  TrendingUp,
+  Briefcase,
   PhoneMissed,
   Bot,
   MessageSquare,
   UserPlus,
+  Users,
   Flame,
   CalendarCheck,
   ArrowRight,
   Send,
-  TrendingUp,
-  Briefcase,
+  Target,
+  Zap,
 } from "lucide-react";
 
 function formatTimeAgo(timestamp) {
@@ -164,88 +168,133 @@ export default function OverviewPage() {
         <h1 suppressHydrationWarning className="text-xl font-semibold text-slate-50">
           {mounted ? getGreeting(userName) : "Welcome!"}
         </h1>
-        <p className="mt-1 text-sm text-slate-400">{"Here's your week at a glance."}</p>
+        <p className="mt-1 text-sm text-slate-400">{"Here's your business at a glance."}</p>
       </div>
 
-      {/* Hero Card: Revenue This Month */}
+      {/* Hero Banner: Revenue | Expenses | Net Profit */}
       <div className="mb-6">
-        <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-slate-950/70 px-5 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20">
-              <DollarSign className="h-5 w-5 text-emerald-400" />
+        <div className="rounded-2xl border border-slate-700/50 bg-gradient-to-r from-slate-950 via-slate-900/80 to-slate-950 overflow-hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-700/40">
+            {/* Revenue */}
+            <div className="px-5 py-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                  <DollarSign className="h-5 w-5 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-400/80">Revenue MTD</p>
+                  <p className="text-2xl font-bold text-emerald-400">
+                    {loading ? "\u2026" : fmt(kpis.revenueMtd)}
+                  </p>
+                  <p className="text-[11px] text-slate-500">
+                    {loading ? "" : `${fmt(kpis.revenueWtd)} this week`}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-emerald-300/70">
-                Revenue This Month
-              </p>
-              <p className="text-3xl font-bold text-emerald-400">
-                {loading ? "..." : fmt(kpis.revenueMtd)}
-              </p>
-              <p className="mt-0.5 text-xs text-slate-400">
-                {loading ? "" : `Pipeline: ${fmt(kpis.pipelineValue)} in active quotes & contracts`}
-              </p>
+            {/* Expenses */}
+            <div className="px-5 py-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.2)]">
+                  <TrendingDown className="h-5 w-5 text-rose-400" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-rose-400/80">Expenses MTD</p>
+                  <p className="text-2xl font-bold text-rose-400">
+                    {loading ? "\u2026" : fmt(kpis.expensesMtd)}
+                  </p>
+                  <p className="text-[11px] text-slate-500">Materials & subcontractors</p>
+                </div>
+              </div>
+            </div>
+            {/* Net Profit */}
+            <div className="px-5 py-5">
+              <div className="flex items-center gap-3">
+                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                  !loading && (kpis.profitMtd || 0) >= 0
+                    ? "bg-sky-500/20 shadow-[0_0_20px_rgba(56,189,248,0.3)]"
+                    : "bg-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.2)]"
+                }`}>
+                  <TrendingUp className={`h-5 w-5 ${
+                    !loading && (kpis.profitMtd || 0) >= 0 ? "text-sky-400" : "text-rose-400"
+                  }`} />
+                </div>
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-sky-400/80">Net Profit</p>
+                  <p className={`text-2xl font-bold ${
+                    !loading && (kpis.profitMtd || 0) >= 0 ? "text-sky-400" : "text-rose-400"
+                  }`}>
+                    {loading ? "\u2026" : fmt(kpis.profitMtd)}
+                  </p>
+                  <p className="text-[11px] text-slate-500">Revenue minus expenses</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      {/* Row 1: Pipeline & Growth */}
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard
           icon={Briefcase}
-          accent="border-l-blue-400"
-          label="Pipeline Value"
+          accent="border-l-amber-400"
+          label="Pipeline"
           subLabel="Active quotes & contracts"
-          value={loading ? "..." : fmt(kpis.pipelineValue)}
+          value={loading ? "\u2026" : fmt(kpis.pipelineValue)}
+        />
+        <StatCard
+          icon={Zap}
+          accent="border-l-sky-400"
+          label="Active Jobs"
+          subLabel="In progress"
+          value={loading ? "\u2026" : kpis.activeJobs ?? "--"}
+        />
+        <StatCard
+          icon={Users}
+          accent="border-l-blue-400"
+          label="Total Leads"
+          subLabel="All time captured"
+          value={loading ? "\u2026" : kpis.totalLeads ?? "--"}
+        />
+        <StatCard
+          icon={Target}
+          accent="border-l-violet-400"
+          label="Conversion"
+          subLabel="Won / total leads"
+          value={loading ? "\u2026" : `${kpis.conversionRate ?? 0}%`}
+        />
+      </div>
+
+      {/* Row 2: AI Performance */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatCard
+          icon={UserPlus}
+          accent="border-l-blue-400"
+          label="New Leads"
+          subLabel="This week"
+          value={loading ? "\u2026" : kpis.newLeadsThisWeek ?? "--"}
         />
         <StatCard
           icon={PhoneMissed}
           accent="border-l-amber-400"
           label="Missed Calls"
           subLabel="This week"
-          value={loading ? "..." : kpis.missedCallsThisWeek ?? "--"}
+          value={loading ? "\u2026" : kpis.missedCallsThisWeek ?? "--"}
         />
         <StatCard
           icon={Bot}
           accent="border-l-sky-400"
-          label="Voice AI Answered"
-          subLabel="This week"
-          value={loading ? "..." : kpis.voiceCallsThisWeek ?? "--"}
-        />
-        <StatCard
-          icon={MessageSquare}
-          accent="border-l-violet-400"
-          label="Auto-Replies"
-          subLabel="This week"
-          value={loading ? "..." : kpis.aiRepliesThisWeek ?? "--"}
-        />
-        <StatCard
-          icon={UserPlus}
-          accent="border-l-blue-400"
-          label="New Leads"
-          subLabel="This week"
-          value={loading ? "..." : kpis.newLeadsThisWeek ?? "--"}
+          label="AI Answered"
+          subLabel="Voice calls"
+          value={loading ? "\u2026" : kpis.voiceCallsThisWeek ?? "--"}
         />
         <StatCard
           icon={Flame}
           accent="border-l-orange-400"
           label="Hot Leads"
-          subLabel="High-priority"
-          value={loading ? "..." : kpis.hotLeadsCount ?? "--"}
-        />
-        <StatCard
-          icon={CalendarCheck}
-          accent="border-l-rose-400"
-          label="Tasks Due Today"
-          subLabel="Open tasks"
-          value={loading ? "..." : kpis.tasksDueToday ?? "--"}
-        />
-        <StatCard
-          icon={TrendingUp}
-          accent="border-l-emerald-400"
-          label="Revenue Protected"
-          subLabel={`${kpis.voiceCallsThisWeek || 0} calls x $300`}
-          value={loading ? "..." : fmt(kpis.revenueProtected)}
+          subLabel="Score 40+"
+          value={loading ? "\u2026" : kpis.hotLeadsCount ?? "--"}
         />
       </div>
 
@@ -257,7 +306,7 @@ export default function OverviewPage() {
             type="text"
             value={askInput}
             onChange={(e) => setAskInput(e.target.value)}
-            placeholder="Ask BlueWise anything..."
+            placeholder="Ask BlueWise anything\u2026"
             className="flex-1 rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
           />
           <button
@@ -294,7 +343,7 @@ export default function OverviewPage() {
         <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
           <h2 className="text-sm font-semibold text-slate-50">Recent Activity</h2>
           {loading ? (
-            <p className="mt-3 text-xs text-slate-500">Loading...</p>
+            <p className="mt-3 text-xs text-slate-500">Loading\u2026</p>
           ) : activity.length === 0 ? (
             <p className="mt-3 text-xs text-slate-500">No recent activity.</p>
           ) : (
@@ -337,7 +386,7 @@ export default function OverviewPage() {
             </Link>
           </div>
           {loading ? (
-            <p className="mt-3 text-xs text-slate-500">Loading...</p>
+            <p className="mt-3 text-xs text-slate-500">Loading\u2026</p>
           ) : recentLeads.length === 0 ? (
             <p className="mt-3 text-xs text-slate-500">No leads yet.</p>
           ) : (
@@ -354,7 +403,7 @@ export default function OverviewPage() {
                       </p>
                       <p className="text-[11px] text-slate-500">
                         {lead.source ? getSourceLabel(lead.source) : ""}
-                        {lead.status ? ` · ${lead.status}` : ""}
+                        {lead.status ? ` \u00b7 ${lead.status}` : ""}
                       </p>
                     </div>
                     <ArrowRight className="h-4 w-4 shrink-0 text-slate-600 group-hover:text-sky-400" />
