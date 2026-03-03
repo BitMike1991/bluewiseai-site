@@ -168,6 +168,27 @@ export default function FinancesPage() {
           </div>
         </div>
 
+        {/* By Person Breakdown */}
+        {data.byPerson && Object.keys(data.byPerson).length > 0 && (
+          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+            <h3 className="text-sm font-medium text-slate-300 mb-3">By Person</h3>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {Object.entries(data.byPerson).map(([name, totals]) => (
+                <div key={name} className="rounded-xl border border-slate-800/60 bg-slate-900/40 p-3">
+                  <p className="text-sm font-medium text-slate-200">{name}</p>
+                  <div className="mt-1.5 flex items-center gap-4 text-xs">
+                    <span className="text-emerald-400">+{fmt(totals.payments)}</span>
+                    <span className="text-rose-400">-{fmt(totals.expenses)}</span>
+                    <span className={totals.payments - totals.expenses >= 0 ? "text-sky-400" : "text-rose-400"}>
+                      = {fmt(totals.payments - totals.expenses)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Tables Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Top Clients */}
@@ -199,7 +220,7 @@ export default function FinancesPage() {
                   <div key={i} className="flex items-center justify-between py-1.5 border-b border-slate-800/50 last:border-0">
                     <div>
                       <div className="text-sm text-slate-200">{p.client}</div>
-                      <div className="text-[10px] text-slate-500">{p.jobNumber} &middot; {p.daysOverdue}d overdue</div>
+                      <div className="text-[10px] text-slate-500">{p.jobNumber} \u00b7 {p.daysOverdue}d overdue</div>
                     </div>
                     <div className="text-sm font-medium text-amber-400">{fmt(p.amount)}</div>
                   </div>
@@ -219,7 +240,7 @@ export default function FinancesPage() {
                   <div key={i} className="flex items-center justify-between py-1.5 border-b border-slate-800/50 last:border-0">
                     <div>
                       <div className="text-sm text-slate-200">{e.vendor}</div>
-                      <div className="text-[10px] text-slate-500">{e.category} &middot; {fmtDate(e.date)}</div>
+                      <div className="text-[10px] text-slate-500">{e.category} \u00b7 {fmtDate(e.date)}</div>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="text-sm font-medium text-rose-400">{fmt(e.amount)}</div>
