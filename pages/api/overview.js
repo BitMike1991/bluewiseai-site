@@ -18,14 +18,12 @@ export default async function handler(req, res) {
   try {
     const now = new Date();
     const since = new Date();
-    since.setDate(now.getDate() - 7); // last 7 days
-
+    since.setDate(now.getDate() - 7);
     const sinceIso = since.toISOString();
-    const todayStr = now.toISOString().slice(0, 10); // YYYY-MM-DD
+    const todayStr = now.toISOString().slice(0, 10);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-    //
-    // 1) New leads this week – canonical LEADS table
-    //
+    // 1) New leads this week
     const { data: newLeadsRows, error: newLeadsError } = await supabase
       .from("leads")
       .select("id")
@@ -35,9 +33,7 @@ export default async function handler(req, res) {
     if (newLeadsError) throw newLeadsError;
     const newLeadsThisWeek = newLeadsRows?.length || 0;
 
-    //
-    // 2) Tasks: open + due today + overdue
-    //
+    // 2) Tasks
     const { data: openTasksRows, error: openTasksError } = await supabase
       .from("tasks")
       .select("id, status, due_at")
@@ -47,25 +43,16 @@ export default async function handler(req, res) {
     if (openTasksError) throw openTasksError;
 
     const openTasks = openTasksRows?.length || 0;
+    const tasksDueToday = openTasksRows?.filter((t) => {
+      if (!t.due_at) return false;
+      return new Date(t.due_at).toISOString().slice(0, 10) === todayStr;
+    }).length || 0;
+    const tasksOverdue = openTasksRows?.filter((t) => {
+      if (!t.due_at) return false;
+      return new Date(t.due_at).toISOString().slice(0, 10) < todayStr;
+    }).length || 0;
 
-    const tasksDueToday =
-      openTasksRows?.filter((t) => {
-        if (!t.due_at) return false;
-        const d = new Date(t.due_at);
-        return d.toISOString().slice(0, 10) === todayStr;
-      }).length || 0;
-
-    const tasksOverdue =
-      openTasksRows?.filter((t) => {
-        if (!t.due_at) return false;
-        const d = new Date(t.due_at);
-        const iso = d.toISOString().slice(0, 10);
-        return iso < todayStr;
-      }).length || 0;
-
-    //
-    // 3) Missed calls this week (via leads table)
-    //
+    // 3) Missed calls this week
     const { data: missedRows, error: missedError } = await supabase
       .from("leads")
       .select("id")
@@ -76,9 +63,7 @@ export default async function handler(req, res) {
     if (missedError) throw missedError;
     const missedCallsThisWeek = missedRows?.length || 0;
 
-    //
-    // 4) Voice AI answered calls this week (call transcripts)
-    //
+    // 4) Voice AI answered
     const { data: voiceRows, error: voiceError } = await supabase
       .from("messages")
       .select("id")
@@ -90,9 +75,7 @@ export default async function handler(req, res) {
     if (voiceError) throw voiceError;
     const voiceCallsThisWeek = voiceRows?.length || 0;
 
-    //
-    // 5) AI auto-replies this week (SMS outbound)
-    //
+    // 5) AI auto-replies
     const { data: aiRows, error: aiError } = await supabase
       .from("messages")
       .select("id")
@@ -104,9 +87,7 @@ export default async function handler(req, res) {
     if (aiError) throw aiError;
     const aiRepliesThisWeek = aiRows?.length || 0;
 
-    //
-    // 6) Hot leads (leads with hot_score > 0 or >= 40)
-    //
+    // 6) Hot leads
     const { data: hotRows, error: hotError } = await supabase
       .from("leads")
       .select("id")
@@ -116,14 +97,34 @@ export default async function handler(req, res) {
     if (hotError) throw hotError;
     const hotLeadsCount = hotRows?.length || 0;
 
-    //
-    // 7) Revenue protected calculation ($300 per voice call answered)
-    //
-    const revenueProtected = voiceCallsThisWeek * 300;
+    // 7) REAL revenue this month (from payments)
+    const { data: monthPayments } = await supabase
+      .from("payments")
+      .select("amount")
+      .eq("customer_id", customerId)
+      .eq("status", "succeeded")
+      .gte("created_at", monthStart);
 
-    //
-    // 8) Recent LEADS (canonical) – last 10 leads
-    //
+    const revenueMtd = (monthPayments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
+
+    // 8) Pipeline value (unsigned quotes + contracts)
+    const { data: pipelineQuotes } = await supabase
+      .from("quotes")
+      .select("total_ttc")
+      .eq("customer_id", customerId)
+      .in("status", ["sent", "ready"]);
+
+    const { data: pipelineContracts } = await supabase
+      .from("jobs")
+      .select("quote_amount")
+      .eq("customer_id", customerId)
+      .in("status", ["contract_sent", "signed"]);
+
+    const pipelineValue =
+      (pipelineQuotes || []).reduce((s, q) => s + Number(q.total_ttc || 0), 0) +
+      (pipelineContracts || []).reduce((s, j) => s + Number(j.quote_amount || 0) * 1.14975, 0);
+
+    // 9) Recent leads
     const { data: recentLeadRows, error: recentLeadError } = await supabase
       .from("leads")
       .select("id, name, email, phone, source, status, created_at")
@@ -143,9 +144,7 @@ export default async function handler(req, res) {
       createdAt: l.created_at,
     }));
 
-    //
-    // 9) Activity from inbox_lead_events
-    //
+    // 10) Activity from inbox_lead_events
     const { data: eventRows, error: activityError } = await supabase
       .from("inbox_lead_events")
       .select("id, lead_id, event_type, created_at, payload")
@@ -155,9 +154,7 @@ export default async function handler(req, res) {
 
     if (activityError) throw activityError;
 
-    //
-    // 10) Activity from messages
-    //
+    // 11) Activity from messages
     const { data: messageRows, error: messageError } = await supabase
       .from("messages")
       .select("*")
@@ -167,9 +164,7 @@ export default async function handler(req, res) {
 
     if (messageError) throw messageError;
 
-    //
-    // 11) Map: inbox_leads.id -> canonical leads.id
-    //
+    // 12) Map inbox_leads.id -> canonical leads.id
     const inboxLeadIds = Array.from(
       new Set((eventRows || []).map((row) => row.lead_id).filter((id) => id != null))
     );
@@ -181,28 +176,23 @@ export default async function handler(req, res) {
         .select("id, lead_id")
         .in("id", inboxLeadIds);
 
-      if (inboxMapError) {
-        console.error("[api/overview] inbox map error:", inboxMapError);
-      } else {
+      if (!inboxMapError) {
         for (const r of inboxMapRows || []) {
           if (r.id != null) inboxToCanonical[r.id] = r.lead_id || null;
         }
       }
     }
 
-    //
-    // 12) Normalize inbox_lead_events → activity
-    //
+    // 13) Normalize events + messages
     const activityFromEvents = (eventRows || []).map((row) => {
       let label = row.event_type;
-
       if (row.event_type === "missed_call") label = "Missed call";
       else if (row.event_type === "sms_sent_auto_reply") label = "AI sent SMS auto-reply";
       else if (row.event_type === "lead_created") label = "New lead created";
 
       const inboxLeadId = row.lead_id || null;
-      const canonicalLeadId =
-        inboxLeadId && inboxToCanonical[inboxLeadId] ? inboxToCanonical[inboxLeadId] : null;
+      const canonicalLeadId = inboxLeadId && inboxToCanonical[inboxLeadId]
+        ? inboxToCanonical[inboxLeadId] : null;
 
       return {
         id: `evt-${row.id}`,
@@ -215,26 +205,17 @@ export default async function handler(req, res) {
       };
     });
 
-    //
-    // 13) Normalize messages → activity
-    //
     const activityFromMessages = (messageRows || []).map((row) => {
       const kind = row.channel || "message";
       const direction = row.direction || "inbound";
 
       let baseLabel;
-      if (kind === "sms") {
-        baseLabel = direction === "outbound" ? "You sent an SMS" : "Lead sent an SMS";
-      } else if (kind === "email") {
-        baseLabel = direction === "outbound" ? "You sent an email" : "Lead sent an email";
-      } else if (kind === "call") {
-        baseLabel = "Voice AI call";
-      } else {
-        baseLabel = direction === "outbound" ? "You sent a message" : "Lead sent a message";
-      }
+      if (kind === "sms") baseLabel = direction === "outbound" ? "You sent an SMS" : "Lead sent an SMS";
+      else if (kind === "email") baseLabel = direction === "outbound" ? "You sent an email" : "Lead sent an email";
+      else if (kind === "call") baseLabel = "Voice AI call";
+      else baseLabel = direction === "outbound" ? "You sent a message" : "Lead sent a message";
 
       const preview = row.snippet || row.subject || row.preview || row.body_preview || null;
-
       const label = preview ? `${baseLabel} – ${String(preview).slice(0, 80)}` : baseLabel;
 
       return {
@@ -244,30 +225,19 @@ export default async function handler(req, res) {
         type: `message.${kind}`,
         label,
         timestamp: row.created_at,
-        payload: {
-          kind,
-          direction,
-          subject: row.subject || null,
-        },
+        payload: { kind, direction, subject: row.subject || null },
       };
     });
 
-    //
     // 14) Merge + sort + trim
-    //
     const combinedActivity = [...activityFromEvents, ...activityFromMessages];
-
     combinedActivity.sort((a, b) => {
       const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
       const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
       return tb - ta;
     });
-
     const activity = combinedActivity.slice(0, 30);
 
-    //
-    // 15) Response
-    //
     return res.status(200).json({
       kpis: {
         missedCallsThisWeek,
@@ -275,8 +245,9 @@ export default async function handler(req, res) {
         aiRepliesThisWeek,
         newLeadsThisWeek,
         hotLeadsCount,
-        revenueProtected,
-        // Legacy KPIs (kept for backwards compatibility)
+        revenueMtd,
+        pipelineValue,
+        revenueProtected: voiceCallsThisWeek * 300,
         openTasks,
         tasksDueToday,
         tasksOverdue,
