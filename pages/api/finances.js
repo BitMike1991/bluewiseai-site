@@ -159,7 +159,7 @@ export default async function handler(req, res) {
     // By person breakdown (from financial_logs)
     const { data: financialLogs } = await supabase
       .from("financial_logs")
-      .select("log_type, amount, submitted_by, from_person, to_person")
+      .select("log_type, amount, submitted_by, from_person, to_person, settled_at, settlement_id")
       .eq("customer_id", customerId);
 
     const byPerson = {};
@@ -192,6 +192,24 @@ export default async function handler(req, res) {
         date: e.paid_at,
       }));
 
+    // Unsettled expenses count + total
+    const unsettledExpenses = (financialLogs || []).filter(l => l.log_type === "expense" && !l.settled_at);
+    const unsettledTotal = unsettledExpenses.reduce((s, l) => s + (parseFloat(l.amount) || 0), 0);
+
+    // Settlement history (unique settlement_ids)
+    const settlementsMap = {};
+    for (const log of financialLogs || []) {
+      if (!log.settlement_id) continue;
+      if (!settlementsMap[log.settlement_id]) {
+        settlementsMap[log.settlement_id] = { id: log.settlement_id, settledAt: log.settled_at, expenses: 0, count: 0 };
+      }
+      if (log.log_type === "expense") {
+        settlementsMap[log.settlement_id].expenses += parseFloat(log.amount) || 0;
+        settlementsMap[log.settlement_id].count++;
+      }
+    }
+    const settlements = Object.values(settlementsMap).sort((a, b) => new Date(b.settledAt) - new Date(a.settledAt));
+
     return res.status(200).json({
       totalRevenue,
       totalExpenses,
@@ -210,6 +228,9 @@ export default async function handler(req, res) {
       pendingPayments,
       recentExpenses,
       byPerson,
+      unsettledTotal: Math.round(unsettledTotal * 100) / 100,
+      unsettledCount: unsettledExpenses.length,
+      settlements,
     });
   } catch (err) {
     console.error("[api/finances] Error:", err);

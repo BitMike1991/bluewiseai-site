@@ -89,6 +89,17 @@ export default function FinancesPage() {
           </a>
         </div>
 
+        {/* Unsettled Expenses Banner */}
+        {(data.unsettledCount || 0) > 0 && (
+          <div className="rounded-xl border border-amber-500/40 bg-amber-950/20 px-4 py-3 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-amber-300">{data.unsettledCount} unsettled expense{data.unsettledCount > 1 ? "s" : ""}</p>
+              <p className="text-xs text-amber-400/70">Will be cleared on next payment received</p>
+            </div>
+            <span className="text-lg font-bold text-amber-400">{fmt(data.unsettledTotal)}</span>
+          </div>
+        )}
+
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard
@@ -247,7 +258,7 @@ export default function FinancesPage() {
                   <div key={i} className="flex items-center justify-between py-1.5 border-b border-slate-800/50 last:border-0">
                     <div>
                       <div className="text-sm text-slate-200">{p.client}</div>
-                      <div className="text-[10px] text-slate-500">{p.jobNumber} \u00b7 {p.daysOverdue}d overdue</div>
+                      <div className="text-[10px] text-slate-500">{p.jobNumber} &middot; {p.daysOverdue}d overdue</div>
                     </div>
                     <div className="text-sm font-medium text-amber-400">{fmt(p.amount)}</div>
                   </div>
@@ -267,7 +278,7 @@ export default function FinancesPage() {
                   <div key={i} className="flex items-center justify-between py-1.5 border-b border-slate-800/50 last:border-0">
                     <div>
                       <div className="text-sm text-slate-200">{e.vendor}</div>
-                      <div className="text-[10px] text-slate-500">{e.category} \u00b7 {fmtDate(e.date)}</div>
+                      <div className="text-[10px] text-slate-500">{e.category} &middot; {fmtDate(e.date)}</div>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="text-sm font-medium text-rose-400">{fmt(e.amount)}</div>
