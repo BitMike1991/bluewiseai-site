@@ -22,6 +22,7 @@ export default async function handler(req, res) {
     const sinceIso = since.toISOString();
     const todayStr = now.toISOString().slice(0, 10);
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const since30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
     // 1) New leads this week
     const { data: newLeadsRows, error: newLeadsError } = await supabase
@@ -97,35 +98,74 @@ export default async function handler(req, res) {
     if (hotError) throw hotError;
     const hotLeadsCount = hotRows?.length || 0;
 
-    // 7) Revenue this month (real from payments)
-    const { data: monthPayments } = await supabase
+    // ── FINANCIAL DATA ──
+
+    // 7) ALL payments (succeeded) — for total + time-based breakdowns
+    const { data: allPayments } = await supabase
       .from("payments")
-      .select("amount")
+      .select("amount, created_at")
       .eq("customer_id", customerId)
-      .eq("status", "succeeded")
-      .gte("created_at", monthStart);
+      .eq("status", "succeeded");
 
-    const revenueMtd = (monthPayments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
+    const totalRevenue = (allPayments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
 
-    // 7b) Revenue this week
-    const { data: weekPayments } = await supabase
-      .from("payments")
-      .select("amount")
-      .eq("customer_id", customerId)
-      .eq("status", "succeeded")
-      .gte("created_at", sinceIso);
+    const revenue30d = (allPayments || []).filter((p) =>
+      p.created_at && new Date(p.created_at).toISOString() >= since30d
+    ).reduce((s, p) => s + Number(p.amount || 0), 0);
 
-    const revenueWtd = (weekPayments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
+    const revenueMtd = (allPayments || []).filter((p) =>
+      p.created_at && new Date(p.created_at).toISOString() >= monthStart
+    ).reduce((s, p) => s + Number(p.amount || 0), 0);
 
-    // 7c) Expenses this month
-    const { data: monthExpenses } = await supabase
+    const revenueWtd = (allPayments || []).filter((p) =>
+      p.created_at && new Date(p.created_at).toISOString() >= sinceIso
+    ).reduce((s, p) => s + Number(p.amount || 0), 0);
+
+    // 7b) ALL expenses
+    const { data: allExpenses } = await supabase
       .from("expenses")
-      .select("total")
-      .eq("customer_id", customerId)
-      .gte("paid_at", monthStart);
+      .select("total, paid_at")
+      .eq("customer_id", customerId);
 
-    const expensesMtd = (monthExpenses || []).reduce((s, e) => s + Number(e.total || 0), 0);
-    const profitMtd = revenueMtd - expensesMtd;
+    const totalExpenses = (allExpenses || []).reduce((s, e) => s + Number(e.total || 0), 0);
+
+    const expenses30d = (allExpenses || []).filter((e) =>
+      e.paid_at && new Date(e.paid_at).toISOString() >= since30d
+    ).reduce((s, e) => s + Number(e.total || 0), 0);
+
+    const expensesMtd = (allExpenses || []).filter((e) =>
+      e.paid_at && new Date(e.paid_at).toISOString() >= monthStart
+    ).reduce((s, e) => s + Number(e.total || 0), 0);
+
+    // 7c) Outstanding balance (TTC owed - total paid across all active jobs)
+    const { data: jobsWithQuotes } = await supabase
+      .from("jobs")
+      .select("id, quote_amount, status")
+      .eq("customer_id", customerId)
+      .not("status", "in", "(cancelled,lost)");
+
+    let totalTtcOwed = 0;
+    const activeJobIds = [];
+    for (const j of jobsWithQuotes || []) {
+      if (j.quote_amount) {
+        totalTtcOwed += Number(j.quote_amount) * 1.14975;
+        activeJobIds.push(j.id);
+      }
+    }
+
+    let totalPaidOnJobs = 0;
+    if (activeJobIds.length > 0) {
+      const { data: jobPayments } = await supabase
+        .from("payments")
+        .select("amount")
+        .eq("customer_id", customerId)
+        .eq("status", "succeeded")
+        .in("job_id", activeJobIds);
+
+      totalPaidOnJobs = (jobPayments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
+    }
+
+    const outstandingBalance = Math.max(0, totalTtcOwed - totalPaidOnJobs);
 
     // 8) Pipeline value (unsigned quotes + contracts)
     const { data: pipelineQuotes } = await supabase
@@ -279,20 +319,30 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       kpis: {
+        // Financial — multiple time ranges
+        totalRevenue,
+        totalExpenses,
+        totalProfit: totalRevenue - totalExpenses,
+        revenue30d,
+        expenses30d,
+        profit30d: revenue30d - expenses30d,
         revenueMtd,
         revenueWtd,
         expensesMtd,
-        profitMtd,
+        profitMtd: revenueMtd - expensesMtd,
+        outstandingBalance: Math.round(outstandingBalance),
         pipelineValue,
+        // Leads & jobs
         totalLeads,
         activeJobs,
         conversionRate,
+        // AI performance
         missedCallsThisWeek,
         voiceCallsThisWeek,
         aiRepliesThisWeek,
         newLeadsThisWeek,
         hotLeadsCount,
-        revenueProtected: voiceCallsThisWeek * 300,
+        // Tasks
         openTasks,
         tasksDueToday,
         tasksOverdue,
