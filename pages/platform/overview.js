@@ -19,7 +19,7 @@ import {
   CalendarCheck,
   ArrowRight,
   Send,
-  Target,
+  AlertCircle,
   Zap,
 } from "lucide-react";
 
@@ -182,12 +182,12 @@ export default function OverviewPage() {
                   <DollarSign className="h-5 w-5 text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-400/80">Revenue MTD</p>
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-400/80">Total Revenue</p>
                   <p className="text-2xl font-bold text-emerald-400">
-                    {loading ? "\u2026" : fmt(kpis.revenueMtd)}
+                    {loading ? "\u2026" : fmt(kpis.totalRevenue)}
                   </p>
                   <p className="text-[11px] text-slate-500">
-                    {loading ? "" : `${fmt(kpis.revenueWtd)} this week`}
+                    {loading ? "" : `MTD ${fmt(kpis.revenueMtd)} \u00b7 WTD ${fmt(kpis.revenueWtd)}`}
                   </p>
                 </div>
               </div>
@@ -199,11 +199,13 @@ export default function OverviewPage() {
                   <TrendingDown className="h-5 w-5 text-rose-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-medium uppercase tracking-wider text-rose-400/80">Expenses MTD</p>
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-rose-400/80">Total Expenses</p>
                   <p className="text-2xl font-bold text-rose-400">
-                    {loading ? "\u2026" : fmt(kpis.expensesMtd)}
+                    {loading ? "\u2026" : fmt(kpis.totalExpenses)}
                   </p>
-                  <p className="text-[11px] text-slate-500">Materials & subcontractors</p>
+                  <p className="text-[11px] text-slate-500">
+                    {loading ? "" : `MTD ${fmt(kpis.expensesMtd)}`}
+                  </p>
                 </div>
               </div>
             </div>
@@ -211,20 +213,20 @@ export default function OverviewPage() {
             <div className="px-5 py-5">
               <div className="flex items-center gap-3">
                 <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-                  !loading && (kpis.profitMtd || 0) >= 0
+                  !loading && (kpis.totalProfit || 0) >= 0
                     ? "bg-sky-500/20 shadow-[0_0_20px_rgba(56,189,248,0.3)]"
                     : "bg-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.2)]"
                 }`}>
                   <TrendingUp className={`h-5 w-5 ${
-                    !loading && (kpis.profitMtd || 0) >= 0 ? "text-sky-400" : "text-rose-400"
+                    !loading && (kpis.totalProfit || 0) >= 0 ? "text-sky-400" : "text-rose-400"
                   }`} />
                 </div>
                 <div>
                   <p className="text-[11px] font-medium uppercase tracking-wider text-sky-400/80">Net Profit</p>
                   <p className={`text-2xl font-bold ${
-                    !loading && (kpis.profitMtd || 0) >= 0 ? "text-sky-400" : "text-rose-400"
+                    !loading && (kpis.totalProfit || 0) >= 0 ? "text-sky-400" : "text-rose-400"
                   }`}>
-                    {loading ? "\u2026" : fmt(kpis.profitMtd)}
+                    {loading ? "\u2026" : fmt(kpis.totalProfit)}
                   </p>
                   <p className="text-[11px] text-slate-500">Revenue minus expenses</p>
                 </div>
@@ -237,8 +239,15 @@ export default function OverviewPage() {
       {/* Row 1: Pipeline & Growth */}
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard
-          icon={Briefcase}
+          icon={AlertCircle}
           accent="border-l-amber-400"
+          label="Outstanding"
+          subLabel="Balance owed by clients"
+          value={loading ? "\u2026" : fmt(kpis.outstandingBalance)}
+        />
+        <StatCard
+          icon={Briefcase}
+          accent="border-l-violet-400"
           label="Pipeline"
           subLabel="Active quotes & contracts"
           value={loading ? "\u2026" : fmt(kpis.pipelineValue)}
@@ -256,13 +265,6 @@ export default function OverviewPage() {
           label="Total Leads"
           subLabel="All time captured"
           value={loading ? "\u2026" : kpis.totalLeads ?? "--"}
-        />
-        <StatCard
-          icon={Target}
-          accent="border-l-violet-400"
-          label="Conversion"
-          subLabel="Won / total leads"
-          value={loading ? "\u2026" : `${kpis.conversionRate ?? 0}%`}
         />
       </div>
 
