@@ -55,8 +55,9 @@ function stripHtmlToText(html) {
 // ---------------------------------------------------
 
 export default async function handler(req, res) {
-  if (req.method !== "GET") {
-    res.setHeader("Allow", ["GET"]);
+  const allowedMethods = ["GET", "PATCH"];
+  if (!allowedMethods.includes(req.method)) {
+    res.setHeader("Allow", allowedMethods);
     return res.status(405).json({ error: "Method not allowed" });
   }
 
@@ -72,6 +73,43 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Invalid lead id" });
   }
 
+  // ── PATCH: update lead status ──
+  if (req.method === "PATCH") {
+    try {
+      const { status } = req.body;
+      const validStatuses = ["new", "active", "in_convo", "quoted", "won", "lost", "dead"];
+
+      if (!status || !validStatuses.includes(status)) {
+        return res.status(400).json({
+          error: `Invalid status. Valid: ${validStatuses.join(", ")}`,
+        });
+      }
+
+      const { data, error: updateError } = await supabase
+        .from("leads")
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq("id", leadId)
+        .eq("customer_id", customerId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error("[api/leads/[id]] updateError", updateError);
+        return res.status(500).json({ error: "Failed to update lead status" });
+      }
+
+      if (!data) {
+        return res.status(404).json({ error: "Lead not found" });
+      }
+
+      return res.status(200).json({ success: true, lead: data });
+    } catch (err) {
+      console.error("[api/leads/[id]] PATCH error", err);
+      return res.status(500).json({ error: "Failed to update lead" });
+    }
+  }
+
+  // ── GET: full lead detail ──
   try {
     //
     // 1) Fetch canonical LEAD
@@ -191,7 +229,6 @@ export default async function handler(req, res) {
 
     //
     // 4) Fetch primary INBOX_LEAD thread(s) for this lead
-    // NOTE: keep String(customerId) behavior as you already had it here
     //
     const { data: inboxRows, error: inboxError } = await supabase
       .from("inbox_leads")
@@ -283,12 +320,9 @@ export default async function handler(req, res) {
           created_at
         `
         )
-        // tenant-safe (messages is multi-tenant)
         .eq("customer_id", customerId)
         .eq("lead_id", leadId)
         .order("created_at", { ascending: true }),
-      // inbox_messages uses inbox_leads.id as lead_id (not leads.id)
-      // so we need the primaryInboxLead.id to query it
       primaryInboxLead
         ? supabase
             .from("inbox_messages")
@@ -394,9 +428,7 @@ export default async function handler(req, res) {
       })) || [];
 
     //
-    // 8) Fetch PHOTOS (inbox_attachments linked via inbox_messages)
-    //    inbox_messages.lead_id = inbox_leads.id (NOT leads.id)
-    //    so we use primaryInboxLead.id to find the right messages
+    // 8) Fetch PHOTOS
     //
     let photos = [];
     if (primaryInboxLead) {
