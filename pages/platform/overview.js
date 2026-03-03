@@ -15,22 +15,20 @@ import {
   CalendarCheck,
   ArrowRight,
   Send,
+  TrendingUp,
+  Briefcase,
 } from "lucide-react";
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatTimeAgo(timestamp) {
   if (!timestamp) return "";
   const now = Date.now();
   const then = new Date(timestamp).getTime();
   if (Number.isNaN(then)) return "";
-
   const diffMs = now - then;
   const diffSec = Math.floor(diffMs / 1000);
   const diffMin = Math.floor(diffSec / 60);
   const diffH = Math.floor(diffMin / 60);
   const diffD = Math.floor(diffH / 24);
-
   if (diffSec < 60) return "Just now";
   if (diffMin < 60) return `${diffMin}m ago`;
   if (diffH < 24) return `${diffH}h ago`;
@@ -39,10 +37,14 @@ function formatTimeAgo(timestamp) {
 
 function getGreeting(name) {
   const h = new Date().getHours();
-  const base =
-    h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+  const base = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
   if (name) return `${base}, ${name.split("@")[0]}!`;
   return `${base}!`;
+}
+
+function fmt(n) {
+  if (n == null) return "$0";
+  return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(n);
 }
 
 const AVATAR_COLORS = [
@@ -70,7 +72,6 @@ function getInitial(name) {
   return name.charAt(0).toUpperCase();
 }
 
-// Activity dot color by event type
 function getActivityDot(type) {
   if (type === "missed_call") return "bg-amber-400";
   if (type === "sms_sent_auto_reply") return "bg-violet-400";
@@ -81,7 +82,6 @@ function getActivityDot(type) {
   return "bg-slate-500";
 }
 
-// Source label mapping
 function getSourceLabel(source) {
   if (!source) return null;
   const map = {
@@ -95,16 +95,12 @@ function getSourceLabel(source) {
   return map[source] || source;
 }
 
-// ── Quick prompts for Ask widget ─────────────────────────────────────────────
-
 const QUICK_PROMPTS = [
   { label: "Missed calls", q: "Show missed calls without follow-up" },
   { label: "No reply 24h", q: "Leads with no reply in 24 hours" },
   { label: "Tasks due", q: "Show open tasks due today" },
   { label: "Hot leads", q: "Show hot leads to chase" },
 ];
-
-// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function OverviewPage() {
   const router = useRouter();
@@ -115,23 +111,17 @@ export default function OverviewPage() {
   const [userName, setUserName] = useState(null);
   const [askInput, setAskInput] = useState("");
 
-  // Load user name for greeting
   useEffect(() => {
     setMounted(true);
     async function loadUser() {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (session?.user) {
-          setUserName(session.user.email || null);
-        }
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) setUserName(session.user.email || null);
       } catch {}
     }
     loadUser();
   }, []);
 
-  // Fetch overview data
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -149,9 +139,7 @@ export default function OverviewPage() {
       }
     }
     load();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   const kpis = data?.kpis || {};
@@ -171,20 +159,15 @@ export default function OverviewPage() {
 
   return (
     <DashboardLayout title="Overview">
-      {/* ── Greeting ── */}
+      {/* Greeting */}
       <div className="mb-6">
-        <h1
-          suppressHydrationWarning
-          className="text-xl font-semibold text-slate-50"
-        >
+        <h1 suppressHydrationWarning className="text-xl font-semibold text-slate-50">
           {mounted ? getGreeting(userName) : "Welcome!"}
         </h1>
-        <p className="mt-1 text-sm text-slate-400">
-          {"Here's your week at a glance."}
-        </p>
+        <p className="mt-1 text-sm text-slate-400">{"Here's your week at a glance."}</p>
       </div>
 
-      {/* ── Hero Card: Revenue Protected ── */}
+      {/* Hero Card: Revenue This Month */}
       <div className="mb-6">
         <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-slate-950/70 px-5 py-4">
           <div className="flex items-center gap-3">
@@ -193,83 +176,80 @@ export default function OverviewPage() {
             </div>
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-emerald-300/70">
-                Revenue Protected
+                Revenue This Month
               </p>
               <p className="text-3xl font-bold text-emerald-400">
-                {loading
-                  ? "…"
-                  : kpis.revenueProtected != null
-                  ? `$${kpis.revenueProtected.toLocaleString()}`
-                  : "$0"}
+                {loading ? "..." : fmt(kpis.revenueMtd)}
               </p>
               <p className="mt-0.5 text-xs text-slate-400">
-                {loading
-                  ? ""
-                  : `${kpis.voiceCallsThisWeek || 0} voice calls answered × $300 avg value`}
+                {loading ? "" : `Pipeline: ${fmt(kpis.pipelineValue)} in active quotes & contracts`}
               </p>
             </div>
           </div>
-          {/* Progress bar */}
-          {!loading && kpis.voiceCallsThisWeek > 0 && (
-            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-800/60">
-              <div
-                className="h-full rounded-full bg-emerald-500/60"
-                style={{
-                  width: `${Math.min(100, (kpis.voiceCallsThisWeek / 20) * 100)}%`,
-                }}
-              />
-            </div>
-          )}
         </div>
       </div>
 
-      {/* ── 6 KPI Cards ── */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* KPI Cards */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <StatCard
+          icon={Briefcase}
+          accent="border-l-blue-400"
+          label="Pipeline Value"
+          subLabel="Active quotes & contracts"
+          value={loading ? "..." : fmt(kpis.pipelineValue)}
+        />
         <StatCard
           icon={PhoneMissed}
           accent="border-l-amber-400"
           label="Missed Calls"
           subLabel="This week"
-          value={loading ? "…" : kpis.missedCallsThisWeek ?? "--"}
+          value={loading ? "..." : kpis.missedCallsThisWeek ?? "--"}
         />
         <StatCard
           icon={Bot}
           accent="border-l-sky-400"
           label="Voice AI Answered"
           subLabel="This week"
-          value={loading ? "…" : kpis.voiceCallsThisWeek ?? "--"}
+          value={loading ? "..." : kpis.voiceCallsThisWeek ?? "--"}
         />
         <StatCard
           icon={MessageSquare}
           accent="border-l-violet-400"
           label="Auto-Replies"
           subLabel="This week"
-          value={loading ? "…" : kpis.aiRepliesThisWeek ?? "--"}
+          value={loading ? "..." : kpis.aiRepliesThisWeek ?? "--"}
         />
         <StatCard
           icon={UserPlus}
           accent="border-l-blue-400"
           label="New Leads"
           subLabel="This week"
-          value={loading ? "…" : kpis.newLeadsThisWeek ?? "--"}
+          value={loading ? "..." : kpis.newLeadsThisWeek ?? "--"}
         />
         <StatCard
           icon={Flame}
           accent="border-l-orange-400"
           label="Hot Leads"
           subLabel="High-priority"
-          value={loading ? "…" : kpis.hotLeadsCount ?? "--"}
+          value={loading ? "..." : kpis.hotLeadsCount ?? "--"}
         />
         <StatCard
           icon={CalendarCheck}
           accent="border-l-rose-400"
           label="Tasks Due Today"
           subLabel="Open tasks"
-          value={loading ? "…" : kpis.tasksDueToday ?? "--"}
+          value={loading ? "..." : kpis.tasksDueToday ?? "--"}
+        />
+        <StatCard
+          icon={TrendingUp}
+          accent="border-l-emerald-400"
+          label="Revenue Protected"
+          subLabel={`${kpis.voiceCallsThisWeek || 0} calls x $300`}
+          value={loading ? "..." : fmt(kpis.revenueProtected)}
         />
       </div>
 
-      {/* ── Ask BlueWise Widget ── */}
+      {/* Ask BlueWise Widget */}
       <div className="mb-6 rounded-2xl border border-sky-700/40 bg-slate-950/80 px-4 py-4 shadow-[0_0_28px_rgba(56,189,248,0.12)]">
         <form onSubmit={handleAskSubmit} className="flex items-center gap-2">
           <label className="sr-only">Ask BlueWise</label>
@@ -277,7 +257,7 @@ export default function OverviewPage() {
             type="text"
             value={askInput}
             onChange={(e) => setAskInput(e.target.value)}
-            placeholder="Ask BlueWise anything…"
+            placeholder="Ask BlueWise anything..."
             className="flex-1 rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
           />
           <button
@@ -289,7 +269,6 @@ export default function OverviewPage() {
             Ask
           </button>
         </form>
-
         <div className="mt-3 flex items-center justify-between">
           <div className="flex flex-wrap gap-2">
             {QUICK_PROMPTS.map((p) => (
@@ -303,38 +282,28 @@ export default function OverviewPage() {
               </button>
             ))}
           </div>
-          <Link
-            href="/platform/ask"
-            className="shrink-0 ml-3 text-xs font-medium text-sky-400 hover:text-sky-300"
-          >
-            Command Center →
+          <Link href="/platform/ask" className="shrink-0 ml-3 text-xs font-medium text-sky-400 hover:text-sky-300">
+            Command Center &rarr;
           </Link>
         </div>
       </div>
 
-      {/* ── Activity Feed + Recent Leads (side by side) ── */}
+      {/* Activity Feed + Recent Leads */}
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Activity Feed */}
         <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-          <h2 className="text-sm font-semibold text-slate-50">
-            Recent Activity
-          </h2>
-
+          <h2 className="text-sm font-semibold text-slate-50">Recent Activity</h2>
           {loading ? (
-            <p className="mt-3 text-xs text-slate-500">Loading…</p>
+            <p className="mt-3 text-xs text-slate-500">Loading...</p>
           ) : activity.length === 0 ? (
             <p className="mt-3 text-xs text-slate-500">No recent activity.</p>
           ) : (
             <ul className="mt-3 space-y-0">
               {activity.slice(0, 8).map((item) => (
                 <li key={item.id} className="flex items-start gap-3 py-2">
-                  {/* Timeline dot */}
                   <div className="mt-1.5 flex flex-col items-center">
-                    <span
-                      className={`block h-2.5 w-2.5 rounded-full ${getActivityDot(item.type)}`}
-                    />
+                    <span className={`block h-2.5 w-2.5 rounded-full ${getActivityDot(item.type)}`} />
                   </div>
-                  {/* Content */}
                   <div className="min-w-0 flex-1">
                     {item.leadId ? (
                       <Link
@@ -344,14 +313,9 @@ export default function OverviewPage() {
                         {item.label}
                       </Link>
                     ) : (
-                      <p className="text-sm text-slate-200 line-clamp-1">
-                        {item.label}
-                      </p>
+                      <p className="text-sm text-slate-200 line-clamp-1">{item.label}</p>
                     )}
-                    <p
-                      suppressHydrationWarning
-                      className="text-[11px] text-slate-500"
-                    >
+                    <p suppressHydrationWarning className="text-[11px] text-slate-500">
                       {mounted ? formatTimeAgo(item.timestamp) : ""}
                     </p>
                   </div>
@@ -359,47 +323,31 @@ export default function OverviewPage() {
               ))}
             </ul>
           )}
-
           {activity.length > 8 && (
-            <p className="mt-2 text-xs text-slate-500">
-              Showing 8 of {activity.length} events
-            </p>
+            <p className="mt-2 text-xs text-slate-500">Showing 8 of {activity.length} events</p>
           )}
         </div>
 
         {/* Recent Leads */}
         <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-50">
-              Recent Leads
-            </h2>
-            <Link
-              href="/platform/leads"
-              className="text-xs text-sky-400 hover:text-sky-300"
-            >
-              View all →
+            <h2 className="text-sm font-semibold text-slate-50">Recent Leads</h2>
+            <Link href="/platform/leads" className="text-xs text-sky-400 hover:text-sky-300">
+              View all &rarr;
             </Link>
           </div>
-
           {loading ? (
-            <p className="mt-3 text-xs text-slate-500">Loading…</p>
+            <p className="mt-3 text-xs text-slate-500">Loading...</p>
           ) : recentLeads.length === 0 ? (
             <p className="mt-3 text-xs text-slate-500">No leads yet.</p>
           ) : (
             <ul className="mt-3 divide-y divide-slate-800/60">
               {recentLeads.slice(0, 6).map((lead) => (
                 <li key={lead.id}>
-                  <Link
-                    href={`/platform/leads/${lead.id}`}
-                    className="flex items-center gap-3 py-2.5 group"
-                  >
-                    {/* Avatar */}
-                    <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${getAvatarColor(lead.name)}`}
-                    >
+                  <Link href={`/platform/leads/${lead.id}`} className="flex items-center gap-3 py-2.5 group">
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${getAvatarColor(lead.name)}`}>
                       {getInitial(lead.name)}
                     </div>
-                    {/* Info */}
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-slate-100 group-hover:text-sky-300">
                         {lead.name}
@@ -409,7 +357,6 @@ export default function OverviewPage() {
                         {lead.status ? ` · ${lead.status}` : ""}
                       </p>
                     </div>
-                    {/* Arrow */}
                     <ArrowRight className="h-4 w-4 shrink-0 text-slate-600 group-hover:text-sky-400" />
                   </Link>
                 </li>
@@ -420,9 +367,7 @@ export default function OverviewPage() {
       </div>
 
       {error && (
-        <p className="mt-4 text-xs text-red-400">
-          Error loading overview: {error}
-        </p>
+        <p className="mt-4 text-xs text-red-400">Error loading overview: {error}</p>
       )}
     </DashboardLayout>
   );
