@@ -159,16 +159,24 @@ export default async function handler(req, res) {
     // By person breakdown (from financial_logs)
     const { data: financialLogs } = await supabase
       .from("financial_logs")
-      .select("log_type, amount, submitted_by")
+      .select("log_type, amount, submitted_by, from_person, to_person")
       .eq("customer_id", customerId);
 
     const byPerson = {};
+    const ensurePerson = (name) => {
+      if (!byPerson[name]) byPerson[name] = { payments: 0, expenses: 0, transfersIn: 0, transfersOut: 0 };
+    };
     for (const log of financialLogs || []) {
-      const person = log.submitted_by || "Unknown";
-      if (!byPerson[person]) byPerson[person] = { payments: 0, expenses: 0 };
       const amt = parseFloat(log.amount) || 0;
-      if (log.log_type === "payment") byPerson[person].payments += amt;
-      else if (log.log_type === "expense") byPerson[person].expenses += amt;
+      if (log.log_type === "transfer") {
+        if (log.from_person) { ensurePerson(log.from_person); byPerson[log.from_person].transfersOut += amt; }
+        if (log.to_person) { ensurePerson(log.to_person); byPerson[log.to_person].transfersIn += amt; }
+      } else {
+        const person = log.submitted_by || "Unknown";
+        ensurePerson(person);
+        if (log.log_type === "payment") byPerson[person].payments += amt;
+        else if (log.log_type === "expense") byPerson[person].expenses += amt;
+      }
     }
 
     // Recent expenses (all time, latest 10)

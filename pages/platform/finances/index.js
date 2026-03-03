@@ -168,23 +168,50 @@ export default function FinancesPage() {
           </div>
         </div>
 
-        {/* By Person Breakdown */}
+        {/* By Person Ledger */}
         {data.byPerson && Object.keys(data.byPerson).length > 0 && (
           <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-            <h3 className="text-sm font-medium text-slate-300 mb-3">By Person</h3>
+            <h3 className="text-sm font-medium text-slate-300 mb-3">Person Ledger</h3>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {Object.entries(data.byPerson).map(([name, totals]) => (
-                <div key={name} className="rounded-xl border border-slate-800/60 bg-slate-900/40 p-3">
-                  <p className="text-sm font-medium text-slate-200">{name}</p>
-                  <div className="mt-1.5 flex items-center gap-4 text-xs">
-                    <span className="text-emerald-400">+{fmt(totals.payments)}</span>
-                    <span className="text-rose-400">-{fmt(totals.expenses)}</span>
-                    <span className={totals.payments - totals.expenses >= 0 ? "text-sky-400" : "text-rose-400"}>
-                      = {fmt(totals.payments - totals.expenses)}
-                    </span>
+              {Object.entries(data.byPerson).map(([name, t]) => {
+                const balance = (t.payments || 0) - (t.expenses || 0) + (t.transfersIn || 0) - (t.transfersOut || 0);
+                return (
+                  <div key={name} className={`rounded-xl border p-3 ${balance >= 0 ? "border-emerald-500/30 bg-emerald-950/10" : "border-rose-500/30 bg-rose-950/10"}`}>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-slate-200">{name}</p>
+                      <span className={`text-sm font-bold ${balance >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                        {fmt(balance)}
+                      </span>
+                    </div>
+                    <div className="mt-2 space-y-1 text-xs">
+                      {(t.payments || 0) > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Cash received</span>
+                          <span className="text-emerald-400">+{fmt(t.payments)}</span>
+                        </div>
+                      )}
+                      {(t.expenses || 0) > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Expenses</span>
+                          <span className="text-rose-400">-{fmt(t.expenses)}</span>
+                        </div>
+                      )}
+                      {(t.transfersOut || 0) > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Sent</span>
+                          <span className="text-rose-400">-{fmt(t.transfersOut)}</span>
+                        </div>
+                      )}
+                      {(t.transfersIn || 0) > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Received</span>
+                          <span className="text-emerald-400">+{fmt(t.transfersIn)}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
