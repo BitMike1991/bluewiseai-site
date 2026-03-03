@@ -85,6 +85,8 @@ export default function JobDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lightboxUrl, setLightboxUrl] = useState(null);
+  const [finances, setFinances] = useState(null);
+  const [financesLoading, setFinancesLoading] = useState(false);
 
   async function loadJob() {
     if (!id) return;
@@ -103,8 +105,24 @@ export default function JobDetailPage() {
     }
   }
 
+  async function loadFinances() {
+    if (!id) return;
+    try {
+      setFinancesLoading(true);
+      const res = await fetch(`/api/jobs/${id}/finances`);
+      if (!res.ok) return;
+      const json = await res.json();
+      setFinances(json);
+    } catch (err) {
+      console.error('Failed to load finances:', err);
+    } finally {
+      setFinancesLoading(false);
+    }
+  }
+
   useEffect(() => {
     loadJob();
+    loadFinances();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -144,6 +162,19 @@ export default function JobDetailPage() {
   const addressStr = address
     ? [address.street, address.city, address.province, address.postal_code].filter(Boolean).join(', ')
     : null;
+
+  // Financial summary computed values
+  const subtotal = finances?.subtotal ?? quoteAmount;
+  const tps = finances?.tps ?? subtotal * 0.05;
+  const tvq = finances?.tvq ?? subtotal * 0.09975;
+  const ttc = finances?.ttc ?? subtotal + tps + tvq;
+  const finTotalPaid = finances?.totalPaid ?? totalPaid;
+  const totalExpenses = finances?.totalExpenses ?? 0;
+  const balanceRemaining = finances?.balanceRemaining ?? (ttc - finTotalPaid);
+  const margin = finances?.margin ?? (finTotalPaid - subtotal - totalExpenses);
+  const marginPct = finances?.marginPct ?? (subtotal > 0 ? ((margin / subtotal) * 100) : 0);
+  const progressPct = finances?.progressPct ?? (ttc > 0 ? Math.min(100, Math.round((finTotalPaid / ttc) * 100)) : 0);
+  const expenses = finances?.expenses ?? [];
 
   return (
     <DashboardLayout>
@@ -232,6 +263,101 @@ export default function JobDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Financial Summary Card */}
+      <div className="mb-6 rounded-xl bg-slate-900/60 border border-slate-800/80 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-slate-300">Financial Summary</h2>
+          {financesLoading && (
+            <span className="text-[10px] text-slate-500 animate-pulse">Loading...</span>
+          )}
+        </div>
+
+        {/* Tax Breakdown */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div className="px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40">
+            <p className="text-[10px] text-slate-500 mb-0.5">Subtotal</p>
+            <p className="text-sm font-medium text-slate-200">{formatCurrency(subtotal)}</p>
+          </div>
+          <div className="px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40">
+            <p className="text-[10px] text-slate-500 mb-0.5">TPS (5%)</p>
+            <p className="text-sm font-medium text-slate-200">{formatCurrency(tps)}</p>
+          </div>
+          <div className="px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40">
+            <p className="text-[10px] text-slate-500 mb-0.5">TVQ (9.975%)</p>
+            <p className="text-sm font-medium text-slate-200">{formatCurrency(tvq)}</p>
+          </div>
+          <div className="px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40">
+            <p className="text-[10px] text-slate-500 mb-0.5">Total TTC</p>
+            <p className="text-sm font-semibold text-slate-50">{formatCurrency(ttc)}</p>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] text-slate-500">Payment Progress</span>
+            <span className={`text-[10px] font-medium ${progressPct >= 100 ? 'text-emerald-400' : 'text-sky-400'}`}>
+              {progressPct}%
+            </span>
+          </div>
+          <div className="h-2 rounded-full bg-slate-700 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                progressPct >= 100 ? 'bg-emerald-500' : 'bg-blue-500'
+              }`}
+              style={{ width: `${Math.min(100, progressPct)}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="border-t border-slate-700/60 my-3" />
+
+        {/* Paid / Expenses */}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+            <span className="text-xs text-slate-400">Total Paid</span>
+            <span className="text-sm font-semibold text-emerald-400">{formatCurrency(finTotalPaid)}</span>
+          </div>
+          <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/20">
+            <span className="text-xs text-slate-400">Total Expenses</span>
+            <span className="text-sm font-semibold text-rose-400">{formatCurrency(totalExpenses)}</span>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-700/60 my-3" />
+
+        {/* Balance + Margin */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className={`flex items-center justify-between px-3 py-2 rounded-lg border ${
+            balanceRemaining <= 0
+              ? 'bg-emerald-500/10 border-emerald-500/20'
+              : 'bg-amber-500/10 border-amber-500/20'
+          }`}>
+            <span className="text-xs text-slate-400">Balance Remaining</span>
+            <span className={`text-sm font-semibold ${
+              balanceRemaining <= 0 ? 'text-emerald-400' : 'text-amber-300'
+            }`}>
+              {formatCurrency(Math.max(0, balanceRemaining))}
+            </span>
+          </div>
+          <div className={`flex items-center justify-between px-3 py-2 rounded-lg border ${
+            margin >= 0
+              ? 'bg-emerald-500/10 border-emerald-500/20'
+              : 'bg-rose-500/10 border-rose-500/20'
+          }`}>
+            <span className="text-xs text-slate-400">Margin</span>
+            <div className="text-right">
+              <p className={`text-sm font-semibold ${margin >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {formatCurrency(margin)}
+              </p>
+              <p className={`text-[10px] ${margin >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {marginPct.toFixed(1)}%
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Main content: 2 columns */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -359,6 +485,83 @@ export default function JobDetailPage() {
               </div>
             )}
           </div>
+
+          {/* Expenses */}
+          {(expenses.length > 0 || financesLoading) && (
+            <div className="rounded-xl bg-slate-900/60 border border-slate-800/80 p-4">
+              <h2 className="text-sm font-semibold text-slate-300 mb-3">
+                Expenses ({expenses.length})
+              </h2>
+              {financesLoading && expenses.length === 0 ? (
+                <p className="text-xs text-slate-500 animate-pulse">Loading expenses...</p>
+              ) : expenses.length === 0 ? (
+                <p className="text-xs text-slate-500">No expenses recorded.</p>
+              ) : (
+                <div className="space-y-2">
+                  {expenses.map((exp, i) => (
+                    <div
+                      key={exp.id ?? i}
+                      className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm text-slate-200 truncate">
+                            {exp.vendor || 'Unknown Vendor'}
+                          </p>
+                          {exp.category && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-700/60 text-slate-400 border border-slate-600/40 flex-shrink-0">
+                              {exp.category}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          {exp.date ? formatShortDate(exp.date) : formatDate(exp.created_at)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0 ml-3">
+                        <p className="text-sm font-medium text-rose-400">
+                          {formatCurrency(exp.amount)}
+                        </p>
+                        {exp.receipt_url && (
+                          <a
+                            href={exp.receipt_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sky-400 hover:text-sky-300 transition"
+                            title="View Receipt"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                              className="w-3.5 h-3.5"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M4.25 5.5a.75.75 0 00-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 00.75-.75v-4a.75.75 0 011.5 0v4A2.25 2.25 0 0112.75 17h-8.5A2.25 2.25 0 012 14.75v-8.5A2.25 2.25 0 014.25 4h5a.75.75 0 010 1.5h-5z"
+                                clipRule="evenodd"
+                              />
+                              <path
+                                fillRule="evenodd"
+                                d="M6.194 12.753a.75.75 0 001.06.053L16.5 4.44v2.81a.75.75 0 001.5 0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.553l-9.056 8.194a.75.75 0 00-.053 1.06z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Expenses total */}
+                  <div className="flex items-center justify-between px-3 py-2 mt-2 border-t border-slate-700/40">
+                    <span className="text-xs text-slate-400">Total expenses</span>
+                    <span className="text-sm font-semibold text-rose-400">{formatCurrency(totalExpenses)}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Activity Timeline */}
           <div className="rounded-xl bg-slate-900/60 border border-slate-800/80 p-4">
