@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
 import StatCard from "../../../src/components/dashboard/StatCard";
-import { DollarSign, TrendingUp, TrendingDown, Percent, Download, ExternalLink } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, AlertCircle, Download, ExternalLink } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const BarChart = dynamic(() => import("recharts").then(m => m.BarChart), { ssr: false });
@@ -13,17 +14,16 @@ const ResponsiveContainer = dynamic(() => import("recharts").then(m => m.Respons
 const PieChart = dynamic(() => import("recharts").then(m => m.PieChart), { ssr: false });
 const Pie = dynamic(() => import("recharts").then(m => m.Pie), { ssr: false });
 const Cell = dynamic(() => import("recharts").then(m => m.Cell), { ssr: false });
-const Legend = dynamic(() => import("recharts").then(m => m.Legend), { ssr: false });
 
 const PIE_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
 
 function fmt(n) {
-  if (n == null) return "—";
+  if (n == null) return "\u2014";
   return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(n);
 }
 
 function fmtDate(d) {
-  if (!d) return "—";
+  if (!d) return "\u2014";
   return new Date(d).toLocaleDateString("en-CA", { month: "short", day: "numeric" });
 }
 
@@ -70,7 +70,7 @@ export default function FinancesPage() {
     );
   }
 
-  const profitTrend = data.profitMtd >= 0;
+  const profitTrend = (data.totalProfit || 0) >= 0;
 
   return (
     <DashboardLayout title="Finances">
@@ -92,32 +92,32 @@ export default function FinancesPage() {
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard
-            label="Revenue (Month)"
-            value={fmt(data.revenueMtd)}
-            subLabel={`This week: ${fmt(data.revenueWtd)}`}
+            label="Total Revenue"
+            value={fmt(data.totalRevenue)}
+            subLabel={`MTD: ${fmt(data.revenueMtd)} \u00b7 WTD: ${fmt(data.revenueWtd)}`}
             icon={DollarSign}
             accent="border-l-emerald-500"
           />
           <StatCard
-            label="Expenses (Month)"
-            value={fmt(data.expensesMtd)}
-            subLabel={`This week: ${fmt(data.expensesWtd)}`}
+            label="Total Expenses"
+            value={fmt(data.totalExpenses)}
+            subLabel={`MTD: ${fmt(data.expensesMtd)}`}
             icon={TrendingDown}
             accent="border-l-rose-500"
           />
           <StatCard
             label="Net Profit"
-            value={fmt(data.profitMtd)}
+            value={fmt(data.totalProfit)}
             subLabel={profitTrend ? "Profitable" : "Deficit"}
             icon={profitTrend ? TrendingUp : TrendingDown}
             accent={profitTrend ? "border-l-blue-500" : "border-l-amber-500"}
           />
           <StatCard
-            label="Collection Rate"
-            value={`${data.collectionRate}%`}
-            subLabel="Paid vs invoiced"
-            icon={Percent}
-            accent="border-l-violet-500"
+            label="Outstanding"
+            value={fmt(data.outstandingBalance)}
+            subLabel={`Collection: ${data.collectionRate}%`}
+            icon={AlertCircle}
+            accent="border-l-amber-500"
           />
         </div>
 
@@ -141,7 +141,7 @@ export default function FinancesPage() {
 
           {/* Payment Methods Pie */}
           <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-            <h3 className="text-sm font-medium text-slate-300 mb-3">Payment Methods</h3>
+            <h3 className="text-sm font-medium text-slate-300 mb-3">Payment Types</h3>
             <div className="h-64">
               {data.paymentMethods.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -162,7 +162,7 @@ export default function FinancesPage() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center h-full text-slate-500 text-sm">No payments this month</div>
+                <div className="flex items-center justify-center h-full text-slate-500 text-sm">No payments recorded</div>
               )}
             </div>
           </div>
@@ -233,7 +233,7 @@ export default function FinancesPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-slate-500 text-sm">No expenses this month</p>
+              <p className="text-slate-500 text-sm">No expenses recorded</p>
             )}
           </div>
         </div>
