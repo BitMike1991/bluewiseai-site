@@ -97,7 +97,7 @@ export default async function handler(req, res) {
     if (hotError) throw hotError;
     const hotLeadsCount = hotRows?.length || 0;
 
-    // 7) REAL revenue this month (from payments)
+    // 7) Revenue this month (real from payments)
     const { data: monthPayments } = await supabase
       .from("payments")
       .select("amount")
@@ -106,6 +106,26 @@ export default async function handler(req, res) {
       .gte("created_at", monthStart);
 
     const revenueMtd = (monthPayments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
+
+    // 7b) Revenue this week
+    const { data: weekPayments } = await supabase
+      .from("payments")
+      .select("amount")
+      .eq("customer_id", customerId)
+      .eq("status", "succeeded")
+      .gte("created_at", sinceIso);
+
+    const revenueWtd = (weekPayments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
+
+    // 7c) Expenses this month
+    const { data: monthExpenses } = await supabase
+      .from("expenses")
+      .select("total")
+      .eq("customer_id", customerId)
+      .gte("paid_at", monthStart);
+
+    const expensesMtd = (monthExpenses || []).reduce((s, e) => s + Number(e.total || 0), 0);
+    const profitMtd = revenueMtd - expensesMtd;
 
     // 8) Pipeline value (unsigned quotes + contracts)
     const { data: pipelineQuotes } = await supabase
@@ -123,6 +143,25 @@ export default async function handler(req, res) {
     const pipelineValue =
       (pipelineQuotes || []).reduce((s, q) => s + Number(q.total_ttc || 0), 0) +
       (pipelineContracts || []).reduce((s, j) => s + Number(j.quote_amount || 0) * 1.14975, 0);
+
+    // 8b) Total leads (all time) + conversion rate
+    const { data: allLeadRows } = await supabase
+      .from("leads")
+      .select("id, status")
+      .eq("customer_id", customerId);
+
+    const totalLeads = allLeadRows?.length || 0;
+    const wonLeads = (allLeadRows || []).filter((l) => l.status === "won").length;
+    const conversionRate = totalLeads > 0 ? Math.round((wonLeads / totalLeads) * 100) : 0;
+
+    // 8c) Active jobs
+    const { data: activeJobRows } = await supabase
+      .from("jobs")
+      .select("id")
+      .eq("customer_id", customerId)
+      .in("status", ["in_progress", "signed", "scheduled"]);
+
+    const activeJobs = activeJobRows?.length || 0;
 
     // 9) Recent leads
     const { data: recentLeadRows, error: recentLeadError } = await supabase
@@ -216,7 +255,7 @@ export default async function handler(req, res) {
       else baseLabel = direction === "outbound" ? "You sent a message" : "Lead sent a message";
 
       const preview = row.snippet || row.subject || row.preview || row.body_preview || null;
-      const label = preview ? `${baseLabel} – ${String(preview).slice(0, 80)}` : baseLabel;
+      const label = preview ? `${baseLabel} \u2013 ${String(preview).slice(0, 80)}` : baseLabel;
 
       return {
         id: `msg-${row.id}`,
@@ -240,13 +279,19 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       kpis: {
+        revenueMtd,
+        revenueWtd,
+        expensesMtd,
+        profitMtd,
+        pipelineValue,
+        totalLeads,
+        activeJobs,
+        conversionRate,
         missedCallsThisWeek,
         voiceCallsThisWeek,
         aiRepliesThisWeek,
         newLeadsThisWeek,
         hotLeadsCount,
-        revenueMtd,
-        pipelineValue,
         revenueProtected: voiceCallsThisWeek * 300,
         openTasks,
         tasksDueToday,
