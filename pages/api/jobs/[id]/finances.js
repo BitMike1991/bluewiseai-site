@@ -40,7 +40,7 @@ export default async function handler(req, res) {
     // Payments
     const { data: payments } = await supabase
       .from("payments")
-      .select("id, amount, method, payment_type, status, created_at, receipt_url")
+      .select("id, amount, payment_method, payment_type, status, created_at, receipt_url")
       .eq("job_id", job.id)
       .eq("customer_id", customerId)
       .order("created_at", { ascending: true });
@@ -56,7 +56,7 @@ export default async function handler(req, res) {
     // Expenses for this job
     const { data: expenses } = await supabase
       .from("expenses")
-      .select("id, total, vendor, category, description, paid_at, receipt_url, method")
+      .select("id, total, vendor, category, description, paid_at, receipt_url, payment_method")
       .eq("customer_id", customerId)
       .eq("job_id", job.id)
       .order("paid_at", { ascending: true });
@@ -82,7 +82,7 @@ export default async function handler(req, res) {
       payments: (payments || []).map(p => ({
         id: p.id,
         amount: Number(p.amount || 0),
-        method: p.method,
+        method: p.payment_method,
         type: p.payment_type,
         status: p.status,
         date: p.created_at,
@@ -96,7 +96,7 @@ export default async function handler(req, res) {
         description: e.description,
         date: e.paid_at,
         receiptUrl: e.receipt_url,
-        method: e.method,
+        method: e.payment_method,
       })),
       totalPaid,
       pendingAmount,
