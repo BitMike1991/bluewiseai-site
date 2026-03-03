@@ -210,6 +210,15 @@ export default async function handler(req, res) {
     }
     const settlements = Object.values(settlementsMap).sort((a, b) => new Date(b.settledAt) - new Date(a.settledAt));
 
+    // Tax collected on revenue (reverse-calc from TTC payments)
+    const TAX_RATE = 1.14975;
+    const revenueHt = Math.round((totalRevenue / TAX_RATE) * 100) / 100;
+    const totalTps = Math.round((revenueHt * 0.05) * 100) / 100;
+    const totalTvq = Math.round((revenueHt * 0.09975) * 100) / 100;
+    const mtdHt = Math.round((revenueMtd / TAX_RATE) * 100) / 100;
+    const tpsMtd = Math.round((mtdHt * 0.05) * 100) / 100;
+    const tvqMtd = Math.round((mtdHt * 0.09975) * 100) / 100;
+
     return res.status(200).json({
       totalRevenue,
       totalExpenses,
@@ -231,6 +240,13 @@ export default async function handler(req, res) {
       unsettledTotal: Math.round(unsettledTotal * 100) / 100,
       unsettledCount: unsettledExpenses.length,
       settlements,
+      taxes: {
+        revenueHt,
+        totalTps,
+        totalTvq,
+        tpsMtd,
+        tvqMtd,
+      },
     });
   } catch (err) {
     console.error("[api/finances] Error:", err);

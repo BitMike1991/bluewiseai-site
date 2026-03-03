@@ -132,6 +132,33 @@ export default function FinancesPage() {
           />
         </div>
 
+        {/* Tax Summary */}
+        {data.taxes && (
+          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+            <h3 className="text-sm font-medium text-slate-300 mb-3">Taxes Collected (Accounting)</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Revenue HT</p>
+                <p className="text-sm font-medium text-slate-200">{fmt(data.taxes.revenueHt)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wide">TPS (5%)</p>
+                <p className="text-sm font-medium text-blue-400">{fmt(data.taxes.totalTps)}</p>
+                <p className="text-[10px] text-slate-600">MTD: {fmt(data.taxes.tpsMtd)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wide">TVQ (9.975%)</p>
+                <p className="text-sm font-medium text-blue-400">{fmt(data.taxes.totalTvq)}</p>
+                <p className="text-[10px] text-slate-600">MTD: {fmt(data.taxes.tvqMtd)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Total Taxes</p>
+                <p className="text-sm font-medium text-amber-400">{fmt(data.taxes.totalTps + data.taxes.totalTvq)}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Revenue vs Expenses Chart */}
