@@ -1,59 +1,87 @@
 import Link from 'next/link';
-import { Github, Twitter, Linkedin } from 'lucide-react';
+import { useRouter } from 'next/router';
 
 export default function Footer() {
+  const { pathname } = useRouter();
+  const isFr = pathname.startsWith('/fr');
+
+  const navLinks = isFr
+    ? [
+        { href: '/fr', label: 'Accueil' },
+        { href: '/fr/about', label: 'À propos' },
+        { href: '/fr/services', label: 'Services' },
+        { href: '/fr/portfolio', label: 'Résultats' },
+        { href: '/fr/lead-rescue', label: 'Plans & prix' },
+        { href: '/fr/contact', label: 'Contact' },
+      ]
+    : [
+        { href: '/', label: 'Home' },
+        { href: '/about', label: 'About' },
+        { href: '/services', label: 'Services' },
+        { href: '/portfolio', label: 'Results' },
+        { href: '/lead-rescue', label: 'Plans & Pricing' },
+        { href: '/contact', label: 'Contact' },
+      ];
+
   return (
-    <footer className="bg-gray-100 text-midgray py-6">
-      <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between">
-        
-        {/* Copyright */}
-        <p className="text-sm text-center md:text-left">
-          © {new Date().getFullYear()} BlueWise AI. All rights reserved.
-        </p>
+    <footer className="bg-slate-950 border-t border-slate-800 text-slate-400 py-10">
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="grid md:grid-cols-3 gap-8 mb-8">
+          {/* Brand */}
+          <div>
+            <h3 className="text-white font-bold text-lg mb-2">BlueWise AI</h3>
+            <p className="text-sm">
+              {isFr
+                ? "Optimisation d'entreprise propulsée par IA pour les entrepreneurs en services résidentiels."
+                : "AI-powered business optimization for home service contractors."}
+            </p>
+          </div>
 
-        {/* Social icons */}
-        <div className="flex space-x-4 mt-4 md:mt-0">
-          <Link
-            href="https://linkedin.com/in/bluewiseai"
-            target="_blank"
-            aria-label="LinkedIn"
-            title="LinkedIn"
-            className="
-              hover:text-blue-600
-              transition
-              hover:drop-shadow-[0_0_12px_rgba(59,130,246,0.7)]
-            "
-          >
-            <Linkedin className="w-5 h-5" />
-          </Link>
+          {/* Nav links */}
+          <div>
+            <h4 className="text-slate-300 font-semibold text-sm uppercase tracking-wider mb-3">
+              {isFr ? 'Navigation' : 'Navigation'}
+            </h4>
+            <ul className="space-y-2 text-sm">
+              {navLinks.map(({ href, label }) => (
+                <li key={href}>
+                  <Link href={href} className="hover:text-white transition-colors">
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-          <Link
-            href="https://twitter.com/bluewiseai"
-            target="_blank"
-            aria-label="X (Twitter)"
-            title="X (Twitter)"
-            className="
-              hover:text-blue-600
-              transition
-              hover:drop-shadow-[0_0_12px_rgba(59,130,246,0.7)]
-            "
-          >
-            <Twitter className="w-5 h-5" />
-          </Link>
+          {/* Contact */}
+          <div>
+            <h4 className="text-slate-300 font-semibold text-sm uppercase tracking-wider mb-3">
+              Contact
+            </h4>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <a href="mailto:mikael@bluewiseai.com" className="hover:text-white transition-colors">
+                  mikael@bluewiseai.com
+                </a>
+              </li>
+              <li>
+                <a href="https://calendly.com/mikael-bluewiseai" target="_blank" rel="noopener noreferrer"
+                  className="hover:text-white transition-colors">
+                  {isFr ? 'Réserver un appel' : 'Book a call'}
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
 
-          <Link
-            href="https://github.com/bluewiseai"
-            target="_blank"
-            aria-label="GitHub"
-            title="GitHub"
-            className="
-              hover:text-blue-600
-              transition
-              hover:drop-shadow-[0_0_12px_rgba(59,130,246,0.7)]
-            "
-          >
-            <Github className="w-5 h-5" />
-          </Link>
+        {/* Bottom bar */}
+        <div className="border-t border-slate-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs">
+            &copy; {new Date().getFullYear()} BlueWise AI. {isFr ? 'Tous droits réservés.' : 'All rights reserved.'}
+          </p>
+          <div className="flex gap-4 text-xs">
+            <span>{isFr ? 'Montréal, QC' : 'Montreal, QC'}</span>
+          </div>
         </div>
       </div>
     </footer>

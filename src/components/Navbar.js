@@ -7,11 +7,9 @@ export default function Navbar() {
   const router = useRouter();
   const { pathname, asPath, query } = router;
 
-  // Real current path (not /pillars/[slug]), without query string
   const currentPath = (asPath || "").split("?")[0] || "/";
   const isFr = currentPath.startsWith("/fr");
 
-  // Main dark pages (add onboarding & offer pages here)
   const isMainDarkPage =
     pathname === "/" ||
     pathname === "/fr" ||
@@ -28,40 +26,41 @@ export default function Navbar() {
     pathname === "/lead-rescue" ||
     pathname === "/fr/lead-rescue";
 
-  // Add pillars (index + article pages)
   const isPillarsPage =
     pathname.startsWith("/pillars") || pathname.startsWith("/fr/pillars");
 
   const isDarkPage = isMainDarkPage || isPillarsPage;
 
   const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Base nav items WITHOUT resources (we’ll handle Resources/Ressources as a dropdown)
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   const navItems = isFr
     ? [
         { href: "/fr", label: "Accueil" },
-        { href: "/fr/about", label: "À propos" },
+        { href: "/fr/about", label: "\u00C0 propos" },
         { href: "/fr/services", label: "Services" },
-        { href: "/fr/portfolio", label: "Portfolio" },
-        { href: "/fr/contact", label: "Contact", isCTA: true },
+        { href: "/fr/portfolio", label: "R\u00e9sultats" },
+        { href: "/fr/lead-rescue", label: "Plans" },
       ]
     : [
         { href: "/", label: "Home" },
         { href: "/about", label: "About" },
         { href: "/services", label: "Services" },
-        { href: "/portfolio", label: "Portfolio" },
-        { href: "/contact", label: "Contact", isCTA: true },
+        { href: "/portfolio", label: "Results" },
+        { href: "/lead-rescue", label: "Plans" },
       ];
 
-  // Mapping EN <-> FR slugs for pillar articles
   const enToFr = {
     "ultimate-guide-ai-automation": "guide-ultime-automatisation-ia-pme",
     "making-money-ai-automation": "gagner-argent-avec-automatisation-ia",
@@ -73,41 +72,23 @@ export default function Navbar() {
   );
 
   let slug = query.slug;
-  if (Array.isArray(slug)) {
-    slug = slug[0];
-  }
+  if (Array.isArray(slug)) slug = slug[0];
 
   let switchHref;
-
   if (slug) {
-    // Dynamic article page
     if (isFr) {
-      const targetSlug = frToEn[slug] || slug;
-      switchHref = `/pillars/${targetSlug}`;
+      switchHref = `/pillars/${frToEn[slug] || slug}`;
     } else {
-      const targetSlug = enToFr[slug] || slug;
-      switchHref = `/fr/pillars/${targetSlug}`;
+      switchHref = `/fr/pillars/${enToFr[slug] || slug}`;
     }
   } else {
-    // Static pages (including onboarding/offer): just add/remove /fr prefix
     if (isFr) {
-      const withoutFr = currentPath.replace(/^\/fr/, "") || "/";
-      switchHref = withoutFr;
+      switchHref = currentPath.replace(/^\/fr/, "") || "/";
     } else {
       switchHref = currentPath === "/" ? "/fr" : `/fr${currentPath}`;
     }
   }
 
-  // Helper: active state for dropdown parent (resources)
-  const isResourcesActive =
-    pathname.startsWith("/pillars") ||
-    pathname.startsWith("/fr/pillars") ||
-    pathname === "/onboarding-rescue" ||
-    pathname === "/fr/onboarding-rescue" ||
-    pathname === "/lead-rescue" ||
-    pathname === "/fr/lead-rescue";
-
-  // Tailwind styles for nav links
   const linkBase = (isActive) =>
     `px-3 py-2 rounded transition-all duration-200 ${
       isActive
@@ -145,34 +126,37 @@ export default function Navbar() {
             alt="BlueWise AI logo"
             width={40}
             height={40}
-            className="
-              rounded-full mr-3
-              transition-all duration-300
-              hover:scale-110
-              hover:drop-shadow-[0_0_25px_rgba(59,130,246,0.85)]
-            "
+            className="rounded-full mr-3 transition-all duration-300 hover:scale-110 hover:drop-shadow-[0_0_25px_rgba(59,130,246,0.85)]"
             priority
           />
         </Link>
 
-        {/* Nav items */}
-        <nav className="flex items-center flex-wrap gap-4 sm:gap-7 text-sm sm:text-base font-medium uppercase tracking-wide">
-          {/* Regular nav items */}
-          {navItems.map(({ href, label, isCTA }) => {
+        {/* Mobile hamburger button */}
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className={`md:hidden p-2 rounded-lg transition-colors ${
+            isDarkPage ? "text-gray-200 hover:bg-slate-800/50" : "text-gray-700 hover:bg-gray-100"
+          }`}
+          aria-label="Toggle menu"
+        >
+          {mobileOpen ? (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          ) : (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          )}
+        </button>
+
+        {/* Desktop nav */}
+        <nav className="hidden md:flex items-center gap-4 sm:gap-7 text-sm sm:text-base font-medium uppercase tracking-wide">
+          {navItems.map(({ href, label }) => {
             const isActive = pathname === href || pathname === `${href}/`;
-
-            if (isCTA) {
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition shadow"
-                >
-                  {label}
-                </Link>
-              );
-            }
-
             return (
               <Link key={href} href={href} className={linkBase(isActive)}>
                 {label}
@@ -180,128 +164,34 @@ export default function Navbar() {
             );
           })}
 
-          {/* Resources dropdown */}
-          <div className="relative group">
-            <button
-              type="button"
-              className={`flex items-center gap-1 ${linkBase(isResourcesActive)}`}
-            >
-              {isFr ? "Ressources" : "Resources"}
-              <span className="text-xs">▾</span>
-            </button>
-
-            <div
-              className={`
-                invisible opacity-0 group-hover:visible group-hover:opacity-100
-                absolute right-0 sm:right-0 left-0 sm:left-auto mt-2
-                w-[calc(100vw-2rem)] sm:w-auto sm:min-w-[230px] max-w-sm
-                mx-4 sm:mx-0
-                rounded-xl border shadow-lg transition-all duration-150
-                ${
-                  isDarkPage
-                    ? "bg-slate-900/95 border-white/10"
-                    : "bg-white border-gray-200"
-                }
-              `}
-            >
-              <div className="py-2">
-                <Link
-                  href={isFr ? "/fr/pillars" : "/pillars"}
-                  className={`
-                    block px-4 py-2 text-sm
-                    ${
-                      isDarkPage
-                        ? "text-gray-200 hover:text-white hover:bg-slate-800/70"
-                        : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-                    }
-                  `}
-                >
-                  {isFr ? "Articles & guides" : "Articles & guides"}
-                </Link>
-
-                <Link
-                  href={isFr ? "/fr/onboarding-rescue" : "/onboarding-rescue"}
-                  className={`
-                    block px-4 py-2 text-sm
-                    ${
-                      isDarkPage
-                        ? "text-gray-200 hover:text-white hover:bg-slate-800/70"
-                        : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-                    }
-                  `}
-                >
-                  {isFr
-                    ? "Formulaire Lead Rescue"
-                    : "Lead Rescue System form"}
-                </Link>
-
-                <div
-                  className={
-                    isDarkPage
-                      ? "border-t border-slate-700/70 my-1"
-                      : "border-t border-gray-200 my-1"
-                  }
-                />
-
-                <p
-                  className={`
-                    px-4 pt-1 pb-1 text-[11px] tracking-[0.18em] uppercase
-                    ${
-                      isDarkPage
-                        ? "text-slate-400"
-                        : "text-gray-500"
-                    }
-                  `}
-                >
-                  {isFr ? "Offres" : "Offers"}
-                </p>
-
-                <Link
-                  href={isFr ? "/fr/lead-rescue" : "/lead-rescue"}
-                  className={`
-                    block px-4 py-2 text-sm
-                    ${
-                      isDarkPage
-                        ? "text-gray-200 hover:text-white hover:bg-slate-800/70"
-                        : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-                    }
-                  `}
-                >
-                  {isFr
-                    ? "Lead Rescue System (page d’offre)"
-                    : "Lead Rescue System offer"}
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* ⭐ INSERTED PLATFORM BUTTON ⭐ */}
+          {/* Platform button */}
           <Link
             href="/platform/overview"
-            className={`
-              rounded-full border px-4 py-2 text-xs sm:text-sm font-semibold tracking-[0.18em]
-              ${
-                isDarkPage
-                  ? "border-blue-500/70 text-blue-200 hover:bg-blue-600/20 hover:text-blue-100"
-                  : "border-blue-600 text-blue-700 hover:bg-blue-50"
-              }
-            `}
+            className={`rounded-full border px-4 py-2 text-xs sm:text-sm font-semibold tracking-[0.18em] ${
+              isDarkPage
+                ? "border-blue-500/70 text-blue-200 hover:bg-blue-600/20 hover:text-blue-100"
+                : "border-blue-600 text-blue-700 hover:bg-blue-50"
+            }`}
           >
             {isFr ? "Plateforme" : "Platform"}
           </Link>
-          {/* ⭐ END INSERT ⭐ */}
+
+          {/* Contact CTA */}
+          <Link
+            href={isFr ? "/fr/contact" : "/contact"}
+            className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-500 transition shadow"
+          >
+            Contact
+          </Link>
 
           {/* Language switch */}
           <Link
             href={switchHref}
-            className={`
-              ml-2 px-3 py-2 rounded transition-all
-              ${
-                isDarkPage
-                  ? "text-gray-300 hover:text-white hover:bg-slate-700/50"
-                  : "text-gray-500 hover:text-blue-600 hover:bg-blue-100"
-              }
-            `}
+            className={`ml-2 px-3 py-2 rounded transition-all ${
+              isDarkPage
+                ? "text-gray-300 hover:text-white hover:bg-slate-700/50"
+                : "text-gray-500 hover:text-blue-600 hover:bg-blue-100"
+            }`}
             aria-label="Switch language"
             title="Switch language"
           >
@@ -309,6 +199,53 @@ export default function Navbar() {
           </Link>
         </nav>
       </div>
+
+      {/* Mobile nav dropdown */}
+      {mobileOpen && (
+        <div className={`md:hidden border-t ${
+          isDarkPage ? "bg-slate-900/95 border-white/10" : "bg-white/95 border-gray-200"
+        }`}>
+          <nav className="flex flex-col px-6 py-4 gap-2 text-sm font-medium uppercase tracking-wide">
+            {navItems.map(({ href, label }) => {
+              const isActive = pathname === href || pathname === `${href}/`;
+              return (
+                <Link key={href} href={href} className={`${linkBase(isActive)} block py-3`}>
+                  {label}
+                </Link>
+              );
+            })}
+
+            <Link
+              href="/platform/overview"
+              className={`block py-3 rounded-xl border text-center font-semibold ${
+                isDarkPage
+                  ? "border-blue-500/70 text-blue-200"
+                  : "border-blue-600 text-blue-700"
+              }`}
+            >
+              {isFr ? "Plateforme" : "Platform"}
+            </Link>
+
+            <Link
+              href={isFr ? "/fr/contact" : "/contact"}
+              className="block py-3 bg-blue-600 text-white text-center rounded-xl font-semibold"
+            >
+              Contact
+            </Link>
+
+            <div className="flex justify-center pt-2">
+              <Link
+                href={switchHref}
+                className={`px-4 py-2 rounded ${
+                  isDarkPage ? "text-gray-300 hover:text-white" : "text-gray-500 hover:text-blue-600"
+                }`}
+              >
+                {isFr ? "EN" : "FR"}
+              </Link>
+            </div>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

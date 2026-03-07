@@ -7,49 +7,27 @@ export default function HeroV2() {
   const { pathname } = useRouter();
   const isFr = pathname.startsWith("/fr");
   const contactHref = isFr ? "/fr/contact" : "/contact";
-  const offerHref = isFr ? "/fr/lead-rescue" : "/lead-rescue";
+  const pricingHref = isFr ? "/fr/lead-rescue" : "/lead-rescue";
 
   useEffect(() => {
     const handleScroll = () => {
       const y = window.scrollY;
       setScrollY(y > 600 ? 600 : y);
     };
-
     if (typeof window !== "undefined") {
       window.addEventListener("scroll", handleScroll);
       return () => window.removeEventListener("scroll", handleScroll);
     }
   }, []);
 
-  // Parallax factors
   const bgOffset = scrollY * 0.12;
   const glowOffset = scrollY * 0.18;
-
-  // Background placement – use same for both languages
   const bgPosX = "80%";
   const baseY = -60;
 
-  // 🧠 Bilingual text content
   const tagline = isFr
-    ? "BLUEWISE AI – PLATEFORME LEAD RESCUE"
-    : "BLUEWISE AI – LEAD RESCUE PLATFORM";
-
-  const titleLine1 = isFr
-    ? "Ne perdez plus jamais un prospect."
-    : "Never Miss Another Lead.";
-
-  const titleLine2 = isFr ? null : (
-    <>
-      Capture <span className="text-blue-300">Every Call</span>. Qualify <span className="text-blue-300">24/7</span>.
-    </>
-  );
-
-  const bodyText = isFr
-    ? "Plateforme SaaS complète qui capture les appels manqués, qualifie les prospects via IA vocale et SMS, gère votre inbox et livre tout sur un tableau de bord en temps réel."
-    : "Complete SaaS platform that captures missed calls, qualifies leads via AI voice & SMS, manages your inbox, and delivers everything to a real-time dashboard.";
-
-  // Use same heading size for both languages
-  const headingClassName = "text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white mb-3 max-w-3xl";
+    ? "BLUEWISE AI \u2014 OPTIMISATION D'ENTREPRISE"
+    : "BLUEWISE AI \u2014 BUSINESS OPTIMIZATION";
 
   return (
     <section
@@ -66,17 +44,11 @@ export default function HeroV2() {
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.38),transparent_55%),radial-gradient(circle_at_bottom,_rgba(15,23,42,0.85),#020617)] mix-blend-soft-light z-0"
         style={{ transform: `translateY(${glowOffset * -0.2}px)` }}
       />
-
-      {/* Top glow */}
       <div
         className="pointer-events-none absolute -top-40 left-1/2 z-0 h-[700px] w-[700px] -translate-x-1/2 rounded-full bg-white/4 blur-3xl"
         style={{ transform: `translateY(${glowOffset * -0.4}px)` }}
       />
-
-      {/* Side glow */}
       <div className="pointer-events-none absolute right-32 top-24 h-72 w-72 rounded-full bg-blue-500/25 blur-3xl z-0" />
-
-      {/* Dark overlay */}
       <div className="pointer-events-none absolute inset-0 bg-slate-950/30 z-0" />
 
       {/* MAIN CONTENT */}
@@ -87,22 +59,18 @@ export default function HeroV2() {
         </p>
 
         {/* HEADLINE */}
-        <h1 className={headingClassName}>
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white mb-3 max-w-3xl">
           {isFr ? (
             <>
-              {"Ne perdez plus jamais un prospect."}
+              On gère ta business
               <br />
-              <span className="text-white">
-                {"Capturez "}
-                <span className="text-blue-300">{"chaque appel"}</span>
-                {"."}
-              </span>
+              <span className="text-blue-300">pendant que tu fais ta job.</span>
             </>
           ) : (
             <>
-              {titleLine1}
+              We Run Your Business
               <br />
-              <span className="text-white">{titleLine2}</span>
+              <span className="text-blue-300">While You Do the Work.</span>
             </>
           )}
         </h1>
@@ -112,23 +80,30 @@ export default function HeroV2() {
 
         {/* Subtext */}
         <p className="text-base sm:text-lg text-slate-200/85 mb-12 max-w-xl">
-          {bodyText}
+          {isFr
+            ? "IA + automatisation pour entrepreneurs. Appels manqués, soumissions, contrats, paiements \u2014 tout géré automatiquement."
+            : "AI-powered operations for contractors. Missed calls, quotes, contracts, payments \u2014 all handled automatically."}
         </p>
 
-        {/* SINGLE SPECIAL OFFER CTA */}
-        <div className="relative inline-flex items-center">
-          {/* Glow */}
-          <div className="pointer-events-none absolute -inset-x-6 -inset-y-3 bg-blue-500/30 blur-3xl opacity-80 z-0" />
-
+        {/* TWO CTAs */}
+        <div className="flex flex-col sm:flex-row gap-4">
           <Link
-            href={offerHref}
-            className="relative z-10 rounded-2xl px-10 py-5 text-xl sm:text-2xl font-extrabold
-                       bg-blue-600 text-white tracking-wide
-                       shadow-[0_0_40px_rgba(59,130,246,0.75)]
-                       animate-flashSpecial
-                       transition-all duration-300"
+            href={pricingHref}
+            className="relative z-10 rounded-xl px-8 py-4 text-lg font-bold
+                       bg-blue-600 hover:bg-blue-500 text-white
+                       shadow-[0_0_30px_rgba(59,130,246,0.5)]
+                       transition-all duration-300 hover:scale-105 text-center"
           >
-            {isFr ? "OFFRE SPÉCIALE" : "SPECIAL OFFER"}
+            {isFr ? "Voir les plans" : "See Plans"}
+          </Link>
+          <Link
+            href={contactHref}
+            className="rounded-xl px-8 py-4 text-lg font-semibold
+                       border-2 border-slate-500 hover:border-blue-500
+                       text-slate-200 hover:text-white
+                       transition-all duration-300 text-center"
+          >
+            {isFr ? "Réserver une démo" : "Book a Demo"}
           </Link>
         </div>
       </div>
