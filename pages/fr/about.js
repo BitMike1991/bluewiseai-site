@@ -71,11 +71,11 @@ export default function AboutFr() {
             <h2 className="text-2xl font-bold">Résultats prouvés</h2>
             <div className="grid md:grid-cols-2 gap-8">
               <div>
-                <h3 className="text-lg font-semibold text-emerald-300 mb-3">Service Plus — Build d&apos;opérations complet</h3>
+                <h3 className="text-lg font-semibold text-emerald-300 mb-3">Service Plus — Build complet de la business</h3>
                 <p className="text-slate-200 text-sm mb-4">
-                  On a bâti le système d&apos;opérations au complet pour un entrepreneur résidentiel : CRM,
-                  réceptionniste IA, pipeline de soumissions automatiques, contrats numériques, suivi
-                  de paiements et rapports financiers.
+                  On a tout bâti pour un entrepreneur résidentiel : site web, réseaux sociaux, campagnes de pubs
+                  pour amener les leads, plus le système d&apos;opérations au complet — CRM, réceptionniste IA,
+                  soumissions automatiques, contrats, suivi de paiements et rapports financiers.
                 </p>
                 <ul className="text-slate-300 text-sm space-y-1">
                   <li>&#10003; 71 000 $ de pipeline généré en 30 jours</li>

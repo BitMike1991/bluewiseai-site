@@ -106,9 +106,9 @@ export default function HomeFr() {
               </div>
               <h2 className="text-3xl font-bold mb-4">Service Plus : 71 000 $ de pipeline en 30 jours</h2>
               <p className="text-slate-200 mb-6">
-                Un entrepreneur résidentiel au Québec manquait 40 % de ses appels entrants et gérait tout
-                avec papier et crayon. On a bâti toute son opération — CRM, réceptionniste IA, soumissions
-                automatiques, contrats et suivi des paiements.
+                On a bâti le package complet pour un entrepreneur résidentiel au Québec — nouveau site web,
+                stratégie réseaux sociaux, pubs ciblées, ET le système d&apos;opérations au complet. Réceptionniste IA,
+                soumissions automatiques, contrats, suivi des paiements. On a amené les leads pis on s&apos;est assuré qu&apos;aucun se perde.
               </p>
               <Link href="/fr/portfolio"
                 className="text-blue-300 hover:text-blue-200 font-semibold transition-colors">

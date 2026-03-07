@@ -50,10 +50,12 @@ export default function Portfolio() {
                 <div className="rounded-xl p-5 bg-slate-950/80 border border-red-500/30">
                   <h3 className="font-semibold text-red-300 mb-3">Before BlueWise</h3>
                   <ul className="space-y-2 text-slate-200 text-sm">
+                    <li>&#8226; No website or online presence</li>
+                    <li>&#8226; No social media strategy</li>
+                    <li>&#8226; No lead generation — word of mouth only</li>
                     <li>&#8226; Missing 40% of inbound calls</li>
                     <li>&#8226; Pen and paper for quotes and contracts</li>
                     <li>&#8226; No CRM — tracking leads in a notebook</li>
-                    <li>&#8226; Manual follow-ups (most never happened)</li>
                     <li>&#8226; No visibility into financial performance</li>
                     <li>&#8226; 3+ hours/day on admin</li>
                   </ul>
@@ -61,6 +63,8 @@ export default function Portfolio() {
                 <div className="rounded-xl p-5 bg-slate-950/80 border border-emerald-500/30">
                   <h3 className="font-semibold text-emerald-300 mb-3">After BlueWise</h3>
                   <ul className="space-y-2 text-slate-200 text-sm">
+                    <li>&#8226; Professional website driving leads 24/7</li>
+                    <li>&#8226; Social media strategy + targeted ad campaigns</li>
                     <li>&#8226; Zero missed leads — AI answers every call</li>
                     <li>&#8226; Quotes generated automatically from Slack</li>
                     <li>&#8226; Digital contracts with e-signatures</li>
@@ -75,7 +79,7 @@ export default function Portfolio() {
               <div>
                 <h3 className="font-semibold text-white mb-3">What We Built</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-                  {['AI Voice Agent (24/7)', 'SMS Lead Capture', 'CRM Dashboard', 'Quote Pipeline', 'Digital Contracts', 'E-Signatures',
+                  {['Website', 'Social Media', 'Ad Campaigns', 'AI Voice Agent (24/7)', 'SMS Lead Capture', 'CRM Dashboard', 'Quote Pipeline', 'Digital Contracts', 'E-Signatures',
                     'Payment Tracking', 'Expense Tracking', 'Auto Receipts', 'Financial Reports', 'Morning Briefing', 'Slack Integration'].map((item) => (
                     <div key={item} className="bg-slate-900/60 rounded-lg px-3 py-2 border border-slate-700/50 text-slate-300">
                       {item}

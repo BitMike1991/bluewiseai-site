@@ -70,10 +70,11 @@ export default function About() {
             <h2 className="text-2xl font-bold">Proven Results</h2>
             <div className="grid md:grid-cols-2 gap-8">
               <div>
-                <h3 className="text-lg font-semibold text-emerald-300 mb-3">Service Plus — Full Operations Build</h3>
+                <h3 className="text-lg font-semibold text-emerald-300 mb-3">Service Plus — Full Business Build</h3>
                 <p className="text-slate-200 text-sm mb-4">
-                  Built the entire business operations system for a residential contractor: CRM, AI receptionist,
-                  automated quote pipeline, digital contracts, payment tracking, and financial reporting.
+                  Built everything for a residential contractor: website, social media, ad campaigns to drive leads,
+                  plus the full operations system — CRM, AI receptionist, automated quotes, contracts, payment tracking,
+                  and financial reporting.
                 </p>
                 <ul className="text-slate-300 text-sm space-y-1">
                   <li>&#10003; $71K pipeline generated in 30 days</li>

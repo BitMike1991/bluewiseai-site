@@ -106,9 +106,9 @@ export default function Home() {
               </div>
               <h2 className="text-3xl font-bold mb-4">Service Plus: $71K Pipeline in 30 Days</h2>
               <p className="text-slate-200 mb-6">
-                A residential contractor in Quebec was missing 40% of inbound calls and managing everything
-                with pen and paper. We built their entire operation — CRM, AI receptionist, automated quotes,
-                contracts, and payment tracking.
+                We built the complete package for a residential contractor in Quebec — new website, social media
+                strategy, targeted ads, AND the full operations system. AI receptionist, automated quotes,
+                contracts, payment tracking. We drove the leads in and made sure none got lost.
               </p>
               <Link href="/portfolio"
                 className="text-blue-300 hover:text-blue-200 font-semibold transition-colors">

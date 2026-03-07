@@ -50,10 +50,12 @@ export default function PortfolioFr() {
                 <div className="rounded-xl p-5 bg-slate-950/80 border border-red-500/30">
                   <h3 className="font-semibold text-red-300 mb-3">Avant BlueWise</h3>
                   <ul className="space-y-2 text-slate-200 text-sm">
+                    <li>&#8226; Aucun site web ni présence en ligne</li>
+                    <li>&#8226; Pas de stratégie réseaux sociaux</li>
+                    <li>&#8226; Pas de génération de leads — juste le bouche-à-oreille</li>
                     <li>&#8226; Manquait 40 % des appels entrants</li>
                     <li>&#8226; Soumissions pis contrats au papier</li>
                     <li>&#8226; Pas de CRM — les leads dans un cahier</li>
-                    <li>&#8226; Suivis manuels (la plupart jamais faits)</li>
                     <li>&#8226; Aucune visibilité sur la performance financière</li>
                     <li>&#8226; 3+ heures/jour sur l&apos;admin</li>
                   </ul>
@@ -61,6 +63,8 @@ export default function PortfolioFr() {
                 <div className="rounded-xl p-5 bg-slate-950/80 border border-emerald-500/30">
                   <h3 className="font-semibold text-emerald-300 mb-3">Après BlueWise</h3>
                   <ul className="space-y-2 text-slate-200 text-sm">
+                    <li>&#8226; Site web professionnel qui génère des leads 24/7</li>
+                    <li>&#8226; Stratégie réseaux sociaux + campagnes de pubs ciblées</li>
                     <li>&#8226; Zéro leads manqués — l&apos;IA répond à chaque appel</li>
                     <li>&#8226; Soumissions générées automatiquement depuis Slack</li>
                     <li>&#8226; Contrats numériques avec signatures électroniques</li>
@@ -75,7 +79,7 @@ export default function PortfolioFr() {
               <div>
                 <h3 className="font-semibold text-white mb-3">Ce qu&apos;on a bâti</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-                  {['Agent vocal IA (24/7)', 'Capture SMS', 'Dashboard CRM', 'Pipeline soumissions', 'Contrats numériques', 'E-signatures',
+                  {['Site web', 'Réseaux sociaux', 'Campagnes pub', 'Agent vocal IA (24/7)', 'Capture SMS', 'Dashboard CRM', 'Pipeline soumissions', 'Contrats numériques', 'E-signatures',
                     'Suivi paiements', 'Suivi dépenses', 'Reçus automatiques', 'Rapports financiers', 'Briefing du matin', 'Intégration Slack'].map((item) => (
                     <div key={item} className="bg-slate-900/60 rounded-lg px-3 py-2 border border-slate-700/50 text-slate-300">
                       {item}
