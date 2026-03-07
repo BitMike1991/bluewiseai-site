@@ -1,164 +1,129 @@
-/* eslint-disable react/no-unescaped-entities */
-
-
 import Image from "next/image";
-import ConsultCTA from "@/components/ConsultCTA";
+import Link from "next/link";
 
-export default function About() {
+export default function AboutFr() {
   return (
-    <div
-      className="
-        min-h-screen
-        bg-[url('/styles/backgroundpages.png')]
-        bg-cover bg-center
-        text-white
-      "
-    >
+    <div className="min-h-screen bg-[url('/styles/backgroundpages.png')] bg-cover bg-center text-white">
       <div className="min-h-screen py-16 px-4 backdrop-brightness-110">
-        <section
-          className="
-            max-w-5xl mx-auto space-y-12 px-6 sm:px-12 py-10
-            rounded-3xl
-            bg-slate-950/80
-            border border-white/10
-            backdrop-blur-md
-            shadow-[0_0_45px_rgba(15,23,42,0.9)]
-          "
-        >
-          {/* TITRE + SOUS-TITRE */}
+        <section className="max-w-5xl mx-auto space-y-12 px-6 sm:px-12 py-10 rounded-3xl bg-slate-950/80 border border-white/10 backdrop-blur-md shadow-[0_0_45px_rgba(15,23,42,0.9)]">
+
+          {/* TITRE */}
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-heading drop-shadow-md">À propos de Blue Wise&nbsp;AI</h1>
-            <p className="text-lg text-slate-100 drop-shadow-sm">
-              Je crée des systèmes d’automatisation IA pour les petites entreprises et les créateurs qui en ont assez de se noyer dans l’administratif.
-              Ma mission est de vous libérer du temps — <span className="text-blue-300">5&nbsp;à&nbsp;10&nbsp;heures chaque semaine</span> —
-              pour que vous puissiez vous concentrer sur ce qui fait vraiment croître votre entreprise.
+            <h1 className="text-4xl sm:text-5xl font-bold">À propos de BlueWise AI</h1>
+            <p className="text-lg text-slate-200 max-w-2xl mx-auto">
+              On build des systèmes d&apos;entreprise propulsés par IA pour les entrepreneurs trop occupés sur le terrain pour gérer leurs opérations.
             </p>
           </div>
 
-          {/* HERO ROW: PHOTO + INTRO */}
+          {/* FONDATEUR + HISTOIRE */}
           <div className="flex flex-col md:flex-row items-center gap-8">
-            {/* Photo */}
             <div className="shrink-0">
-              <div
-                className="
-                  relative h-40 w-40 md:h-48 md:w-48 rounded-full overflow-hidden
-                  border border-blue-400/70
-                  shadow-[0_0_40px_rgba(59,130,246,0.65)]
-                  bg-slate-900
-                "
-              >
-                <Image
-                  src="/mikael-profile.jpg" // <-- mettez votre photo dans /public sous ce nom ou changez le chemin
-                  alt="Mikael, fondateur de BlueWise AI"
-                  fill
-                  className="object-cover"
-                />
+              <div className="relative h-40 w-40 md:h-48 md:w-48 rounded-full overflow-hidden border border-blue-400/70 shadow-[0_0_40px_rgba(59,130,246,0.65)] bg-slate-900">
+                <Image src="/mikael-profile.jpg" alt="Mikael, fondateur de BlueWise AI" fill className="object-cover" />
               </div>
             </div>
-
-            {/* Intro copy */}
             <div className="space-y-4">
-              <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
-                <span>👋</span>
-                <span>Qui se cache derrière Blue Wise&nbsp;AI&nbsp;?</span>
-              </h2>
-              <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-                Salut, je m’appelle Mikael — le constructeur derrière Blue Wise AI.
+              <h2 className="text-2xl font-bold">Bâti par un gars de terrain, pour les gars de terrain</h2>
+              <p className="text-slate-200 leading-relaxed">
+                Moi c&apos;est Mikael. J&apos;ai parti BlueWise après avoir bâti le système d&apos;opérations
+                complet pour un entrepreneur résidentiel au Québec — de zéro. Réceptionniste IA, CRM,
+                soumissions automatiques, contrats, suivi de paiements, rapports financiers. Le résultat :
+                71 000 $ de pipeline en 30 jours.
               </p>
-              <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-                J’ai lancé ce projet pour aider des personnes comme moi — motivées, créatives,
-                mais sans une grande équipe technique — à utiliser l’IA pour construire des outils intelligents
-                qui font réellement gagner du temps et stimulent la croissance.
-              </p>
-              <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-                Vous n’avez pas besoin d’être développeur ni fondateur soutenu par du capital‑risque pour profiter de l’IA.
-                Il vous faut juste le bon guide, un peu de créativité et un vrai problème à résoudre.
+              <p className="text-slate-200 leading-relaxed">
+                J&apos;ai réalisé que chaque entrepreneur a le même problème : y sont incroyables dans
+                leur métier, mais y perdent de l&apos;argent sur les opérations. Appels manqués, soumissions
+                manuelles, factures papier, zéro suivi. BlueWise règle tout ça.
               </p>
             </div>
           </div>
 
-          {/* AVEC QUI JE TRAVAILLE LE MIEUX */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
-              <span>🎯</span>
-              <span>Avec qui je travaille le mieux</span>
-            </h2>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Je travaille le mieux avec des propriétaires de petites entreprises, des fondateurs solitaires et des créateurs
-              qui offrent déjà de la valeur mais se sentent coincés sous trop de tâches manuelles&nbsp;:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-slate-100 drop-shadow-sm">
-              <li>Vous êtes noyé sous les courriels, les relances et l’administration.</li>
-              <li>Vous savez que l’IA pourrait aider, mais vous ne savez pas par où commencer.</li>
-              <li>Vous préférez des systèmes simples et pratiques à de gros logiciels compliqués.</li>
-            </ul>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Si vous vous reconnaissez là‑dedans, nous sommes probablement faits pour travailler ensemble.
-            </p>
+          {/* MÉTHODOLOGIE */}
+          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25">
+            <h2 className="text-2xl font-bold">Comment on travaille</h2>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div>
+                <h3 className="font-semibold text-blue-300 mb-2">Clé en main</h3>
+                <p className="text-slate-300 text-sm">
+                  On te donne pas un logiciel en te disant « arrange-toi. » On build, on configure pis
+                  on gère ton système au complet. Toi tu focus sur le terrain.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-emerald-300 mb-2">Vrais résultats, vrais chiffres</h3>
+                <p className="text-slate-300 text-sm">
+                  On te montre le ROI avant que tu signes. Si le calcul marche pas pour ta business,
+                  on te le dit d&apos;avance. Pas de bullshit.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-amber-300 mb-2">Optimisation continue</h3>
+                <p className="text-slate-300 text-sm">
+                  Ton système s&apos;améliore chaque mois. On monitor, on tweak pis on améliore basé
+                  sur de la vraie data de leads — pas du guesswork.
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* CE QUE JE FAIS */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
-              <span>🧠</span>
-              <span>Ce que je fais</span>
-            </h2>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Je conçois et construis de petites automatisations à fort impact&nbsp;:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-slate-100 drop-shadow-sm">
-              <li>Tri des courriels, résumés et réponses intelligentes.</li>
-              <li>Capture de leads et flux de qualification.</li>
-              <li>SMS après appel manqué et séquences de suivi.</li>
-              <li>Outils GPT sur mesure pour vos workflows spécifiques.</li>
-            </ul>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              J’ai déjà lancé des applications alimentées par l’IA et des outils internes et j’affine mes compétences chaque jour.
-              Pas de blabla ni de complexité inutile&nbsp;— juste des outils qui fonctionnent.
-            </p>
+          {/* RÉSULTATS */}
+          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-gradient-to-br from-emerald-900/20 to-slate-900/80 border border-emerald-500/30">
+            <h2 className="text-2xl font-bold">Résultats prouvés</h2>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-lg font-semibold text-emerald-300 mb-3">Service Plus — Build d&apos;opérations complet</h3>
+                <p className="text-slate-200 text-sm mb-4">
+                  On a bâti le système d&apos;opérations au complet pour un entrepreneur résidentiel : CRM,
+                  réceptionniste IA, pipeline de soumissions automatiques, contrats numériques, suivi
+                  de paiements et rapports financiers.
+                </p>
+                <ul className="text-slate-300 text-sm space-y-1">
+                  <li>&#10003; 71 000 $ de pipeline généré en 30 jours</li>
+                  <li>&#10003; Zéro leads manqués depuis le déploiement</li>
+                  <li>&#10003; Flow soumission-à-contrat 100 % automatisé</li>
+                  <li>&#10003; Dashboard financier en temps réel</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-blue-300 mb-3">Ramoneur Multi-Services — Lead Rescue</h3>
+                <p className="text-slate-200 text-sm mb-4">
+                  On a déployé le moteur SMS IA et l&apos;agent vocal pour une business de ramonage.
+                  Passé de manquer 60 % des appels à capter chaque lead automatiquement.
+                </p>
+                <ul className="text-slate-300 text-sm space-y-1">
+                  <li>&#10003; 60 % manqués → 0 % manqués</li>
+                  <li>&#10003; L&apos;IA gère la qualification 24/7</li>
+                  <li>&#10003; Premier rappel en 24h après le déploiement</li>
+                  <li>&#10003; Zéro suivi manuel requis</li>
+                </ul>
+              </div>
+            </div>
           </div>
 
-          {/* COMMENT JE TRAVAILLE */}
+          {/* CE QU'ON CROIT */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
-              <span>⚙️</span>
-              <span>Comment je travaille</span>
-            </h2>
-            <blockquote className="border-l-4 border-blue-400 pl-4 italic text-slate-100 drop-shadow-sm">
-              Clarté d’abord. Rapidité ensuite. Valeur toujours.
+            <h2 className="text-2xl font-bold">Ce qu&apos;on croit</h2>
+            <blockquote className="border-l-4 border-blue-400 pl-4 italic text-slate-200">
+              « Les entrepreneurs sont le backbone de l&apos;économie. Y devraient pas avoir à choisir
+              entre faire de la bonne job pis runner une bonne business. L&apos;IA rend les deux possibles. »
             </blockquote>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Nous commençons par un court appel pour comprendre votre entreprise, vos goulots d’étranglement
-              et où l’automatisation peut créer des gains rapides. Ensuite je propose un plan simple avec une ou deux
-              automatisations à fort levier que nous pouvons construire dans les 1 à 2 semaines qui suivent.
-            </p>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Je garde les choses légères&nbsp;: communication directe, itération rapide et un focus sur des résultats que vous ressentez
-              dans votre agenda et votre charge de travail.
-            </p>
-          </div>
-
-          {/* POURQUOI C’EST IMPORTANT */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
-              <span>🌱</span>
-              <span>Pourquoi c’est important</span>
-            </h2>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Blue Wise AI n’est pas seulement une entreprise — c’est ma façon de vivre.
-              Je crois au travail intelligent plutôt que difficile&nbsp;: utiliser la technologie pour créer de la liberté et de la concentration pour nous-mêmes et nos clients.
-            </p>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Les outils doivent servir les gens, pas l’inverse. Chaque automatisation que je construis vise à simplifier votre vie et à amplifier votre impact.
+            <p className="text-slate-300 text-sm">
+              On est pas une grosse agence. On est une équipe focus qui build des vrais systèmes pour
+              de vraies businesses. On se spécialise en services résidentiels parce qu&apos;on comprend
+              l&apos;industrie, pis parce que c&apos;est là que l&apos;IA crée le plus de valeur.
             </p>
           </div>
 
           {/* CTA */}
-          <div className="pt-8 text-center space-y-3">
-            <p className="text-slate-100 drop-shadow-sm">
-              Pas sûr de savoir par où commencer&nbsp;? Cartographions ensemble votre première automatisation.
+          <div className="pt-4 text-center space-y-4">
+            <h3 className="text-2xl font-bold">Prêt à voir ce que BlueWise peut faire pour toi ?</h3>
+            <p className="text-slate-300 max-w-2xl mx-auto">
+              Call de 15 minutes. On regarde tes opérations pis on te dit exactement où l&apos;automatisation fit.
             </p>
-            <ConsultCTA>Obtenez votre audit IA de 15 minutes — Gratuit</ConsultCTA>
+            <Link href="/fr/contact"
+              className="inline-block bg-blue-600 text-white font-bold px-8 py-4 rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-500 transition-all hover:-translate-y-0.5">
+              Réserve ton appel stratégique
+            </Link>
           </div>
         </section>
       </div>

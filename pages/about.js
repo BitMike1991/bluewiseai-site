@@ -1,165 +1,127 @@
 import Image from "next/image";
-import ConsultCTA from "@/components/ConsultCTA";
+import Link from "next/link";
 
 export default function About() {
   return (
-    <div
-      className="
-        min-h-screen
-        bg-[url('/styles/backgroundpages.png')]
-        bg-cover bg-center
-        text-white
-      "
-    >
+    <div className="min-h-screen bg-[url('/styles/backgroundpages.png')] bg-cover bg-center text-white">
       <div className="min-h-screen py-16 px-4 backdrop-brightness-110">
-        <section
-          className="
-            max-w-5xl mx-auto space-y-12 px-6 sm:px-12 py-10
-            rounded-3xl
-            bg-slate-950/80
-            border border-white/10
-            backdrop-blur-md
-            shadow-[0_0_45px_rgba(15,23,42,0.9)]
-          "
-        >
-          {/* TITLE + ONE-LINER */}
+        <section className="max-w-5xl mx-auto space-y-12 px-6 sm:px-12 py-10 rounded-3xl bg-slate-950/80 border border-white/10 backdrop-blur-md shadow-[0_0_45px_rgba(15,23,42,0.9)]">
+
+          {/* TITLE */}
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-heading drop-shadow-md">About Blue Wise&nbsp;AI</h1>
-            <p className="text-lg text-slate-100 drop-shadow-sm">
-              I build AI automation systems for small businesses and creators who are tired of drowning in admin.
-              My mission is to free up your time — <span className="text-blue-300">5–10 hours every week</span> —
-              so you can double down on the work that actually grows your business.
+            <h1 className="text-4xl sm:text-5xl font-bold">About BlueWise AI</h1>
+            <p className="text-lg text-slate-200 max-w-2xl mx-auto">
+              We build AI-powered business systems for contractors who are too busy working to manage their operations.
             </p>
           </div>
 
-          {/* HERO ROW: PHOTO + INTRO */}
+          {/* FOUNDER + STORY */}
           <div className="flex flex-col md:flex-row items-center gap-8">
-            {/* Photo */}
             <div className="shrink-0">
-              <div
-                className="
-                  relative h-40 w-40 md:h-48 md:w-48 rounded-full overflow-hidden
-                  border border-blue-400/70
-                  shadow-[0_0_40px_rgba(59,130,246,0.65)]
-                  bg-slate-900
-                "
-              >
-                <Image
-                  src="/mikael-profile.jpg" // <-- put your photo in /public with this name or change the path
-                  alt="Mikael, founder of BlueWise AI"
-                  fill
-                  className="object-cover"
-                />
+              <div className="relative h-40 w-40 md:h-48 md:w-48 rounded-full overflow-hidden border border-blue-400/70 shadow-[0_0_40px_rgba(59,130,246,0.65)] bg-slate-900">
+                <Image src="/mikael-profile.jpg" alt="Mikael, founder of BlueWise AI" fill className="object-cover" />
               </div>
             </div>
-
-            {/* Intro copy */}
             <div className="space-y-4">
-              <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
-                <span>👋</span>
-                <span>Who&apos;s behind Blue Wise AI?</span>
-              </h2>
-              <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-                Hi, I&apos;m Mikael — the builder behind Blue Wise AI.
+              <h2 className="text-2xl font-bold">Built by a contractor, for contractors</h2>
+              <p className="text-slate-200 leading-relaxed">
+                I&apos;m Mikael. I started BlueWise after building the entire operations system for a
+                residential contractor in Quebec — from scratch. AI receptionist, CRM, automated quotes,
+                contracts, payment tracking, financial reporting. The result: a $71K pipeline in 30 days.
               </p>
-              <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-                I started this project to help people like me — motivated, creative,
-                but without a big tech team — use AI to build smart tools that
-                actually save time and unlock growth.
-              </p>
-              <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-                You don&apos;t need to be a developer or a VC-backed founder to benefit
-                from AI. You just need the right guide, a bit of creativity, and a
-                real problem worth solving.
+              <p className="text-slate-200 leading-relaxed">
+                I realized that every contractor has the same problem: they&apos;re incredible at their
+                trade, but losing money on operations. Missed calls, manual quotes, paper invoices,
+                zero follow-up. BlueWise fixes all of that.
               </p>
             </div>
           </div>
 
-          {/* WHO I WORK BEST WITH (LEAD-FOCUSED) */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
-              <span>🎯</span>
-              <span>Who I work best with</span>
-            </h2>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              I work best with small business owners, solo founders, and creators
-              who are already delivering value but feel stuck doing too many manual tasks:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-slate-100 drop-shadow-sm">
-              <li>You&apos;re drowning in emails, follow-ups, and admin.</li>
-              <li>You know AI could help, but you don&apos;t know where to start.</li>
-              <li>You prefer simple, practical systems over big, complicated software.</li>
-            </ul>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              If that sounds like you, we&apos;re probably a great fit.
-            </p>
+          {/* METHODOLOGY */}
+          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25">
+            <h2 className="text-2xl font-bold">How We Work</h2>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div>
+                <h3 className="font-semibold text-blue-300 mb-2">Done-for-you</h3>
+                <p className="text-slate-300 text-sm">
+                  We don&apos;t hand you software and say &quot;figure it out.&quot; We build, configure,
+                  and manage your entire system. You focus on the work.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-emerald-300 mb-2">Real results, real numbers</h3>
+                <p className="text-slate-300 text-sm">
+                  We show you ROI before you sign up. If the math doesn&apos;t work for your business,
+                  we tell you upfront. No BS.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-amber-300 mb-2">Continuous optimization</h3>
+                <p className="text-slate-300 text-sm">
+                  Your system gets better every month. We monitor, tweak, and improve based on
+                  actual lead data — not guesswork.
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* WHAT I DO */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
-              <span>🧠</span>
-              <span>What I do</span>
-            </h2>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              I design and build small, high-impact automations:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-slate-100 drop-shadow-sm">
-              <li>Email triage, summaries, and smart auto-replies.</li>
-              <li>Lead capture and qualification flows.</li>
-              <li>Missed-call text-back and follow-up sequences.</li>
-              <li>Custom GPT tools for your specific business workflows.</li>
-            </ul>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              I&apos;ve already launched AI-powered apps and internal tools and keep
-              sharpening my skills daily. No fluff, no unnecessary complexity —
-              just tools that work.
-            </p>
+          {/* CASE STUDY HIGHLIGHT */}
+          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-gradient-to-br from-emerald-900/20 to-slate-900/80 border border-emerald-500/30">
+            <h2 className="text-2xl font-bold">Proven Results</h2>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-lg font-semibold text-emerald-300 mb-3">Service Plus — Full Operations Build</h3>
+                <p className="text-slate-200 text-sm mb-4">
+                  Built the entire business operations system for a residential contractor: CRM, AI receptionist,
+                  automated quote pipeline, digital contracts, payment tracking, and financial reporting.
+                </p>
+                <ul className="text-slate-300 text-sm space-y-1">
+                  <li>&#10003; $71K pipeline generated in 30 days</li>
+                  <li>&#10003; Zero missed leads since deployment</li>
+                  <li>&#10003; 100% automated quote-to-contract flow</li>
+                  <li>&#10003; Real-time financial dashboard</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-blue-300 mb-3">Ramoneur Multi-Services — Lead Rescue</h3>
+                <p className="text-slate-200 text-sm mb-4">
+                  Deployed AI SMS engine and voice agent for a chimney services business. Went from
+                  missing 60% of calls to capturing every lead automatically.
+                </p>
+                <ul className="text-slate-300 text-sm space-y-1">
+                  <li>&#10003; 60% missed → 0% missed</li>
+                  <li>&#10003; AI handles qualification 24/7</li>
+                  <li>&#10003; First callback within 24 hours of deployment</li>
+                  <li>&#10003; Zero manual follow-up required</li>
+                </ul>
+              </div>
+            </div>
           </div>
 
-          {/* HOW I WORK */}
+          {/* WHAT WE BELIEVE */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
-              <span>⚙️</span>
-              <span>How I work</span>
-            </h2>
-            <blockquote className="border-l-4 border-blue-400 pl-4 italic text-slate-100 drop-shadow-sm">
-              Clarity first. Speed second. Value always.
+            <h2 className="text-2xl font-bold">What We Believe</h2>
+            <blockquote className="border-l-4 border-blue-400 pl-4 italic text-slate-200">
+              &quot;Contractors are the backbone of the economy. They shouldn&apos;t have to choose between
+              doing great work and running a great business. AI makes both possible.&quot;
             </blockquote>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              We start with a short call to understand your business, your
-              bottlenecks, and where automation can create quick wins. Then I
-              propose a simple plan with one or two high-leverage automations
-              we can build in the next 1–2 weeks.
-            </p>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              I keep things lean — direct communication, fast iteration, and a
-              focus on results you can feel in your calendar and your workload.
+            <p className="text-slate-300 text-sm">
+              We&apos;re not a giant agency. We&apos;re a focused team that builds real systems for real
+              businesses. We specialize in home services because we understand the industry, and
+              because that&apos;s where AI creates the most value.
             </p>
           </div>
 
-          {/* WHY IT MATTERS */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-heading flex items-center gap-2 drop-shadow-sm">
-              <span>🌱</span>
-              <span>Why it matters</span>
-            </h2>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Blue Wise AI isn’t just a business — it’s my way of living.
-              I believe in working smart, not hard: using technology to create freedom and focus for ourselves and our clients.
+          {/* CTA */}
+          <div className="pt-4 text-center space-y-4">
+            <h3 className="text-2xl font-bold">Ready to see what BlueWise can do for you?</h3>
+            <p className="text-slate-300 max-w-2xl mx-auto">
+              15-minute call. We&apos;ll look at your operations and tell you exactly where automation fits.
             </p>
-            <p className="leading-relaxed text-slate-100 drop-shadow-sm">
-              Tools should serve people, not the other way around. Every automation I build is designed to simplify your life and amplify your impact.
-            </p>
-          </div>
-
-          {/* LEAD CTA */}
-          <div className="pt-8 text-center space-y-3">
-            <p className="text-slate-100 drop-shadow-sm">
-              Not sure where to start? Let&apos;s map out your first automation
-              together.
-            </p>
-            <ConsultCTA>Free 15-Min Automation Audit</ConsultCTA>
+            <Link href="/contact"
+              className="inline-block bg-blue-600 text-white font-bold px-8 py-4 rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-500 transition-all hover:-translate-y-0.5">
+              Book Free Strategy Call
+            </Link>
           </div>
         </section>
       </div>

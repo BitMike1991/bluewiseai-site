@@ -1,516 +1,315 @@
 // pages/lead-rescue.js
 import { useState } from "react";
-import ConsultCTA from "@/components/ConsultCTA";
 import ROICalculator from "@/components/ROICalculator";
 import Link from "next/link";
+import { TIERS, COMPARISON_FEATURES } from "@/data/pricing";
 
 export default function LeadRescueOffer() {
   const [selectedTier, setSelectedTier] = useState("pro");
+  const lang = "en";
 
   return (
-    <div
-      className="
-        min-h-screen
-        bg-[url('/styles/backgroundpages.png')]
-        bg-cover bg-center
-        text-white
-      "
-    >
+    <div className="min-h-screen bg-[url('/styles/backgroundpages.png')] bg-cover bg-center text-white">
       <div className="min-h-screen py-16 px-4 backdrop-brightness-110">
-        <section
-          className="
-            max-w-6xl mx-auto space-y-12 px-6 sm:px-12 py-10
-            rounded-3xl
-            bg-slate-950/80
-            border border-white/10
-            backdrop-blur-md
-            shadow-[0_0_45px_rgba(15,23,42,0.9)]
-          "
-        >
+        <section className="max-w-6xl mx-auto space-y-12 px-6 sm:px-12 py-10 rounded-3xl bg-slate-950/80 border border-white/10 backdrop-blur-md shadow-[0_0_45px_rgba(15,23,42,0.9)]">
+
           {/* HERO */}
           <div className="text-center space-y-4 max-w-4xl mx-auto">
-            <h1 className="text-4xl sm:text-5xl font-heading drop-shadow-md">
-              Lead Rescue Platform
+            <h1 className="text-4xl sm:text-5xl font-bold">
+              We Run Your Business Operations
+              <br />
+              <span className="text-blue-300">While You Do the Work</span>
             </h1>
-            <p className="text-xl sm:text-2xl text-blue-300 font-semibold">
-              AI-Powered Lead Recovery for Trade Businesses
+            <p className="text-lg text-slate-200 max-w-2xl mx-auto">
+              Complete AI-powered business management for contractors. From missed calls to paid invoices
+              — we handle everything so you can focus on the job.
             </p>
-            <p className="text-lg text-slate-200 drop-shadow-sm">
-              Stop losing $28,800+/year to missed calls. Lead Rescue automatically responds to every lead
-              via SMS, voice, and email—capturing jobs while you're on-site.
-            </p>
-
-            {/* Production Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8 max-w-3xl mx-auto">
-              <div className="bg-slate-900/60 rounded-xl p-3 border border-blue-500/30">
-                <div className="text-2xl font-bold text-blue-300">10,118</div>
-                <div className="text-xs text-slate-300">Operations/Week</div>
-              </div>
-              <div className="bg-slate-900/60 rounded-xl p-3 border border-emerald-500/30">
-                <div className="text-2xl font-bold text-emerald-300">97.6%</div>
-                <div className="text-xs text-slate-300">Uptime</div>
-              </div>
-              <div className="bg-slate-900/60 rounded-xl p-3 border border-purple-500/30">
-                <div className="text-2xl font-bold text-purple-300">24/7</div>
-                <div className="text-xs text-slate-300">Automated</div>
-              </div>
-              <div className="bg-slate-900/60 rounded-xl p-3 border border-amber-500/30">
-                <div className="text-2xl font-bold text-amber-300">97</div>
-                <div className="text-xs text-slate-300">Leads Qualified</div>
-              </div>
-            </div>
-          </div>
-
-          {/* PROBLEM SECTION */}
-          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25 shadow-[0_0_30px_rgba(15,23,42,0.9)]">
-            <h2 className="text-2xl sm:text-3xl font-heading flex items-center gap-2">
-              <span>🚨</span>
-              <span>The $28,800/Year Problem Every Trade Business Has</span>
-            </h2>
-
-            <p className="text-slate-200 text-lg">
-              When you're on a roof, under a sink, or in front of a customer, you can't answer every call.
-              And every missed call is money walking out the door.
-            </p>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="rounded-xl p-5 bg-slate-950/80 border border-red-500/40">
-                <h3 className="font-semibold text-red-300 mb-3 text-lg">❌ Without Lead Rescue</h3>
-                <ul className="space-y-2 text-slate-200">
-                  <li>• 60% of calls go to voicemail</li>
-                  <li>• 80% of voicemails never get returned</li>
-                  <li>• Leads call your competitors next</li>
-                  <li>• <strong>$28,800/year in lost revenue</strong> (20 calls/week)</li>
-                  <li>• Manual follow-up takes 2+ hours/day</li>
-                </ul>
-              </div>
-
-              <div className="rounded-xl p-5 bg-slate-950/80 border border-emerald-500/40">
-                <h3 className="font-semibold text-emerald-300 mb-3 text-lg">✅ With Lead Rescue</h3>
-                <ul className="space-y-2 text-slate-200">
-                  <li>• 100% response within 5 minutes (automated)</li>
-                  <li>• AI qualifies leads automatically</li>
-                  <li>• Emergencies flagged and prioritized</li>
-                  <li>• <strong>Recover $2,400+/month</strong> in lost revenue</li>
-                  <li>• Zero manual follow-up required</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Real Testimonial */}
-            <div className="mt-6 rounded-xl p-5 bg-slate-950/60 border border-slate-700/50">
-              <p className="text-slate-200 italic text-sm sm:text-base">
-                "We sent 90 Slybroadcast messages and got our first callback within 24 hours.
-                The AI handled it automatically while I was working on site."
-              </p>
-              <p className="text-blue-300 text-sm mt-2">— Mikael, Ramoneur Multi-Services</p>
-            </div>
           </div>
 
           {/* PRICING TIERS */}
           <div className="space-y-6">
             <div className="text-center space-y-3">
-              <h2 className="text-3xl sm:text-4xl font-heading">Choose Your Lead Rescue System</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold">Choose Your Plan</h2>
               <p className="text-slate-300 text-lg max-w-3xl mx-auto">
-                All systems include your custom dashboard, production monitoring, and ongoing support.
-                Choose the level of automation that fits your business.
+                All plans include setup, onboarding, and ongoing support. Pick the level that fits your business.
               </p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
-              {/* TIER 1: SMS LEAD RESCUE */}
-              <div className={`rounded-2xl p-6 border-2 transition-all duration-200 ${selectedTier === 'starter' ? 'border-blue-500/70 bg-slate-900/80' : 'border-slate-700/50 bg-slate-900/60'}`}>
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-xl font-heading text-slate-200">SMS Lead Rescue</h3>
-                    <p className="text-sm text-slate-400 mt-1">Perfect for getting started</p>
-                  </div>
-
-                  <div className="py-4">
-                    <div className="text-4xl font-bold text-blue-300">$497</div>
-                    <div className="text-sm text-slate-400">One-time setup</div>
-                    <div className="text-sm text-slate-300 mt-2">+ $249/mo support</div>
-                  </div>
-
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">✓</span>
-                      <span className="text-slate-200">Missed call → SMS automation</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">✓</span>
-                      <span className="text-slate-200">SMS lead qualifier bot</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">✓</span>
-                      <span className="text-slate-200">Lead tracking dashboard</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">✓</span>
-                      <span className="text-slate-200">Daily lead summary emails</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-slate-500 mt-0.5">✗</span>
-                      <span className="text-slate-500">Voice AI agent</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-slate-500 mt-0.5">✗</span>
-                      <span className="text-slate-500">Inbox email engine</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setSelectedTier('starter')}
-                    className={`w-full py-3 rounded-xl font-semibold transition-all ${selectedTier === 'starter' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+              {TIERS.map((tier) => {
+                const isSelected = selectedTier === tier.id;
+                const isPopular = tier.popular;
+                return (
+                  <div key={tier.id}
+                    className={`rounded-2xl p-6 border-2 transition-all duration-200 relative ${
+                      isPopular
+                        ? isSelected
+                          ? 'border-emerald-500/70 bg-gradient-to-br from-emerald-900/20 to-slate-900/80'
+                          : 'border-emerald-500/50 bg-slate-900/60'
+                        : isSelected
+                          ? 'border-blue-500/70 bg-slate-900/80'
+                          : 'border-slate-700/50 bg-slate-900/60'
+                    }`}
                   >
-                    {selectedTier === 'starter' ? 'Selected' : 'Select Plan'}
-                  </button>
-                </div>
-              </div>
+                    {isPopular && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                        Most Popular
+                      </div>
+                    )}
 
-              {/* TIER 2: FULL LEAD RESCUE (RECOMMENDED) */}
-              <div className={`rounded-2xl p-6 border-2 relative ${selectedTier === 'pro' ? 'border-emerald-500/70 bg-gradient-to-br from-emerald-900/20 to-slate-900/80' : 'border-emerald-500/50 bg-slate-900/60'}`}>
-                {/* Most Popular Badge */}
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                  ⭐ Most Popular
-                </div>
+                    <div className={`space-y-4 ${isPopular ? 'mt-2' : ''}`}>
+                      <div>
+                        <h3 className={`text-xl font-bold ${isPopular ? 'text-slate-50' : 'text-slate-200'}`}>
+                          {tier.name[lang]}
+                        </h3>
+                        <p className={`text-sm mt-1 ${isPopular ? 'text-emerald-300' : 'text-slate-400'}`}>
+                          {tier.tagline[lang]}
+                        </p>
+                      </div>
 
-                <div className="space-y-4 mt-2">
-                  <div>
-                    <h3 className="text-xl font-heading text-slate-50">Full Lead Rescue</h3>
-                    <p className="text-sm text-emerald-300 mt-1">Complete automation suite</p>
-                  </div>
+                      <div className="py-4">
+                        <div className={`text-4xl font-bold ${isPopular ? 'text-emerald-300' : tier.id === 'elite' ? 'text-amber-300' : 'text-blue-300'}`}>
+                          ${tier.setup.toLocaleString()}
+                        </div>
+                        <div className="text-sm text-slate-400">One-time setup</div>
+                        <div className="text-sm text-slate-300 mt-2">+ ${tier.monthly.toLocaleString()}/mo</div>
+                      </div>
 
-                  <div className="py-4">
-                    <div className="text-4xl font-bold text-emerald-300">$2,997</div>
-                    <div className="text-sm text-slate-400">One-time setup</div>
-                    <div className="text-sm text-slate-300 mt-2">+ $799/mo support</div>
-                    <div className="text-xs text-emerald-300 mt-1">Save $3,000 vs competitors</div>
-                  </div>
+                      <div className="space-y-2 text-sm">
+                        {tier.features[lang].map((f, i) => (
+                          <div key={i} className="flex items-start gap-2">
+                            <span className={`mt-0.5 ${f.included ? 'text-emerald-400' : 'text-slate-500'}`}>
+                              {f.included ? '✓' : '—'}
+                            </span>
+                            <span className={f.included ? 'text-slate-100' : 'text-slate-500'}>{f.text}</span>
+                          </div>
+                        ))}
+                      </div>
 
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">✓</span>
-                      <span className="text-slate-100 font-semibold">Everything in SMS tier</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">✓</span>
-                      <span className="text-slate-100"><strong>VAPI Voice AI agent</strong> (24/7 call answering)</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">✓</span>
-                      <span className="text-slate-100">Voice-to-lead qualification</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">✓</span>
-                      <span className="text-slate-100">Multi-channel (voice + SMS + email)</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">✓</span>
-                      <span className="text-slate-100">Advanced lead scoring</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">✓</span>
-                      <span className="text-slate-100">Priority support (4-hour response)</span>
-                    </div>
-                  </div>
+                      <div className="text-xs text-slate-400 pt-2">
+                        <div>Support: {tier.support[lang]}</div>
+                        <div>Onboarding: {tier.onboarding[lang]}</div>
+                      </div>
 
-                  <button
-                    onClick={() => setSelectedTier('pro')}
-                    className="w-full py-3 rounded-xl font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg shadow-emerald-500/30"
-                  >
-                    {selectedTier === 'pro' ? '✓ Selected' : 'Select Best Value'}
-                  </button>
-
-                  <div className="text-xs text-center text-slate-400 pt-2">
-                    ROI: Break even in 45-60 days
-                  </div>
-                </div>
-              </div>
-
-              {/* TIER 3: ENTERPRISE */}
-              <div className={`rounded-2xl p-6 border-2 transition-all duration-200 ${selectedTier === 'enterprise' ? 'border-amber-500/70 bg-slate-900/80' : 'border-slate-700/50 bg-slate-900/60'}`}>
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-xl font-heading text-slate-200">Enterprise</h3>
-                    <p className="text-sm text-slate-400 mt-1">For multi-location businesses</p>
-                  </div>
-
-                  <div className="py-4">
-                    <div className="text-4xl font-bold text-amber-300">$4,997</div>
-                    <div className="text-sm text-slate-400">One-time setup</div>
-                    <div className="text-sm text-slate-300 mt-2">+ $1,200/mo support</div>
-                  </div>
-
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">✓</span>
-                      <span className="text-slate-100 font-semibold">Everything in Full tier</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">✓</span>
-                      <span className="text-slate-200"><strong>Inbox AI engine</strong> (email triage)</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">✓</span>
-                      <span className="text-slate-200">Multi-location support</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">✓</span>
-                      <span className="text-slate-200">Custom CRM integrations</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">✓</span>
-                      <span className="text-slate-200">Priority support (2-hour response)</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">✓</span>
-                      <span className="text-slate-200">Monthly strategy calls</span>
+                      <button
+                        onClick={() => setSelectedTier(tier.id)}
+                        className={`w-full py-3 rounded-xl font-semibold transition-all ${
+                          isPopular
+                            ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
+                            : isSelected
+                              ? tier.id === 'elite' ? 'bg-amber-600 text-white' : 'bg-blue-600 text-white'
+                              : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        }`}
+                      >
+                        {isSelected ? '✓ Selected' : isPopular ? 'Select Best Value' : 'Select Plan'}
+                      </button>
                     </div>
                   </div>
-
-                  <button
-                    onClick={() => setSelectedTier('enterprise')}
-                    className={`w-full py-3 rounded-xl font-semibold transition-all ${selectedTier === 'enterprise' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
-                  >
-                    {selectedTier === 'enterprise' ? 'Selected' : 'Select Plan'}
-                  </button>
-                </div>
-              </div>
+                );
+              })}
             </div>
 
             {/* CTA Below Pricing */}
             <div className="text-center pt-4">
-              <Link
-                href="/onboarding-rescue"
-                className="inline-block px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg rounded-xl shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
-              >
-                Get Started with Lead Rescue →
+              <Link href="/contact"
+                className="inline-block px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg rounded-xl shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5">
+                Book Your Free Strategy Call
               </Link>
               <p className="text-sm text-slate-400 mt-3">
-                Book a 15-minute call to see which tier is right for your business
+                15 minutes. We&apos;ll tell you exactly which plan makes sense for your business.
               </p>
             </div>
           </div>
 
-          {/* INTERACTIVE ROI CALCULATOR */}
+          {/* FEATURE COMPARISON TABLE */}
+          <div className="space-y-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-center">Feature Comparison</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-700">
+                    <th className="text-left py-3 px-4 text-slate-300 font-semibold">Feature</th>
+                    <th className="text-center py-3 px-4 text-blue-300 font-semibold">Starter</th>
+                    <th className="text-center py-3 px-4 text-emerald-300 font-semibold">Pro</th>
+                    <th className="text-center py-3 px-4 text-amber-300 font-semibold">Elite</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-slate-800">
+                    <td className="py-3 px-4 text-slate-300 font-semibold">Setup</td>
+                    <td className="py-3 px-4 text-center text-white font-bold">$2,997</td>
+                    <td className="py-3 px-4 text-center text-white font-bold">$4,997</td>
+                    <td className="py-3 px-4 text-center text-white font-bold">$7,500</td>
+                  </tr>
+                  <tr className="border-b border-slate-800">
+                    <td className="py-3 px-4 text-slate-300 font-semibold">Monthly</td>
+                    <td className="py-3 px-4 text-center text-white font-bold">$799/mo</td>
+                    <td className="py-3 px-4 text-center text-white font-bold">$1,997/mo</td>
+                    <td className="py-3 px-4 text-center text-white font-bold">$3,997/mo</td>
+                  </tr>
+                  {COMPARISON_FEATURES.map((feat, i) => (
+                    <tr key={i} className="border-b border-slate-800/50">
+                      <td className="py-3 px-4 text-slate-200">{feat[lang]}</td>
+                      {['starter', 'pro', 'elite'].map((tid) => {
+                        const val = feat[tid];
+                        if (typeof val === 'boolean') {
+                          return (
+                            <td key={tid} className="py-3 px-4 text-center">
+                              {val ? <span className="text-emerald-400">✓</span> : <span className="text-slate-600">—</span>}
+                            </td>
+                          );
+                        }
+                        const display = typeof val === 'object' ? val[lang] : val;
+                        return <td key={tid} className="py-3 px-4 text-center text-slate-300 text-xs">{display}</td>;
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* ROI CALCULATOR */}
           <ROICalculator />
 
-          {/* WHAT'S INCLUDED */}
+          {/* WHAT YOU'RE REPLACING */}
           <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25">
-            <h2 className="text-2xl sm:text-3xl font-heading flex items-center gap-2">
-              <span>🤖</span>
-              <span>What's Included In Every System</span>
-            </h2>
-
+            <h2 className="text-2xl sm:text-3xl font-bold">What You&apos;re Replacing</h2>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-3">
-                <h3 className="font-semibold text-blue-300 text-lg">Technology Stack</h3>
-                <ul className="space-y-2 text-slate-200 text-sm">
-                  <li>✓ Custom n8n automation workflows</li>
-                  <li>✓ Supabase database + authentication</li>
-                  <li>✓ OpenAI GPT-4 for lead qualification</li>
-                  <li>✓ Telnyx SMS/Voice integration</li>
-                  <li>✓ VAPI Voice AI (Full & Enterprise tiers)</li>
-                  <li>✓ Production monitoring & error handling</li>
-                </ul>
+                <h3 className="font-semibold text-red-300 text-lg">Without BlueWise</h3>
+                <div className="space-y-2 text-slate-200 text-sm">
+                  <div className="flex justify-between"><span>Receptionist/assistant</span><strong className="text-red-300">$3,500/mo</strong></div>
+                  <div className="flex justify-between"><span>CRM software (GoHighLevel, etc.)</span><strong className="text-red-300">$297/mo</strong></div>
+                  <div className="flex justify-between"><span>Marketing agency</span><strong className="text-red-300">$2,000/mo</strong></div>
+                  <div className="flex justify-between"><span>Bookkeeping/admin</span><strong className="text-red-300">$1,500/mo</strong></div>
+                  <div className="h-px bg-slate-600 my-2"></div>
+                  <div className="flex justify-between text-lg"><span className="text-red-300">Total</span><strong className="text-red-200 text-xl">$7,297/mo</strong></div>
+                </div>
               </div>
-
               <div className="space-y-3">
-                <h3 className="font-semibold text-blue-300 text-lg">Your Dashboard</h3>
-                <ul className="space-y-2 text-slate-200 text-sm">
-                  <li>✓ Real-time lead tracking & conversations</li>
-                  <li>✓ Lead scoring & qualification status</li>
-                  <li>✓ Daily summary emails (8 AM)</li>
-                  <li>✓ Emergency job detection & alerts</li>
-                  <li>✓ Full conversation history</li>
-                  <li>✓ Mobile-responsive design</li>
-                </ul>
+                <h3 className="font-semibold text-emerald-300 text-lg">With BlueWise Pro</h3>
+                <div className="space-y-2 text-slate-200 text-sm">
+                  <div className="flex justify-between"><span>AI receptionist 24/7</span><strong className="text-emerald-300">Included</strong></div>
+                  <div className="flex justify-between"><span>Full CRM + dashboard</span><strong className="text-emerald-300">Included</strong></div>
+                  <div className="flex justify-between"><span>Lead capture + qualification</span><strong className="text-emerald-300">Included</strong></div>
+                  <div className="flex justify-between"><span>Contracts + invoicing</span><strong className="text-emerald-300">Included</strong></div>
+                  <div className="h-px bg-slate-600 my-2"></div>
+                  <div className="flex justify-between text-lg"><span className="text-emerald-300">Total</span><strong className="text-emerald-200 text-xl">$1,997/mo</strong></div>
+                </div>
               </div>
             </div>
-
-            <div className="mt-6 p-4 rounded-xl bg-slate-950/60 border border-slate-700/50">
-              <p className="text-sm text-slate-300">
-                <strong className="text-blue-300">All infrastructure included:</strong> You don't need
-                to manage API keys, hosting, or technical setup. We handle everything so you can focus
-                on running your business.
-              </p>
+            <div className="text-center pt-2">
+              <p className="text-emerald-300 font-semibold text-lg">Save $5,300/mo — that&apos;s $63,600/year back in your pocket.</p>
             </div>
           </div>
 
-          {/* WHO THIS IS FOR */}
-          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25">
-            <h2 className="text-2xl sm:text-3xl font-heading flex items-center gap-2">
-              <span>🎯</span>
-              <span>Is Lead Rescue Right For Your Business?</span>
-            </h2>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold text-emerald-300 mb-3">✓ Perfect For:</h3>
-                <ul className="space-y-2 text-slate-200">
-                  <li>• HVAC, plumbing, roofing, electrical, chimney businesses</li>
-                  <li>• 1-20 employees ($300k-5M revenue/year)</li>
-                  <li>• Getting 15-50 calls/week</li>
-                  <li>• Missing 5-15 calls/week due to workload</li>
-                  <li>• Average job value $300+</li>
-                  <li>• Losing $20k-100k/year to missed opportunities</li>
-                  <li>• <strong>Businesses with receptionists/assistants:</strong> Stop paying them $60K to answer "Do you work in my area?" 50 times per day. Lead Rescue pre-qualifies calls so your team only talks to hot leads. Have 4 assistants? Keep 2 for serious work and save $120K/year.</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-red-300 mb-3">✗ Not For:</h3>
-                <ul className="space-y-2 text-slate-200">
-                  <li>• Businesses getting &lt;10 calls/week</li>
-                  <li>• Average job value under $150</li>
-                  <li>• Complex consultations requiring immediate human expertise (medical, legal, financial advice)</li>
-                  <li>• Not ready to invest $2,997+ upfront</li>
-                  <li>• Want to "try it out" for cheap — this is a premium platform</li>
-                  <li>• Not committed to improving lead capture systems</li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="mt-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/30">
-              <p className="text-slate-200">
-                <strong className="text-blue-300">Honest assessment:</strong> If you're losing less than
-                $10,000/year to missed calls, the SMS tier ($497) might be a better fit. If you're losing
-                $20,000+/year, the Full tier ($2,997) pays for itself in 2 months.
-              </p>
-            </div>
-          </div>
-
-          {/* PROCESS */}
-          <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25">
-            <h2 className="text-2xl sm:text-3xl font-heading flex items-center gap-2">
-              <span>📋</span>
-              <span>How The Process Works</span>
-            </h2>
-
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">1</div>
-                <div>
-                  <h3 className="font-semibold text-blue-300">Strategy Call (15 min)</h3>
-                  <p className="text-slate-300 text-sm">We analyze your current lead flow and recommend the right tier</p>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">2</div>
-                <div>
-                  <h3 className="font-semibold text-blue-300">Custom Design (2-3 days)</h3>
-                  <p className="text-slate-300 text-sm">We map your workflows, emergency triggers, and response templates</p>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">3</div>
-                <div>
-                  <h3 className="font-semibold text-blue-300">Build & Test (1-2 weeks)</h3>
-                  <p className="text-slate-300 text-sm">We build your automations, dashboard, and voice scripts</p>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">4</div>
-                <div>
-                  <h3 className="font-semibold text-blue-300">Go Live (Day 1)</h3>
-                  <p className="text-slate-300 text-sm">We launch with live monitoring and fine-tune based on real leads</p>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">5</div>
-                <div>
-                  <h3 className="font-semibold text-blue-300">Ongoing Support (Monthly)</h3>
-                  <p className="text-slate-300 text-sm">We monitor, optimize, and improve your system continuously</p>
-                </div>
-              </div>
-            </div>
+          {/* 90-DAY GUARANTEE */}
+          <div className="text-center p-6 md:p-8 rounded-2xl bg-gradient-to-br from-emerald-900/30 to-slate-900/80 border-2 border-emerald-500/40">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3">90-Day Break-Even Guarantee</h2>
+            <p className="text-slate-200 max-w-2xl mx-auto">
+              If your system doesn&apos;t generate enough leads to cover its monthly cost within 90 days,
+              we keep optimizing for free until it does. No hidden fees, no excuses.
+            </p>
           </div>
 
           {/* FAQ */}
           <div className="space-y-6 p-6 md:p-8 rounded-2xl bg-slate-900/80 border border-blue-500/25">
-            <h2 className="text-2xl sm:text-3xl font-heading">Frequently Asked Questions</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold">Frequently Asked Questions</h2>
 
             <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold text-blue-300 mb-2">Why is the Full tier $2,997 when others charge $6,000+?</h3>
-                <p className="text-slate-300 text-sm">
-                  Most competitors charge $3k-6k for JUST the voice agent. We bundle voice, SMS, email,
-                  dashboard, and monitoring into one system because we've built it as a platform, not
-                  custom code for each client. You get enterprise features at half the price.
+              <details className="group">
+                <summary className="cursor-pointer font-semibold text-blue-300 mb-2 list-none flex justify-between items-center">
+                  How is this different from GoHighLevel?
+                  <span className="text-slate-500 group-open:rotate-180 transition-transform">&#9660;</span>
+                </summary>
+                <p className="text-slate-300 text-sm pl-0 pb-4">
+                  GoHighLevel is a DIY tool — you still need to set it up, maintain it, and figure out what works.
+                  BlueWise is a done-for-you service. We build, run, and optimize your entire lead operation.
+                  You don&apos;t touch software. You answer qualified leads.
                 </p>
-              </div>
+              </details>
 
-              <div>
-                <h3 className="font-semibold text-blue-300 mb-2">Can I upgrade from SMS to Full tier later?</h3>
-                <p className="text-slate-300 text-sm">
-                  Yes! Pay the difference ($2,500) and we'll add the voice agent and advanced features.
-                  Most clients start with SMS to test, then upgrade within 30 days after seeing results.
+              <details className="group">
+                <summary className="cursor-pointer font-semibold text-blue-300 mb-2 list-none flex justify-between items-center">
+                  What if I already have a CRM?
+                  <span className="text-slate-500 group-open:rotate-180 transition-transform">&#9660;</span>
+                </summary>
+                <p className="text-slate-300 text-sm pl-0 pb-4">
+                  We can integrate with your existing tools or replace them entirely — whichever saves you more
+                  time and money. Most clients ditch their old CRM within 2 weeks because ours does more with
+                  zero manual work.
                 </p>
-              </div>
+              </details>
 
-              <div>
-                <h3 className="font-semibold text-blue-300 mb-2">What's included in monthly support?</h3>
-                <p className="text-slate-300 text-sm">
-                  All the subscriptions (n8n, OpenAI, Telnyx, hosting), monitoring, bug fixes, small
-                  tweaks, and optimization. You're not paying for our time—you're paying for peace of
-                  mind that it just works.
+              <details className="group">
+                <summary className="cursor-pointer font-semibold text-blue-300 mb-2 list-none flex justify-between items-center">
+                  Is this a scam? These numbers seem too good.
+                  <span className="text-slate-500 group-open:rotate-180 transition-transform">&#9660;</span>
+                </summary>
+                <p className="text-slate-300 text-sm pl-0 pb-4">
+                  The ROI calculator uses conservative estimates (70% capture rate, not 100%). We built this system
+                  for Service Plus, a real contractor business that generated $71K in pipeline in 30 days. We have
+                  real numbers, real clients, and a 90-day guarantee. Book a call — we&apos;ll show you the dashboard live.
                 </p>
-              </div>
+              </details>
 
-              <div>
-                <h3 className="font-semibold text-blue-300 mb-2">How many leads can the system handle?</h3>
-                <p className="text-slate-300 text-sm">
-                  Currently processing 10,118 operations/week across all clients with 97.6% uptime.
-                  Your system can handle 100-500 leads/month easily. For higher volume, we move to Enterprise tier.
+              <details className="group">
+                <summary className="cursor-pointer font-semibold text-blue-300 mb-2 list-none flex justify-between items-center">
+                  What if it doesn&apos;t work for my business?
+                  <span className="text-slate-500 group-open:rotate-180 transition-transform">&#9660;</span>
+                </summary>
+                <p className="text-slate-300 text-sm pl-0 pb-4">
+                  That&apos;s what the strategy call is for. If your business doesn&apos;t fit (too few calls, job values
+                  too low), we&apos;ll tell you upfront. We don&apos;t want unhappy clients — it&apos;s bad for everyone.
+                  Plus, you&apos;re covered by the 90-day guarantee.
                 </p>
-              </div>
+              </details>
 
-              <div>
-                <h3 className="font-semibold text-blue-300 mb-2">What if it doesn't work for my business?</h3>
-                <p className="text-slate-300 text-sm">
-                  Honest answer: If you're not getting at least 10-15 calls/week, there's not enough
-                  volume to justify the cost. That's why we do a strategy call first—to make sure it's
-                  a good fit before you invest.
+              <details className="group">
+                <summary className="cursor-pointer font-semibold text-blue-300 mb-2 list-none flex justify-between items-center">
+                  How long does setup take?
+                  <span className="text-slate-500 group-open:rotate-180 transition-transform">&#9660;</span>
+                </summary>
+                <p className="text-slate-300 text-sm pl-0 pb-4">
+                  Starter: 1 week. Pro: 1-2 weeks. Elite: 2 weeks with white-glove onboarding. You keep running
+                  your business normally — we handle everything in the background and go live when ready.
                 </p>
-              </div>
+              </details>
+
+              <details className="group">
+                <summary className="cursor-pointer font-semibold text-blue-300 mb-2 list-none flex justify-between items-center">
+                  Can I upgrade later?
+                  <span className="text-slate-500 group-open:rotate-180 transition-transform">&#9660;</span>
+                </summary>
+                <p className="text-slate-300 text-sm pl-0 pb-4">
+                  Yes. You pay the difference in setup fees and we add the new features. Most Starter clients
+                  upgrade to Pro within 60 days after seeing the ROI.
+                </p>
+              </details>
             </div>
           </div>
 
           {/* FINAL CTA */}
           <div className="text-center space-y-6 pt-8">
-            <h2 className="text-3xl sm:text-4xl font-heading">Ready to Stop Losing Leads?</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold">Ready to Automate Your Business?</h2>
             <p className="text-lg text-slate-300 max-w-2xl mx-auto">
-              Book a 15-minute strategy call. We'll analyze your current lead flow and recommend
-              the right tier for your business.
+              Book a 15-minute strategy call. We&apos;ll analyze your business and tell you exactly
+              which plan will work — or if BlueWise isn&apos;t the right fit.
             </p>
 
-            <Link
-              href="/onboarding-rescue"
-              className="inline-block px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xl rounded-xl shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5"
-            >
-              Book Your Strategy Call →
+            <Link href="/contact"
+              className="inline-block px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xl rounded-xl shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5">
+              Book Your Strategy Call
             </Link>
 
             <div className="pt-6 space-y-2">
-              <p className="text-sm text-slate-400">
-                Currently accepting 5 new clients this month
-              </p>
+              <p className="text-sm text-slate-400">We onboard 3 new clients per month — limited capacity.</p>
               <div className="flex items-center justify-center gap-4 text-xs text-slate-500">
-                <span>✓ No credit card required</span>
-                <span>✓ Free strategy call</span>
-                <span>✓ Custom recommendations</span>
+                <span>&#10003; No credit card required</span>
+                <span>&#10003; 90-day guarantee</span>
+                <span>&#10003; Free strategy call</span>
               </div>
-            </div>
-
-            <div className="pt-6 border-t border-slate-800">
-              <Link href="/portfolio" className="text-blue-400 hover:text-blue-300 text-sm">
-                View full platform details & production metrics →
-              </Link>
             </div>
           </div>
         </section>
