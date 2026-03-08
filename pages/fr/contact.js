@@ -43,17 +43,33 @@ export default function ContactFr() {
           {/* DEUX COLONNES: Calendly + Formulaire */}
           <div className="grid md:grid-cols-2 gap-8">
 
-            {/* CALENDLY EMBED */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold">Choisis un moment qui te convient</h2>
-              <div className="rounded-2xl overflow-hidden border border-blue-500/30 bg-white" style={{ minHeight: '630px' }}>
-                <iframe
-                  src="https://calendly.com/mikael-bluewiseai?hide_landing_page_details=1&hide_gdpr_banner=1"
-                  width="100%"
-                  height="630"
-                  frameBorder="0"
-                  title="R&eacute;server un appel avec BlueWise AI"
-                />
+            {/* RÉSERVATION */}
+            <div className="space-y-6">
+              <h2 className="text-xl font-bold">Réserve ton appel gratuit</h2>
+              <div className="rounded-2xl border border-blue-500/30 bg-slate-900/60 p-8 flex flex-col items-center justify-center text-center space-y-6" style={{ minHeight: '400px' }}>
+                <div className="w-20 h-20 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-4xl">
+                  &#128197;
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-bold">Appel stratégique de 15 minutes</h3>
+                  <p className="text-slate-300 text-sm max-w-sm">
+                    On analyse tes opérations, on calcule tes pertes de revenus, pis on te montre exactement où l&apos;automatisation fit.
+                  </p>
+                </div>
+                <ul className="text-slate-300 text-sm space-y-1 text-left">
+                  <li>&#10003; Gratuit — aucun engagement</li>
+                  <li>&#10003; Calcul de ROI personnalisé pour ta business</li>
+                  <li>&#10003; Recommandations actionables que tu peux utiliser tout de suite</li>
+                </ul>
+                <a
+                  href="https://calendar.google.com/calendar/appointments/schedules/AcZssZ0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl shadow-lg shadow-blue-500/30 hover:-translate-y-0.5 transition-all text-lg"
+                >
+                  Choisis ton moment
+                </a>
+                <p className="text-slate-500 text-xs">Ouvre Google Calendar — choisis le créneau qui te convient</p>
               </div>
             </div>
 
@@ -157,8 +173,8 @@ export default function ContactFr() {
             </div>
             <div className="rounded-xl bg-slate-900/60 border border-slate-700/50 p-5 text-center">
               <div className="text-2xl mb-2">T&eacute;l&eacute;phone</div>
-              <a href="tel:+14504998758" className="text-blue-300 hover:underline">
-                (450) 499-8758
+              <a href="tel:+15144184743" className="text-blue-300 hover:underline">
+                (514) 418-4743
               </a>
             </div>
             <div className="rounded-xl bg-slate-900/60 border border-slate-700/50 p-5 text-center">
