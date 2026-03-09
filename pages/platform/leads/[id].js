@@ -9,6 +9,7 @@ function formatDate(dateString) {
   if (!dateString) return "\u2014";
   const d = new Date(dateString);
   return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Montreal",
     dateStyle: "medium",
     timeStyle: "short",
   }).format(d);

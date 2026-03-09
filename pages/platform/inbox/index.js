@@ -21,9 +21,10 @@ const CHANNEL_FILTERS = [
 ];
 
 function formatDateTime(dateString) {
-  if (!dateString) return "—";
+  if (!dateString) return "\u2014";
   const d = new Date(dateString);
   return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Montreal",
     dateStyle: "medium",
     timeStyle: "short",
   }).format(d);
@@ -152,7 +153,7 @@ export default function InboxPage() {
           <div className="flex-1 relative">
             <input
               type="text"
-              placeholder="Search by name, phone, or email…"
+              placeholder="Search by name, phone, or email\u2026"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-slate-900/70 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
@@ -217,7 +218,7 @@ export default function InboxPage() {
 
       {/* Conversation list */}
       <div className="rounded-2xl bg-slate-900/60 border border-slate-800/80 shadow-lg shadow-slate-950/60 overflow-hidden">
-        {loading && <div className="px-4 py-6 text-sm text-slate-400">Loading inbox…</div>}
+        {loading && <div className="px-4 py-6 text-sm text-slate-400">Loading inbox\u2026</div>}
 
         {!loading && error && (
           <div className="px-4 py-6 text-sm text-rose-400">
@@ -261,7 +262,7 @@ export default function InboxPage() {
                       </p>
                       <p className="text-xs text-slate-400 truncate">
                         {conv.phone ? <span>{conv.phone}</span> : null}
-                        {conv.phone && conv.email ? <span> · </span> : null}
+                        {conv.phone && conv.email ? <span> \u00b7 </span> : null}
                         {conv.email ? <span>{conv.email}</span> : null}
                       </p>
                     </div>
@@ -284,7 +285,7 @@ export default function InboxPage() {
                       <div className="mt-1 flex items-center gap-2">
                         <span className={channelPill(conv.previewChannel)}>
                           {(conv.previewLabel || conv.previewChannel || "activity").toString()}
-                          {conv.previewDirection ? ` · ${conv.previewDirection}` : ""}
+                          {conv.previewDirection ? ` \u00b7 ${conv.previewDirection}` : ""}
                         </span>
                         <span className="hidden md:inline-flex text-[0.7rem] text-slate-500 capitalize">
                           {conv.source || "unknown"}

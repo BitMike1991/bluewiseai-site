@@ -348,8 +348,12 @@ export default async function handler(req, res) {
       console.error("[api/leads/[id]] inboxMessagesError", inboxMessagesError);
 
     // inbox_messages is the authoritative source for SMS (has telnyx_message_id).
-    // Build a set of SMS timestamps from inbox_messages so we can skip duplicates
-    // that also appear in the general messages table.
+    // Dedup by epoch ms (raw strings may differ: timestamptz has +00, timestamp doesn't).
+    function toEpoch(ts) {
+      if (!ts) return 0;
+      return new Date(ts).getTime();
+    }
+
     const smsMessages =
       (inboxMessageRows || []).map((m) => ({
         id: m.id,
@@ -363,8 +367,9 @@ export default async function handler(req, res) {
         created_at: m.created_at,
       })) || [];
 
-    const smsTimestamps = new Set(
-      smsMessages.map((m) => m.created_at).filter(Boolean)
+    // Build epoch set for dedup (handles timezone format differences)
+    const smsEpochs = new Set(
+      smsMessages.map((m) => toEpoch(m.created_at)).filter(Boolean)
     );
 
     const generalMessages =
@@ -387,14 +392,12 @@ export default async function handler(req, res) {
 
     // Filter out SMS from messages table when inbox_messages already has them
     const dedupedGeneral = generalMessages.filter(
-      (m) => !m._isSms || !smsTimestamps.has(m.created_at)
+      (m) => !m._isSms || !smsEpochs.has(toEpoch(m.created_at))
     );
     dedupedGeneral.forEach((m) => delete m._isSms);
 
     const messages = [...dedupedGeneral, ...smsMessages].sort((a, b) => {
-      const aMs = a.created_at ? new Date(a.created_at).getTime() : 0;
-      const bMs = b.created_at ? new Date(b.created_at).getTime() : 0;
-      return aMs - bMs;
+      return toEpoch(a.created_at) - toEpoch(b.created_at);
     });
 
     //
