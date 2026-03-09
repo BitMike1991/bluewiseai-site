@@ -347,6 +347,26 @@ export default async function handler(req, res) {
     if (inboxMessagesError)
       console.error("[api/leads/[id]] inboxMessagesError", inboxMessagesError);
 
+    // inbox_messages is the authoritative source for SMS (has telnyx_message_id).
+    // Build a set of SMS timestamps from inbox_messages so we can skip duplicates
+    // that also appear in the general messages table.
+    const smsMessages =
+      (inboxMessageRows || []).map((m) => ({
+        id: m.id,
+        lead_id: m.lead_id,
+        channel: "sms",
+        direction: m.direction,
+        message_type: m.message_type,
+        body_text: m.body,
+        body_html: null,
+        provider_message_id: m.telnyx_message_id || null,
+        created_at: m.created_at,
+      })) || [];
+
+    const smsTimestamps = new Set(
+      smsMessages.map((m) => m.created_at).filter(Boolean)
+    );
+
     const generalMessages =
       (emailMessageRows || []).map((m) => {
         const ch = (m.channel || m.message_type || "email").toLowerCase();
@@ -361,23 +381,17 @@ export default async function handler(req, res) {
           body_text: isSms ? (m.body || "") : stripHtmlToText(m.body || ""),
           body_html: isSms ? null : (m.body || null),
           created_at: m.created_at,
+          _isSms: isSms,
         };
       }) || [];
 
-    const smsMessages =
-      (inboxMessageRows || []).map((m) => ({
-        id: m.id,
-        lead_id: m.lead_id,
-        channel: "sms",
-        direction: m.direction,
-        message_type: m.message_type,
-        body_text: m.body,
-        body_html: null,
-        provider_message_id: m.telnyx_message_id || null,
-        created_at: m.created_at,
-      })) || [];
+    // Filter out SMS from messages table when inbox_messages already has them
+    const dedupedGeneral = generalMessages.filter(
+      (m) => !m._isSms || !smsTimestamps.has(m.created_at)
+    );
+    dedupedGeneral.forEach((m) => delete m._isSms);
 
-    const messages = [...generalMessages, ...smsMessages].sort((a, b) => {
+    const messages = [...dedupedGeneral, ...smsMessages].sort((a, b) => {
       const aMs = a.created_at ? new Date(a.created_at).getTime() : 0;
       const bMs = b.created_at ? new Date(b.created_at).getTime() : 0;
       return aMs - bMs;
