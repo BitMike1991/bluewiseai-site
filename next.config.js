@@ -1,8 +1,15 @@
+const path = require('path')
+
 /** @type {import('next').NextConfig} */
 module.exports = {
   eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
     ignoreDuringBuilds: true,
+  },
+  transpilePackages: ['@splinetool/react-spline', '@splinetool/runtime'],
+  webpack: (config) => {
+    config.resolve.alias['@splinetool/react-spline'] = path.resolve(
+      __dirname, 'node_modules/@splinetool/react-spline/dist/react-spline.js'
+    )
+    return config
   },
 };

@@ -1,24 +1,37 @@
-/* Tailwind directives (only once in your project) */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Smooth scrolling for anchor links (nav to #sections) */
+/* ─── CSS Variables: Premium Dark Palette ─── */
+:root {
+  --bg: #0a0a0f;
+  --surface: #111118;
+  --surface2: #1a1a24;
+  --border: #2a2a3a;
+  --accent: #6c63ff;
+  --accent2: #00d4aa;
+  --red: #ff4757;
+  --yellow: #ffa502;
+  --green: #2ed573;
+  --text: #e8e8f0;
+  --text2: #8888aa;
+  --text3: #555570;
+}
+
 html {
   scroll-behavior: smooth;
 }
 
-/* Better text rendering + background safety */
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-    "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  /* background gradient to match BlueWise vibe */
-  background: linear-gradient(to bottom, #020617, #0f172a);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-/* Focus ring: accessible + on-brand glow (only on interactive elements via keyboard) */
+/* ─── Focus States: Accessible + On-Brand ─── */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -26,78 +39,68 @@ select:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.6);
+  box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.6);
 }
 
-/* Selection color matches your neon blue brand */
+/* ─── Selection ─── */
 ::selection {
-  background-color: rgba(59, 130, 246, 0.4); /* blue-500-ish */
-  color: #f9fafb; /* near-white */
+  background-color: rgba(108, 99, 255, 0.4);
+  color: #f9fafb;
 }
 
-/* HERO / GHOST BREATHING ANIMATION */
-@keyframes breath {
-  0%, 100% {
-    opacity: 0.45;
-  }
-  50% {
-    opacity: 0.95;
-  }
-}
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-/* Global fade-in for pages / sections (used in Layout) */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Optional: reusable helpers you can use with className */
-
-/* Glassy panel (for cards, sections, etc.) */
+/* ─── Utility Classes ─── */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.72);        /* slate-900-ish */
-  backdrop-filter: blur(18px);
+  background: rgba(17, 17, 24, 0.8);
+  backdrop-filter: blur(20px);
   border-radius: 1.25rem;
-  border: 1px solid rgba(148, 163, 184, 0.3); /* slate-400-ish border */
+  border: 1px solid var(--border);
 }
 
-/* Neon outline state (if you want a reusable glow style) */
 .neon-outline {
-  box-shadow: 0 0 24px rgba(59, 130, 246, 0.85);
+  box-shadow: 0 0 24px rgba(108, 99, 255, 0.6);
 }
 
-/* Optional: slightly nicer scrollbars on desktop (ignored on mobile) */
-::-webkit-scrollbar {
-  width: 8px;
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
-::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 1);
+
+/* ─── Animations ─── */
+@keyframes breath {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.95; }
 }
-::-webkit-scrollbar-thumb {
-  background: rgba(51, 102, 204, 0.75);
-  border-radius: 999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.9);
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes flashGlowSpecial {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 25px rgba(59,130,246,0.9), 0 0 50px rgba(59,130,246,0.5);
+    box-shadow: 0 0 25px rgba(108,99,255,0.9), 0 0 50px rgba(108,99,255,0.5);
   }
   50% {
     transform: scale(1.05);
-    box-shadow: 0 0 40px rgba(59,130,246,1), 0 0 70px rgba(59,130,246,0.8);
+    box-shadow: 0 0 40px rgba(108,99,255,1), 0 0 70px rgba(108,99,255,0.8);
   }
 }
 
 .animate-flashSpecial {
   animation: flashGlowSpecial 2.2s ease-in-out infinite;
+}
+
+/* ─── Reduced Motion: Accessibility ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -67,7 +67,7 @@ export default function ROICalculator() {
   };
 
   return (
-    <div className="rounded-3xl border-2 border-blue-500/40 bg-gradient-to-br from-blue-900/30 to-slate-900/90 p-6 md:p-10 backdrop-blur-xl">
+    <div className="p-6 md:p-10">
       <div className="text-center mb-8">
         <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">{t.title}</h3>
         <p className="text-slate-300 text-sm sm:text-base">{t.subtitle}</p>

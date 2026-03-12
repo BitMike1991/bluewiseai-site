@@ -38,20 +38,20 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+    <div className="flex flex-col min-h-screen bg-bg">
       <Navbar />
 
-      <main
-        className={
-          isDarkPage
-            ? "flex-grow bg-transparent"
-            : "flex-grow bg-white/90 backdrop-blur-sm shadow-[0_0_60px_rgba(59,130,246,0.2)]"
-        }
-      >
-        <div className="max-w-6xl mx-auto px-6 py-8 animate-[fadeIn_0.6s_ease-out]">
+      {isDarkPage ? (
+        <main className="flex-grow">
           {children}
-        </div>
-      </main>
+        </main>
+      ) : (
+        <main className="flex-grow bg-white/90 backdrop-blur-sm shadow-[0_0_60px_rgba(59,130,246,0.2)]">
+          <div className="max-w-6xl mx-auto px-6 py-8 animate-[fadeIn_0.6s_ease-out]">
+            {children}
+          </div>
+        </main>
+      )}
 
       <Footer />
       <Analytics />
