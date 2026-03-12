@@ -29,7 +29,7 @@ export default function Footer() {
         <div className="grid md:grid-cols-3 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <h3 className="text-white font-bold text-lg mb-2">BlueWise AI</h3>
+            <h3 className="text-white font-bold text-lg mb-2">BlueWise</h3>
             <p className="text-sm">
               {isFr
                 ? "Optimisation d'entreprise propulsée par IA pour les entrepreneurs en services résidentiels."
@@ -77,7 +77,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-slate-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs">
-            &copy; {new Date().getFullYear()} BlueWise AI. {isFr ? 'Tous droits réservés.' : 'All rights reserved.'}
+            &copy; {new Date().getFullYear()} BlueWise. {isFr ? 'Tous droits réservés.' : 'All rights reserved.'}
           </p>
           <div className="flex gap-4 text-xs">
             <span>{isFr ? 'Montréal, QC' : 'Montreal, QC'}</span>

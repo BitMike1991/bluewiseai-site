@@ -58,7 +58,7 @@ export default async function handler(req, res) {
         <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
           <div style="max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 8px;">
             <div style="text-align: center; margin-bottom: 20px;">
-              <img src="https://www.bluewiseai.com/_next/image?url=%2Fowl.png&w=96&q=75" alt="Blue Wise AI" style="max-height: 60px;" />
+              <img src="https://www.bluewiseai.com/_next/image?url=%2Fbluewise-logo.png&w=96&q=75" alt="BlueWise" style="max-height: 60px;" />
             </div>
             <p>${isFrench ? `Bonjour ${name},` : `Hi ${name},`}</p>
 

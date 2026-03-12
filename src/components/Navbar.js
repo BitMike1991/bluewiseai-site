@@ -121,21 +121,21 @@ export default function Navbar() {
         <Link
           href={isFr ? "/fr" : "/"}
           className="flex items-center gap-2.5 group"
-          aria-label="BlueWise AI logo"
-          title="BlueWise AI"
+          aria-label="BlueWise logo"
+          title="BlueWise"
         >
           <Image
-            src="/owl.png"
-            alt="BlueWise AI logo"
+            src="/bluewise-logo.png"
+            alt="BlueWise logo"
             width={36}
             height={36}
-            className="rounded-full transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_rgba(108,99,255,0.7)]"
+            className="rounded-lg transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_rgba(108,99,255,0.7)]"
             priority
           />
           <span className={`font-heading font-bold text-lg tracking-tight hidden sm:block ${
             isDarkPage ? "text-white" : "text-gray-900"
           }`}>
-            BlueWise<span className="text-accent">AI</span>
+            BlueWise
           </span>
         </Link>
 
