@@ -5,6 +5,14 @@ module.exports = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'talaveracasajuarez.com',
+      },
+    ],
+  },
   transpilePackages: ['@splinetool/react-spline', '@splinetool/runtime'],
   webpack: (config) => {
     config.resolve.alias['@splinetool/react-spline'] = path.resolve(
