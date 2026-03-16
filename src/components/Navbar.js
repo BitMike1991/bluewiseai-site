@@ -21,7 +21,6 @@ const NAV_ITEMS = {
   es: [
     { href: "/es", label: "Inicio" },
     { href: "/es/services", label: "Cómo funciona" },
-    { href: "/es/portfolio", label: "Resultados" },
     { href: "/es/lead-rescue", label: "Planes" },
   ],
 };
