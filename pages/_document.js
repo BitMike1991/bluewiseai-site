@@ -15,6 +15,7 @@ export default function Document() {
         <meta property="og:image:height" content="768" />
         <meta property="og:image:type" content="image/png" />
         <meta property="og:url" content="https://bluewiseai.com" />
+        <meta property="fb:app_id" content="928880796387934" />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:image" content="https://bluewiseai.com/bluewise-logo.png" />
 
