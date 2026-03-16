@@ -9,6 +9,7 @@ const SCOPES = [
 ].join(" ");
 
 export default async function handler(req, res) {
+  try {
   const { user, customerId } = await getAuthContext(req, res);
 
   if (!user) return res.status(401).json({ error: "Not authenticated" });
@@ -76,4 +77,8 @@ export default async function handler(req, res) {
 
   res.setHeader("Allow", ["GET", "DELETE"]);
   return res.status(405).json({ error: "Method not allowed" });
+  } catch (err) {
+    console.error("[gmail-auth] Unhandled error:", err);
+    return res.status(500).json({ error: "Internal error", details: err.message });
+  }
 }
