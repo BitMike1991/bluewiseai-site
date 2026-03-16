@@ -5,23 +5,21 @@ import { getLocale, localePath } from '@/lib/locale';
 const NAV_LINKS = {
   en: [
     { href: '/', label: 'Home' },
-    { href: '/about', label: 'About' },
-    { href: '/services', label: 'Services' },
-    { href: '/portfolio', label: 'Results' },
+    { href: '/services', label: 'How It Works' },
     { href: '/lead-rescue', label: 'Plans & Pricing' },
+    { href: '/artisan', label: 'Artisan' },
     { href: '/contact', label: 'Contact' },
   ],
   fr: [
     { href: '/fr', label: 'Accueil' },
-    { href: '/fr/about', label: 'À propos' },
-    { href: '/fr/services', label: 'Services' },
-    { href: '/fr/portfolio', label: 'Résultats' },
+    { href: '/fr/services', label: 'Comment ça marche' },
     { href: '/fr/lead-rescue', label: 'Plans & prix' },
+    { href: '/fr/artisan', label: 'Artisan' },
     { href: '/fr/contact', label: 'Contact' },
   ],
   es: [
     { href: '/es', label: 'Inicio' },
-    { href: '/es/services', label: 'Servicios' },
+    { href: '/es/services', label: 'Cómo funciona' },
     { href: '/es/lead-rescue', label: 'Planes y precios' },
     { href: '/es/artisan', label: 'Artesanos' },
     { href: '/es/contact', label: 'Contacto' },

@@ -9,19 +9,20 @@ const NAV_ITEMS = {
   en: [
     { href: "/", label: "Home" },
     { href: "/services", label: "How It Works" },
-    { href: "/portfolio", label: "Results" },
     { href: "/lead-rescue", label: "Plans" },
+    { href: "/artisan", label: "Artisan" },
   ],
   fr: [
     { href: "/fr", label: "Accueil" },
     { href: "/fr/services", label: "Comment ça marche" },
-    { href: "/fr/portfolio", label: "Résultats" },
     { href: "/fr/lead-rescue", label: "Plans" },
+    { href: "/fr/artisan", label: "Artisan" },
   ],
   es: [
     { href: "/es", label: "Inicio" },
     { href: "/es/services", label: "Cómo funciona" },
     { href: "/es/lead-rescue", label: "Planes" },
+    { href: "/es/artisan", label: "Artesanos" },
   ],
 };
 
