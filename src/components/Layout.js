@@ -1,30 +1,43 @@
 // src/components/Layout.js
 import { Analytics } from "@vercel/analytics/next"
 import { useRouter } from "next/router";
+import { useEffect } from "react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import { getLocale } from "@/lib/locale";
 
 export default function Layout({ children }) {
   const { pathname } = useRouter();
+  const locale = getLocale(pathname);
+
+  // Set document lang attribute dynamically
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   // Helper booleans for groups of pages
   const isMainDarkPage =
     pathname === "/" ||
     pathname === "/fr" ||
+    pathname === "/es" ||
     pathname === "/contact" ||
     pathname === "/fr/contact" ||
+    pathname === "/es/contact" ||
     pathname === "/services" ||
     pathname === "/fr/services" ||
+    pathname === "/es/services" ||
     pathname === "/about" ||
     pathname === "/fr/about" ||
     pathname === "/portfolio" ||
     pathname === "/fr/portfolio" ||
-    pathname === "/onboarding-rescue" ||          // ✅ NEW
-    pathname === "/fr/onboarding-rescue" ||        // ✅ NEW
-    pathname === "/lead-rescue" ||          // ✅ NEW
-    pathname === "/fr/lead-rescue" ||       // ✅ NEW
+    pathname === "/onboarding-rescue" ||
+    pathname === "/fr/onboarding-rescue" ||
+    pathname === "/lead-rescue" ||
+    pathname === "/fr/lead-rescue" ||
+    pathname === "/es/lead-rescue" ||
     pathname === "/artisan" ||
-    pathname === "/fr/artisan";
+    pathname === "/fr/artisan" ||
+    pathname === "/es/artisan";
   // All resources / pillars pages (list + articles) → dark layout too
   const isPillarsPage =
     pathname.startsWith("/pillars") || pathname.startsWith("/fr/pillars");
@@ -35,7 +48,7 @@ export default function Layout({ children }) {
   const isPlatformPage = pathname.startsWith("/platform");
 
   if (isPlatformPage) {
-    // Dashboard pages (we’ll wrap them in DashboardLayout directly)
+    // Dashboard pages (we'll wrap them in DashboardLayout directly)
     return <>{children}</>;
   }
 

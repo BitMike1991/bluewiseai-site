@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { ROI_DEFAULTS, PRICING } from "@/data/pricing";
+import { getLocale } from "@/lib/locale";
 
 export default function ROICalculator() {
   const { pathname } = useRouter();
-  const isFr = pathname.startsWith("/fr");
+  const locale = getLocale(pathname);
 
   const [missedCallsPerWeek, setMissedCallsPerWeek] = useState(ROI_DEFAULTS.missedCallsPerWeek);
   const [avgJobValue, setAvgJobValue] = useState(ROI_DEFAULTS.avgJobValue);
@@ -30,40 +31,55 @@ export default function ROICalculator() {
   const netProfitYearTwo = recoveredRevenue - yearTwoCost;
 
   const t = {
-    title: isFr ? "Calcule ton ROI" : "Calculate Your ROI",
-    subtitle: isFr
-      ? "Ajuste les curseurs pour voir ton retour sur investissement personnalisé (basé sur le plan Pro)"
-      : "Adjust the sliders to see your personalized ROI (based on Pro plan)",
-    missedCalls: isFr ? "Appels manqués par semaine" : "Missed Calls Per Week",
-    avgJob: isFr ? "Valeur moyenne du contrat" : "Average Job Value",
-    conversion: isFr ? "Taux de conversion (si tu répondais)" : "Conversion Rate (if you answered)",
-    currentTitle: isFr ? "Situation actuelle" : "Current Situation",
-    withTitle: isFr ? "Avec BlueWise (Pro)" : "With BlueWise (Pro)",
-    missedYear: isFr ? "Appels manqués/année :" : "Missed calls/year:",
-    potentialRev: isFr ? "Revenus potentiels :" : "Potential revenue:",
-    lostYear: isFr ? "Perdus par année :" : "Lost per year:",
-    setup: isFr ? "Frais d'installation :" : "Setup fee:",
-    monthlySupport: isFr ? "Support mensuel :" : "Monthly support:",
-    firstYearTotal: isFr ? "Total 1ère année :" : "First year total:",
-    recovered: isFr ? "Revenus récupérés :" : "Recovered revenue:",
-    netProfit: isFr ? "Profit net Année 1 :" : "Net profit Year 1:",
-    breakeven: isFr ? "Rentabilisé en" : "Break-Even",
-    roi: isFr ? "ROI Année 1" : "ROI Year 1",
-    capture: isFr ? "Taux capture" : "Capture Rate",
-    year2: isFr ? "Profit An 2+" : "Year 2+ Profit",
-    days: isFr ? "jours" : "days",
-    returnLabel: isFr ? "retour" : "return",
-    ofMissed: isFr ? "des appels manqués" : "of missed calls",
-    perYear: isFr ? "par année" : "per year",
-    basedOn: isFr ? "Basé sur tes chiffres, BlueWise se rentabilise en" : "Based on your numbers, BlueWise pays for itself in",
-    lessMonth: isFr ? "moins d'un mois" : "less than a month",
-    oneTwo: isFr ? "1-2 mois" : "1-2 months",
-    twoThree: isFr ? "2-3 mois" : "2-3 months",
-    threePlus: isFr ? "3+ mois" : "3+ months",
-    gainTitle: isFr ? "Ton gain potentiel" : "Your Potential Gain",
-    firstYear: isFr ? "dans ta première année" : "in your first year alone",
-    notFit: isFr ? "Avec ces chiffres, le plan Pro n'est peut-être pas le bon fit. Considère le plan Starter." : "With these numbers, the Pro plan may not be the best fit. Consider the Starter plan.",
-    guarantee: isFr ? "Garantie rentabilité 90 jours — on travaille gratis jusqu'à ce que tu sois profitable." : "90-day break-even guarantee — we work for free until you're profitable.",
+    title: { en: "Calculate Your ROI", fr: "Calcule ton ROI", es: "Calcula tu ROI" }[locale],
+    subtitle: {
+      en: "Adjust the sliders to see your personalized ROI (based on Pro plan)",
+      fr: "Ajuste les curseurs pour voir ton retour sur investissement personnalisé (basé sur le plan Pro)",
+      es: "Ajusta los controles para ver tu retorno de inversión personalizado (basado en el plan Pro)",
+    }[locale],
+    missedCalls: { en: "Missed Calls Per Week", fr: "Appels manqués par semaine", es: "Llamadas perdidas por semana" }[locale],
+    avgJob: { en: "Average Job Value", fr: "Valeur moyenne du contrat", es: "Valor promedio del trabajo" }[locale],
+    conversion: { en: "Conversion Rate (if you answered)", fr: "Taux de conversion (si tu répondais)", es: "Tasa de conversión (si contestaras)" }[locale],
+    currentTitle: { en: "Current Situation", fr: "Situation actuelle", es: "Situación actual" }[locale],
+    withTitle: { en: "With BlueWise (Pro)", fr: "Avec BlueWise (Pro)", es: "Con BlueWise (Pro)" }[locale],
+    missedYear: { en: "Missed calls/year:", fr: "Appels manqués/année :", es: "Llamadas perdidas/año:" }[locale],
+    potentialRev: { en: "Potential revenue:", fr: "Revenus potentiels :", es: "Ingresos potenciales:" }[locale],
+    lostYear: { en: "Lost per year:", fr: "Perdus par année :", es: "Perdidos por año:" }[locale],
+    setup: { en: "Setup fee:", fr: "Frais d'installation :", es: "Costo de instalación:" }[locale],
+    monthlySupport: { en: "Monthly support:", fr: "Support mensuel :", es: "Soporte mensual:" }[locale],
+    firstYearTotal: { en: "First year total:", fr: "Total 1ère année :", es: "Total primer año:" }[locale],
+    recovered: { en: "Recovered revenue:", fr: "Revenus récupérés :", es: "Ingresos recuperados:" }[locale],
+    netProfit: { en: "Net profit Year 1:", fr: "Profit net Année 1 :", es: "Ganancia neta Año 1:" }[locale],
+    breakeven: { en: "Break-Even", fr: "Rentabilisé en", es: "Punto de equilibrio" }[locale],
+    roi: { en: "ROI Year 1", fr: "ROI Année 1", es: "ROI Año 1" }[locale],
+    capture: { en: "Capture Rate", fr: "Taux capture", es: "Tasa de captura" }[locale],
+    year2: { en: "Year 2+ Profit", fr: "Profit An 2+", es: "Ganancia Año 2+" }[locale],
+    days: { en: "days", fr: "jours", es: "días" }[locale],
+    returnLabel: { en: "return", fr: "retour", es: "retorno" }[locale],
+    ofMissed: { en: "of missed calls", fr: "des appels manqués", es: "de llamadas perdidas" }[locale],
+    perYear: { en: "per year", fr: "par année", es: "por año" }[locale],
+    basedOn: {
+      en: "Based on your numbers, BlueWise pays for itself in",
+      fr: "Basé sur tes chiffres, BlueWise se rentabilise en",
+      es: "Según tus números, BlueWise se paga solo en",
+    }[locale],
+    lessMonth: { en: "less than a month", fr: "moins d'un mois", es: "menos de un mes" }[locale],
+    oneTwo: { en: "1-2 months", fr: "1-2 mois", es: "1-2 meses" }[locale],
+    twoThree: { en: "2-3 months", fr: "2-3 mois", es: "2-3 meses" }[locale],
+    threePlus: { en: "3+ months", fr: "3+ mois", es: "3+ meses" }[locale],
+    gainTitle: { en: "Your Potential Gain", fr: "Ton gain potentiel", es: "Tu ganancia potencial" }[locale],
+    firstYear: { en: "in your first year alone", fr: "dans ta première année", es: "solo en tu primer año" }[locale],
+    notFit: {
+      en: "With these numbers, the Pro plan may not be the best fit. Consider the Starter plan.",
+      fr: "Avec ces chiffres, le plan Pro n'est peut-être pas le bon fit. Considère le plan Starter.",
+      es: "Con estos números, el plan Pro podría no ser el mejor. Considera el plan Starter.",
+    }[locale],
+    guarantee: {
+      en: "90-day break-even guarantee — we work for free until you're profitable.",
+      fr: "Garantie rentabilité 90 jours — on travaille gratis jusqu'à ce que tu sois profitable.",
+      es: "Garantía de punto de equilibrio en 90 días — trabajamos gratis hasta que seas rentable.",
+    }[locale],
+    week: { en: "week", fr: "sem", es: "sem" }[locale],
   };
 
   return (
@@ -83,8 +99,8 @@ export default function ROICalculator() {
             onChange={(e) => setMissedCallsPerWeek(Number(e.target.value))}
             className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
           <div className="flex justify-between text-xs text-slate-400 mt-1">
-            <span>5/{isFr ? "sem" : "week"}</span>
-            <span>50/{isFr ? "sem" : "week"}</span>
+            <span>5/{t.week}</span>
+            <span>50/{t.week}</span>
           </div>
         </div>
 
@@ -146,7 +162,7 @@ export default function ROICalculator() {
             </div>
             <div className="flex justify-between text-sm">
               <span>{t.monthlySupport}</span>
-              <strong className="text-white">${monthlyFee}/{isFr ? "mo" : "mo"}</strong>
+              <strong className="text-white">${monthlyFee}/mo</strong>
             </div>
             <div className="flex justify-between text-sm">
               <span>{t.firstYearTotal}</span>

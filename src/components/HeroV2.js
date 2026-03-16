@@ -6,12 +6,42 @@ import { ChevronDown, Zap, Target, ShieldCheck } from "lucide-react";
 import { TextGenerateEffect } from "@/components/ui/TextGenerateEffect";
 import { ShimmerButton } from "@/components/ui/ShimmerButton";
 import { NumberTicker } from "@/components/ui/NumberTicker";
+import { getLocale, localePath } from "@/lib/locale";
 
 // Lazy-load Spline — never block page render
 const Spline = dynamic(
   () => import("@splinetool/react-spline").then((m) => m.default || m),
   { ssr: false, loading: () => null }
 );
+
+const T = {
+  pill: {
+    en: "AI-Powered Business Automation",
+    fr: "Automatisation IA pour entrepreneurs",
+    es: "Automatización empresarial con IA",
+  },
+  headline1: {
+    en: "We Run Your Business",
+    fr: "On gère ta business",
+    es: "Nosotros manejamos tu negocio",
+  },
+  headline2: {
+    en: "While You Do the Work",
+    fr: "Pendant que tu fais ta job",
+    es: "Mientras tú haces el trabajo",
+  },
+  subtext: {
+    en: "Missed calls, quotes, contracts, payments — all handled automatically by AI. You focus on what you do best.",
+    fr: "Appels manqués, soumissions, contrats, paiements — tout géré automatiquement par l'IA. Toi, tu fais ce que tu fais de mieux.",
+    es: "Llamadas perdidas, cotizaciones, contratos, pagos — todo manejado automáticamente con IA. Tú concéntrate en lo que mejor sabes hacer.",
+  },
+  seePlans: { en: "See Plans", fr: "Voir les plans", es: "Ver planes" },
+  bookCall: { en: "Book a Call", fr: "Réserver un appel", es: "Agendar llamada" },
+  automationRate: { en: "Automation rate", fr: "Taux d'automatisation", es: "Tasa de automatización" },
+  pipeline: { en: "Pipeline in 30 days", fr: "Pipeline en 30 jours", es: "Pipeline en 30 días" },
+  missedLeads: { en: "Missed leads", fr: "Leads manqués", es: "Leads perdidos" },
+  scroll: { en: "Scroll", fr: "Défiler", es: "Desplazar" },
+};
 
 function SocialProofStat({ icon: Icon, value, suffix, label, delay }) {
   return (
@@ -34,9 +64,10 @@ function SocialProofStat({ icon: Icon, value, suffix, label, delay }) {
 
 export default function HeroV2() {
   const { pathname } = useRouter();
-  const isFr = pathname.startsWith("/fr");
-  const contactHref = isFr ? "/fr/contact" : "/contact";
-  const pricingHref = isFr ? "/fr/lead-rescue" : "/lead-rescue";
+  const locale = getLocale(pathname);
+  const prefix = localePath(locale);
+  const contactHref = `${prefix}/contact`;
+  const pricingHref = `${prefix}/lead-rescue`;
 
   const [splineError, setSplineError] = useState(false);
 
@@ -91,16 +122,14 @@ export default function HeroV2() {
           >
             <Zap className="w-3.5 h-3.5 text-accent" />
             <span className="text-xs font-semibold text-accent tracking-wider uppercase">
-              {isFr
-                ? "Automatisation IA pour entrepreneurs"
-                : "AI-Powered Business Automation"}
+              {T.pill[locale]}
             </span>
           </div>
 
           {/* Headline — two lines with gradient accent */}
           <h1 className="mb-8">
             <TextGenerateEffect
-              words={isFr ? "On gère ta business" : "We Run Your Business"}
+              words={T.headline1[locale]}
               className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-heading font-bold leading-[1.08] text-white"
               duration={0.6}
             />
@@ -108,7 +137,7 @@ export default function HeroV2() {
               className="block mt-2 text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-heading font-bold leading-[1.08] opacity-0 animate-fade-in bg-gradient-to-r from-accent via-accent2 to-accent bg-clip-text text-transparent"
               style={{ animationDelay: "800ms", animationFillMode: "forwards" }}
             >
-              {isFr ? "Pendant que tu fais ta job" : "While You Do the Work"}
+              {T.headline2[locale]}
             </span>
           </h1>
 
@@ -117,9 +146,7 @@ export default function HeroV2() {
             className="text-base sm:text-lg text-txt2 mb-10 max-w-xl leading-relaxed opacity-0 animate-fade-in"
             style={{ animationDelay: "1.2s", animationFillMode: "forwards" }}
           >
-            {isFr
-              ? "Appels manqués, soumissions, contrats, paiements — tout géré automatiquement par l'IA. Toi, tu fais ce que tu fais de mieux."
-              : "Missed calls, quotes, contracts, payments — all handled automatically by AI. You focus on what you do best."}
+            {T.subtext[locale]}
           </p>
 
           {/* CTAs */}
@@ -129,7 +156,7 @@ export default function HeroV2() {
           >
             <Link href={pricingHref}>
               <ShimmerButton className="text-base px-8 py-4 w-full sm:w-auto">
-                {isFr ? "Voir les plans" : "See Plans"}
+                {T.seePlans[locale]}
               </ShimmerButton>
             </Link>
             <Link
@@ -139,7 +166,7 @@ export default function HeroV2() {
                          text-txt2 hover:text-white
                          transition-all duration-300 text-center cursor-pointer"
             >
-              {isFr ? "Réserver un appel" : "Book a Call"}
+              {T.bookCall[locale]}
             </Link>
           </div>
 
@@ -149,21 +176,21 @@ export default function HeroV2() {
               icon={Zap}
               value={97.6}
               suffix="%"
-              label={isFr ? "Taux d'automatisation" : "Automation rate"}
+              label={T.automationRate[locale]}
               delay={1800}
             />
             <SocialProofStat
               icon={Target}
               value={71}
               suffix="K"
-              label={isFr ? "Pipeline en 30 jours" : "Pipeline in 30 days"}
+              label={T.pipeline[locale]}
               delay={2000}
             />
             <SocialProofStat
               icon={ShieldCheck}
               value={0}
               suffix=""
-              label={isFr ? "Leads manqués" : "Missed leads"}
+              label={T.missedLeads[locale]}
               delay={2200}
             />
           </div>
@@ -177,7 +204,7 @@ export default function HeroV2() {
       >
         <div className="flex flex-col items-center gap-2 text-txt3">
           <span className="text-xs tracking-wider uppercase">
-            {isFr ? "Défiler" : "Scroll"}
+            {T.scroll[locale]}
           </span>
           <ChevronDown className="w-5 h-5 animate-bounce" />
         </div>
