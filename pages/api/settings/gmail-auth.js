@@ -23,9 +23,8 @@ export default async function handler(req, res) {
     }
 
     // State encodes customer_id + user_id for security verification on callback
-    const state = Buffer.from(
-      JSON.stringify({ customerId, userId: user.id })
-    ).toString("base64url");
+    const stateJson = JSON.stringify({ customerId, userId: user.id });
+    const state = Buffer.from(stateJson).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
     const params = new URLSearchParams({
       client_id: clientId,

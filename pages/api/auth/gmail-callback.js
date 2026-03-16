@@ -20,7 +20,8 @@ export default async function handler(req, res) {
   // Decode state
   let stateData;
   try {
-    stateData = JSON.parse(Buffer.from(state, "base64url").toString());
+    const padded = state.replace(/-/g, "+").replace(/_/g, "/");
+    stateData = JSON.parse(Buffer.from(padded, "base64").toString());
   } catch (e) {
     return res.redirect("/platform/settings?gmail=error&reason=invalid_state");
   }
