@@ -37,7 +37,10 @@ export default function Layout({ children }) {
     pathname === "/es/lead-rescue" ||
     pathname === "/artisan" ||
     pathname === "/fr/artisan" ||
-    pathname === "/es/artisan";
+    pathname === "/es/artisan" ||
+    pathname === "/results" ||
+    pathname === "/fr/results" ||
+    pathname === "/es/results";
   // All resources / pillars pages (list + articles) → dark layout too
   const isPillarsPage =
     pathname.startsWith("/pillars") || pathname.startsWith("/fr/pillars");

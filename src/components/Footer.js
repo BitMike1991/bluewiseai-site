@@ -6,6 +6,7 @@ const NAV_LINKS = {
   en: [
     { href: '/', label: 'Home' },
     { href: '/services', label: 'How It Works' },
+    { href: '/results', label: 'Results' },
     { href: '/lead-rescue', label: 'Plans & Pricing' },
     { href: '/artisan', label: 'Artisan' },
     { href: '/contact', label: 'Contact' },
@@ -13,6 +14,7 @@ const NAV_LINKS = {
   fr: [
     { href: '/fr', label: 'Accueil' },
     { href: '/fr/services', label: 'Comment ça marche' },
+    { href: '/fr/results', label: 'Résultats' },
     { href: '/fr/lead-rescue', label: 'Plans & prix' },
     { href: '/fr/artisan', label: 'Artisan' },
     { href: '/fr/contact', label: 'Contact' },

@@ -9,18 +9,21 @@ const NAV_ITEMS = {
   en: [
     { href: "/", label: "Home" },
     { href: "/services", label: "How It Works" },
+    { href: "/results", label: "Results" },
     { href: "/lead-rescue", label: "Plans" },
     { href: "/artisan", label: "Artisan" },
   ],
   fr: [
     { href: "/fr", label: "Accueil" },
     { href: "/fr/services", label: "Comment ça marche" },
+    { href: "/fr/results", label: "Résultats" },
     { href: "/fr/lead-rescue", label: "Plans" },
     { href: "/fr/artisan", label: "Artisan" },
   ],
   es: [
     { href: "/es", label: "Inicio" },
     { href: "/es/services", label: "Cómo funciona" },
+    { href: "/es/results", label: "Resultados" },
     { href: "/es/lead-rescue", label: "Planes" },
     { href: "/es/artisan", label: "Artesanos" },
   ],
@@ -66,7 +69,10 @@ export default function Navbar() {
     pathname === "/es/lead-rescue" ||
     pathname === "/artisan" ||
     pathname === "/fr/artisan" ||
-    pathname === "/es/artisan";
+    pathname === "/es/artisan" ||
+    pathname === "/results" ||
+    pathname === "/fr/results" ||
+    pathname === "/es/results";
 
   const isPillarsPage =
     pathname.startsWith("/pillars") || pathname.startsWith("/fr/pillars");

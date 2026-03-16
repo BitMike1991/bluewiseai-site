@@ -276,12 +276,12 @@ const CASE_T = {
     es: '"Desde que tenemos BlueWise, no hemos perdido ni una sola llamada. El sistema se pagó solo en 6 semanas."',
   },
   cite: { en: "\u2014 Owner, Service Plus", fr: "\u2014 Propriétaire, Service Plus", es: "\u2014 Propietario, Service Plus" },
-  readMore: { en: "Book a call to learn more", fr: "Réserve un appel pour en savoir plus", es: "Agenda una llamada para saber más" },
+  readMore: { en: "Read the full case study", fr: "Lire l'étude de cas complète", es: "Leer el caso de éxito completo" },
 };
 
 function CaseStudy({ locale }) {
   const prefix = localePath(locale);
-  const contactHref = `${prefix}/contact`;
+  const resultsHref = `${prefix}/results`;
 
   const statLabels = {
     pipeline: { en: "Pipeline in 30 days", fr: "Pipeline en 30 jours", es: "Pipeline en 30 días" },
@@ -318,7 +318,7 @@ function CaseStudy({ locale }) {
               </blockquote>
 
               <Link
-                href={contactHref}
+                href={resultsHref}
                 className="inline-flex items-center gap-2 text-accent hover:text-accent/80 font-semibold transition-colors"
               >
                 {CASE_T.readMore[locale]}
