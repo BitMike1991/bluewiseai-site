@@ -44,18 +44,30 @@ export default function SettingsPage() {
   const [gmail, setGmail] = useState({ loading: true, connected: false, email: '' });
   const [gmailLoading, setGmailLoading] = useState(false);
 
-  // Load Gmail status
+  // Outlook OAuth state
+  const [outlook, setOutlook] = useState({ loading: true, connected: false, email: '' });
+  const [outlookLoading, setOutlookLoading] = useState(false);
+
+  // Load email connection statuses
   useEffect(() => {
     fetch('/api/settings/gmail-status')
       .then((r) => r.json())
       .then((data) => setGmail({ loading: false, connected: data.connected, email: data.email || '' }))
       .catch(() => setGmail((g) => ({ ...g, loading: false })));
+
+    fetch('/api/settings/outlook-status')
+      .then((r) => r.json())
+      .then((data) => setOutlook({ loading: false, connected: data.connected, email: data.email || '' }))
+      .catch(() => setOutlook((g) => ({ ...g, loading: false })));
   }, []);
 
   // Check for OAuth callback result
   useEffect(() => {
     if (router.query.gmail === 'success') {
       setGmail((g) => ({ ...g, connected: true, email: router.query.email || g.email }));
+    }
+    if (router.query.outlook === 'success') {
+      setOutlook((g) => ({ ...g, connected: true, email: router.query.email || g.email }));
     }
   }, [router.query]);
 
@@ -81,6 +93,30 @@ export default function SettingsPage() {
       console.error('Disconnect failed:', e);
     }
     setGmailLoading(false);
+  }
+
+  async function connectOutlook() {
+    setOutlookLoading(true);
+    try {
+      const res = await fetch('/api/settings/outlook-auth');
+      const data = await res.json();
+      if (data.authUrl) window.location.href = data.authUrl;
+    } catch (e) {
+      console.error('Outlook auth failed:', e);
+      setOutlookLoading(false);
+    }
+  }
+
+  async function disconnectOutlook() {
+    if (!confirm('Disconnect Outlook? Email processing will stop.')) return;
+    setOutlookLoading(true);
+    try {
+      await fetch('/api/settings/outlook-auth', { method: 'DELETE' });
+      setOutlook({ loading: false, connected: false, email: '' });
+    } catch (e) {
+      console.error('Disconnect failed:', e);
+    }
+    setOutlookLoading(false);
   }
 
   // Load settings on mount
@@ -250,6 +286,70 @@ export default function SettingsPage() {
           {router.query.gmail === 'success' && (
             <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
               <p className="text-green-400 text-xs">Gmail connected successfully!</p>
+            </div>
+          )}
+        </section>
+
+        {/* Outlook Integration */}
+        <section className="rounded-2xl bg-slate-950/70 border border-slate-800/80 shadow-xl shadow-black/40 p-5 space-y-4">
+          <div className="flex items-center gap-3">
+            <Mail className="w-4 h-4 text-sky-400" />
+            <div>
+              <h2 className="text-sm font-semibold text-slate-100">Outlook Integration</h2>
+              <p className="text-xs text-slate-400">Connect your Outlook / Hotmail / Microsoft 365 email.</p>
+            </div>
+          </div>
+
+          {outlook.loading ? (
+            <div className="flex items-center gap-2 text-gray-400">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-xs">Checking connection...</span>
+            </div>
+          ) : outlook.connected ? (
+            <div className="flex items-center justify-between bg-black/20 rounded-lg px-4 py-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <div>
+                  <p className="text-white text-sm font-medium">{outlook.email}</p>
+                  <p className="text-gray-500 text-xs">Connected</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={disconnectOutlook}
+                disabled={outlookLoading}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-400 border border-red-400/30 rounded-lg hover:bg-red-400/10 transition-colors disabled:opacity-50"
+              >
+                <Unplug className="w-3.5 h-3.5" />
+                Disconnect
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-gray-500">
+                <XCircle className="w-4 h-4" />
+                <span className="text-xs">Not connected</span>
+              </div>
+              <button
+                type="button"
+                onClick={connectOutlook}
+                disabled={outlookLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
+              >
+                {outlookLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                Connect Outlook
+              </button>
+            </div>
+          )}
+
+          {router.query.outlook === 'error' && (
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <p className="text-red-400 text-xs">Connection failed: {router.query.reason || 'Unknown error'}</p>
+            </div>
+          )}
+          {router.query.outlook === 'success' && (
+            <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+              <p className="text-green-400 text-xs">Outlook connected successfully!</p>
             </div>
           )}
         </section>
