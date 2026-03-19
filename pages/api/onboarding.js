@@ -179,9 +179,9 @@ export default async function handler(req, res) {
     // TODO: Trigger provisioning workflow (Telnyx number, VAPI agent, n8n workflow)
     // TODO: Create Notion task for 8-phase onboarding checklist
 
+    // Don't expose customer_id to anonymous callers (enumeration risk)
     return res.status(200).json({
       success: true,
-      customer_id: customer.id,
       message: 'Onboarding intake saved successfully. You will receive an email within 24 hours with next steps.',
     });
 

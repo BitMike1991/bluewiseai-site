@@ -1,6 +1,7 @@
 // pages/api/auth/outlook-callback.js
 // Microsoft OAuth callback — exchanges code for tokens, stores in customer_email_oauth
 import { getSupabaseServerClient } from "../../../lib/supabaseServer";
+import { verifySignedState } from "../../../lib/oauthState";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -17,12 +18,9 @@ export default async function handler(req, res) {
     return res.redirect("/platform/settings?outlook=error&reason=missing_params");
   }
 
-  // Decode state
-  let stateData;
-  try {
-    const padded = state.replace(/-/g, "+").replace(/_/g, "/");
-    stateData = JSON.parse(Buffer.from(padded, "base64").toString());
-  } catch (e) {
+  // Verify HMAC-signed state (prevents CSRF + account takeover)
+  const stateData = verifySignedState(state);
+  if (!stateData) {
     return res.redirect("/platform/settings?outlook=error&reason=invalid_state");
   }
 

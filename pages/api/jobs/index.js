@@ -99,10 +99,12 @@ export default async function handler(req, res) {
       supabase
         .from("contracts")
         .select("id, job_id, signature_status, signed_at")
+        .eq("customer_id", customerId)
         .in("job_id", jobIds),
       supabase
         .from("payments")
         .select("id, job_id, payment_type, amount, status, paid_at")
+        .eq("customer_id", customerId)
         .in("job_id", jobIds),
     ]);
 

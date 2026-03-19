@@ -35,16 +35,19 @@ export default async function handler(req, res) {
         .from("contracts")
         .select("*")
         .eq("job_id", job.id)
+        .eq("customer_id", customerId)
         .order("created_at", { ascending: false }),
       supabase
         .from("payments")
         .select("*")
         .eq("job_id", job.id)
+        .eq("customer_id", customerId)
         .order("created_at", { ascending: false }),
       supabase
         .from("job_events")
         .select("*")
         .eq("job_id", job.id)
+        .eq("customer_id", customerId)
         .order("created_at", { ascending: false })
         .limit(50),
       job.lead_id

@@ -2,6 +2,7 @@
 // GET → returns Microsoft OAuth URL for Outlook authorization
 // DELETE → revokes and removes OAuth tokens
 import { getAuthContext, getSupabaseServerClient } from "../../../lib/supabaseServer";
+import { createSignedState } from "../../../lib/oauthState";
 
 const SCOPES = [
   "https://graph.microsoft.com/Mail.ReadWrite",
@@ -26,8 +27,8 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: "Microsoft OAuth not configured" });
       }
 
-      const stateJson = JSON.stringify({ customerId, userId: user.id });
-      const state = Buffer.from(stateJson).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      // HMAC-signed state to prevent CSRF + account takeover
+      const state = createSignedState({ customerId, userId: user.id });
 
       const params = new URLSearchParams({
         client_id: clientId,

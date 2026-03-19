@@ -2,6 +2,7 @@
 // GET → returns Google OAuth URL for Gmail authorization
 // DELETE → revokes and removes OAuth tokens
 import { getAuthContext, getSupabaseServerClient } from "../../../lib/supabaseServer";
+import { createSignedState } from "../../../lib/oauthState";
 
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.modify",
@@ -24,9 +25,8 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Google OAuth not configured" });
     }
 
-    // State encodes customer_id + user_id for security verification on callback
-    const stateJson = JSON.stringify({ customerId, userId: user.id });
-    const state = Buffer.from(stateJson).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    // HMAC-signed state to prevent CSRF + account takeover
+    const state = createSignedState({ customerId, userId: user.id });
 
     const params = new URLSearchParams({
       client_id: clientId,

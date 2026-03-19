@@ -6,9 +6,11 @@ export async function middleware(req) {
   let res = NextResponse.next();
   const { pathname, search } = req.nextUrl;
 
-  // Allow login page + auth endpoints
+  // Allow login page, auth endpoints, and subscription status check
   if (pathname === "/platform/login") return res;
+  if (pathname === "/platform/suspended") return res;
   if (pathname.startsWith("/api/auth/")) return res;
+  if (pathname === "/api/subscription/status") return res;
 
   const isProtected =
     pathname.startsWith("/platform") ||
@@ -50,6 +52,26 @@ export async function middleware(req) {
     url.pathname = "/platform/login";
     url.searchParams.set("next", `${pathname}${search || ""}`);
     return NextResponse.redirect(url);
+  }
+
+  // Subscription gate: HMAC-signed cookie fast-path (no DB call in Edge runtime)
+  const subCookie = req.cookies.get("__sub_status")?.value;
+  if (subCookie && subCookie.includes(".") && pathname.startsWith("/platform") && pathname !== "/platform/suspended") {
+    const [val, sig] = subCookie.split(".");
+    // Verify signature using Web Crypto (Edge runtime compatible)
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw", encoder.encode(process.env.SUPABASE_SERVICE_ROLE_KEY),
+      { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+    );
+    const sigBuf = await crypto.subtle.sign("HMAC", key, encoder.encode(val));
+    const expectedSig = btoa(String.fromCharCode(...new Uint8Array(sigBuf)))
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+    if (sig === expectedSig && val === "suspended") {
+      const url = req.nextUrl.clone();
+      url.pathname = "/platform/suspended";
+      return NextResponse.redirect(url);
+    }
   }
 
   return res;

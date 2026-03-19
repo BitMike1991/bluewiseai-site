@@ -11,7 +11,11 @@ const mgClient = mailgun.client({
 });
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const allowedOrigins = ['https://bluewiseai.com', 'https://www.bluewiseai.com'];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -24,10 +28,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: `Method ${req.method} not allowed` });
   }
 
-  const { name, email, message } = req.body || {};
-  if (!name || !email || !message) {
+  const { name: rawName, email, message: rawMessage } = req.body || {};
+  if (!rawName || !email || !rawMessage) {
     return res.status(400).json({ error: 'Please fill out all fields.' });
   }
+  // HTML-encode user input to prevent XSS in emails
+  const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const name = esc(rawName);
+  const message = esc(rawMessage);
 
   try {
     const domain = process.env.MAILGUN_DOMAIN;
