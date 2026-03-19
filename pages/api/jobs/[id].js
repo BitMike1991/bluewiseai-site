@@ -55,6 +55,7 @@ export default async function handler(req, res) {
             .from("leads")
             .select("id, name, first_name, phone, email, city, status, source")
             .eq("id", job.lead_id)
+            .eq("customer_id", customerId)
             .single()
         : Promise.resolve({ data: null }),
     ]);

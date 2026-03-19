@@ -44,8 +44,8 @@ export default async function handler(req, res) {
     const internalMail = {
       from: `BlueWise AI Contact <postmaster@${domain}>`,
       to: process.env.MAILGUN_TO,
-      subject: `New message from ${name}`,
-      text: message,
+      subject: `New message from ${rawName}`,
+      text: rawMessage,
       'h:Reply-To': email,
     };
 
@@ -58,8 +58,8 @@ export default async function handler(req, res) {
       : 'Thank you for your message!';
 
     const plainText = isFrench
-      ? `Bonjour ${name},\n\nMerci d'avoir contacté Blue Wise AI. Nous avons bien reçu votre message et nous vous répondrons sous peu.\n\nVotre message :\n"${message}"\n\nÀ bientôt,\nMikaël Larivée Levesque\nFondateur / Consultant IA`
-      : `Hi ${name},\n\nThank you for contacting Blue Wise AI. We've received your message and will get back to you shortly.\n\nYour message:\n"${message}"\n\nTalk soon,\nMikaël Larivée Levesque\nFounder / AI Consultant`;
+      ? `Bonjour ${rawName},\n\nMerci d'avoir contacté Blue Wise AI. Nous avons bien reçu votre message et nous vous répondrons sous peu.\n\nVotre message :\n"${rawMessage}"\n\nÀ bientôt,\nMikaël Larivée Levesque\nFondateur / Consultant IA`
+      : `Hi ${rawName},\n\nThank you for contacting Blue Wise AI. We've received your message and will get back to you shortly.\n\nYour message:\n"${rawMessage}"\n\nTalk soon,\nMikaël Larivée Levesque\nFounder / AI Consultant`;
 
     const html = `
       <html>
