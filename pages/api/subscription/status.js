@@ -26,7 +26,7 @@ export default async function handler(req, res) {
 
     // Set cookie for middleware fast-path (5-min TTL, HttpOnly + Secure + signed)
     const crypto = await import("crypto");
-    const cookieSecret = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const cookieSecret = process.env.HMAC_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
     const cookieVal = allowed ? "active" : "suspended";
     const sig = crypto.createHmac("sha256", cookieSecret).update(cookieVal).digest("base64url");
     res.setHeader(

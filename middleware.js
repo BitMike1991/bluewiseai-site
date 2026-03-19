@@ -67,13 +67,15 @@ export async function middleware(req) {
   }
 
   // Subscription gate: HMAC-signed cookie fast-path (no DB call in Edge runtime)
+  // Note: If cookie is missing, DashboardLayout.js calls /api/subscription/status on mount,
+  // which re-sets the cookie and redirects suspended users client-side. API routes still enforce auth.
   const subCookie = req.cookies.get("__sub_status")?.value;
   if (subCookie && subCookie.includes(".") && pathname.startsWith("/platform") && pathname !== "/platform/suspended") {
     const [val, sig] = subCookie.split(".");
     // Verify signature using Web Crypto (Edge runtime compatible)
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
-      "raw", encoder.encode(process.env.SUPABASE_SERVICE_ROLE_KEY),
+      "raw", encoder.encode(process.env.HMAC_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY),
       { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
     );
     const sigBuf = await crypto.subtle.sign("HMAC", key, encoder.encode(val));

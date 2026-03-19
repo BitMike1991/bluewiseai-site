@@ -194,7 +194,7 @@ export default async function handler(req, res) {
     console.error('Onboarding API error:', error);
     return res.status(500).json({
       error: 'Internal server error',
-      details: error.message
+      details: "See server logs"
     });
   }
 }

@@ -69,7 +69,7 @@ export default async function handler(req, res) {
       console.error("[/api/tasks] Supabase error:", error);
       return res
         .status(500)
-        .json({ error: error.message || "Failed to fetch tasks" });
+        .json({ error: "Failed to fetch tasks" });
     }
 
     const now = Date.now();

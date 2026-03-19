@@ -39,6 +39,10 @@ export default async function handler(req, res) {
   const { checkRateLimit } = await import("../../lib/security");
   if (checkRateLimit(req, res, `send:${customerId}`, 60)) return;
 
+  // CSRF protection
+  const { checkCsrf } = await import("../../lib/csrf");
+  if (checkCsrf(req, res)) return;
+
   // ---- Parse payload ----
   const { lead_id, channel, to, subject, body, meta, html } = req.body || {};
 
@@ -54,7 +58,17 @@ export default async function handler(req, res) {
   if (!bodyText) return res.status(400).json({ error: "body is required" });
 
   const subjectText = normStr(subject);
-  const htmlText = isNonEmptyString(html) ? String(html) : null;
+  // Sanitize HTML: strip dangerous tags/attributes to prevent phishing via platform
+  let htmlText = null;
+  if (isNonEmptyString(html)) {
+    htmlText = String(html)
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+      .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, "")
+      .replace(/<object[^>]*>[\s\S]*?<\/object>/gi, "")
+      .replace(/<embed[^>]*>[\s\S]*?<\/embed>/gi, "")
+      .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, "")
+      .replace(/javascript:/gi, "");
+  }
 
   if (channel === "email" && !subjectText) {
     return res.status(400).json({ error: "subject is required for email" });

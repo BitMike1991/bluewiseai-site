@@ -2035,6 +2035,10 @@ export default async function handler(req, res) {
     if (checkRateLimit(req, res, `ask:${user.id}`, 20)) return;
   }
 
+  // CSRF protection
+  const { checkCsrf } = await import("../../lib/csrf");
+  if (checkCsrf(req, res)) return;
+
   if (!user) {
     return res.status(401).json({ error: "Not authenticated" });
   }
@@ -2442,7 +2446,7 @@ export default async function handler(req, res) {
     console.error("[/api/ask] Unexpected error:", err);
     return res.status(500).json({
       error: "Failed to answer Ask BlueWise query.",
-      details: err.message || String(err),
+      details: "See server logs",
     });
   }
 }

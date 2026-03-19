@@ -44,7 +44,7 @@ export default async function handler(req, res) {
         console.error("[api/settings] Supabase error (GET)", error);
         return res
           .status(500)
-          .json({ error: "Failed to load settings", details: error.message });
+          .json({ error: "Failed to load settings" });
       }
 
       if (!data) {
@@ -146,7 +146,7 @@ export default async function handler(req, res) {
         console.error("[api/settings] Supabase error (PATCH)", error);
         return res
           .status(500)
-          .json({ error: "Failed to save settings", details: error.message });
+          .json({ error: "Failed to save settings", details: "See server logs" });
       }
 
       const payload = {

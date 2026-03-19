@@ -55,7 +55,7 @@ export default async function handler(req, res) {
         .eq("provider", "outlook");
 
       if (error) {
-        return res.status(500).json({ error: "Failed to disconnect", details: error.message });
+        return res.status(500).json({ error: "Failed to disconnect", details: "See server logs" });
       }
 
       return res.status(200).json({ success: true });
@@ -65,6 +65,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   } catch (err) {
     console.error("[outlook-auth] Unhandled error:", err);
-    return res.status(500).json({ error: "Internal error", details: err.message });
+    return res.status(500).json({ error: "Internal error", details: "See server logs" });
   }
 }
