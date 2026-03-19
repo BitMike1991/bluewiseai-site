@@ -33,6 +33,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Rate limit: 3 onboarding submissions per hour per IP
+  const { checkRateLimit } = await import("../../lib/security");
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0] || req.socket?.remoteAddress || "unknown";
+  if (checkRateLimit(req, res, `onboard:${ip}`, 3)) return;
+
   try {
     const { onboarding_intake } = req.body;
 

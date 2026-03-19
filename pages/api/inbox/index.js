@@ -134,12 +134,15 @@ export default async function handler(req, res) {
 
     // Search (name/email/phone)
     if (isNonEmptyString(search)) {
-      const term = search.trim();
-      leadsQuery = leadsQuery.or(
-        [`name.ilike.%${term}%`, `email.ilike.%${term}%`, `phone.ilike.%${term}%`].join(
-          ","
-        )
-      );
+      const { sanitizeSearchTerm } = await import("../../../lib/security");
+      const safe = sanitizeSearchTerm(search.trim());
+      if (safe) {
+        leadsQuery = leadsQuery.or(
+          [`name.ilike.%${safe}%`, `email.ilike.%${safe}%`, `phone.ilike.%${safe}%`].join(
+            ","
+          )
+        );
+      }
     }
 
     // Sort rough; final sort after we merge activity

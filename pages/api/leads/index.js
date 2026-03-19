@@ -56,14 +56,18 @@ export default async function handler(req, res) {
     }
 
     if (term) {
-      leadsQuery = leadsQuery.or(
-        [
-          `name.ilike.%${term}%`,
-          `first_name.ilike.%${term}%`,
-          `email.ilike.%${term}%`,
-          `phone.ilike.%${term}%`,
-        ].join(",")
-      );
+      const { sanitizeSearchTerm } = await import("../../../lib/security");
+      const safe = sanitizeSearchTerm(term);
+      if (safe) {
+        leadsQuery = leadsQuery.or(
+          [
+            `name.ilike.%${safe}%`,
+            `first_name.ilike.%${safe}%`,
+            `email.ilike.%${safe}%`,
+            `phone.ilike.%${safe}%`,
+          ].join(",")
+        );
+      }
     }
 
     leadsQuery = leadsQuery

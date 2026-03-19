@@ -12,6 +12,14 @@ export async function middleware(req) {
   if (pathname.startsWith("/api/auth/")) return res;
   if (pathname === "/api/subscription/status") return res;
 
+  // Public API routes that don't need auth (allowlist)
+  const isPublic =
+    pathname === "/api/contact" ||
+    pathname === "/api/onboarding" ||
+    pathname === "/api/export-leads";
+
+  if (isPublic) return res;
+
   const isProtected =
     pathname.startsWith("/platform") ||
     pathname.startsWith("/api/ask") ||
@@ -22,7 +30,11 @@ export async function middleware(req) {
     pathname.startsWith("/api/tasks") ||
     pathname.startsWith("/api/followups") ||
     pathname.startsWith("/api/settings") ||
-    pathname.startsWith("/api/calls");
+    pathname.startsWith("/api/calls") ||
+    pathname.startsWith("/api/jobs") ||
+    pathname.startsWith("/api/finances") ||
+    pathname.startsWith("/api/campaigns") ||
+    pathname.startsWith("/api/admin");
 
   if (!isProtected) return res;
 
@@ -80,7 +92,7 @@ export async function middleware(req) {
 export const config = {
   matcher: [
     "/platform/:path*",
-    "/api/auth/:path*", // allow rule above will short-circuit; still good to include for clarity
+    "/api/auth/:path*",
     "/api/ask",
     "/api/send",
     "/api/inbox/:path*",
@@ -90,5 +102,10 @@ export const config = {
     "/api/followups/:path*",
     "/api/settings/:path*",
     "/api/calls/:path*",
+    "/api/jobs/:path*",
+    "/api/finances/:path*",
+    "/api/campaigns/:path*",
+    "/api/admin/:path*",
+    "/api/subscription/:path*",
   ],
 };

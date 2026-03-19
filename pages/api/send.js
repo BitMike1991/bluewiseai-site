@@ -35,6 +35,10 @@ export default async function handler(req, res) {
   if (!user) return res.status(401).json({ error: "Not authenticated" });
   if (!customerId) return res.status(403).json({ error: "No customer mapping for this user" });
 
+  // Rate limit: 60 sends per minute per customer
+  const { checkRateLimit } = await import("../../lib/security");
+  if (checkRateLimit(req, res, `send:${customerId}`, 60)) return;
+
   // ---- Parse payload ----
   const { lead_id, channel, to, subject, body, meta, html } = req.body || {};
 

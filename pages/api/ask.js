@@ -2029,6 +2029,12 @@ export default async function handler(req, res) {
   // ✅ Auth + tenant resolution (cookie-aware)
   const { supabase, customerId, user } = await getAuthContext(req, res);
 
+  // Rate limit: 20 AI requests per minute per user
+  if (user) {
+    const { checkRateLimit } = await import("../../lib/security");
+    if (checkRateLimit(req, res, `ask:${user.id}`, 20)) return;
+  }
+
   if (!user) {
     return res.status(401).json({ error: "Not authenticated" });
   }

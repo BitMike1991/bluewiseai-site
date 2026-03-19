@@ -62,15 +62,19 @@ export default async function handler(req, res) {
     }
 
     if (term) {
-      jobsQuery = jobsQuery.or(
-        [
-          `client_name.ilike.%${term}%`,
-          `client_email.ilike.%${term}%`,
-          `client_phone.ilike.%${term}%`,
-          `job_id.ilike.%${term}%`,
-          `project_type.ilike.%${term}%`,
-        ].join(",")
-      );
+      const { sanitizeSearchTerm } = await import("../../../lib/security");
+      const safe = sanitizeSearchTerm(term);
+      if (safe) {
+        jobsQuery = jobsQuery.or(
+          [
+            `client_name.ilike.%${safe}%`,
+            `client_email.ilike.%${safe}%`,
+            `client_phone.ilike.%${safe}%`,
+            `job_id.ilike.%${safe}%`,
+            `project_type.ilike.%${safe}%`,
+          ].join(",")
+        );
+      }
     }
 
     jobsQuery = jobsQuery

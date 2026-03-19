@@ -28,6 +28,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: `Method ${req.method} not allowed` });
   }
 
+  // Rate limit: 5 contact submissions per minute per IP
+  const { checkRateLimit } = await import("../../lib/security");
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0] || req.socket?.remoteAddress || "unknown";
+  if (checkRateLimit(req, res, `contact:${ip}`, 5)) return;
+
   const { name: rawName, email, message: rawMessage } = req.body || {};
   if (!rawName || !email || !rawMessage) {
     return res.status(400).json({ error: 'Please fill out all fields.' });
