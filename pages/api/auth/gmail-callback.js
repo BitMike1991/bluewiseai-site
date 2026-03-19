@@ -2,6 +2,7 @@
 // Google OAuth callback — exchanges code for tokens, stores in customer_email_oauth
 import { getSupabaseServerClient } from "../../../lib/supabaseServer";
 import { verifySignedState } from "../../../lib/oauthState";
+import { encryptToken } from "../../../lib/tokenEncryption";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -83,8 +84,8 @@ export default async function handler(req, res) {
       {
         customer_id: customerId,
         provider: "gmail",
-        access_token: tokenData.access_token,
-        refresh_token: tokenData.refresh_token,
+        access_token: encryptToken(tokenData.access_token),
+        refresh_token: encryptToken(tokenData.refresh_token),
         token_expiry: tokenExpiry,
         email_address: emailAddress,
         scopes: tokenData.scope ? tokenData.scope.split(" ") : [],

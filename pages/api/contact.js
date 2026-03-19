@@ -37,6 +37,9 @@ export default async function handler(req, res) {
   if (!rawName || !email || !rawMessage) {
     return res.status(400).json({ error: 'Please fill out all fields.' });
   }
+  if (rawName.length > 200 || email.length > 320 || rawMessage.length > 5000) {
+    return res.status(400).json({ error: 'Input exceeds maximum length.' });
+  }
   // HTML-encode user input to prevent XSS in emails
   const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const name = esc(rawName);

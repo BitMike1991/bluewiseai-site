@@ -18,6 +18,9 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: "No customer mapping for this user" });
     }
 
+    const { checkRateLimit } = await import("../../../lib/security");
+    if (checkRateLimit(req, res, `read:${customerId}`, 120)) return;
+
     // Pagination
     const page = Number.parseInt(req.query.page ?? "1", 10) || 1;
     const pageSize = Number.parseInt(req.query.pageSize ?? "25", 10) || 25;
@@ -51,19 +54,10 @@ export default async function handler(req, res) {
           return res.status(500).json({ error: e1.message });
         }
 
-        const { data: d2, error: e2, count: c2 } = await supabase
-          .from("telnyx_other_events")
-          .select("*", { count: "exact" })
-          .order("created_at", { ascending: false })
-          .range(from, to);
-
-        if (e2) {
-          console.error("[/api/calls] Supabase telnyx_other_events error:", e2);
-          return res.status(500).json({ error: e2.message });
-        }
-
-        data = d2;
-        count = c2;
+        // Column doesn't exist — return empty rather than loading all tenants' data
+        console.warn("[/api/calls] telnyx_other_events has no customer_id column — returning empty");
+        data = [];
+        count = 0;
       } else {
         data = d1;
         count = c1;
@@ -342,20 +336,8 @@ export default async function handler(req, res) {
         if (!looksLikeMissingColumn) {
           console.error("[/api/calls] inbox_messages error:", msgError1);
         } else {
-          const { data: msgData2, error: msgError2 } = await supabase
-            .from("inbox_messages")
-            .select("id, lead_id, direction, message_type")
-            .in("lead_id", leadIds)
-            .eq("direction", "outbound");
-
-          if (msgError2) {
-            console.error("[/api/calls] inbox_messages error:", msgError2);
-          } else {
-            for (const m of msgData2 || []) {
-              // we don't strictly require sms vs mms yet
-              leadIdsWithOutboundSms.add(m.lead_id);
-            }
-          }
+          // Column doesn't exist — skip rather than loading all tenants' messages
+          console.warn("[/api/calls] inbox_messages has no customer_id column — skipping outbound SMS check");
         }
       } else {
         for (const m of msgData1 || []) {

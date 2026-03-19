@@ -56,8 +56,10 @@ export default async function handler(req, res) {
 
   const bodyText = normStr(body);
   if (!bodyText) return res.status(400).json({ error: "body is required" });
+  if (bodyText.length > 50000) return res.status(400).json({ error: "body exceeds maximum length" });
 
   const subjectText = normStr(subject);
+  if (subjectText && subjectText.length > 500) return res.status(400).json({ error: "subject exceeds maximum length" });
   // Sanitize HTML: strip dangerous tags/attributes to prevent phishing via platform
   let htmlText = null;
   if (isNonEmptyString(html)) {

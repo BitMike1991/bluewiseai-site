@@ -56,10 +56,11 @@ export async function middleware(req) {
     }
   );
 
-  const { data, error } = await supabase.auth.getSession();
-  const session = data?.session || null;
+  // Use getUser() for server-side JWT verification (more secure than getSession which trusts the cookie)
+  const { data, error } = await supabase.auth.getUser();
+  const user = data?.user || null;
 
-  if (!session || error) {
+  if (!user || error) {
     const url = req.nextUrl.clone();
     url.pathname = "/platform/login";
     url.searchParams.set("next", `${pathname}${search || ""}`);

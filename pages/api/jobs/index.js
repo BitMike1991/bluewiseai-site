@@ -13,6 +13,9 @@ export default async function handler(req, res) {
   if (!customerId)
     return res.status(403).json({ error: "No customer mapping for this user" });
 
+  const { checkRateLimit } = await import("../../../lib/security");
+  if (checkRateLimit(req, res, `read:${customerId}`, 120)) return;
+
   try {
     const { status, search, page = "1", pageSize = "20" } = req.query;
 

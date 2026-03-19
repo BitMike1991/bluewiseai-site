@@ -2018,6 +2018,9 @@ export default async function handler(req, res) {
   if (!question || typeof question !== "string") {
     return res.status(400).json({ error: "Missing question" });
   }
+  if (question.length > 5000) {
+    return res.status(400).json({ error: "Question exceeds maximum length of 5000 characters" });
+  }
 
   if (!process.env.OPENAI_API_KEY) {
     return res.status(500).json({

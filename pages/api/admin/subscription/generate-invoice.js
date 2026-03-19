@@ -6,11 +6,9 @@ import { getSubscription, computeRevenueShare, logEvent, sendBillingSlack } from
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  // Auth: CRON_SECRET or admin
-  const secret = req.headers["x-cron-secret"] || req.headers["authorization"]?.replace("Bearer ", "");
-  if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
-    return res.status(403).json({ error: "Unauthorized" });
-  }
+  // Auth: CRON_SECRET (timing-safe comparison)
+  const { checkCronSecret } = await import("../../../../lib/security");
+  if (checkCronSecret(req, res)) return;
 
   const { customerId: targetId, month, year } = req.body;
   if (!targetId) {

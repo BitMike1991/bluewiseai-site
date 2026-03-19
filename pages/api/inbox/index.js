@@ -88,8 +88,11 @@ export default async function handler(req, res) {
   // IMPORTANT: use cookie-aware supabase (not service role) for tenant routes
   const { supabase, customerId, error } = await requireCustomer(req, res);
   if (error || !customerId) {
-    return res.status(401).json({ error: error?.message || "Not authenticated" });
+    return res.status(401).json({ error: "Not authenticated" });
   }
+
+  const { checkRateLimit } = await import("../../../lib/security");
+  if (checkRateLimit(req, res, `read:${customerId}`, 120)) return;
 
   try {
     const { search, status = "open", channel = "all" } = req.query;

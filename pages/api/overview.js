@@ -15,6 +15,10 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: "No customer mapping for this user" });
   }
 
+  // Rate limit: 120 read requests per minute per customer
+  const { checkRateLimit } = await import("../../lib/security");
+  if (checkRateLimit(req, res, `read:${customerId}`, 120)) return;
+
   try {
     const now = new Date();
     const since = new Date();

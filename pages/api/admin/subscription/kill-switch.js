@@ -5,11 +5,9 @@ import { suspendCustomer, toggleN8nWorkflows, sendBillingSlack } from "../../../
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  // Auth: CRON_SECRET header
-  const secret = req.headers["x-cron-secret"] || req.headers["authorization"]?.replace("Bearer ", "");
-  if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
-    return res.status(403).json({ error: "Unauthorized" });
-  }
+  // Auth: CRON_SECRET (timing-safe comparison)
+  const { checkCronSecret } = await import("../../../../lib/security");
+  if (checkCronSecret(req, res)) return;
 
   const { customerIds } = req.body;
   if (!customerIds || !Array.isArray(customerIds) || customerIds.length === 0) {
