@@ -3,12 +3,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Sidebar from "./Sidebar";
 import TopNav from "./TopNav";
+import SuspendedScreen from "./SuspendedScreen";
 import { supabase } from "../../../lib/supabaseClient";
 
 export default function DashboardLayout({ children }) {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userInfo, setUserInfo] = useState({ email: null, customerName: null });
+  const [suspended, setSuspended] = useState(false);
 
   useEffect(() => {
     async function loadUser() {
@@ -27,6 +29,23 @@ export default function DashboardLayout({ children }) {
     loadUser();
   }, []);
 
+  // Subscription gate check
+  useEffect(() => {
+    async function checkSubscription() {
+      try {
+        const res = await fetch("/api/subscription/status");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.allowed === false) setSuspended(true);
+        }
+        // Fail-open: any error = allow access
+      } catch (e) {
+        // Fail-open
+      }
+    }
+    checkSubscription();
+  }, []);
+
   async function handleLogout() {
     try {
       await supabase.auth.signOut();
@@ -43,6 +62,9 @@ export default function DashboardLayout({ children }) {
   const closeSidebar = () => {
     setSidebarOpen(false);
   };
+
+  // If suspended, show blocked screen instead of CRM
+  if (suspended) return <SuspendedScreen />;
 
   return (
     <div className="flex h-screen bg-slate-950 text-slate-50">

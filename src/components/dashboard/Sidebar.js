@@ -10,6 +10,7 @@ import {
   Target,
   CheckSquare,
   DollarSign,
+  CreditCard,
   Settings,
   X,
 } from "lucide-react";
@@ -23,6 +24,7 @@ const navItems = [
   { href: "/platform/finances", label: "Finances", icon: DollarSign },
   { href: "/platform/campaigns", label: "Campaigns", icon: Target },
   { href: "/platform/tasks", label: "Tasks", icon: CheckSquare },
+  { href: "/platform/billing", label: "Billing", icon: CreditCard },
   { href: "/platform/settings", label: "Settings", icon: Settings },
 ];
 
