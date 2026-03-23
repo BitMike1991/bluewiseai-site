@@ -9,7 +9,7 @@ import { useRouter } from "next/router";
 import Sidebar from "./Sidebar";
 import TopNav from "./TopNav";
 import SuspendedScreen from "./SuspendedScreen";
-import { BrandingProvider } from "./BrandingContext";
+import { BrandingProvider, useBranding } from "./BrandingContext";
 import { supabase } from "../../../lib/supabaseClient";
 
 export default function DashboardLayout({ children }) {
@@ -74,25 +74,41 @@ export default function DashboardLayout({ children }) {
 
   return (
     <BrandingProvider>
-      <div className="flex h-screen bg-slate-950 text-slate-50">
-        {/* Sidebar */}
-        <Sidebar
-          isOpen={sidebarOpen}
-          onClose={closeSidebar}
+      <DashboardShell
+        sidebarOpen={sidebarOpen}
+        closeSidebar={closeSidebar}
+        toggleSidebar={toggleSidebar}
+        handleLogout={handleLogout}
+        userInfo={userInfo}
+      >
+        {children}
+      </DashboardShell>
+    </BrandingProvider>
+  );
+}
+
+function DashboardShell({ sidebarOpen, closeSidebar, toggleSidebar, handleLogout, userInfo, children }) {
+  const { branding } = useBranding();
+
+  return (
+    <div
+      className="flex h-screen"
+      style={{ backgroundColor: branding.dashboard_bg || "#0a0a12", color: branding.text_primary || "#f0f0f5" }}
+    >
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={closeSidebar}
+        customerName={userInfo.customerName}
+      />
+      <div className="flex flex-col flex-1 min-w-0">
+        <TopNav
+          onLogout={handleLogout}
+          onToggleSidebar={toggleSidebar}
+          userName={userInfo.email}
           customerName={userInfo.customerName}
         />
-
-        {/* Main area */}
-        <div className="flex flex-col flex-1 min-w-0">
-          <TopNav
-            onLogout={handleLogout}
-            onToggleSidebar={toggleSidebar}
-            userName={userInfo.email}
-            customerName={userInfo.customerName}
-          />
-          <main className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6">{children}</main>
-        </div>
+        <main className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6">{children}</main>
       </div>
-    </BrandingProvider>
+    </div>
   );
 }

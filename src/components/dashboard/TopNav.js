@@ -23,19 +23,26 @@ export default function TopNav({ onLogout, onToggleSidebar, userName, customerNa
     ? customerName.charAt(0).toUpperCase()
     : "U";
 
+  const borderColor = branding.border_color || "#1e1e2e";
+  const surfaceColor = branding.surface_color || "#111119";
+  const textSecondary = branding.text_secondary || "#8888aa";
+
   return (
-    <header className="flex items-center justify-between border-b border-slate-800 bg-slate-950/80 px-4 md:px-6 py-3 backdrop-blur">
+    <header
+      className="flex items-center justify-between px-4 md:px-6 py-3 backdrop-blur"
+      style={{ borderBottom: `1px solid ${borderColor}`, backgroundColor: `${surfaceColor}cc` }}
+    >
       <div className="flex items-center gap-3">
         {/* Hamburger menu button (mobile only) */}
         <button
           onClick={onToggleSidebar}
-          className="md:hidden p-2 rounded-lg hover:bg-slate-800/70 transition-colors"
+          className="md:hidden p-2 rounded-lg transition-colors"
           aria-label="Toggle menu"
         >
-          <Menu className="w-5 h-5 text-slate-300" />
+          <Menu className="w-5 h-5" style={{ color: textSecondary }} />
         </button>
 
-        <div className="text-sm font-medium text-slate-300">
+        <div className="text-sm font-medium" style={{ color: textSecondary }}>
           {breadcrumb}
         </div>
       </div>
@@ -50,14 +57,15 @@ export default function TopNav({ onLogout, onToggleSidebar, userName, customerNa
             <span className="text-xs font-semibold" style={{ color: branding.primary_color }}>{initials}</span>
           </div>
           {customerName && (
-            <span className="hidden sm:inline text-xs text-slate-400">{customerName}</span>
+            <span className="hidden sm:inline text-xs" style={{ color: textSecondary }}>{customerName}</span>
           )}
         </div>
 
         {onLogout && (
           <button
             onClick={onLogout}
-            className="flex items-center gap-1.5 rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-400 hover:border-slate-600 hover:text-slate-200 transition-colors"
+            className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs transition-colors"
+            style={{ borderColor, color: textSecondary }}
           >
             <LogOut className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Logout</span>

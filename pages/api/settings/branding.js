@@ -10,6 +10,14 @@ const DEFAULT_BRANDING = {
   accent_color: "#00d4aa",
   sidebar_bg: null,
   favicon_url: null,
+  // Full palette
+  dashboard_bg: "#0a0a12",
+  surface_color: "#111119",
+  border_color: "#1e1e2e",
+  text_primary: "#f0f0f5",
+  text_secondary: "#8888aa",
+  // Per-tenant navigation (null = show all)
+  nav_items: null,
 };
 
 export default async function handler(req, res) {

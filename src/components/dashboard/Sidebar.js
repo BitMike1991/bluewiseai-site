@@ -16,22 +16,30 @@ import {
   X,
 } from "lucide-react";
 
-const navItems = [
-  { href: "/platform/overview", label: "Overview", icon: LayoutDashboard },
-  { href: "/platform/leads", label: "Leads", icon: Users },
-  { href: "/platform/jobs", label: "Jobs", icon: Briefcase },
-  { href: "/platform/inbox", label: "Inbox", icon: Inbox },
-  { href: "/platform/calls", label: "Calls", icon: Phone },
-  { href: "/platform/finances", label: "Finances", icon: DollarSign },
-  { href: "/platform/campaigns", label: "Campaigns", icon: Target },
-  { href: "/platform/tasks", label: "Tasks", icon: CheckSquare },
-  { href: "/platform/billing", label: "Billing", icon: CreditCard },
-  { href: "/platform/settings", label: "Settings", icon: Settings },
+const ALL_NAV_ITEMS = [
+  { key: "overview", href: "/platform/overview", label: "Overview", icon: LayoutDashboard },
+  { key: "leads", href: "/platform/leads", label: "Leads", icon: Users },
+  { key: "jobs", href: "/platform/jobs", label: "Jobs", icon: Briefcase },
+  { key: "inbox", href: "/platform/inbox", label: "Inbox", icon: Inbox },
+  { key: "calls", href: "/platform/calls", label: "Calls", icon: Phone },
+  { key: "finances", href: "/platform/finances", label: "Finances", icon: DollarSign },
+  { key: "campaigns", href: "/platform/campaigns", label: "Campaigns", icon: Target },
+  { key: "tasks", href: "/platform/tasks", label: "Tasks", icon: CheckSquare },
+  { key: "billing", href: "/platform/billing", label: "Billing", icon: CreditCard },
+  { key: "settings", href: "/platform/settings", label: "Settings", icon: Settings },
 ];
 
 export default function Sidebar({ isOpen, onClose, customerName }) {
   const router = useRouter();
   const { branding } = useBranding();
+
+  // Filter nav items by tenant config (null = show all)
+  const visibleItems = branding.nav_items
+    ? ALL_NAV_ITEMS.filter((item) => branding.nav_items.includes(item.key))
+    : ALL_NAV_ITEMS;
+
+  const sidebarBg = branding.sidebar_bg || branding.surface_color || "#0a0a12";
+  const borderColor = branding.border_color || "#1e1e2e";
 
   return (
     <>
@@ -48,14 +56,14 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
       <aside
         className={`
           fixed md:static inset-y-0 left-0 z-50
-          w-64 border-r border-slate-800 bg-slate-950/95 md:bg-slate-950/90
-          flex flex-col
+          w-64 flex flex-col
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
+        style={{ backgroundColor: sidebarBg, borderRight: `1px solid ${borderColor}` }}
       >
         {/* Header */}
-        <div className="px-4 py-5 border-b border-slate-800/60">
+        <div className="px-4 py-5" style={{ borderBottom: `1px solid ${borderColor}60` }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               {branding.logo_url ? (
@@ -73,14 +81,15 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
                 </div>
               )}
               <div>
-                <div className="text-sm font-semibold text-slate-50">{branding.company_display_name}</div>
-                <div className="text-[10px] text-slate-500 tracking-wide">{branding.tagline}</div>
+                <div className="text-sm font-semibold" style={{ color: branding.text_primary || "#f0f0f5" }}>{branding.company_display_name}</div>
+                <div className="text-[10px] tracking-wide" style={{ color: branding.text_secondary || "#8888aa" }}>{branding.tagline}</div>
               </div>
             </div>
             {/* Close button (mobile only) */}
             <button
               onClick={onClose}
-              className="md:hidden p-1.5 rounded-lg hover:bg-slate-800/70 text-slate-400 hover:text-slate-200 transition-colors"
+              className="md:hidden p-1.5 rounded-lg transition-colors"
+              style={{ color: branding.text_secondary || "#8888aa" }}
               aria-label="Close menu"
             >
               <X className="w-4 h-4" />
@@ -90,7 +99,7 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          {navItems.map((item) => {
+          {visibleItems.map((item) => {
             const isActive =
               router.pathname === item.href ||
               (item.href !== "/platform/overview" && router.pathname.startsWith(item.href + "/"));
@@ -104,14 +113,17 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
                     onClose?.();
                   }
                 }}
-                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors
-                  ${
-                    isActive
-                      ? "bg-blue-600/15 text-blue-400 font-medium"
-                      : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
-                  }`}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors"
+                style={
+                  isActive
+                    ? { backgroundColor: `${branding.primary_color}15`, color: branding.primary_color, fontWeight: 500 }
+                    : { color: branding.text_secondary || "#8888aa" }
+                }
               >
-                <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-blue-400" : "text-slate-500"}`} />
+                <Icon
+                  className="w-4 h-4 flex-shrink-0"
+                  style={{ color: isActive ? branding.primary_color : (branding.text_secondary || "#555577") }}
+                />
                 {item.label}
               </Link>
             );
@@ -120,12 +132,15 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
 
         {/* Customer footer */}
         {customerName && (
-          <div className="px-4 py-3 border-t border-slate-800/60">
+          <div className="px-4 py-3" style={{ borderTop: `1px solid ${borderColor}60` }}>
             <div className="flex items-center gap-2.5">
-              <div className="h-7 w-7 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-semibold text-slate-300">
+              <div
+                className="h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-semibold"
+                style={{ backgroundColor: `${branding.primary_color}20`, color: branding.primary_color }}
+              >
                 {customerName.charAt(0).toUpperCase()}
               </div>
-              <div className="text-xs text-slate-400 truncate">{customerName}</div>
+              <div className="text-xs truncate" style={{ color: branding.text_secondary || "#8888aa" }}>{customerName}</div>
             </div>
           </div>
         )}
