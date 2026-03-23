@@ -1,9 +1,15 @@
 // src/components/dashboard/DashboardLayout.js
+// PHASE 2 (not implemented): Custom subdomain routing
+// Vercel wildcard domain *.bluewiseai.com → Next.js middleware reads hostname
+// → looks up customer by domain column → sets customer context before render
+// → DashboardLayout picks up branding from that customer
+// Current implementation: auth-based branding via BrandingProvider (Prompts 1-4)
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Sidebar from "./Sidebar";
 import TopNav from "./TopNav";
 import SuspendedScreen from "./SuspendedScreen";
+import { BrandingProvider } from "./BrandingContext";
 import { supabase } from "../../../lib/supabaseClient";
 
 export default function DashboardLayout({ children }) {
@@ -67,24 +73,26 @@ export default function DashboardLayout({ children }) {
   if (suspended) return <SuspendedScreen />;
 
   return (
-    <div className="flex h-screen bg-slate-950 text-slate-50">
-      {/* Sidebar */}
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={closeSidebar}
-        customerName={userInfo.customerName}
-      />
-
-      {/* Main area */}
-      <div className="flex flex-col flex-1 min-w-0">
-        <TopNav
-          onLogout={handleLogout}
-          onToggleSidebar={toggleSidebar}
-          userName={userInfo.email}
+    <BrandingProvider>
+      <div className="flex h-screen bg-slate-950 text-slate-50">
+        {/* Sidebar */}
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={closeSidebar}
           customerName={userInfo.customerName}
         />
-        <main className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6">{children}</main>
+
+        {/* Main area */}
+        <div className="flex flex-col flex-1 min-w-0">
+          <TopNav
+            onLogout={handleLogout}
+            onToggleSidebar={toggleSidebar}
+            userName={userInfo.email}
+            customerName={userInfo.customerName}
+          />
+          <main className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </BrandingProvider>
   );
 }

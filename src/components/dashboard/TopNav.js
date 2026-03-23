@@ -1,6 +1,7 @@
 // src/components/dashboard/TopNav.js
 import { useRouter } from "next/router";
 import { LogOut, Menu } from "lucide-react";
+import { useBranding } from "./BrandingContext";
 
 // Map route segments to readable breadcrumbs
 function getBreadcrumb(pathname) {
@@ -13,6 +14,7 @@ function getBreadcrumb(pathname) {
 
 export default function TopNav({ onLogout, onToggleSidebar, userName, customerName }) {
   const router = useRouter();
+  const { branding } = useBranding();
   const breadcrumb = getBreadcrumb(router.pathname);
 
   const initials = userName
@@ -41,8 +43,11 @@ export default function TopNav({ onLogout, onToggleSidebar, userName, customerNa
       <div className="flex items-center gap-3">
         {/* User avatar + name */}
         <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center">
-            <span className="text-xs font-semibold text-blue-400">{initials}</span>
+          <div
+            className="h-7 w-7 rounded-full border flex items-center justify-center"
+            style={{ backgroundColor: `${branding.primary_color}20`, borderColor: `${branding.primary_color}30` }}
+          >
+            <span className="text-xs font-semibold" style={{ color: branding.primary_color }}>{initials}</span>
           </div>
           {customerName && (
             <span className="hidden sm:inline text-xs text-slate-400">{customerName}</span>

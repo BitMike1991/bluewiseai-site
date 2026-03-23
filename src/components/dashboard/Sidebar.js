@@ -1,6 +1,7 @@
 // src/components/dashboard/Sidebar.js
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useBranding } from "./BrandingContext";
 import {
   LayoutDashboard,
   Users,
@@ -30,6 +31,7 @@ const navItems = [
 
 export default function Sidebar({ isOpen, onClose, customerName }) {
   const router = useRouter();
+  const { branding } = useBranding();
 
   return (
     <>
@@ -56,12 +58,23 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
         <div className="px-4 py-5 border-b border-slate-800/60">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/30">
-                <span className="text-xs font-bold text-white">BW</span>
-              </div>
+              {branding.logo_url ? (
+                <img
+                  src={branding.logo_url}
+                  alt={branding.company_display_name}
+                  className="h-8 w-8 rounded-lg object-cover"
+                />
+              ) : (
+                <div
+                  className="h-8 w-8 rounded-lg flex items-center justify-center shadow-lg"
+                  style={{ backgroundColor: branding.primary_color, boxShadow: `0 10px 15px -3px ${branding.primary_color}30` }}
+                >
+                  <span className="text-xs font-bold text-white">{branding.logo_text}</span>
+                </div>
+              )}
               <div>
-                <div className="text-sm font-semibold text-slate-50">BlueWise AI</div>
-                <div className="text-[10px] text-slate-500 tracking-wide">Lead Rescue Platform</div>
+                <div className="text-sm font-semibold text-slate-50">{branding.company_display_name}</div>
+                <div className="text-[10px] text-slate-500 tracking-wide">{branding.tagline}</div>
               </div>
             </div>
             {/* Close button (mobile only) */}
