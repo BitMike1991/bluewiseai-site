@@ -95,7 +95,7 @@ export default async function handler(req, res) {
   if (checkRateLimit(req, res, `read:${customerId}`, 120)) return;
 
   try {
-    const { search, status = "open", channel = "all" } = req.query;
+    const { search, status = "open", channel = "all", dateRange, sort } = req.query;
 
     // ------------------------------------------------------------------
     // 1) Base: canonical threads from leads
@@ -145,6 +145,15 @@ export default async function handler(req, res) {
             ","
           )
         );
+      }
+    }
+
+    // Date range filter
+    if (dateRange && dateRange !== "all") {
+      const days = parseInt(dateRange, 10);
+      if (days > 0) {
+        const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+        leadsQuery = leadsQuery.gte("first_seen_at", since);
       }
     }
 
@@ -346,12 +355,17 @@ export default async function handler(req, res) {
       items = items.filter((it) => (it.previewChannel || "unknown") === channelVal);
     }
 
-    // Final sort by lastContactAt desc
-    items.sort((a, b) => {
-      const ta = ts(a.lastContactAt) || 0;
-      const tb = ts(b.lastContactAt) || 0;
-      return tb - ta;
-    });
+    // Final sort
+    if (sort === "oldest") {
+      items.sort((a, b) => (ts(a.lastContactAt) || 0) - (ts(b.lastContactAt) || 0));
+    } else if (sort === "name-az") {
+      items.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    } else if (sort === "name-za") {
+      items.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
+    } else {
+      // Default: newest first
+      items.sort((a, b) => (ts(b.lastContactAt) || 0) - (ts(a.lastContactAt) || 0));
+    }
 
     return res.status(200).json({ items });
   } catch (err) {

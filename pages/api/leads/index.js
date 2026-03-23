@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   if (checkRateLimit(req, res, `read:${customerId}`, 120)) return;
 
   try {
-    const { status, search, page = "1", pageSize = "20" } = req.query;
+    const { status, search, source, dateRange, sort, page = "1", pageSize = "20" } = req.query;
 
     const pageNum = Math.max(parseInt(page, 10) || 1, 1);
     const sizeNum = Math.min(Math.max(parseInt(pageSize, 10) || 20, 1), 100);
@@ -73,8 +73,31 @@ export default async function handler(req, res) {
       }
     }
 
+    // Source filter
+    if (source && source !== "all") {
+      leadsQuery = leadsQuery.eq("source", source);
+    }
+
+    // Date range filter
+    if (dateRange && dateRange !== "all") {
+      const days = parseInt(dateRange, 10);
+      if (days > 0) {
+        const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+        leadsQuery = leadsQuery.gte("first_seen_at", since);
+      }
+    }
+
+    // Sort
+    const sortMap = {
+      newest: { col: "first_seen_at", ascending: false },
+      oldest: { col: "first_seen_at", ascending: true },
+      "name-az": { col: "name", ascending: true },
+      "name-za": { col: "name", ascending: false },
+      activity: { col: "last_message_at", ascending: false },
+    };
+    const sortConfig = sortMap[sort] || sortMap.activity;
     leadsQuery = leadsQuery
-      .order("last_message_at", { ascending: false, nullsFirst: false })
+      .order(sortConfig.col, { ascending: sortConfig.ascending, nullsFirst: false })
       .range(offset, offset + sizeNum - 1);
 
     const { data: leadRows, error: leadError, count: totalCount } =

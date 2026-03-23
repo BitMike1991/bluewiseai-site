@@ -20,6 +20,21 @@ const CHANNEL_FILTERS = [
   { value: "call", label: "Calls" },
 ];
 
+const DATE_FILTERS = [
+  { value: "all", label: "All time" },
+  { value: "1", label: "Today" },
+  { value: "7", label: "Last 7 days" },
+  { value: "30", label: "Last 30 days" },
+  { value: "90", label: "Last 90 days" },
+];
+
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "name-az", label: "Name A\u2013Z" },
+  { value: "name-za", label: "Name Z\u2013A" },
+];
+
 function formatDateTime(dateString) {
   if (!dateString) return "\u2014";
   const d = new Date(dateString);
@@ -67,6 +82,8 @@ export default function InboxPage() {
   const [conversations, setConversations] = useState([]);
   const [statusFilter, setStatusFilter] = useState("open");
   const [channelFilter, setChannelFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -80,9 +97,13 @@ export default function InboxPage() {
       const statusVal = opts.status ?? statusFilter;
       const searchVal = opts.search ?? search;
       const channelVal = opts.channel ?? channelFilter;
+      const dateVal = opts.dateRange ?? dateFilter;
+      const sortVal = opts.sort ?? sortBy;
 
       query.set("status", statusVal || "open");
       query.set("channel", channelVal || "all");
+      if (dateVal && dateVal !== "all") query.set("dateRange", dateVal);
+      if (sortVal && sortVal !== "newest") query.set("sort", sortVal);
 
       if (searchVal && searchVal.trim().length > 0) {
         query.set("search", searchVal.trim());
@@ -148,58 +169,56 @@ export default function InboxPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row md:items-center md:space-x-3 space-y-3 md:space-y-0 mb-4">
-        <form onSubmit={handleSearchSubmit} className="flex-1 flex items-center space-x-2">
+      <div className="flex flex-col gap-3 mb-4">
+        <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
           <div className="flex-1 relative">
             <input
               type="text"
               placeholder="Search by name, phone, or email\u2026"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-900/70 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+              className="w-full bg-slate-900/70 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             />
           </div>
           <button
             type="submit"
-            className="px-4 py-2.5 md:py-2 rounded-xl text-xs font-medium bg-sky-500 hover:bg-sky-400 text-white shadow-sm shadow-sky-500/40 transition min-h-[44px] md:min-h-0"
+            className="px-4 py-2.5 md:py-2 rounded-xl text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white transition min-h-[44px] md:min-h-0"
           >
             Search
           </button>
         </form>
 
-        <div className="w-full md:w-56">
+        <div className="flex flex-wrap gap-2">
           <select
             value={channelFilter}
-            onChange={(e) => {
-              const val = e.target.value;
-              setChannelFilter(val);
-              loadInbox({ channel: val });
-            }}
-            className="w-full bg-slate-900/70 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/60"
+            onChange={(e) => { const v = e.target.value; setChannelFilter(v); loadInbox({ channel: v }); }}
+            className="bg-slate-900/70 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           >
-            {CHANNEL_FILTERS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
+            {CHANNEL_FILTERS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
-        </div>
 
-        <div className="w-full md:w-60">
           <select
             value={statusFilter}
-            onChange={(e) => {
-              const val = e.target.value;
-              setStatusFilter(val);
-              loadInbox({ status: val });
-            }}
-            className="w-full bg-slate-900/70 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/60"
+            onChange={(e) => { const v = e.target.value; setStatusFilter(v); loadInbox({ status: v }); }}
+            className="bg-slate-900/70 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           >
-            {STATUS_FILTERS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
+            {STATUS_FILTERS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+
+          <select
+            value={dateFilter}
+            onChange={(e) => { const v = e.target.value; setDateFilter(v); loadInbox({ dateRange: v }); }}
+            className="bg-slate-900/70 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          >
+            {DATE_FILTERS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+
+          <select
+            value={sortBy}
+            onChange={(e) => { const v = e.target.value; setSortBy(v); loadInbox({ sort: v }); }}
+            className="bg-slate-900/70 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          >
+            {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
       </div>

@@ -12,6 +12,33 @@ const STATUS_OPTIONS = [
   { value: 'lost', label: 'Lost' },
 ];
 
+const SOURCE_OPTIONS = [
+  { value: 'all', label: 'All sources' },
+  { value: 'missed_call', label: 'Missed calls' },
+  { value: 'cold_outreach', label: 'Cold outreach' },
+  { value: 'email', label: 'Email' },
+  { value: 'sms', label: 'SMS' },
+  { value: 'form', label: 'Form' },
+  { value: 'manual', label: 'Manual' },
+  { value: 'referral', label: 'Referral' },
+];
+
+const DATE_OPTIONS = [
+  { value: 'all', label: 'All time' },
+  { value: '1', label: 'Today' },
+  { value: '7', label: 'Last 7 days' },
+  { value: '30', label: 'Last 30 days' },
+  { value: '90', label: 'Last 90 days' },
+];
+
+const SORT_OPTIONS = [
+  { value: 'activity', label: 'Recent activity' },
+  { value: 'newest', label: 'Newest first' },
+  { value: 'oldest', label: 'Oldest first' },
+  { value: 'name-az', label: 'Name A\u2013Z' },
+  { value: 'name-za', label: 'Name Z\u2013A' },
+];
+
 const AVATAR_COLORS = [
   'bg-blue-500/20 text-blue-300',
   'bg-emerald-500/20 text-emerald-300',
@@ -61,6 +88,9 @@ export default function LeadsPage() {
   const [leads, setLeads] = useState([]);
   const [total, setTotal] = useState(0);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [sourceFilter, setSourceFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('activity');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const pageSize = 20;
@@ -80,6 +110,21 @@ export default function LeadsPage() {
       const statusValue = params.statusFilter ?? statusFilter;
       if (statusValue && statusValue !== 'all') {
         query.set('status', statusValue);
+      }
+
+      const sourceValue = params.sourceFilter ?? sourceFilter;
+      if (sourceValue && sourceValue !== 'all') {
+        query.set('source', sourceValue);
+      }
+
+      const dateValue = params.dateFilter ?? dateFilter;
+      if (dateValue && dateValue !== 'all') {
+        query.set('dateRange', dateValue);
+      }
+
+      const sortValue = params.sortBy ?? sortBy;
+      if (sortValue && sortValue !== 'activity') {
+        query.set('sort', sortValue);
       }
 
       const searchValue = params.search ?? search;
@@ -152,40 +197,57 @@ export default function LeadsPage() {
         </div>
       </div>
 
-      {/* Filters row */}
-      <div className="flex flex-col md:flex-row md:items-center md:space-x-3 space-y-3 md:space-y-0 mb-4">
-        <form
-          onSubmit={handleSearchSubmit}
-          className="flex-1 flex items-center space-x-2"
-        >
+      {/* Filters */}
+      <div className="flex flex-col gap-3 mb-4">
+        <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
           <div className="flex-1 relative">
             <input
               type="text"
               placeholder="Search by name, email, or phone\u2026"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-900/70 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+              className="w-full bg-slate-900/70 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             />
           </div>
           <button
             type="submit"
-            className="px-4 py-2.5 md:py-2 rounded-xl text-xs font-medium bg-sky-500 hover:bg-sky-400 text-white shadow-sm shadow-sky-500/40 transition min-h-[44px] md:min-h-0"
+            className="px-4 py-2.5 md:py-2 rounded-xl text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white transition min-h-[44px] md:min-h-0"
           >
             Search
           </button>
         </form>
 
-        <div className="w-full md:w-52">
+        <div className="flex flex-wrap gap-2">
           <select
             value={statusFilter}
             onChange={handleStatusChange}
-            className="w-full bg-slate-900/70 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/60"
+            className="bg-slate-900/70 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           >
-            {STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
+            {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+
+          <select
+            value={sourceFilter}
+            onChange={(e) => { const v = e.target.value; setSourceFilter(v); loadLeads({ page: 1, sourceFilter: v }); }}
+            className="bg-slate-900/70 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          >
+            {SOURCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+
+          <select
+            value={dateFilter}
+            onChange={(e) => { const v = e.target.value; setDateFilter(v); loadLeads({ page: 1, dateFilter: v }); }}
+            className="bg-slate-900/70 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          >
+            {DATE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+
+          <select
+            value={sortBy}
+            onChange={(e) => { const v = e.target.value; setSortBy(v); loadLeads({ page: 1, sortBy: v }); }}
+            className="bg-slate-900/70 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          >
+            {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
       </div>
