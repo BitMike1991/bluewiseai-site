@@ -90,7 +90,7 @@ export default function LeadsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('activity');
+  const [sortBy, setSortBy] = useState('newest');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const pageSize = 20;
@@ -123,7 +123,7 @@ export default function LeadsPage() {
       }
 
       const sortValue = params.sortBy ?? sortBy;
-      if (sortValue && sortValue !== 'activity') {
+      if (sortValue) {
         query.set('sort', sortValue);
       }
 
