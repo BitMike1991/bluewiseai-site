@@ -344,7 +344,7 @@ export default function OnboardingWizard() {
         <Head>
           <title>Bienvenue! | BlueWise AI</title>
         </Head>
-        <div className="min-h-screen bg-bg flex items-center justify-center p-6">
+        <div className="min-h-screen flex items-center justify-center p-6">
           <div className="max-w-lg text-center space-y-6">
             <div className="w-20 h-20 rounded-full bg-accent/20 border-2 border-accent flex items-center justify-center mx-auto">
               <Check className="w-10 h-10 text-accent" />
@@ -376,7 +376,7 @@ export default function OnboardingWizard() {
         <meta name="description" content="Configurez votre systeme BlueWise AI en 5 minutes" />
       </Head>
 
-      <div className="min-h-screen bg-bg relative overflow-hidden">
+      <div className="min-h-screen relative overflow-hidden">
         {/* Background glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
 
