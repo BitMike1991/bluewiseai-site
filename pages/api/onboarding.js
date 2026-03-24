@@ -91,6 +91,13 @@ export default async function handler(req, res) {
     const questions = (onboarding_intake.qualifying_questions || []).join(' | ');
     const payments = (onboarding_intake.payment_methods || []).join(', ');
 
+    // Build upload summary
+    const uploads = onboarding_intake.uploads || {};
+    const uploadLines = Object.entries(uploads)
+      .filter(([, files]) => Array.isArray(files) && files.length > 0)
+      .map(([key, files]) => `${key}: ${files.length}`)
+      .join(', ');
+
     const slackMsg = [
       `:rocket: *NOUVEAU CLIENT — ${bizName}* (ID: ${customerId})`,
       ``,
@@ -102,6 +109,7 @@ export default async function handler(req, res) {
       `*Services:* ${services}`,
       `*Questions de qualification:* ${questions || 'Defaut'}`,
       `*Paiements:* ${payments || 'interac'}`,
+      `*Documents:* ${uploadLines || 'Aucun — a envoyer plus tard'}`,
       ``,
       `━━━━━━━━━━━━━━━━━━━━━━━━`,
       ``,

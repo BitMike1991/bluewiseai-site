@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { Check, ChevronRight, ChevronLeft, Building2, Wrench, Bot, Settings, Send, Phone, Mail, MapPin, Clock, MessageSquare, AlertTriangle, Globe, Sparkles, Loader2 } from 'lucide-react';
+import { Check, ChevronRight, ChevronLeft, Building2, Wrench, Bot, Settings, Send, Phone, Mail, MapPin, Clock, MessageSquare, AlertTriangle, Globe, Sparkles, Loader2, Upload, FileText, X, Image as ImageIcon } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 
 const INDUSTRIES = [
   { value: 'plumbing', label: 'Plomberie', icon: '🔧' },
@@ -23,7 +24,67 @@ const STEPS = [
   { id: 2, title: 'Vos services', icon: Wrench },
   { id: 3, title: 'Votre agent IA', icon: Bot },
   { id: 4, title: 'Preferences', icon: Settings },
-  { id: 5, title: 'Confirmation', icon: Send },
+  { id: 5, title: 'Vos documents', icon: Upload },
+  { id: 6, title: 'Confirmation', icon: Send },
+];
+
+const UPLOAD_CATEGORIES = [
+  {
+    key: 'logo',
+    label: 'Logo de votre entreprise',
+    hint: 'PNG, SVG ou JPG — haute resolution',
+    accept: '.png,.jpg,.jpeg,.svg,.webp',
+    maxFiles: 2,
+  },
+  {
+    key: 'work_photos',
+    label: 'Photos de vos travaux',
+    hint: 'Vos meilleurs projets — pour votre site web (max 10)',
+    accept: '.png,.jpg,.jpeg,.webp',
+    maxFiles: 10,
+  },
+  {
+    key: 'quote_template',
+    label: 'Template de soumission',
+    hint: 'Votre format actuel — on va le numeriser pour vous',
+    accept: '.pdf,.doc,.docx,.jpg,.jpeg,.png',
+    maxFiles: 3,
+  },
+  {
+    key: 'contract_template',
+    label: 'Template de contrat',
+    hint: 'Votre contrat actuel — on va le numeriser',
+    accept: '.pdf,.doc,.docx,.jpg,.jpeg,.png',
+    maxFiles: 3,
+  },
+  {
+    key: 'insurance',
+    label: "Certificat d'assurance",
+    hint: "Preuve d'assurance responsabilite — pour credibilite",
+    accept: '.pdf,.jpg,.jpeg,.png',
+    maxFiles: 2,
+  },
+  {
+    key: 'license',
+    label: "Licence RBQ / Permis d'affaires",
+    hint: 'Pour afficher sur votre site et vos soumissions',
+    accept: '.pdf,.jpg,.jpeg,.png',
+    maxFiles: 2,
+  },
+  {
+    key: 'price_list',
+    label: 'Liste de prix / Carte de tarifs',
+    hint: "Pour que l'agent IA connaisse vos fourchettes de prix",
+    accept: '.pdf,.xlsx,.xls,.csv,.jpg,.jpeg,.png',
+    maxFiles: 2,
+  },
+  {
+    key: 'team_photo',
+    label: "Photo de l'equipe / du proprietaire",
+    hint: 'Pour la section "A propos" de votre site web',
+    accept: '.png,.jpg,.jpeg,.webp',
+    maxFiles: 5,
+  },
 ];
 
 function ProgressBar({ current, steps }) {
@@ -166,6 +227,124 @@ function TagInput({ value = [], onChange, placeholder, suggestions = [] }) {
   );
 }
 
+async function uploadToStorage(file, category, businessName) {
+  const safeName = (businessName || 'upload').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
+  const timestamp = Date.now();
+  const safeFn = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const path = `${safeName}/${category}/${timestamp}_${safeFn}`;
+
+  const { error } = await supabase.storage
+    .from('onboarding-uploads')
+    .upload(path, file, { cacheControl: '3600', upsert: false });
+
+  if (error) throw new Error(error.message);
+
+  const { data } = supabase.storage
+    .from('onboarding-uploads')
+    .getPublicUrl(path);
+
+  return data.publicUrl;
+}
+
+function FileUpload({ category, label, hint, accept, maxFiles = 5, files = [], onUpload, onRemove, businessName }) {
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
+  const handleFiles = async (fileList) => {
+    const remaining = maxFiles - files.length;
+    if (remaining <= 0) return;
+    const newFiles = Array.from(fileList).slice(0, remaining);
+    if (newFiles.length === 0) return;
+
+    setUploading(true);
+    setUploadError('');
+    for (const file of newFiles) {
+      if (file.size > 10 * 1024 * 1024) {
+        setUploadError(`${file.name} depasse 10 MB`);
+        continue;
+      }
+      try {
+        const url = await uploadToStorage(file, category, businessName);
+        onUpload({ name: file.name, url, size: file.size, type: file.type });
+      } catch (err) {
+        setUploadError(`Erreur: ${err.message}`);
+      }
+    }
+    setUploading(false);
+  };
+
+  const isImage = (type) => type?.startsWith('image/');
+  const inputId = `upload-${category}`;
+
+  return (
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-txt">{label}</label>
+      <div
+        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={e => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
+        onClick={() => document.getElementById(inputId)?.click()}
+        className={`border-2 border-dashed rounded-xl p-5 text-center transition-all cursor-pointer ${
+          dragOver ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/30 hover:bg-surface2/50'
+        } ${files.length >= maxFiles ? 'opacity-50 pointer-events-none' : ''}`}
+      >
+        <Upload className="w-6 h-6 text-txt3 mx-auto mb-1.5" />
+        <p className="text-sm text-txt2">
+          Glissez vos fichiers ici ou <span className="text-accent font-medium">cliquez pour choisir</span>
+        </p>
+        <p className="text-xs text-txt3 mt-1">{hint}</p>
+        <input
+          id={inputId}
+          type="file"
+          accept={accept}
+          multiple={maxFiles > 1}
+          className="hidden"
+          onChange={e => { handleFiles(e.target.files); e.target.value = ''; }}
+        />
+      </div>
+
+      {uploadError && (
+        <p className="text-xs text-danger flex items-center gap-1">
+          <AlertTriangle className="w-3 h-3" /> {uploadError}
+        </p>
+      )}
+
+      {uploading && (
+        <div className="flex items-center gap-2 text-sm text-accent">
+          <Loader2 className="w-4 h-4 animate-spin" /> Telechargement en cours...
+        </div>
+      )}
+
+      {files.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+          {files.map((f, i) => (
+            <div key={i} className="flex items-center gap-2 bg-surface2 border border-border rounded-lg px-3 py-2 group">
+              {isImage(f.type) ? (
+                <ImageIcon className="w-4 h-4 text-accent flex-shrink-0" />
+              ) : (
+                <FileText className="w-4 h-4 text-accent flex-shrink-0" />
+              )}
+              <span className="text-sm text-txt truncate flex-1">{f.name}</span>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onRemove(i); }}
+                className="text-txt3 hover:text-danger transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {files.length > 0 && (
+        <p className="text-xs text-txt3">{files.length}/{maxFiles} fichier{files.length > 1 ? 's' : ''}</p>
+      )}
+    </div>
+  );
+}
+
 function StepCard({ title, description, children, visible }) {
   return (
     <div className={`transition-all duration-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 absolute pointer-events-none'}`}>
@@ -241,6 +420,9 @@ export default function OnboardingWizard() {
     paymentMethods: ['interac'],
     neverSay: '',
     noPricing: true,
+
+    // Step 5 — uploads
+    uploads: {},
   });
 
   const u = (field, val) => setForm(prev => ({ ...prev, [field]: val }));
@@ -266,7 +448,7 @@ export default function OnboardingWizard() {
     const err = validate();
     if (err) { setError(err); return; }
     setError('');
-    setStep(s => Math.min(s + 1, 5));
+    setStep(s => Math.min(s + 1, 6));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -306,6 +488,7 @@ export default function OnboardingWizard() {
       payment_methods: form.paymentMethods,
       never_say: form.neverSay,
       no_pricing: form.noPricing,
+      uploads: form.uploads,
     };
 
     try {
@@ -776,9 +959,49 @@ export default function OnboardingWizard() {
               </Field>
             </StepCard>
 
-            {/* Step 5 — Review */}
+            {/* Step 5 — Documents */}
             <StepCard
               visible={step === 5}
+              title="Vos documents"
+              description="Envoyez-nous vos fichiers pour qu'on configure tout parfaitement. Tout est optionnel — vous pouvez aussi les envoyer plus tard."
+            >
+              <div className="space-y-6">
+                {UPLOAD_CATEGORIES.map(cat => (
+                  <FileUpload
+                    key={cat.key}
+                    category={cat.key}
+                    label={cat.label}
+                    hint={cat.hint}
+                    accept={cat.accept}
+                    maxFiles={cat.maxFiles}
+                    files={form.uploads[cat.key] || []}
+                    businessName={form.businessName}
+                    onUpload={(file) => {
+                      u('uploads', {
+                        ...form.uploads,
+                        [cat.key]: [...(form.uploads[cat.key] || []), file],
+                      });
+                    }}
+                    onRemove={(idx) => {
+                      u('uploads', {
+                        ...form.uploads,
+                        [cat.key]: (form.uploads[cat.key] || []).filter((_, i) => i !== idx),
+                      });
+                    }}
+                  />
+                ))}
+              </div>
+
+              <div className="mt-6 bg-surface2 border border-border rounded-xl p-4">
+                <p className="text-sm text-txt2">
+                  <span className="text-accent font-medium">Pas de fichiers sous la main?</span> Aucun probleme — vous pourrez nous les envoyer par courriel apres. L&apos;important c&apos;est de soumettre le formulaire pour demarrer votre configuration.
+                </p>
+              </div>
+            </StepCard>
+
+            {/* Step 6 — Review */}
+            <StepCard
+              visible={step === 6}
               title="Verifiez vos informations"
               description="Assurez-vous que tout est correct avant de soumettre."
             >
@@ -811,6 +1034,19 @@ export default function OnboardingWizard() {
                   <ReviewLine label="Contact prefere" value={form.preferredContact} />
                   <ReviewLine label="Prix au telephone" value={form.noPricing ? 'Non — soumission seulement' : 'Oui'} />
                 </ReviewSection>
+
+                <ReviewSection title="Documents" onEdit={() => setStep(5)}>
+                  {Object.entries(form.uploads).filter(([, files]) => files.length > 0).length === 0 ? (
+                    <p className="text-sm text-txt3">Aucun document telecharge</p>
+                  ) : (
+                    Object.entries(form.uploads)
+                      .filter(([, files]) => files.length > 0)
+                      .map(([key, files]) => {
+                        const cat = UPLOAD_CATEGORIES.find(c => c.key === key);
+                        return <ReviewLine key={key} label={cat?.label || key} value={`${files.length} fichier${files.length > 1 ? 's' : ''}`} />;
+                      })
+                  )}
+                </ReviewSection>
               </div>
             </StepCard>
 
@@ -826,7 +1062,7 @@ export default function OnboardingWizard() {
                 </button>
               ) : <div />}
 
-              {step < 5 ? (
+              {step < 6 ? (
                 <button
                   type="button"
                   onClick={next}
