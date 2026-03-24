@@ -72,7 +72,8 @@ export default function Navbar() {
     pathname === "/es/artisan" ||
     pathname === "/results" ||
     pathname === "/fr/results" ||
-    pathname === "/es/results";
+    pathname === "/es/results" ||
+    pathname === "/onboarding";
 
   const isPillarsPage =
     pathname.startsWith("/pillars") || pathname.startsWith("/fr/pillars");
