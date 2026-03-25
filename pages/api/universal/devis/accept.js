@@ -171,7 +171,7 @@ export default async function handler(req, res) {
     };
 
     try {
-      fetch('https://automation.bluewiseai.com/webhook/quote-accepted', {
+      fetch('https://automation.bluewiseai.com/webhook/sp-quote-accepted', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(webhookPayload)
