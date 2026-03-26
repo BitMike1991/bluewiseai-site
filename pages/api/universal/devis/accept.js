@@ -173,13 +173,13 @@ export default async function handler(req, res) {
     };
 
     try {
-      fetch('https://automation.bluewiseai.com/webhook/sp-quote-accepted', {
+      await fetch('https://automation.bluewiseai.com/webhook/sp-quote-accepted', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(webhookPayload)
-      }).catch(err => console.error('n8n webhook error (non-blocking):', err));
+      });
     } catch (e) {
-      // non-blocking
+      console.error('n8n webhook error:', e);
     }
 
     return res.status(200).json({
