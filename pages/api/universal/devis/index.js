@@ -376,7 +376,7 @@ function generateQuoteHtml(data, config) {
     status.textContent = 'Traitement en cours...';
 
     try {
-      var resp = await fetch('https://bluewiseai.com/api/universal/devis/accept', {
+      var resp = await fetch('https://www.bluewiseai.com/api/universal/devis/accept', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ quote_number: QUOTE_NUMBER })

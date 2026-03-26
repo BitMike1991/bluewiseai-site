@@ -796,7 +796,7 @@ function generateContractHtml(data, config) {
     var signedHtml = document.documentElement.outerHTML;
 
     try {
-      var resp = await fetch('https://bluewiseai.com/api/universal/contrat/sign', {
+      var resp = await fetch('https://www.bluewiseai.com/api/universal/contrat/sign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
