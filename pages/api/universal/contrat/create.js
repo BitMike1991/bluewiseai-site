@@ -1026,6 +1026,7 @@ export default async function handler(req, res) {
           job_id: jobDbId,
           customer_id: resolvedCustomerId,
           signature_status: 'pending',
+          signature_request_id: contract_number,
           storage_path: filename,
           storage_bucket: 'contracts',
           html_content: html

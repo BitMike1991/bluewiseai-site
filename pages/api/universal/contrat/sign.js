@@ -197,18 +197,38 @@ export default async function handler(req, res) {
       // Non-fatal
     }
 
-    // ── 9. Fire n8n webhook — MUST await or Vercel kills it ─────────────────
+    // ── 9. Fetch job data for deposit calculation ─────────────────────────────
+    const { data: jobData } = await supabase
+      .from('jobs')
+      .select('job_id, client_name, client_phone, client_email, quote_amount, payment_terms')
+      .eq('id', jobId)
+      .single();
+
+    const quoteAmount = jobData?.quote_amount || 0;
+    const totalTtc = Math.round(quoteAmount * 1.14975 * 100) / 100;
+    const paymentTerms = jobData?.payment_terms || [];
+    const firstTranche = Array.isArray(paymentTerms) ? paymentTerms[0] : null;
+    const depositPct = firstTranche?.percentage || 10;
+    const depositAmount = Math.round(quoteAmount * depositPct / 100 * 1.14975 * 100) / 100;
+
+    // ── 10. Fire n8n webhook — MUST await or Vercel kills it ────────────────
     try {
       await fetch('https://automation.bluewiseai.com/webhook/sp-signature-webhook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           event: 'signature_complete',
-          job_id: jobId,
+          job_id: jobData?.job_id || contract_number,
           customer_id: customerId,
           contract_number,
           signer_name,
           signer_email: signer_email || null,
+          client_phone: jobData?.client_phone || '',
+          client_email: jobData?.client_email || signer_email || '',
+          client_name: jobData?.client_name || signer_name,
+          total_ttc: totalTtc,
+          deposit_pct: depositPct,
+          deposit_amount: depositAmount,
           signature_url: signatureUrl,
           signed_at: signedAt,
           ip_address: ip
