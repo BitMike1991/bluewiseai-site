@@ -197,12 +197,13 @@ export default async function handler(req, res) {
       // Non-fatal
     }
 
-    // ── 9. Fire n8n webhook (fire-and-forget) ─────────────────────────────────
+    // ── 9. Fire n8n webhook — MUST await or Vercel kills it ─────────────────
     try {
-      fetch('https://automation.bluewiseai.com/webhook/contract-signed', {
+      await fetch('https://automation.bluewiseai.com/webhook/sp-signature-webhook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          event: 'signature_complete',
           job_id: jobId,
           customer_id: customerId,
           contract_number,
@@ -212,9 +213,9 @@ export default async function handler(req, res) {
           signed_at: signedAt,
           ip_address: ip
         })
-      }).catch(err => console.error('n8n webhook error (non-blocking):', err));
-    } catch (_) {
-      // non-blocking — never fail the response because of n8n
+      });
+    } catch (e) {
+      console.error('n8n webhook error:', e);
     }
 
     // ── 10. Return success ────────────────────────────────────────────────────
