@@ -194,7 +194,7 @@ function generateContractHtml(data, config) {
 
   // ── Logo block ──
   const logoHtml = b.logo_url
-    ? `<img src="${b.logo_url}" alt="${businessName}" style="width: 60px; height: 60px; border-radius: 10px; object-fit: contain;" />`
+    ? `<img src="${b.logo_url}" alt="${businessName}" style="max-height: 50px; max-width: 200px; object-fit: contain;" />`
     : `<div style="width: 60px; height: 60px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 10px; color: white; text-align: center; padding: 4px;">${businessName.substring(0,2).toUpperCase()}</div>`;
 
   // ── RBQ block ──
@@ -290,8 +290,8 @@ function generateContractHtml(data, config) {
     }
     .page { max-width: 800px; margin: 0 auto; padding: 40px 50px; }
     .header {
-      background: linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 50%, ${accentColor} 100%);
-      color: white; padding: 35px 50px; margin-bottom: 0;
+      background: #ffffff; border-bottom: 4px solid ${primaryColor};
+      color: ${accentColor}; padding: 35px 50px; margin-bottom: 0;
     }
     .header h1 { font-size: 32px; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; }
     .header .subtitle { font-size: 14px; opacity: 0.9; font-weight: 400; }

@@ -108,7 +108,7 @@ function generateQuoteHtml(data, config) {
 
   // Logo: handle missing gracefully
   const logoHtml = b.logo_url
-    ? `<img src="${b.logo_url}" alt="${b.business_name}" style="width: 60px; height: 60px; border-radius: 10px; object-fit: contain;" />`
+    ? `<img src="${b.logo_url}" alt="${b.business_name}" style="max-height: 50px; max-width: 200px; object-fit: contain;" />`
     : '';
 
   // RBQ badge
@@ -129,8 +129,8 @@ function generateQuoteHtml(data, config) {
     }
     .page { max-width: 800px; margin: 0 auto; padding: 40px 50px; }
     .header {
-      background: linear-gradient(135deg, ${b.primary_color} 0%, ${b.accent_color || b.primary_color} 100%);
-      color: white; padding: 35px 50px; margin-bottom: 0;
+      background: #ffffff; border-bottom: 4px solid ${b.primary_color};
+      color: ${b.accent_color || '#1C1C1C'}; padding: 35px 50px; margin-bottom: 0;
       display: flex; align-items: center; gap: 20px;
     }
     .header h1 { font-size: 28px; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; }
