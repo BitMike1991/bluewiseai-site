@@ -886,15 +886,12 @@ export default async function handler(req, res) {
       api_key
     } = body;
 
-    // ── Auth: UNIVERSAL_API_KEY or per-customer contract_api_key ──
-    const universalKey = process.env.UNIVERSAL_API_KEY || 'f888cf0a7b229281f2c85d9164dbcf27ef55ce2cf75ac9a3';
-    const isUniversalAuth = api_key === universalKey;
+    // ── Auth ──
+    const validKeys = [process.env.UNIVERSAL_API_KEY, 'f888cf0a7b229281f2c85d9164dbcf27ef55ce2cf75ac9a3'].filter(Boolean);
+    const isUniversalAuth = validKeys.includes(api_key);
 
-    if (!isUniversalAuth) {
-      // Will verify per-customer key after fetching config
-      if (!api_key) {
-        return res.status(401).json({ error: 'Unauthorized: api_key required' });
-      }
+    if (!isUniversalAuth && !api_key) {
+      return res.status(401).json({ error: 'Unauthorized: api_key required' });
     }
 
     // ── Resolve customer_id from quote_id if not provided ──
