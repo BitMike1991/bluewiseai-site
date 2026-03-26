@@ -172,7 +172,7 @@ function generateContractHtml(data, config) {
     warrantyHtml = warranties;
   } else if (Array.isArray(warranties) && warranties.length > 0) {
     warrantyHtml = `<ul style="padding-left: 20px; font-size: 12px;">
-      ${warranties.map(w => `<li>${typeof w === 'string' ? w : `<strong>${w.label || w.title}:</strong> ${w.text || w.description || ''}`}</li>`).join('\n      ')}
+      ${warranties.map(w => `<li>${typeof w === 'string' ? w : `<strong>${w.item || w.label || w.title} :</strong> ${w.duration || w.text || w.description || ''}`}</li>`).join('\n      ')}
     </ul>`;
   } else {
     warrantyHtml = `<p>${businessName} garantit la qualité de la main-d'œuvre et des matériaux utilisés pour une période conforme aux normes de l'industrie.</p>`;
@@ -861,10 +861,12 @@ function generateContractHtml(data, config) {
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
+  // CORS on ALL responses
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     return res.status(200).end();
   }
 
@@ -920,7 +922,7 @@ export default async function handler(req, res) {
     // ── Fetch customer quote_config ──
     const { data: customerData, error: custErr } = await supabase
       .from('customers')
-      .select('quote_config, contract_api_key')
+      .select('quote_config, contract_api_key, domain')
       .eq('id', resolvedCustomerId)
       .maybeSingle();
 
@@ -1044,13 +1046,17 @@ export default async function handler(req, res) {
       }
     }
 
+    // Get customer domain for URL
+    const custDomain = customerData.domain || 'bluewiseai.com';
+
     return res.status(200).json({
       success: true,
       contract_number,
       filename,
       html,
       total_ttc: contractData.total_ttc,
-      customer_id: resolvedCustomerId
+      customer_id: resolvedCustomerId,
+      url: `https://${custDomain}/${filename}`
     });
 
   } catch (error) {
