@@ -144,7 +144,6 @@ export default async function handler(req, res) {
         signed_at: signedAt,
         signer_name,
         signer_email: signer_email || null,
-        signer_ip: ip,
         signature_provider: 'electronic_canvas',
         storage_path: htmlPath,
         storage_bucket: bucket,
@@ -182,7 +181,7 @@ export default async function handler(req, res) {
         job_id: jobId,
         customer_id: customerId,
         event_type: 'contract_signed',
-        event_data: {
+        payload: {
           contract_number,
           signer_name,
           signer_email: signer_email || null,
