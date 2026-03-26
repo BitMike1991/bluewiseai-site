@@ -213,6 +213,25 @@ function generateQuoteHtml(data, config) {
       font-size: 10px; color: #9ca3af; text-align: center;
     }
     .footer p { margin: 2px 0; }
+    @media (max-width: 640px) {
+      .page { padding: 16px; }
+      .header { padding: 20px 16px; flex-direction: column; text-align: center; gap: 12px; }
+      .header h1 { font-size: 20px; }
+      .header img { width: 48px; height: 48px; }
+      .contract-bar { flex-direction: column; padding: 12px 16px; gap: 4px; }
+      .two-col { grid-template-columns: 1fr; gap: 12px; }
+      .info-box { padding: 12px; }
+      .pay-table { font-size: 12px; }
+      .pay-table th, .pay-table td { padding: 8px 6px; }
+      .pay-table .total-row td { font-size: 13px; }
+      .accept-section { padding: 20px 16px; }
+      .btn-accept { padding: 14px 32px; font-size: 16px; width: 100%; }
+      .note-box { padding: 12px; }
+      .promo-box { padding: 10px 12px; }
+      .warranty-box, .exclusion-box { padding: 12px; }
+      .footer { padding-top: 12px; font-size: 9px; }
+      .footer p { word-break: break-word; }
+    }
     @media print {
       body { padding: 0; }
       .page { max-width: 100%; padding: 20px 40px; }

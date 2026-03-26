@@ -363,6 +363,30 @@ function generateContractHtml(data, config) {
     }
     .footer p { margin: 2px 0; }
     .page-break { page-break-before: always; margin-top: 40px; padding-top: 20px; }
+    @media (max-width: 640px) {
+      .page { padding: 16px; }
+      .header { padding: 20px 16px; flex-direction: column; text-align: center; gap: 10px; }
+      .header h1 { font-size: 18px; }
+      .header img { width: 48px; height: 48px; }
+      .contract-bar { flex-direction: column; padding: 12px 16px; gap: 4px; }
+      .two-col { grid-template-columns: 1fr; gap: 12px; }
+      .info-box { padding: 12px; }
+      .pay-table { font-size: 11px; }
+      .pay-table th, .pay-table td { padding: 8px 4px; }
+      .pay-table .total-row td { font-size: 12px; }
+      .terms p, .terms li { font-size: 11px; }
+      .annex-box, .warranty-box, .exclusion-box, .accept-box, .gift-box { padding: 12px; }
+      .sig-grid { grid-template-columns: 1fr; gap: 24px; }
+      .sig-section { padding-top: 16px; }
+      .signature-section { padding: 20px 16px; }
+      .sig-canvas-wrap canvas { height: 120px; }
+      .sig-form-row { flex-direction: column; gap: 8px; }
+      .sig-actions { flex-direction: column; }
+      .sig-actions button { width: 100%; }
+      .footer { font-size: 9px; }
+      .footer p { word-break: break-word; }
+      .page-break { margin-top: 20px; padding-top: 10px; }
+    }
     @media print {
       body { padding: 0; }
       .page { max-width: 100%; padding: 20px 40px; }
