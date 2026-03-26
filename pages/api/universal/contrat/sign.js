@@ -50,11 +50,12 @@ export default async function handler(req, res) {
     const userAgent = req.headers['user-agent'] || 'unknown';
     const signedAt = new Date().toISOString();
 
-    // ── 2. Look up contract by contract_number — get customer_id from record ─
+    // ── 2. Look up contract — try storage_path pattern since table has no contract_number column
+    const storagePath = contract_number.replace('-C-', '-contrat-') + '.html';
     const { data: contract, error: contractLookupErr } = await supabase
       .from('contracts')
-      .select('id, job_id, customer_id, contract_number, signature_status, storage_path, storage_bucket')
-      .eq('contract_number', contract_number)
+      .select('id, job_id, customer_id, signature_status, storage_path, storage_bucket')
+      .or(`storage_path.eq.${storagePath},storage_path.eq.${contract_number}`)
       .maybeSingle();
 
     if (contractLookupErr) {
