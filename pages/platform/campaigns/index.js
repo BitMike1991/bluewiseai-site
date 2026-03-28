@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
 import StatCard from "../../../src/components/dashboard/StatCard";
+import { useBranding } from "../../../src/components/dashboard/BrandingContext";
+import { getBrandingStyles } from "../../../src/components/dashboard/brandingUtils";
 import { Target, Star, Users, Clock, Send, MessageSquare, CheckCircle } from "lucide-react";
 
 function fmtDate(d) {
@@ -59,6 +61,8 @@ function eventTypeLabel(t) {
 }
 
 export default function CampaignsPage() {
+  const { branding } = useBranding();
+  const styles = getBrandingStyles(branding);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("followups");
@@ -99,7 +103,7 @@ export default function CampaignsPage() {
   return (
     <DashboardLayout title="Campaigns">
       <div className="space-y-6">
-        <h1 className="text-xl font-semibold text-slate-50">Campaigns & Automation</h1>
+        <h1 className="text-xl font-semibold" style={{ color: styles.text.primary }}>Campaigns & Automation</h1>
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

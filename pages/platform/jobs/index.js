@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '../../../src/components/dashboard/DashboardLayout';
+import { useBranding } from '../../../src/components/dashboard/BrandingContext';
+import { getBrandingStyles, getStatusBadgeStyle } from '../../../src/components/dashboard/brandingUtils';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All statuses' },
@@ -78,6 +80,8 @@ function formatDate(dateStr) {
 
 export default function JobsPage() {
   const router = useRouter();
+  const { branding } = useBranding();
+  const styles = getBrandingStyles(branding);
   const [jobs, setJobs] = useState([]);
   const [total, setTotal] = useState(0);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -162,7 +166,7 @@ export default function JobsPage() {
     <DashboardLayout title="Jobs">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-lg font-semibold text-slate-50">Jobs</h1>
+          <h1 className="text-lg font-semibold" style={{ color: styles.text.primary }}>Jobs</h1>
           <p className="text-sm text-slate-400">
             Track all jobs from quote to completion.
           </p>
@@ -211,7 +215,7 @@ export default function JobsPage() {
       </div>
 
       {/* Jobs table */}
-      <div className="rounded-2xl bg-slate-900/60 border border-slate-800/80 shadow-lg shadow-slate-950/60 overflow-hidden">
+      <div className="rounded-2xl border shadow-lg overflow-hidden" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
         <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 text-xs font-semibold text-slate-400 border-b border-slate-800/80">
           <div className="col-span-1">Job ID</div>
           <div className="col-span-3">Client</div>

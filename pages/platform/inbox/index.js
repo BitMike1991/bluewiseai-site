@@ -2,6 +2,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
+import { useBranding } from "../../../src/components/dashboard/BrandingContext";
+import { getBrandingStyles, getStatusBadgeStyle } from "../../../src/components/dashboard/brandingUtils";
 
 const STATUS_FILTERS = [
   { value: "open", label: "Open conversations" },
@@ -78,6 +80,8 @@ function channelPill(channel) {
 
 export default function InboxPage() {
   const router = useRouter();
+  const { branding } = useBranding();
+  const styles = getBrandingStyles(branding);
 
   const [conversations, setConversations] = useState([]);
   const [statusFilter, setStatusFilter] = useState("open");
@@ -151,7 +155,7 @@ export default function InboxPage() {
     <DashboardLayout title="Inbox">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-lg font-semibold text-slate-50">Inbox</h1>
+          <h1 className="text-lg font-semibold" style={{ color: styles.text.primary }}>Inbox</h1>
           <p className="text-sm text-slate-400">
             One thread per lead. Latest activity comes from SMS, Email, and Calls. Click a row to open the full lead timeline.
           </p>

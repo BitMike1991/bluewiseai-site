@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
 import StatCard from "../../../src/components/dashboard/StatCard";
+import { useBranding } from "../../../src/components/dashboard/BrandingContext";
+import { getBrandingStyles } from "../../../src/components/dashboard/brandingUtils";
 import { DollarSign, TrendingUp, TrendingDown, AlertCircle, Download, ExternalLink } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -42,6 +44,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function FinancesPage() {
+  const { branding } = useBranding();
+  const styles = getBrandingStyles(branding);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -77,7 +81,7 @@ export default function FinancesPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-slate-50">Financial Overview</h1>
+          <h1 className="text-xl font-semibold" style={{ color: styles.text.primary }}>Financial Overview</h1>
           <a
             href={`/api/export/accountant?month=${new Date().toISOString().slice(0, 7)}`}
             target="_blank"
@@ -134,7 +138,7 @@ export default function FinancesPage() {
 
         {/* Tax Summary */}
         {data.taxes && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+          <div className="rounded-2xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
             <h3 className="text-sm font-medium text-slate-300 mb-3">Taxes Collected (Accounting)</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
@@ -162,7 +166,7 @@ export default function FinancesPage() {
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Revenue vs Expenses Chart */}
-          <div className="lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+          <div className="lg:col-span-2 rounded-2xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
             <h3 className="text-sm font-medium text-slate-300 mb-3">Revenue vs Expenses (6 Months)</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -178,7 +182,7 @@ export default function FinancesPage() {
           </div>
 
           {/* Payment Methods Pie */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+          <div className="rounded-2xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
             <h3 className="text-sm font-medium text-slate-300 mb-3">Payment Types</h3>
             <div className="h-64">
               {data.paymentMethods.length > 0 ? (
@@ -208,7 +212,7 @@ export default function FinancesPage() {
 
         {/* By Person Ledger */}
         {data.byPerson && Object.keys(data.byPerson).length > 0 && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+          <div className="rounded-2xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
             <h3 className="text-sm font-medium text-slate-300 mb-3">Person Ledger</h3>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {Object.entries(data.byPerson).map(([name, t]) => {
@@ -257,7 +261,7 @@ export default function FinancesPage() {
         {/* Tables Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Top Clients */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+          <div className="rounded-2xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
             <h3 className="text-sm font-medium text-slate-300 mb-3">Top Clients by Revenue</h3>
             {data.topClients.length > 0 ? (
               <div className="space-y-2">
@@ -277,7 +281,7 @@ export default function FinancesPage() {
           </div>
 
           {/* Pending Payments */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+          <div className="rounded-2xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
             <h3 className="text-sm font-medium text-slate-300 mb-3">Pending Payments</h3>
             {data.pendingPayments.length > 0 ? (
               <div className="space-y-2">
@@ -297,7 +301,7 @@ export default function FinancesPage() {
           </div>
 
           {/* Recent Expenses */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+          <div className="rounded-2xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
             <h3 className="text-sm font-medium text-slate-300 mb-3">Recent Expenses</h3>
             {data.recentExpenses.length > 0 ? (
               <div className="space-y-2">

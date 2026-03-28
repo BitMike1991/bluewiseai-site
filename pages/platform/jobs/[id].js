@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import DashboardLayout from '../../../src/components/dashboard/DashboardLayout';
+import { useBranding } from '../../../src/components/dashboard/BrandingContext';
+import { getBrandingStyles, getStatusBadgeStyle } from '../../../src/components/dashboard/brandingUtils';
 
 const STATUS_COLORS = {
   draft: 'bg-slate-700/60 text-slate-100 border-slate-500/40',
@@ -81,6 +83,8 @@ function eventLabel(eventType) {
 export default function JobDetailPage() {
   const router = useRouter();
   const { id } = router.query;
+  const { branding } = useBranding();
+  const styles = getBrandingStyles(branding);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -225,7 +229,7 @@ export default function JobDetailPage() {
 
       {/* Status Pipeline */}
       {!isCancelled && (
-        <div className="mb-6 rounded-xl bg-slate-900/60 border border-slate-800/80 p-4">
+        <div className="mb-6 rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           <div className="flex items-center justify-between">
             {STATUS_PIPELINE.map((step, i) => {
               const isCompleted = i <= currentStatusIndex;
@@ -265,7 +269,7 @@ export default function JobDetailPage() {
       )}
 
       {/* Financial Summary Card */}
-      <div className="mb-6 rounded-xl bg-slate-900/60 border border-slate-800/80 p-4">
+      <div className="mb-6 rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-b="">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-slate-300">Financial Summary</h2>
           {financesLoading && (
@@ -365,7 +369,7 @@ export default function JobDetailPage() {
         <div className="lg:col-span-2 space-y-4">
           {/* Photos */}
           {photos && photos.length > 0 && (
-            <div className="rounded-xl bg-slate-900/60 border border-slate-800/80 p-4">
+            <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-b="">
               <h2 className="text-sm font-semibold text-slate-300 mb-3">
                 Photos ({photos.length})
               </h2>
@@ -388,7 +392,7 @@ export default function JobDetailPage() {
           )}
 
           {/* Contracts */}
-          <div className="rounded-xl bg-slate-900/60 border border-slate-800/80 p-4">
+          <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-b="">
             <h2 className="text-sm font-semibold text-slate-300 mb-3">
               Contracts ({contracts.length})
             </h2>
@@ -431,7 +435,7 @@ export default function JobDetailPage() {
           </div>
 
           {/* Payments */}
-          <div className="rounded-xl bg-slate-900/60 border border-slate-800/80 p-4">
+          <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-b="">
             <h2 className="text-sm font-semibold text-slate-300 mb-3">
               Payments ({payments.length})
             </h2>
@@ -488,7 +492,7 @@ export default function JobDetailPage() {
 
           {/* Expenses */}
           {(expenses.length > 0 || financesLoading) && (
-            <div className="rounded-xl bg-slate-900/60 border border-slate-800/80 p-4">
+            <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-b="">
               <h2 className="text-sm font-semibold text-slate-300 mb-3">
                 Expenses ({expenses.length})
               </h2>
@@ -564,7 +568,7 @@ export default function JobDetailPage() {
           )}
 
           {/* Activity Timeline */}
-          <div className="rounded-xl bg-slate-900/60 border border-slate-800/80 p-4">
+          <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-b="">
             <h2 className="text-sm font-semibold text-slate-300 mb-3">Activity</h2>
             {events.length === 0 ? (
               <p className="text-xs text-slate-500">No activity recorded yet.</p>
@@ -590,7 +594,7 @@ export default function JobDetailPage() {
         {/* Right column (1/3) */}
         <div className="space-y-4">
           {/* Client Info */}
-          <div className="rounded-xl bg-slate-900/60 border border-slate-800/80 p-4">
+          <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-b="">
             <h2 className="text-sm font-semibold text-slate-300 mb-3">Client Info</h2>
             <dl className="space-y-2 text-xs">
               <div>
@@ -628,7 +632,7 @@ export default function JobDetailPage() {
           </div>
 
           {/* Job Details */}
-          <div className="rounded-xl bg-slate-900/60 border border-slate-800/80 p-4">
+          <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-b="">
             <h2 className="text-sm font-semibold text-slate-300 mb-3">Job Details</h2>
             <dl className="space-y-2 text-xs">
               <div>
@@ -663,7 +667,7 @@ export default function JobDetailPage() {
           </div>
 
           {/* Key Dates */}
-          <div className="rounded-xl bg-slate-900/60 border border-slate-800/80 p-4">
+          <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-b="">
             <h2 className="text-sm font-semibold text-slate-300 mb-3">Key Dates</h2>
             <dl className="space-y-2 text-xs">
               <div className="flex justify-between">

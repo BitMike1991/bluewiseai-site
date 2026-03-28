@@ -3,12 +3,16 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
+import { useBranding } from "../../../src/components/dashboard/BrandingContext";
+import { getBrandingStyles } from "../../../src/components/dashboard/brandingUtils";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
 export default function CallsPage() {
+  const { branding } = useBranding();
+  const styles = getBrandingStyles(branding);
   const [calls, setCalls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -86,7 +90,7 @@ export default function CallsPage() {
       <header className="mb-4 border-b border-slate-800 pb-3">
         <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div className="space-y-1">
-            <h1 className="text-xl font-semibold text-slate-50 sm:text-2xl">
+            <h1 className="text-xl font-semibold sm:text-2xl" style={{ color: styles.text.primary }}>
               Calls
             </h1>
             <p className="text-xs text-slate-400 sm:text-sm">
@@ -151,7 +155,7 @@ export default function CallsPage() {
 
       {/* Content */}
       <main className="flex w-full flex-1 flex-col gap-4">
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/60 shadow-xl shadow-sky-500/10">
+        <section className="rounded-2xl border shadow-xl" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           {/* Table header row */}
           <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3 sm:px-6">
             <div>

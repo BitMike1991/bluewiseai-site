@@ -4,6 +4,8 @@ import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
+import { useBranding } from "../../../src/components/dashboard/BrandingContext";
+import { getBrandingStyles, getStatusBadgeStyle } from "../../../src/components/dashboard/brandingUtils";
 
 function formatDate(dateString) {
   if (!dateString) return "\u2014";
@@ -235,7 +237,7 @@ function TimelineItem({ item }) {
       <div className="absolute left-1 top-0 bottom-0 w-px bg-slate-700/70" />
       <div className="absolute left-0 top-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.8)]" />
 
-      <div className="bg-slate-900/80 border border-slate-700/70 rounded-xl px-4 py-3 flex flex-col gap-1">
+      <div className="border rounded-xl" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-b=" px-4 py-3 flex flex-col gap-1">
         <div className="flex items-center justify-between gap-2 text-xs text-slate-400">
           <div className="flex items-center gap-2">
             <span className="font-medium text-slate-200">{title}</span>
@@ -286,6 +288,8 @@ function Modal({ open, title, children, onClose }) {
 export default function LeadDetailPage() {
   const router = useRouter();
   const { id } = router.query;
+  const { branding } = useBranding();
+  const styles = getBrandingStyles(branding);
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);

@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '../../../src/components/dashboard/DashboardLayout';
+import { useBranding } from '../../../src/components/dashboard/BrandingContext';
+import { getBrandingStyles } from '../../../src/components/dashboard/brandingUtils';
 import { Mail, CheckCircle, XCircle, Loader2, Unplug } from 'lucide-react';
 
 const TIMEZONES = [
@@ -16,6 +18,8 @@ const TIMEZONES = [
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { branding } = useBranding();
+  const styles = getBrandingStyles(branding);
   const [form, setForm] = useState({
     businessName: '',
     telnyxNumber: '',
@@ -200,7 +204,7 @@ export default function SettingsPage() {
     <DashboardLayout title="Settings">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-lg font-semibold text-slate-50">Settings</h1>
+          <h1 className="text-lg font-semibold" style={{ color: styles.text.primary }}>Settings</h1>
           <p className="text-sm text-slate-400">
             Configure how Lead Rescue and Inbox Agents behave for this customer.
           </p>
@@ -227,7 +231,7 @@ export default function SettingsPage() {
         )}
 
         {/* Gmail Integration */}
-        <section className="rounded-2xl bg-slate-950/70 border border-slate-800/80 shadow-xl shadow-black/40 p-5 space-y-4">
+        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           <div className="flex items-center gap-3">
             <Mail className="w-4 h-4 text-blue-400" />
             <div>
@@ -291,7 +295,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Outlook Integration */}
-        <section className="rounded-2xl bg-slate-950/70 border border-slate-800/80 shadow-xl shadow-black/40 p-5 space-y-4">
+        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-s="">
           <div className="flex items-center gap-3">
             <Mail className="w-4 h-4 text-sky-400" />
             <div>
@@ -355,7 +359,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Business profile */}
-        <section className="rounded-2xl bg-slate-950/70 border border-slate-800/80 shadow-xl shadow-black/40 p-5 space-y-4">
+        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-s="">
           <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="text-sm font-semibold text-slate-100">Business profile</h2>
@@ -425,7 +429,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Phone + inbox */}
-        <section className="rounded-2xl bg-slate-950/70 border border-slate-800/80 shadow-xl shadow-black/40 p-5 space-y-4">
+        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-s="">
           <div>
             <h2 className="text-sm font-semibold text-slate-100">
               Phone & inbox routing
@@ -494,7 +498,7 @@ export default function SettingsPage() {
         </section>
 
         {/* AI persona + offer */}
-        <section className="rounded-2xl bg-slate-950/70 border border-slate-800/80 shadow-xl shadow-black/40 p-5 space-y-4">
+        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-s="">
           <div>
             <h2 className="text-sm font-semibold text-slate-100">AI persona & offer</h2>
             <p className="text-xs text-slate-400">
@@ -545,7 +549,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Signatures & templates */}
-        <section className="rounded-2xl bg-slate-950/70 border border-slate-800/80 shadow-xl shadow-black/40 p-5 space-y-4">
+        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-s="">
           <div>
             <h2 className="text-sm font-semibold text-slate-100">
               Email & SMS templates
@@ -600,7 +604,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Hours */}
-        <section className="rounded-2xl bg-slate-950/70 border border-slate-800/80 shadow-xl shadow-black/40 p-5 space-y-4">
+        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-s="">
           <div>
             <h2 className="text-sm font-semibold text-slate-100">
               Business hours
