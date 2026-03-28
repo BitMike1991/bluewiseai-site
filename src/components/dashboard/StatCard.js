@@ -1,12 +1,15 @@
 // src/components/dashboard/StatCard.js
+import { useBranding } from "./BrandingContext";
+import { getBrandingStyles } from "./brandingUtils";
 
 export default function StatCard({ label, value, subLabel, icon: Icon, accent }) {
+  const { branding } = useBranding();
+  const styles = getBrandingStyles(branding);
+
   return (
     <div
-      className={[
-        "rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3 shadow-lg shadow-slate-950/40",
-        accent ? `border-l-4 ${accent}` : "",
-      ].join(" ")}
+      className={["rounded-2xl border px-4 py-3 shadow-lg", accent ? `border-l-4 ${accent}` : ""].join(" ")}
+      style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}
     >
       <div className="flex items-start gap-3">
         {Icon && (
@@ -15,14 +18,14 @@ export default function StatCard({ label, value, subLabel, icon: Icon, accent })
           </div>
         )}
         <div className="flex flex-col gap-1 min-w-0">
-          <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+          <div className="text-[11px] font-medium uppercase tracking-wide" style={{ color: styles.text.secondary }}>
             {label}
           </div>
-          <div className="text-2xl font-semibold text-slate-50">
+          <div className="text-2xl font-semibold" style={{ color: styles.text.primary }}>
             {value ?? "—"}
           </div>
           {subLabel && (
-            <div className="text-[11px] text-slate-500">
+            <div className="text-[11px]" style={{ color: styles.text.secondary }}>
               {subLabel}
             </div>
           )}

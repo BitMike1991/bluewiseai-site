@@ -1,4 +1,6 @@
 // src/components/dashboard/ActivityFeed.js
+import { useBranding } from "./BrandingContext";
+import { getBrandingStyles } from "./brandingUtils";
 
 function timeAgoFromIso(iso) {
   if (!iso) return "";
@@ -18,22 +20,22 @@ function timeAgoFromIso(iso) {
 }
 
 export default function ActivityFeed({ items, loading }) {
+  const { branding } = useBranding();
+  const styles = getBrandingStyles(branding);
+
   if (loading) {
     return (
-      <div className="rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-4">
-        <h3 className="mb-3 text-sm font-medium text-slate-100">
+      <div className="rounded-2xl border px-4 py-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+        <h3 className="mb-3 text-sm font-medium" style={{ color: styles.text.primary }}>
           Recent Activity
         </h3>
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex items-start gap-3 animate-pulse text-sm"
-            >
-              <div className="mt-1 h-2 w-2 rounded-full bg-slate-700" />
+            <div key={i} className="flex items-start gap-3 animate-pulse text-sm">
+              <div className="mt-1 h-2 w-2 rounded-full" style={{ backgroundColor: styles.colors.border }} />
               <div className="flex-1 space-y-1">
-                <div className="h-3 w-32 rounded bg-slate-800" />
-                <div className="h-2 w-20 rounded bg-slate-900" />
+                <div className="h-3 w-32 rounded" style={{ backgroundColor: styles.colors.border }} />
+                <div className="h-2 w-20 rounded" style={{ backgroundColor: styles.colors.surface }} />
               </div>
             </div>
           ))}
@@ -44,15 +46,15 @@ export default function ActivityFeed({ items, loading }) {
 
   if (!items || items.length === 0) {
     return (
-      <div className="rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-4 text-sm text-slate-500">
-        No recent activity yet. Once your automations run, you’ll see them here.
+      <div className="rounded-2xl border px-4 py-4 text-sm" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor, color: styles.text.secondary }}>
+        No recent activity yet. Once your automations run, you'll see them here.
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-4">
-      <h3 className="mb-3 text-sm font-medium text-slate-100">
+    <div className="rounded-2xl border px-4 py-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+      <h3 className="mb-3 text-sm font-medium" style={{ color: styles.text.primary }}>
         Recent Activity
       </h3>
       <ul className="space-y-3 text-sm">
@@ -62,19 +64,23 @@ export default function ActivityFeed({ items, loading }) {
 
           return (
             <li key={item.id} className="flex items-start gap-3">
-              <div className="mt-1 h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.9)]" />
+              <div
+                className="mt-1 h-2 w-2 rounded-full"
+                style={{ backgroundColor: styles.colors.primary, boxShadow: `0 0 12px ${styles.colors.primary}90` }}
+              />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="text-slate-200 truncate">
+                    <div className="truncate" style={{ color: styles.text.primary }}>
                       {item.label || item.message}
                     </div>
-                    <div className="text-xs text-slate-500">{timeAgo}</div>
+                    <div className="text-xs" style={{ color: styles.text.secondary }}>{timeAgo}</div>
                   </div>
                   {hasLead && (
                     <a
                       href={`/platform/leads/${item.leadId}`}
-                      className="shrink-0 rounded-lg border border-sky-500/60 px-2 py-1 text-[11px] font-medium text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10"
+                      className="shrink-0 rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors"
+                      style={{ borderColor: styles.colors.primary + '60', color: styles.colors.primary }}
                     >
                       View lead
                     </a>

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import DashboardLayout from "../../src/components/dashboard/DashboardLayout";
 import StatCard from "../../src/components/dashboard/StatCard";
+import { useBranding } from "../../src/components/dashboard/BrandingContext";
+import { getBrandingStyles } from "../../src/components/dashboard/brandingUtils";
 import { supabase } from "../../lib/supabaseClient";
 import {
   DollarSign,
@@ -12,11 +14,9 @@ import {
   Briefcase,
   PhoneMissed,
   Bot,
-  MessageSquare,
-  UserPlus,
   Users,
   Flame,
-  CalendarCheck,
+  UserPlus,
   ArrowRight,
   Send,
   AlertCircle,
@@ -88,14 +88,7 @@ function getActivityDot(type) {
 
 function getSourceLabel(source) {
   if (!source) return null;
-  const map = {
-    telnyx_sms: "SMS",
-    telnyx_voice: "Voice",
-    vapi: "Voice AI",
-    web: "Web",
-    manual: "Manual",
-    referral: "Referral",
-  };
+  const map = { telnyx_sms: "SMS", telnyx_voice: "Voice", vapi: "Voice AI", web: "Web", manual: "Manual", referral: "Referral" };
   return map[source] || source;
 }
 
@@ -114,6 +107,8 @@ export default function OverviewPage() {
   const [mounted, setMounted] = useState(false);
   const [userName, setUserName] = useState(null);
   const [askInput, setAskInput] = useState("");
+  const { branding } = useBranding();
+  const styles = getBrandingStyles(branding);
 
   useEffect(() => {
     setMounted(true);
@@ -165,16 +160,16 @@ export default function OverviewPage() {
     <DashboardLayout title="Overview">
       {/* Greeting */}
       <div className="mb-6">
-        <h1 suppressHydrationWarning className="text-xl font-semibold text-slate-50">
+        <h1 suppressHydrationWarning className="text-xl font-semibold" style={{ color: styles.text.primary }}>
           {mounted ? getGreeting(userName) : "Welcome!"}
         </h1>
-        <p className="mt-1 text-sm text-slate-400">{"Here's your business at a glance."}</p>
+        <p className="mt-1 text-sm" style={{ color: styles.text.secondary }}>{"Here's your business at a glance."}</p>
       </div>
 
       {/* Hero Banner: Revenue | Expenses | Net Profit */}
       <div className="mb-6">
-        <div className="rounded-2xl border border-slate-700/50 bg-gradient-to-r from-slate-950 via-slate-900/80 to-slate-950 overflow-hidden">
-          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-700/40">
+        <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x" style={{ borderColor: styles.colors.border + '60' }}>
             {/* Revenue */}
             <div className="px-5 py-5">
               <div className="flex items-center gap-3">
@@ -186,7 +181,7 @@ export default function OverviewPage() {
                   <p className="text-2xl font-bold text-emerald-400">
                     {loading ? "\u2026" : fmt(kpis.totalRevenue)}
                   </p>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px]" style={{ color: styles.text.secondary }}>
                     {loading ? "" : `MTD ${fmt(kpis.revenueMtd)} \u00b7 WTD ${fmt(kpis.revenueWtd)}`}
                   </p>
                 </div>
@@ -203,7 +198,7 @@ export default function OverviewPage() {
                   <p className="text-2xl font-bold text-rose-400">
                     {loading ? "\u2026" : fmt(kpis.totalExpenses)}
                   </p>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px]" style={{ color: styles.text.secondary }}>
                     {loading ? "" : `MTD ${fmt(kpis.expensesMtd)}`}
                   </p>
                 </div>
@@ -228,7 +223,7 @@ export default function OverviewPage() {
                   }`}>
                     {loading ? "\u2026" : fmt(kpis.totalProfit)}
                   </p>
-                  <p className="text-[11px] text-slate-500">Revenue minus expenses</p>
+                  <p className="text-[11px]" style={{ color: styles.text.secondary }}>Revenue minus expenses</p>
                 </div>
               </div>
             </div>
@@ -238,83 +233,37 @@ export default function OverviewPage() {
 
       {/* Row 1: Pipeline & Growth */}
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard
-          icon={AlertCircle}
-          accent="border-l-amber-400"
-          label="Outstanding"
-          subLabel="Balance owed by clients"
-          value={loading ? "\u2026" : fmt(kpis.outstandingBalance)}
-        />
-        <StatCard
-          icon={Briefcase}
-          accent="border-l-violet-400"
-          label="Pipeline"
-          subLabel="Active quotes & contracts"
-          value={loading ? "\u2026" : fmt(kpis.pipelineValue)}
-        />
-        <StatCard
-          icon={Zap}
-          accent="border-l-sky-400"
-          label="Active Jobs"
-          subLabel="In progress"
-          value={loading ? "\u2026" : kpis.activeJobs ?? "--"}
-        />
-        <StatCard
-          icon={Users}
-          accent="border-l-blue-400"
-          label="Total Leads"
-          subLabel="All time captured"
-          value={loading ? "\u2026" : kpis.totalLeads ?? "--"}
-        />
+        <StatCard icon={AlertCircle} accent="border-l-amber-400" label="Outstanding" subLabel="Balance owed by clients" value={loading ? "\u2026" : fmt(kpis.outstandingBalance)} />
+        <StatCard icon={Briefcase} accent="border-l-violet-400" label="Pipeline" subLabel="Active quotes & contracts" value={loading ? "\u2026" : fmt(kpis.pipelineValue)} />
+        <StatCard icon={Zap} accent="border-l-sky-400" label="Active Jobs" subLabel="In progress" value={loading ? "\u2026" : kpis.activeJobs ?? "--"} />
+        <StatCard icon={Users} accent="border-l-blue-400" label="Total Leads" subLabel="All time captured" value={loading ? "\u2026" : kpis.totalLeads ?? "--"} />
       </div>
 
       {/* Row 2: AI Performance */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard
-          icon={UserPlus}
-          accent="border-l-blue-400"
-          label="New Leads"
-          subLabel="This week"
-          value={loading ? "\u2026" : kpis.newLeadsThisWeek ?? "--"}
-        />
-        <StatCard
-          icon={PhoneMissed}
-          accent="border-l-amber-400"
-          label="Missed Calls"
-          subLabel="This week"
-          value={loading ? "\u2026" : kpis.missedCallsThisWeek ?? "--"}
-        />
-        <StatCard
-          icon={Bot}
-          accent="border-l-sky-400"
-          label="AI Answered"
-          subLabel="Voice calls"
-          value={loading ? "\u2026" : kpis.voiceCallsThisWeek ?? "--"}
-        />
-        <StatCard
-          icon={Flame}
-          accent="border-l-orange-400"
-          label="Hot Leads"
-          subLabel="Score 40+"
-          value={loading ? "\u2026" : kpis.hotLeadsCount ?? "--"}
-        />
+        <StatCard icon={UserPlus} accent="border-l-blue-400" label="New Leads" subLabel="This week" value={loading ? "\u2026" : kpis.newLeadsThisWeek ?? "--"} />
+        <StatCard icon={PhoneMissed} accent="border-l-amber-400" label="Missed Calls" subLabel="This week" value={loading ? "\u2026" : kpis.missedCallsThisWeek ?? "--"} />
+        <StatCard icon={Bot} accent="border-l-sky-400" label="AI Answered" subLabel="Voice calls" value={loading ? "\u2026" : kpis.voiceCallsThisWeek ?? "--"} />
+        <StatCard icon={Flame} accent="border-l-orange-400" label="Hot Leads" subLabel="Score 40+" value={loading ? "\u2026" : kpis.hotLeadsCount ?? "--"} />
       </div>
 
-      {/* Ask BlueWise Widget */}
-      <div className="mb-6 rounded-2xl border border-sky-700/40 bg-slate-950/80 px-4 py-4 shadow-[0_0_28px_rgba(56,189,248,0.12)]">
+      {/* Ask Widget */}
+      <div className="mb-6 rounded-2xl border px-4 py-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.colors.primary + '40', boxShadow: `0 0 28px ${styles.colors.primary}12` }}>
         <form onSubmit={handleAskSubmit} className="flex items-center gap-2">
-          <label className="sr-only">Ask BlueWise</label>
+          <label className="sr-only">Ask</label>
           <input
             type="text"
             value={askInput}
             onChange={(e) => setAskInput(e.target.value)}
-            placeholder="Ask BlueWise anything\u2026"
-            className="flex-1 rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+            placeholder="Ask anything\u2026"
+            className="flex-1 rounded-xl border px-4 py-2.5 text-sm focus:outline-none focus:ring-2"
+            style={{ ...styles.input, boxShadow: undefined }}
           />
           <button
             type="submit"
             disabled={!askInput.trim()}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-semibold text-white shadow shadow-sky-500/40 hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold shadow disabled:cursor-not-allowed disabled:opacity-40"
+            style={{ ...styles.button, boxShadow: `0 4px 12px ${styles.colors.primary}40` }}
           >
             <Send className="h-4 w-4" />
             Ask
@@ -327,13 +276,14 @@ export default function OverviewPage() {
                 key={p.label}
                 type="button"
                 onClick={() => handleQuickPrompt(p.q)}
-                className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-1.5 text-xs text-slate-300 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
+                className="rounded-lg border px-3 py-1.5 text-xs transition-colors"
+                style={{ borderColor: styles.colors.border, color: styles.text.secondary }}
               >
                 {p.label}
               </button>
             ))}
           </div>
-          <Link href="/platform/ask" className="shrink-0 ml-3 text-xs font-medium text-sky-400 hover:text-sky-300">
+          <Link href="/platform/ask" className="shrink-0 ml-3 text-xs font-medium" style={{ color: styles.colors.primary }}>
             Command Center &rarr;
           </Link>
         </div>
@@ -342,12 +292,12 @@ export default function OverviewPage() {
       {/* Activity Feed + Recent Leads */}
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Activity Feed */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-          <h2 className="text-sm font-semibold text-slate-50">Recent Activity</h2>
+        <div className="rounded-2xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+          <h2 className="text-sm font-semibold" style={{ color: styles.text.primary }}>Recent Activity</h2>
           {loading ? (
-            <p className="mt-3 text-xs text-slate-500">Loading\u2026</p>
+            <p className="mt-3 text-xs" style={{ color: styles.text.secondary }}>Loading&hellip;</p>
           ) : activity.length === 0 ? (
-            <p className="mt-3 text-xs text-slate-500">No recent activity.</p>
+            <p className="mt-3 text-xs" style={{ color: styles.text.secondary }}>No recent activity.</p>
           ) : (
             <ul className="mt-3 space-y-0">
               {activity.slice(0, 8).map((item) => (
@@ -357,16 +307,13 @@ export default function OverviewPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     {item.leadId ? (
-                      <Link
-                        href={`/platform/leads/${item.leadId}`}
-                        className="text-sm text-slate-200 hover:text-sky-300 line-clamp-1"
-                      >
+                      <Link href={`/platform/leads/${item.leadId}`} className="text-sm line-clamp-1" style={{ color: styles.text.primary }}>
                         {item.label}
                       </Link>
                     ) : (
-                      <p className="text-sm text-slate-200 line-clamp-1">{item.label}</p>
+                      <p className="text-sm line-clamp-1" style={{ color: styles.text.primary }}>{item.label}</p>
                     )}
-                    <p suppressHydrationWarning className="text-[11px] text-slate-500">
+                    <p suppressHydrationWarning className="text-[11px]" style={{ color: styles.text.secondary }}>
                       {mounted ? formatTimeAgo(item.timestamp) : ""}
                     </p>
                   </div>
@@ -375,24 +322,24 @@ export default function OverviewPage() {
             </ul>
           )}
           {activity.length > 8 && (
-            <p className="mt-2 text-xs text-slate-500">Showing 8 of {activity.length} events</p>
+            <p className="mt-2 text-xs" style={{ color: styles.text.secondary }}>Showing 8 of {activity.length} events</p>
           )}
         </div>
 
         {/* Recent Leads */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+        <div className="rounded-2xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-50">Recent Leads</h2>
-            <Link href="/platform/leads" className="text-xs text-sky-400 hover:text-sky-300">
+            <h2 className="text-sm font-semibold" style={{ color: styles.text.primary }}>Recent Leads</h2>
+            <Link href="/platform/leads" className="text-xs" style={{ color: styles.colors.primary }}>
               View all &rarr;
             </Link>
           </div>
           {loading ? (
-            <p className="mt-3 text-xs text-slate-500">Loading\u2026</p>
+            <p className="mt-3 text-xs" style={{ color: styles.text.secondary }}>Loading&hellip;</p>
           ) : recentLeads.length === 0 ? (
-            <p className="mt-3 text-xs text-slate-500">No leads yet.</p>
+            <p className="mt-3 text-xs" style={{ color: styles.text.secondary }}>No leads yet.</p>
           ) : (
-            <ul className="mt-3 divide-y divide-slate-800/60">
+            <ul className="mt-3 divide-y" style={{ borderColor: styles.colors.border + '60' }}>
               {recentLeads.slice(0, 6).map((lead) => (
                 <li key={lead.id}>
                   <Link href={`/platform/leads/${lead.id}`} className="flex items-center gap-3 py-2.5 group">
@@ -400,15 +347,15 @@ export default function OverviewPage() {
                       {getInitial(lead.name)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-slate-100 group-hover:text-sky-300">
+                      <p className="truncate text-sm font-medium" style={{ color: styles.text.primary }}>
                         {lead.name}
                       </p>
-                      <p className="text-[11px] text-slate-500">
+                      <p className="text-[11px]" style={{ color: styles.text.secondary }}>
                         {lead.source ? getSourceLabel(lead.source) : ""}
                         {lead.status ? ` \u00b7 ${lead.status}` : ""}
                       </p>
                     </div>
-                    <ArrowRight className="h-4 w-4 shrink-0 text-slate-600 group-hover:text-sky-400" />
+                    <ArrowRight className="h-4 w-4 shrink-0" style={{ color: styles.colors.border }} />
                   </Link>
                 </li>
               ))}

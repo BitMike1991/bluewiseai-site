@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '../../../src/components/dashboard/DashboardLayout';
+import { useBranding } from '../../../src/components/dashboard/BrandingContext';
+import { getBrandingStyles, getStatusBadgeStyle } from '../../../src/components/dashboard/brandingUtils';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All statuses' },
@@ -85,6 +87,8 @@ function statusBadgeClasses(status) {
 
 export default function LeadsPage() {
   const router = useRouter();
+  const { branding } = useBranding();
+  const styles = getBrandingStyles(branding);
   const [leads, setLeads] = useState([]);
   const [total, setTotal] = useState(0);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -187,12 +191,12 @@ export default function LeadsPage() {
     <DashboardLayout title="Leads">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-lg font-semibold text-slate-50">Leads</h1>
-          <p className="text-sm text-slate-400">
+          <h1 className="text-lg font-semibold" style={{ color: styles.text.primary }}>Leads</h1>
+          <p className="text-sm" style={{ color: styles.text.secondary }}>
             All leads captured by your automations (missed calls, emails, forms, cold outreach).
           </p>
         </div>
-        <div className="text-xs text-slate-500">
+        <div className="text-xs" style={{ color: styles.text.secondary }}>
           {total} lead{total === 1 ? '' : 's'} · Page {page} of {totalPages}
         </div>
       </div>
@@ -206,12 +210,14 @@ export default function LeadsPage() {
               placeholder="Search by name, email, or phone\u2026"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-900/70 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="w-full border rounded-xl px-3 py-2 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2"
+              style={styles.input}
             />
           </div>
           <button
             type="submit"
-            className="px-4 py-2.5 md:py-2 rounded-xl text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white transition min-h-[44px] md:min-h-0"
+            className="px-4 py-2.5 md:py-2 rounded-xl text-xs font-medium transition min-h-[44px] md:min-h-0"
+            style={styles.button}
           >
             Search
           </button>
@@ -221,7 +227,8 @@ export default function LeadsPage() {
           <select
             value={statusFilter}
             onChange={handleStatusChange}
-            className="bg-slate-900/70 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2"
+            style={styles.input}
           >
             {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -229,7 +236,8 @@ export default function LeadsPage() {
           <select
             value={sourceFilter}
             onChange={(e) => { const v = e.target.value; setSourceFilter(v); loadLeads({ page: 1, sourceFilter: v }); }}
-            className="bg-slate-900/70 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2"
+            style={styles.input}
           >
             {SOURCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -237,7 +245,8 @@ export default function LeadsPage() {
           <select
             value={dateFilter}
             onChange={(e) => { const v = e.target.value; setDateFilter(v); loadLeads({ page: 1, dateFilter: v }); }}
-            className="bg-slate-900/70 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2"
+            style={styles.input}
           >
             {DATE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -245,7 +254,8 @@ export default function LeadsPage() {
           <select
             value={sortBy}
             onChange={(e) => { const v = e.target.value; setSortBy(v); loadLeads({ page: 1, sortBy: v }); }}
-            className="bg-slate-900/70 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2"
+            style={styles.input}
           >
             {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -253,8 +263,8 @@ export default function LeadsPage() {
       </div>
 
       {/* Leads table/card hybrid */}
-      <div className="rounded-2xl bg-slate-900/60 border border-slate-800/80 shadow-lg shadow-slate-950/60 overflow-hidden">
-        <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 text-xs font-semibold text-slate-400 border-b border-slate-800/80">
+      <div className="rounded-2xl border shadow-lg overflow-hidden" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+        <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 text-xs font-semibold border-b" style={{ color: styles.text.secondary, borderColor: styles.card.borderColor }}>
           <div className="col-span-4">Lead</div>
           <div className="col-span-2">Source</div>
           <div className="col-span-2">Status</div>
@@ -263,13 +273,13 @@ export default function LeadsPage() {
         </div>
 
         {loading && (
-          <div className="px-4 py-6 text-sm text-slate-400">
+          <div className="px-4 py-6 text-sm" style={{ color: styles.text.secondary }} className="">
             Loading leads\u2026
           </div>
         )}
 
         {!loading && leads.length === 0 && (
-          <div className="px-4 py-6 text-sm text-slate-400">
+          <div className="px-4 py-6 text-sm" style={{ color: styles.text.secondary }} className="">
             No leads found. Once your automations capture calls or emails, they'll appear here.
           </div>
         )}
@@ -330,9 +340,8 @@ export default function LeadsPage() {
                           </div>
                           {/* Mobile badge */}
                           <span
-                            className={`md:hidden mt-1 ${statusBadgeClasses(
-                              lead.status
-                            )}`}
+                            className="md:hidden mt-1"
+                            style={getStatusBadgeStyle(lead.status)}
                           >
                             {lead.status || 'new'}
                           </span>
@@ -353,7 +362,7 @@ export default function LeadsPage() {
 
                   {/* Status */}
                   <div className="hidden md:block md:col-span-2">
-                    <span className={statusBadgeClasses(lead.status)}>
+                    <span style={getStatusBadgeStyle(lead.status)}>
                       {lead.status || 'new'}
                     </span>
                   </div>
