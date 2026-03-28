@@ -273,18 +273,18 @@ export default function LeadsPage() {
         </div>
 
         {loading && (
-          <div className="px-4 py-6 text-sm" style={{ color: styles.text.secondary }} className="">
+          <div className="px-4 py-6 text-sm" style={{ color: styles.text.secondary }}>
             Loading leads\u2026
           </div>
         )}
 
         {!loading && leads.length === 0 && (
-          <div className="px-4 py-6 text-sm" style={{ color: styles.text.secondary }} className="">
+          <div className="px-4 py-6 text-sm" style={{ color: styles.text.secondary }}>
             No leads found. Once your automations capture calls or emails, they'll appear here.
           </div>
         )}
 
-        <ul className="divide-y divide-slate-800/80">
+        <ul className="divide-y" style={{ borderColor: styles.card.borderColor }}>
           {leads.map((lead) => {
             // IDs coming from API
             const leadId = lead.lead_id ?? lead.id;
@@ -317,7 +317,8 @@ export default function LeadsPage() {
               <li
                 key={leadId}
                 onClick={() => handleRowClick(leadId)}
-                className="cursor-pointer hover:bg-slate-900/80 transition-colors"
+                className="cursor-pointer transition-colors"
+                style={{ borderColor: styles.card.borderColor }}
               >
                 <div className="px-4 py-3 grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-center">
                   {/* Lead main info */}
@@ -329,10 +330,10 @@ export default function LeadsPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between md:block">
                           <div>
-                            <p className="text-sm font-medium text-slate-50">
+                            <p className="text-sm font-medium" style={{ color: styles.text.primary }}>
                               {displayName}
                             </p>
-                            <p className="text-xs text-slate-400 truncate">
+                            <p className="text-xs truncate" style={{ color: styles.text.secondary }}>
                               {lead.phone && <span>{lead.phone}</span>}
                               {lead.phone && lead.email && <span> \u00b7 </span>}
                               {lead.email && <span>{lead.email}</span>}
@@ -347,7 +348,7 @@ export default function LeadsPage() {
                           </span>
                         </div>
                         {lead.city && (
-                          <p className="hidden md:block text-xs text-slate-500 mt-0.5">
+                          <p className="hidden md:block text-xs mt-0.5" style={{ color: styles.text.secondary }}>
                             {lead.city}
                           </p>
                         )}
@@ -356,7 +357,7 @@ export default function LeadsPage() {
                   </div>
 
                   {/* Source */}
-                  <div className="md:col-span-2 text-xs text-slate-400">
+                  <div className="md:col-span-2 text-xs" style={{ color: styles.text.secondary }}>
                     {lead.source || 'unknown'}
                   </div>
 
@@ -368,16 +369,16 @@ export default function LeadsPage() {
                   </div>
 
                   {/* Last contact */}
-                  <div className="md:col-span-2 text-xs text-slate-400">
+                  <div className="md:col-span-2 text-xs" style={{ color: styles.text.secondary }}>
                     {lastContactLabel}
                   </div>
 
                   {/* Summary */}
-                  <div className="md:col-span-2 text-xs text-slate-400 text-right md:text-right">
+                  <div className="md:col-span-2 text-xs text-right md:text-right" style={{ color: styles.text.secondary }}>
                     {lead.summary ? (
                       <span className="line-clamp-1">{lead.summary}</span>
                     ) : (
-                      <span className="text-slate-600">No summary</span>
+                      <span style={{ color: styles.text.secondary, opacity: 0.5 }}>No summary</span>
                     )}
                   </div>
                 </div>
@@ -388,7 +389,7 @@ export default function LeadsPage() {
 
         {/* Pagination footer */}
         {!loading && leads.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-800/80 text-xs text-slate-400">
+          <div className="flex items-center justify-between px-4 py-3 border-t text-xs" style={{ borderColor: styles.card.borderColor, color: styles.text.secondary }}>
             <div>
               Showing {(page - 1) * pageSize + 1}\u2013
               {Math.min(page * pageSize, total)} of {total}
@@ -397,14 +398,14 @@ export default function LeadsPage() {
               <button
                 onClick={handlePrev}
                 disabled={page <= 1}
-                className="px-4 py-2 md:py-1 rounded-lg border border-slate-700/80 text-xs disabled:opacity-40 disabled:cursor-default hover:bg-slate-800/80 transition min-h-[44px] md:min-h-0"
+                className="px-4 py-2 md:py-1 rounded-lg border text-xs disabled:opacity-40 disabled:cursor-default transition min-h-[44px] md:min-h-0" style={{ borderColor: styles.card.borderColor, color: styles.text.secondary }}
               >
                 Prev
               </button>
               <button
                 onClick={handleNext}
                 disabled={page >= totalPages}
-                className="px-4 py-2 md:py-1 rounded-lg border border-slate-700/80 text-xs disabled:opacity-40 disabled:cursor-default hover:bg-slate-800/80 transition min-h-[44px] md:min-h-0"
+                className="px-4 py-2 md:py-1 rounded-lg border text-xs disabled:opacity-40 disabled:cursor-default transition min-h-[44px] md:min-h-0" style={{ borderColor: styles.card.borderColor, color: styles.text.secondary }}
               >
                 Next
               </button>
@@ -413,7 +414,7 @@ export default function LeadsPage() {
         )}
 
         {error && (
-          <div className="px-4 py-3 text-xs text-rose-400 border-t border-slate-800/80">
+          <div className="px-4 py-3 text-xs text-rose-400 border-t" style={{ borderColor: styles.card.borderColor }}>
             Error loading leads: {error}
           </div>
         )}
