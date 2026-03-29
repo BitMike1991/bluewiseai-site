@@ -94,37 +94,18 @@ export default async function handler(req, res) {
       })).sort((a, b) => b.revenue - a.revenue);
     }
 
-    // Outstanding balance (TTC owed - total paid across non-cancelled jobs)
-    const { data: jobsWithQuotes } = await supabase
+    // Outstanding = all signed contracts TTC minus all payments = what clients owe
+    const { data: signedJobs } = await supabase
       .from("jobs")
-      .select("id, quote_amount, status")
+      .select("id, quote_amount")
       .eq("customer_id", customerId)
-      .not("status", "in", "(cancelled,lost)");
+      .in("status", ["signed", "contract_signed", "scheduled", "in_progress", "completed"]);
 
-    let totalTtcOwed = 0;
-    const activeJobIds = [];
-    for (const j of jobsWithQuotes || []) {
-      if (j.quote_amount) {
-        totalTtcOwed += Number(j.quote_amount) * 1.14975;
-        activeJobIds.push(j.id);
-      }
-    }
-
-    let totalPaidOnJobs = 0;
-    if (activeJobIds.length > 0) {
-      const { data: jobPayments } = await supabase
-        .from("payments")
-        .select("amount")
-        .eq("customer_id", customerId)
-        .eq("status", "succeeded")
-        .in("job_id", activeJobIds);
-
-      totalPaidOnJobs = (jobPayments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
-    }
-    const outstandingBalance = Math.max(0, totalTtcOwed - totalPaidOnJobs);
+    const totalSignedTtc = (signedJobs || []).reduce((s, j) => s + Number(j.quote_amount || 0) * 1.14975, 0);
+    const outstandingBalance = Math.max(0, totalSignedTtc - totalRevenue);
 
     // Collection rate
-    const collectionRate = totalTtcOwed > 0 ? Math.round((totalPaidOnJobs / totalTtcOwed) * 100) : 0;
+    const collectionRate = totalSignedTtc > 0 ? Math.round((totalRevenue / totalSignedTtc) * 100) : 0;
 
     // Pending payments
     const { data: pendingRows } = await supabase
