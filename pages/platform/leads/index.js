@@ -207,7 +207,7 @@ export default function LeadsPage() {
           <div className="flex-1 relative">
             <input
               type="text"
-              placeholder="Search by name, email, or phone\u2026"
+              placeholder="Search by name, email, or phone..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full border rounded-xl px-3 py-2 text-sm placeholder:text-d-text0 focus:outline-none focus:ring-2"

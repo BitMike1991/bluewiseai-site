@@ -168,7 +168,7 @@ export default function OverviewPage() {
 
       {/* Hero Banner: Revenue | Expenses | Net Profit */}
       <div className="mb-6">
-        <div className="rounded-2xl border overflow-hidden">
+        <div className="rounded-2xl border border-d-border bg-d-surface overflow-hidden">
           <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x">
             {/* Revenue */}
             <div className="px-5 py-5">
@@ -248,21 +248,20 @@ export default function OverviewPage() {
       </div>
 
       {/* Ask Widget */}
-      <div className="mb-6 rounded-2xl border px-4 py-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.colors.primary + '40', boxShadow: `0 0 28px ${styles.colors.primary}12` }}>
+      <div className="mb-6 rounded-2xl border border-d-border bg-d-surface px-4 py-4">
         <form onSubmit={handleAskSubmit} className="flex items-center gap-2">
           <label className="sr-only">Ask</label>
           <input
             type="text"
             value={askInput}
             onChange={(e) => setAskInput(e.target.value)}
-            placeholder="Ask anything\u2026"
-            className="flex-1 rounded-xl border px-4 py-2.5 text-sm focus:outline-none focus:ring-2"
+            placeholder="Ask anything..."
+            className="flex-1 rounded-xl border border-d-border bg-d-bg px-4 py-2.5 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
           />
           <button
             type="submit"
             disabled={!askInput.trim()}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold shadow disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ ...styles.button, boxShadow: `0 4px 12px ${styles.colors.primary}40` }}
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-d-primary text-white px-4 py-2.5 text-sm font-semibold shadow disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Send className="h-4 w-4" />
             Ask
@@ -290,7 +289,7 @@ export default function OverviewPage() {
       {/* Activity Feed + Recent Leads */}
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Activity Feed */}
-        <div className="rounded-2xl border p-4">
+        <div className="rounded-2xl border border-d-border bg-d-surface p-4">
           <h2 className="text-sm font-semibold">Recent Activity</h2>
           {loading ? (
             <p className="mt-3 text-xs">Loading&hellip;</p>
@@ -325,7 +324,7 @@ export default function OverviewPage() {
         </div>
 
         {/* Recent Leads */}
-        <div className="rounded-2xl border p-4">
+        <div className="rounded-2xl border border-d-border bg-d-surface p-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold">Recent Leads</h2>
             <Link href="/platform/leads" className="text-xs">
@@ -353,7 +352,7 @@ export default function OverviewPage() {
                         {lead.status ? ` \u00b7 ${lead.status}` : ""}
                       </p>
                     </div>
-                    <ArrowRight className="h-4 w-4 shrink-0" style={{ color: styles.colors.border }} />
+                    <ArrowRight className="h-4 w-4 shrink-0 text-d-muted" />
                   </Link>
                 </li>
               ))}
