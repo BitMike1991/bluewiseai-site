@@ -17,58 +17,73 @@ export default function AuthCallback() {
     handleAuthCallback();
   }, [router.isReady]);
 
+  async function setSessionCookies(session) {
+    const resp = await fetch("/api/auth/set-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+      }),
+    });
+    if (!resp.ok) {
+      const payload = await resp.json().catch(() => ({}));
+      throw new Error(payload?.error || "Failed to set session cookies");
+    }
+  }
+
   async function handleAuthCallback() {
     try {
-      const { token_hash, type, next } = router.query;
+      const { token_hash, type, next, code } = router.query;
 
-      // Check if we already have a session (invite flow - Supabase verified token server-side)
-      const { data: sessionData } = await supabase.auth.getSession();
+      // PKCE flow: Supabase redirects with ?code= after verifying invite/magic link server-side
+      if (code) {
+        setStatus("verifying");
 
-      if (sessionData?.session) {
-        // Session already exists from invite/email confirmation flow
-        setStatus("creating_session");
-        const session = sessionData.session;
+        const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) throw exchangeError;
 
-        // Set HttpOnly cookies via our API endpoint
-        const resp = await fetch("/api/auth/set-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            access_token: session.access_token,
-            refresh_token: session.refresh_token,
-          }),
-        });
-
-        if (!resp.ok) {
-          const payload = await resp.json().catch(() => ({}));
-          throw new Error(payload?.error || "Failed to set session cookies");
+        const session = data?.session;
+        if (!session?.access_token || !session?.refresh_token) {
+          throw new Error("No valid session returned from code exchange");
         }
 
+        setStatus("creating_session");
+        await setSessionCookies(session);
         setStatus("success");
 
-        // Check if this is a first-time invite (user needs to set password)
         const { data: { user } } = await supabase.auth.getUser();
-
         let redirectTo = "/platform/overview";
-
-        // First-time invite: check if they've set a password yet
-        // Use custom metadata flag instead of confirmed_at (which gets set immediately)
         if (user && !user.user_metadata?.password_set) {
           redirectTo = "/platform/setup-password";
-        }
-
-        // Use next param if provided and valid (but not for first-time setup)
-        if (next && typeof next === "string" && next.startsWith("/platform/") && user?.confirmed_at) {
+        } else if (next && typeof next === "string" && next.startsWith("/platform/")) {
           redirectTo = next;
         }
 
-        // Full page navigation to ensure middleware runs
-        setTimeout(() => {
-          window.location.href = redirectTo;
-        }, 500);
+        setTimeout(() => { window.location.href = redirectTo; }, 500);
+        return;
+      }
+
+      // Check if we already have a session (hash fragment flow — detectSessionInUrl picked it up)
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      if (sessionData?.session) {
+        setStatus("creating_session");
+        await setSessionCookies(sessionData.session);
+        setStatus("success");
+
+        const { data: { user } } = await supabase.auth.getUser();
+        let redirectTo = "/platform/overview";
+        if (user && !user.user_metadata?.password_set) {
+          redirectTo = "/platform/setup-password";
+        } else if (next && typeof next === "string" && next.startsWith("/platform/")) {
+          redirectTo = next;
+        }
+
+        setTimeout(() => { window.location.href = redirectTo; }, 500);
 
       } else if (token_hash && type) {
-        // Magic link flow - verify the OTP token
+        // Legacy OTP flow — verify the token hash directly
         setStatus("verifying");
 
         const { data, error: verifyError } = await supabase.auth.verifyOtp({
@@ -84,36 +99,15 @@ export default function AuthCallback() {
         }
 
         setStatus("creating_session");
-
-        // Set HttpOnly cookies via our API endpoint
-        const resp = await fetch("/api/auth/set-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            access_token: session.access_token,
-            refresh_token: session.refresh_token,
-          }),
-        });
-
-        if (!resp.ok) {
-          const payload = await resp.json().catch(() => ({}));
-          throw new Error(payload?.error || "Failed to set session cookies");
-        }
-
+        await setSessionCookies(session);
         setStatus("success");
 
-        // Determine where to redirect
         let redirectTo = "/platform/overview";
-
-        // Use next param if provided and valid
         if (next && typeof next === "string" && next.startsWith("/platform/")) {
           redirectTo = next;
         }
 
-        // Full page navigation to ensure middleware runs
-        setTimeout(() => {
-          window.location.href = redirectTo;
-        }, 500);
+        setTimeout(() => { window.location.href = redirectTo; }, 500);
 
       } else {
         throw new Error("No session found and no authentication parameters provided");

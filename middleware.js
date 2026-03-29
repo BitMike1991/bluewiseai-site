@@ -8,6 +8,7 @@ export async function middleware(req) {
 
   // Allow login page, auth endpoints, and subscription status check
   if (pathname === "/platform/login") return res;
+  if (pathname === "/platform/setup-password") return res;
   if (pathname === "/platform/suspended") return res;
   if (pathname.startsWith("/api/auth/")) return res;
   if (pathname === "/api/subscription/status") return res;
