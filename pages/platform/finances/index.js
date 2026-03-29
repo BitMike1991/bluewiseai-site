@@ -89,7 +89,7 @@ export default function FinancesPage() {
             href={`/api/export/accountant?month=${new Date().toISOString().slice(0, 7)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-lg bg-slate-800 px-3 py-2 text-xs font-medium text-d-muted hover:bg-slate-700 transition-colors border border-d-border"
+            className="inline-flex items-center gap-2 rounded-lg bg-d-surface px-3 py-2 text-xs font-medium text-d-muted hover:bg-d-surface/80 transition-colors border border-d-border"
           >
             <Download className="w-3.5 h-3.5" />
             Export CSV
@@ -150,13 +150,13 @@ export default function FinancesPage() {
               </div>
               <div>
                 <p className="text-[10px] text-d-text0 uppercase tracking-wide">TPS (5%)</p>
-                <p className="text-sm font-medium text-blue-400">{fmt(data.taxes.totalTps)}</p>
-                <p className="text-[10px] text-slate-600">MTD: {fmt(data.taxes.tpsMtd)}</p>
+                <p className="text-sm font-medium text-d-primary">{fmt(data.taxes.totalTps)}</p>
+                <p className="text-[10px] text-d-muted">MTD: {fmt(data.taxes.tpsMtd)}</p>
               </div>
               <div>
                 <p className="text-[10px] text-d-text0 uppercase tracking-wide">TVQ (9.975%)</p>
-                <p className="text-sm font-medium text-blue-400">{fmt(data.taxes.totalTvq)}</p>
-                <p className="text-[10px] text-slate-600">MTD: {fmt(data.taxes.tvqMtd)}</p>
+                <p className="text-sm font-medium text-d-primary">{fmt(data.taxes.totalTvq)}</p>
+                <p className="text-[10px] text-d-muted">MTD: {fmt(data.taxes.tvqMtd)}</p>
               </div>
               <div>
                 <p className="text-[10px] text-d-text0 uppercase tracking-wide">Total Taxes</p>

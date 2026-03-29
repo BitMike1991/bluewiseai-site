@@ -189,7 +189,7 @@ export default function TasksPage() {
                 className={classNames(
                   "rounded-full px-3 py-1 transition",
                   statusFilter === "all"
-                    ? "bg-slate-700 text-d-text"
+                    ? "bg-d-surface text-d-text"
                     : "text-d-muted hover:bg-d-surface"
                 )}
               >
@@ -232,7 +232,7 @@ export default function TasksPage() {
                   "rounded-lg border px-3 py-1 text-xs sm:text-sm",
                   page <= 1 || loading
                     ? "cursor-not-allowed border-d-border text-d-text0"
-                    : "border-slate-600 text-d-text hover:border-d-primary hover:text-d-primary"
+                    : "border-d-border text-d-text hover:border-d-primary hover:text-d-primary"
                 )}
               >
                 Previous
@@ -248,7 +248,7 @@ export default function TasksPage() {
                   "rounded-lg border px-3 py-1 text-xs sm:text-sm",
                   !pagination?.hasMore || loading
                     ? "cursor-not-allowed border-d-border text-d-text0"
-                    : "border-slate-600 text-d-text hover:border-d-primary hover:text-d-primary"
+                    : "border-d-border text-d-text hover:border-d-primary hover:text-d-primary"
                 )}
               >
                 Next
@@ -258,7 +258,7 @@ export default function TasksPage() {
 
           {/* Error state */}
           {error && (
-            <div className="border-b border-d-border bg-rose-500/10 px-4 py-3 text-xs text-rose-300 sm:px-6">
+            <div className="border-b border-d-border bg-rose-500/10 px-4 py-3 text-xs text-rose-500 sm:px-6">
               {error}
             </div>
           )}
@@ -366,7 +366,7 @@ function TaskRow({ task, onComplete, isCompleting }) {
   const statusBadge = (() => {
     if (statusLabel === "completed") {
       return (
-        <span className="inline-flex rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] text-emerald-300">
+        <span className="inline-flex rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] text-emerald-500">
           Completed
         </span>
       );
@@ -374,7 +374,7 @@ function TaskRow({ task, onComplete, isCompleting }) {
 
     if (isOverdue) {
       return (
-        <span className="inline-flex rounded-full bg-rose-500/20 px-2 py-0.5 text-[11px] text-rose-300">
+        <span className="inline-flex rounded-full bg-rose-500/20 px-2 py-0.5 text-[11px] text-rose-500">
           Overdue
         </span>
       );
@@ -453,7 +453,7 @@ function TaskRow({ task, onComplete, isCompleting }) {
         )}
       </td>
       <td className="whitespace-nowrap px-4 py-3 text-xs text-d-text sm:px-6">
-        <span className="inline-flex rounded-full bg-slate-700/40 px-2 py-0.5 text-[10px] text-d-muted">
+        <span className="inline-flex rounded-full bg-d-border/40 px-2 py-0.5 text-[10px] text-d-muted">
           {typeLabel}
         </span>
       </td>
@@ -465,7 +465,7 @@ function TaskRow({ task, onComplete, isCompleting }) {
       </td>
       <td className="whitespace-nowrap px-4 py-3 text-xs sm:px-6">
         {isCompleted ? (
-          <span className="text-emerald-300 text-[11px]">Done</span>
+          <span className="text-emerald-500 text-[11px]">Done</span>
         ) : (
           <button
             type="button"

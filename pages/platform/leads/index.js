@@ -42,14 +42,14 @@ const SORT_OPTIONS = [
 ];
 
 const AVATAR_COLORS = [
-  'bg-d-primary/20 text-blue-300',
-  'bg-emerald-500/20 text-emerald-300',
-  'bg-violet-500/20 text-violet-300',
-  'bg-amber-500/20 text-amber-300',
-  'bg-rose-500/20 text-rose-300',
-  'bg-cyan-500/20 text-cyan-300',
-  'bg-pink-500/20 text-pink-300',
-  'bg-indigo-500/20 text-indigo-300',
+  'bg-d-primary/20 text-blue-500',
+  'bg-emerald-500/20 text-emerald-500',
+  'bg-violet-500/20 text-violet-500',
+  'bg-amber-500/20 text-amber-500',
+  'bg-rose-500/20 text-rose-500',
+  'bg-cyan-500/20 text-cyan-500',
+  'bg-pink-500/20 text-pink-500',
+  'bg-indigo-500/20 text-indigo-500',
 ];
 
 function getAvatarColor(name) {
@@ -71,17 +71,17 @@ function statusBadgeClasses(status) {
     'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
   switch ((status || '').toLowerCase()) {
     case 'won':
-      return `${base} bg-emerald-500/15 text-emerald-300 border border-emerald-500/40`;
+      return `${base} bg-emerald-500/15 text-emerald-500 border border-emerald-500/40`;
     case 'lost':
     case 'dead':
-      return `${base} bg-rose-500/10 text-rose-300 border border-rose-500/40`;
+      return `${base} bg-rose-500/10 text-rose-500 border border-rose-500/40`;
     case 'quoted':
-      return `${base} bg-amber-500/15 text-amber-300 border border-amber-500/40`;
+      return `${base} bg-amber-500/15 text-amber-500 border border-amber-500/40`;
     case 'active':
     case 'in_convo':
       return `${base} bg-d-primary/15 text-d-primary border border-d-primary/40`;
     default:
-      return `${base} bg-slate-700/60 text-d-text border border-slate-500/40`;
+      return `${base} bg-d-border/60 text-d-text border border-d-border/40`;
   }
 }
 

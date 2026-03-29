@@ -52,14 +52,14 @@ function fmt(n) {
 }
 
 const AVATAR_COLORS = [
-  "bg-d-primary/20 text-blue-300",
-  "bg-emerald-500/20 text-emerald-300",
-  "bg-violet-500/20 text-violet-300",
-  "bg-amber-500/20 text-amber-300",
-  "bg-rose-500/20 text-rose-300",
-  "bg-cyan-500/20 text-cyan-300",
-  "bg-pink-500/20 text-pink-300",
-  "bg-indigo-500/20 text-indigo-300",
+  "bg-d-primary/20 text-blue-500",
+  "bg-emerald-500/20 text-emerald-500",
+  "bg-violet-500/20 text-violet-500",
+  "bg-amber-500/20 text-amber-500",
+  "bg-rose-500/20 text-rose-500",
+  "bg-cyan-500/20 text-cyan-500",
+  "bg-pink-500/20 text-pink-500",
+  "bg-indigo-500/20 text-indigo-500",
 ];
 
 function getAvatarColor(name) {
@@ -83,7 +83,7 @@ function getActivityDot(type) {
   if (type === "message.call") return "bg-d-primary";
   if (type === "message.sms") return "bg-emerald-400";
   if (type === "message.email") return "bg-indigo-400";
-  return "bg-slate-500";
+  return "bg-d-muted";
 }
 
 function getSourceLabel(source) {
@@ -231,20 +231,20 @@ export default function OverviewPage() {
         </div>
       </div>
 
-      {/* Row 1: Pipeline & Growth */}
+      {/* Row 1: Leads & Jobs */}
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard icon={AlertCircle} accent="border-l-amber-400" label="Outstanding" subLabel="Balance owed by clients" value={loading ? "\u2026" : fmt(kpis.outstandingBalance)} />
-        <StatCard icon={Briefcase} accent="border-l-violet-400" label="Pipeline" subLabel="Active quotes & contracts" value={loading ? "\u2026" : fmt(kpis.pipelineValue)} />
+        <StatCard icon={UserPlus} accent="border-l-blue-400" label="New Leads" subLabel="This week" value={loading ? "\u2026" : kpis.newLeadsThisWeek ?? "--"} />
         <StatCard icon={Zap} accent="border-l-d-primary" label="Active Jobs" subLabel="In progress" value={loading ? "\u2026" : kpis.activeJobs ?? "--"} />
+        <StatCard icon={Flame} accent="border-l-orange-400" label="Hot Leads" subLabel="Score 40+" value={loading ? "\u2026" : kpis.hotLeadsCount ?? "--"} />
         <StatCard icon={Users} accent="border-l-blue-400" label="Total Leads" subLabel="All time captured" value={loading ? "\u2026" : kpis.totalLeads ?? "--"} />
       </div>
 
-      {/* Row 2: AI Performance */}
+      {/* Row 2: Money & AI */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard icon={UserPlus} accent="border-l-blue-400" label="New Leads" subLabel="This week" value={loading ? "\u2026" : kpis.newLeadsThisWeek ?? "--"} />
+        <StatCard icon={AlertCircle} accent="border-l-amber-400" label="Outstanding" subLabel="Balance owed by clients" value={loading ? "\u2026" : fmt(kpis.outstandingBalance)} />
+        <StatCard icon={Briefcase} accent="border-l-violet-400" label="Pipeline" subLabel="Active quotes & contracts" value={loading ? "\u2026" : fmt(kpis.pipelineValue)} />
         <StatCard icon={PhoneMissed} accent="border-l-amber-400" label="Missed Calls" subLabel="This week" value={loading ? "\u2026" : kpis.missedCallsThisWeek ?? "--"} />
         <StatCard icon={Bot} accent="border-l-d-primary" label="AI Answered" subLabel="Voice calls" value={loading ? "\u2026" : kpis.voiceCallsThisWeek ?? "--"} />
-        <StatCard icon={Flame} accent="border-l-orange-400" label="Hot Leads" subLabel="Score 40+" value={loading ? "\u2026" : kpis.hotLeadsCount ?? "--"} />
       </div>
 
       {/* Ask Widget */}

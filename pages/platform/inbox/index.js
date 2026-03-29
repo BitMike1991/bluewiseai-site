@@ -52,19 +52,19 @@ function statusBadgeClasses(status) {
     "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border";
   switch ((status || "").toLowerCase()) {
     case "won":
-      return `${base} bg-emerald-500/15 text-emerald-300 border-emerald-500/50`;
+      return `${base} bg-emerald-500/15 text-emerald-500 border-emerald-500/50`;
     case "lost":
     case "dead":
-      return `${base} bg-rose-500/10 text-rose-300 border-rose-500/50`;
+      return `${base} bg-rose-500/10 text-rose-500 border-rose-500/50`;
     case "quoted":
-      return `${base} bg-amber-500/15 text-amber-300 border-amber-500/50`;
+      return `${base} bg-amber-500/15 text-amber-500 border-amber-500/50`;
     case "active":
     case "in_convo":
       return `${base} bg-d-primary/15 text-d-primary border-d-primary/50`;
     case "new":
-      return `${base} bg-indigo-500/15 text-indigo-300 border-indigo-500/50`;
+      return `${base} bg-indigo-500/15 text-indigo-500 border-indigo-500/50`;
     default:
-      return `${base} bg-slate-700/70 text-d-text border-slate-500/60`;
+      return `${base} bg-d-border/70 text-d-text border-d-border/60`;
   }
 }
 
@@ -73,9 +73,9 @@ function channelPill(channel) {
   const base =
     "inline-flex items-center rounded-full border px-2 py-0.5 text-[0.7rem] font-medium";
   if (c === "sms") return `${base} bg-d-primary/10 border-d-primary/40 text-d-primary`;
-  if (c === "email") return `${base} bg-indigo-500/10 border-indigo-500/40 text-indigo-200`;
-  if (c === "call") return `${base} bg-emerald-500/10 border-emerald-500/40 text-emerald-200`;
-  return `${base} bg-slate-700/50 border-slate-600/60 text-d-text`;
+  if (c === "email") return `${base} bg-indigo-500/10 border-indigo-500/40 text-indigo-500`;
+  if (c === "call") return `${base} bg-emerald-500/10 border-emerald-500/40 text-emerald-500`;
+  return `${base} bg-d-border/50 border-d-border/60 text-d-text`;
 }
 
 export default function InboxPage() {
@@ -165,7 +165,7 @@ export default function InboxPage() {
             {openCount} thread{openCount === 1 ? "" : "s"}
           </div>
           {followupCount > 0 && (
-            <div className="text-amber-300">
+            <div className="text-amber-500">
               {followupCount} need follow-up
             </div>
           )}
@@ -230,10 +230,10 @@ export default function InboxPage() {
       {/* Optional: quick follow-up callout */}
       {!loading && !error && needsFollowupItems.length > 0 ? (
         <div className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 px-4 py-3">
-          <p className="text-sm text-amber-200 font-semibold">
+          <p className="text-sm text-amber-500 font-semibold">
             Follow-up queue
           </p>
-          <p className="text-xs text-amber-200/80 mt-1">
+          <p className="text-xs text-amber-500/80 mt-1">
             {needsFollowupItems.length} lead{needsFollowupItems.length === 1 ? "" : "s"} look stale (missed calls or no reply in 24h).
           </p>
         </div>
@@ -318,7 +318,7 @@ export default function InboxPage() {
 
                     <div className="flex items-center gap-2 shrink-0">
                       {typeof conv.missedCallCount === "number" && conv.missedCallCount > 0 && (
-                        <span className="inline-flex items-center rounded-full bg-rose-500/10 border border-rose-500/60 px-2 py-0.5 text-[0.7rem] font-medium text-rose-300">
+                        <span className="inline-flex items-center rounded-full bg-rose-500/10 border border-rose-500/60 px-2 py-0.5 text-[0.7rem] font-medium text-rose-500">
                           {conv.missedCallCount} missed
                         </span>
                       )}

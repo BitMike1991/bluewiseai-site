@@ -32,10 +32,10 @@ export default function ActivityFeed({ items, loading }) {
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex items-start gap-3 animate-pulse text-sm">
-              <div className="mt-1 h-2 w-2 rounded-full" />
+              <div className="mt-1 h-2 w-2 rounded-full bg-d-border/40" />
               <div className="flex-1 space-y-1">
-                <div className="h-3 w-32 rounded" />
-                <div className="h-2 w-20 rounded" />
+                <div className="h-3 w-32 rounded bg-d-border/40" />
+                <div className="h-2 w-20 rounded bg-d-border/40" />
               </div>
             </div>
           ))}
@@ -46,15 +46,15 @@ export default function ActivityFeed({ items, loading }) {
 
   if (!items || items.length === 0) {
     return (
-      <div className="rounded-2xl border px-4 py-4 text-sm">
+      <div className="rounded-2xl border border-d-border bg-d-surface px-4 py-4 text-sm text-d-muted">
         No recent activity yet. Once your automations run, you'll see them here.
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border px-4 py-4">
-      <h3 className="mb-3 text-sm font-medium">
+    <div className="rounded-2xl border border-d-border bg-d-surface px-4 py-4">
+      <h3 className="mb-3 text-sm font-medium text-d-text">
         Recent Activity
       </h3>
       <ul className="space-y-3 text-sm">
@@ -71,15 +71,15 @@ export default function ActivityFeed({ items, loading }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="truncate">
+                    <div className="truncate text-d-text">
                       {item.label || item.message}
                     </div>
-                    <div className="text-xs">{timeAgo}</div>
+                    <div className="text-xs text-d-muted">{timeAgo}</div>
                   </div>
                   {hasLead && (
                     <a
                       href={`/platform/leads/${item.leadId}`}
-                      className="shrink-0 rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors"
+                      className="shrink-0 rounded-lg border border-d-border px-2 py-1 text-[11px] font-medium text-d-muted hover:text-d-text transition-colors"
                     >
                       View lead
                     </a>

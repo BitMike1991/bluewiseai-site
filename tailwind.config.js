@@ -35,6 +35,7 @@ module.exports = {
           border: 'rgb(var(--d-border-rgb, 30 30 46) / <alpha-value>)',
           text: 'rgb(var(--d-text-rgb, 240 240 245) / <alpha-value>)',
           muted: 'rgb(var(--d-muted-rgb, 136 136 170) / <alpha-value>)',
+          text0: 'rgb(var(--d-muted-rgb, 136 136 170) / <alpha-value>)',
           primary: 'rgb(var(--d-primary-rgb, 108 99 255) / <alpha-value>)',
           accent: 'rgb(var(--d-accent-rgb, 0 212 170) / <alpha-value>)',
         },

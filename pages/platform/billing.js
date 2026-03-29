@@ -19,14 +19,14 @@ const STATUS_STYLES = {
   active: { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/30", icon: CheckCircle },
   grace: { bg: "bg-amber-500/10", text: "text-amber-400", border: "border-amber-500/30", icon: Clock },
   suspended: { bg: "bg-red-500/10", text: "text-red-400", border: "border-red-500/30", icon: Ban },
-  cancelled: { bg: "bg-slate-500/10", text: "text-d-muted", border: "border-slate-500/30", icon: Ban },
+  cancelled: { bg: "bg-d-border/10", text: "text-d-muted", border: "border-d-border/30", icon: Ban },
 };
 
 const INVOICE_STYLES = {
   pending: "text-amber-400 bg-amber-500/10",
   paid: "text-emerald-400 bg-emerald-500/10",
   overdue: "text-red-400 bg-red-500/10",
-  waived: "text-d-muted bg-slate-500/10",
+  waived: "text-d-muted bg-d-border/10",
 };
 
 export default function BillingPage() {
@@ -146,7 +146,7 @@ export default function BillingPage() {
           {/* Header with customer selector */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <CreditCard className="w-6 h-6 text-blue-400" />
+              <CreditCard className="w-6 h-6 text-d-primary" />
               <h1 className="text-xl font-bold text-d-text">Billing</h1>
             </div>
             {isAdmin && customers.length > 0 && (
@@ -174,7 +174,7 @@ export default function BillingPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <CreditCard className="w-6 h-6 text-blue-400" />
+            <CreditCard className="w-6 h-6 text-d-primary" />
             <h1 className="text-xl font-bold text-d-text">Billing</h1>
           </div>
           <div className="flex items-center gap-3">
@@ -240,7 +240,7 @@ export default function BillingPage() {
               </div>
               <div>
                 <div className="text-xs text-d-text0">Total Due</div>
-                <div className="text-lg font-bold text-blue-400">{fmt(preview.totalDue)}</div>
+                <div className="text-lg font-bold text-d-primary">{fmt(preview.totalDue)}</div>
               </div>
             </div>
           </div>
@@ -349,7 +349,7 @@ function CustomerSelector({ customers, selectedId, onChange }) {
       <select
         value={selectedId || ""}
         onChange={(e) => onChange(parseInt(e.target.value, 10))}
-        className="appearance-none bg-slate-800 border border-d-border text-d-text text-sm rounded-lg px-4 py-2 pr-8 focus:outline-none focus:border-d-primary transition-colors cursor-pointer"
+        className="appearance-none bg-d-surface border border-d-border text-d-text text-sm rounded-lg px-4 py-2 pr-8 focus:outline-none focus:border-d-primary transition-colors cursor-pointer"
       >
         {customers.map((c) => (
           <option key={c.id} value={c.id}>

@@ -21,25 +21,32 @@ export function getBrandingStyles(branding) {
   };
 }
 
-export function getStatusBadgeStyle(status) {
+// Brand-aware statuses use tenant primary; semantic statuses use fixed -500 shades
+// -500 shades provide best dual-theme contrast (readable on both dark and light backgrounds)
+export function getStatusBadgeStyle(status, branding) {
+  const p = branding?.primary_color || '#6c63ff';
+  const pRgba = (a) => {
+    const h = p.replace('#','');
+    return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`;
+  };
   const map = {
-    new:           { bg: 'rgba(56,189,248,0.15)',  text: '#7dd3fc', border: 'rgba(56,189,248,0.4)' },
-    contacted:     { bg: 'rgba(139,92,246,0.15)',  text: '#c4b5fd', border: 'rgba(139,92,246,0.4)' },
-    qualified:     { bg: 'rgba(245,158,11,0.15)',  text: '#fcd34d', border: 'rgba(245,158,11,0.4)' },
-    active:        { bg: 'rgba(56,189,248,0.15)',  text: '#7dd3fc', border: 'rgba(56,189,248,0.4)' },
-    in_convo:      { bg: 'rgba(56,189,248,0.15)',  text: '#7dd3fc', border: 'rgba(56,189,248,0.4)' },
-    won:           { bg: 'rgba(16,185,129,0.15)',  text: '#6ee7b7', border: 'rgba(16,185,129,0.4)' },
-    lost:          { bg: 'rgba(244,63,94,0.1)',    text: '#fda4af', border: 'rgba(244,63,94,0.4)' },
-    dead:          { bg: 'rgba(244,63,94,0.1)',    text: '#fda4af', border: 'rgba(244,63,94,0.4)' },
-    draft:         { bg: 'rgba(100,116,139,0.2)',  text: '#e2e8f0', border: 'rgba(100,116,139,0.4)' },
-    quote_sent:    { bg: 'rgba(139,92,246,0.15)',  text: '#c4b5fd', border: 'rgba(139,92,246,0.4)' },
-    contract_sent: { bg: 'rgba(245,158,11,0.15)',  text: '#fcd34d', border: 'rgba(245,158,11,0.4)' },
-    signed:        { bg: 'rgba(56,189,248,0.15)',  text: '#7dd3fc', border: 'rgba(56,189,248,0.4)' },
-    scheduled:     { bg: 'rgba(99,102,241,0.15)',  text: '#a5b4fc', border: 'rgba(99,102,241,0.4)' },
-    in_progress:   { bg: 'rgba(249,115,22,0.15)',  text: '#fdba74', border: 'rgba(249,115,22,0.4)' },
-    completed:     { bg: 'rgba(16,185,129,0.15)',  text: '#6ee7b7', border: 'rgba(16,185,129,0.4)' },
-    cancelled:     { bg: 'rgba(244,63,94,0.1)',    text: '#fda4af', border: 'rgba(244,63,94,0.4)' },
-    quoted:        { bg: 'rgba(245,158,11,0.15)',  text: '#fcd34d', border: 'rgba(245,158,11,0.4)' },
+    new:           { bg: pRgba(0.15),              text: p,        border: pRgba(0.4) },
+    active:        { bg: pRgba(0.15),              text: p,        border: pRgba(0.4) },
+    in_convo:      { bg: pRgba(0.15),              text: p,        border: pRgba(0.4) },
+    signed:        { bg: pRgba(0.15),              text: p,        border: pRgba(0.4) },
+    contacted:     { bg: 'rgba(139,92,246,0.15)',  text: '#8b5cf6', border: 'rgba(139,92,246,0.4)' },
+    qualified:     { bg: 'rgba(245,158,11,0.15)',  text: '#d97706', border: 'rgba(245,158,11,0.4)' },
+    won:           { bg: 'rgba(16,185,129,0.15)',  text: '#10b981', border: 'rgba(16,185,129,0.4)' },
+    completed:     { bg: 'rgba(16,185,129,0.15)',  text: '#10b981', border: 'rgba(16,185,129,0.4)' },
+    lost:          { bg: 'rgba(244,63,94,0.12)',   text: '#f43f5e', border: 'rgba(244,63,94,0.4)' },
+    dead:          { bg: 'rgba(244,63,94,0.12)',   text: '#f43f5e', border: 'rgba(244,63,94,0.4)' },
+    cancelled:     { bg: 'rgba(244,63,94,0.12)',   text: '#f43f5e', border: 'rgba(244,63,94,0.4)' },
+    draft:         { bg: 'rgba(100,116,139,0.15)', text: branding?.text_secondary || '#8888aa', border: 'rgba(100,116,139,0.4)' },
+    quote_sent:    { bg: 'rgba(139,92,246,0.15)',  text: '#8b5cf6', border: 'rgba(139,92,246,0.4)' },
+    contract_sent: { bg: 'rgba(245,158,11,0.15)',  text: '#d97706', border: 'rgba(245,158,11,0.4)' },
+    quoted:        { bg: 'rgba(245,158,11,0.15)',  text: '#d97706', border: 'rgba(245,158,11,0.4)' },
+    scheduled:     { bg: 'rgba(99,102,241,0.15)',  text: '#6366f1', border: 'rgba(99,102,241,0.4)' },
+    in_progress:   { bg: 'rgba(249,115,22,0.15)',  text: '#f97316', border: 'rgba(249,115,22,0.4)' },
   };
   const s = map[status] || map.draft;
   return {

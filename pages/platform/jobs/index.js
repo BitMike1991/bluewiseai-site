@@ -18,25 +18,25 @@ const STATUS_OPTIONS = [
 ];
 
 const STATUS_COLORS = {
-  draft: 'bg-slate-700/60 text-d-text border-slate-500/40',
-  quote_sent: 'bg-violet-500/15 text-violet-300 border-violet-500/40',
-  contract_sent: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
+  draft: 'bg-d-border/60 text-d-text border-d-border/40',
+  quote_sent: 'bg-violet-500/15 text-violet-500 border-violet-500/40',
+  contract_sent: 'bg-amber-500/15 text-amber-500 border-amber-500/40',
   signed: 'bg-d-primary/15 text-d-primary border-d-primary/40',
-  scheduled: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/40',
-  in_progress: 'bg-orange-500/15 text-orange-300 border-orange-500/40',
-  completed: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
-  cancelled: 'bg-rose-500/10 text-rose-300 border-rose-500/40',
+  scheduled: 'bg-indigo-500/15 text-indigo-500 border-indigo-500/40',
+  in_progress: 'bg-orange-500/15 text-orange-500 border-orange-500/40',
+  completed: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/40',
+  cancelled: 'bg-rose-500/10 text-rose-500 border-rose-500/40',
 };
 
 const AVATAR_COLORS = [
-  'bg-d-primary/20 text-blue-300',
-  'bg-emerald-500/20 text-emerald-300',
-  'bg-violet-500/20 text-violet-300',
-  'bg-amber-500/20 text-amber-300',
-  'bg-rose-500/20 text-rose-300',
-  'bg-cyan-500/20 text-cyan-300',
-  'bg-pink-500/20 text-pink-300',
-  'bg-indigo-500/20 text-indigo-300',
+  'bg-d-primary/20 text-blue-500',
+  'bg-emerald-500/20 text-emerald-500',
+  'bg-violet-500/20 text-violet-500',
+  'bg-amber-500/20 text-amber-500',
+  'bg-rose-500/20 text-rose-500',
+  'bg-cyan-500/20 text-cyan-500',
+  'bg-pink-500/20 text-pink-500',
+  'bg-indigo-500/20 text-indigo-500',
 ];
 
 function getAvatarColor(name) {
@@ -307,7 +307,7 @@ export default function JobsPage() {
                     {job.total_paid > 0 ? (
                       <span className="text-emerald-400">{formatCurrency(job.total_paid)}</span>
                     ) : (
-                      <span className="text-slate-600">\u2014</span>
+                      <span className="text-d-muted">\u2014</span>
                     )}
                   </div>
 

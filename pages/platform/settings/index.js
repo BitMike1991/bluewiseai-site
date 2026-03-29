@@ -233,7 +233,7 @@ export default function SettingsPage() {
         {/* Gmail Integration */}
         <section className="rounded-2xl border shadow-xl p-5 space-y-4">
           <div className="flex items-center gap-3">
-            <Mail className="w-4 h-4 text-blue-400" />
+            <Mail className="w-4 h-4 text-d-primary" />
             <div>
               <h2 className="text-sm font-semibold text-d-text">Email Integration</h2>
               <p className="text-xs text-d-muted">Connect your Gmail to let your AI assistant read and respond to client emails.</p>
@@ -241,17 +241,17 @@ export default function SettingsPage() {
           </div>
 
           {gmail.loading ? (
-            <div className="flex items-center gap-2 text-gray-400">
+            <div className="flex items-center gap-2 text-d-muted">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-xs">Checking connection...</span>
             </div>
           ) : gmail.connected ? (
-            <div className="flex items-center justify-between bg-black/20 rounded-lg px-4 py-3">
+            <div className="flex items-center justify-between bg-d-surface rounded-lg px-4 py-3">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-green-400" />
                 <div>
-                  <p className="text-white text-sm font-medium">{gmail.email}</p>
-                  <p className="text-gray-500 text-xs">Connected</p>
+                  <p className="text-d-text text-sm font-medium">{gmail.email}</p>
+                  <p className="text-d-muted text-xs">Connected</p>
                 </div>
               </div>
               <button
@@ -266,7 +266,7 @@ export default function SettingsPage() {
             </div>
           ) : (
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-gray-500">
+              <div className="flex items-center gap-2 text-d-muted">
                 <XCircle className="w-4 h-4" />
                 <span className="text-xs">Not connected</span>
               </div>
@@ -305,17 +305,17 @@ export default function SettingsPage() {
           </div>
 
           {outlook.loading ? (
-            <div className="flex items-center gap-2 text-gray-400">
+            <div className="flex items-center gap-2 text-d-muted">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-xs">Checking connection...</span>
             </div>
           ) : outlook.connected ? (
-            <div className="flex items-center justify-between bg-black/20 rounded-lg px-4 py-3">
+            <div className="flex items-center justify-between bg-d-surface rounded-lg px-4 py-3">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-green-400" />
                 <div>
-                  <p className="text-white text-sm font-medium">{outlook.email}</p>
-                  <p className="text-gray-500 text-xs">Connected</p>
+                  <p className="text-d-text text-sm font-medium">{outlook.email}</p>
+                  <p className="text-d-muted text-xs">Connected</p>
                 </div>
               </div>
               <button
@@ -330,7 +330,7 @@ export default function SettingsPage() {
             </div>
           ) : (
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-gray-500">
+              <div className="flex items-center gap-2 text-d-muted">
                 <XCircle className="w-4 h-4" />
                 <span className="text-xs">Not connected</span>
               </div>
@@ -485,7 +485,7 @@ export default function SettingsPage() {
                 type="checkbox"
                 checked={form.smsEnabled}
                 onChange={(e) => updateField('smsEnabled', e.target.checked)}
-                className="h-4 w-4 rounded border-slate-600 bg-d-surface text-d-primary focus:ring-d-primary"
+                className="h-4 w-4 rounded border-d-border bg-d-surface text-d-primary focus:ring-d-primary"
               />
               <label
                 htmlFor="smsEnabled"
@@ -657,7 +657,7 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={saving || loading}
-            className="px-4 py-2 rounded-xl text-xs font-semibold bg-d-primary hover:bg-d-primary/80 text-slate-950 shadow-[0_0_18px_rgb(var(--d-primary-rgb)/0.9)] disabled:opacity-60 disabled:cursor-default transition"
+            className="px-4 py-2 rounded-xl text-xs font-semibold bg-d-primary hover:bg-d-primary/80 text-white shadow-[0_0_18px_rgb(var(--d-primary-rgb)/0.9)] disabled:opacity-60 disabled:cursor-default transition"
           >
             {saving ? 'Saving…' : 'Save settings'}
           </button>

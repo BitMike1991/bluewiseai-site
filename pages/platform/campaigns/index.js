@@ -35,14 +35,14 @@ function typeBadgeColor(t) {
     referral_request: "bg-emerald-500/15 text-emerald-300 border-emerald-500/40",
     payment_reminder: "bg-d-primary/15 text-d-primary border-d-primary/40",
   };
-  return map[t] || "bg-slate-700/60 text-d-muted border-slate-500/40";
+  return map[t] || "bg-d-border/60 text-d-muted border-d-border/40";
 }
 
 function statusBadge(status) {
   if (status === "sent") return "bg-emerald-500/15 text-emerald-300";
   if (status === "scheduled" || status === "pending") return "bg-amber-500/15 text-amber-300";
   if (status === "failed") return "bg-rose-500/15 text-rose-300";
-  return "bg-slate-700/60 text-d-muted";
+  return "bg-d-border/60 text-d-muted";
 }
 
 function eventTypeLabel(t) {
@@ -145,13 +145,13 @@ export default function CampaignsPage() {
               onClick={() => setActiveTab(tab.key)}
               className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
                 activeTab === tab.key
-                  ? "bg-slate-800 text-d-text border-b-2 border-d-primary"
+                  ? "bg-d-surface text-d-text border-b-2 border-d-primary"
                   : "text-d-muted hover:text-d-text hover:bg-d-surface/50"
               }`}
             >
               {tab.label}
               {tab.count > 0 && (
-                <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-slate-700 px-1.5 py-0.5 text-[10px] text-d-muted">
+                <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-d-surface px-1.5 py-0.5 text-[10px] text-d-muted">
                   {tab.count}
                 </span>
               )}
@@ -212,7 +212,7 @@ export default function CampaignsPage() {
                       <span className="text-sm font-medium text-amber-400">{r.rating}/5</span>
                     )}
                     {r.googleClicked && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-d-primary/15 text-blue-300">Google</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-d-primary/15 text-d-primary">Google</span>
                     )}
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${r.respondedAt ? "bg-emerald-500/15 text-emerald-300" : "bg-amber-500/15 text-amber-300"}`}>
                       {r.respondedAt ? "Responded" : "Pending"}
@@ -240,7 +240,7 @@ export default function CampaignsPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                      r.status === "converted" ? "bg-emerald-500/15 text-emerald-300" : "bg-slate-700/60 text-d-muted"
+                      r.status === "converted" ? "bg-emerald-500/15 text-emerald-300" : "bg-d-border/60 text-d-muted"
                     }`}>
                       {r.status || "new"}
                     </span>
@@ -258,11 +258,11 @@ export default function CampaignsPage() {
               ) : recentActivity.map(a => (
                 <div key={a.id} className="flex items-center justify-between px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-d-primary flex-shrink-0" />
                     <div>
                       <span className="text-sm text-d-text">{a.client}</span>
                       <span className="ml-2 text-xs text-d-text0">{a.jobNumber}</span>
-                      <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-700/60 text-d-muted border border-slate-600/40">
+                      <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-d-border/60 text-d-muted border border-d-border/40">
                         {eventTypeLabel(a.eventType)}
                       </span>
                     </div>

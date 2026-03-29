@@ -183,7 +183,7 @@ export default function CallsPage() {
                   "rounded-lg border px-3 py-1 text-xs sm:text-sm",
                   page <= 1 || loading
                     ? "cursor-not-allowed border-d-border text-d-text0"
-                    : "border-slate-600 text-d-text hover:border-d-primary hover:text-d-primary"
+                    : "border-d-border text-d-text hover:border-d-primary hover:text-d-primary"
                 )}
               >
                 Previous
@@ -199,7 +199,7 @@ export default function CallsPage() {
                   "rounded-lg border px-3 py-1 text-xs sm:text-sm",
                   !pagination?.hasMore || loading
                     ? "cursor-not-allowed border-d-border text-d-text0"
-                    : "border-slate-600 text-d-text hover:border-d-primary hover:text-d-primary"
+                    : "border-d-border text-d-text hover:border-d-primary hover:text-d-primary"
                 )}
               >
                 Next
@@ -209,7 +209,7 @@ export default function CallsPage() {
 
           {/* Error state */}
           {error && (
-            <div className="border-b border-d-border bg-rose-500/10 px-4 py-3 text-xs text-rose-300 sm:px-6">
+            <div className="border-b border-d-border bg-rose-500/10 px-4 py-3 text-xs text-rose-500 sm:px-6">
               {error}
             </div>
           )}
@@ -295,7 +295,7 @@ function CallRow({ call }) {
 
     if (!label) {
       return (
-        <span className="inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-d-muted">
+        <span className="inline-flex rounded-full bg-d-surface px-2 py-0.5 text-[11px] text-d-muted">
           Unknown
         </span>
       );
@@ -303,7 +303,7 @@ function CallRow({ call }) {
 
     if (label.includes("miss")) {
       return (
-        <span className="inline-flex rounded-full bg-rose-500/20 px-2 py-0.5 text-[11px] text-rose-300">
+        <span className="inline-flex rounded-full bg-rose-500/20 px-2 py-0.5 text-[11px] text-rose-500">
           Missed
         </span>
       );
@@ -315,7 +315,7 @@ function CallRow({ call }) {
       label.includes("success")
     ) {
       return (
-        <span className="inline-flex rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] text-emerald-300">
+        <span className="inline-flex rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] text-emerald-500">
           Answered
         </span>
       );
@@ -330,7 +330,7 @@ function CallRow({ call }) {
     }
 
     return (
-      <span className="inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-d-muted">
+      <span className="inline-flex rounded-full bg-d-surface px-2 py-0.5 text-[11px] text-d-muted">
         {outcome}
       </span>
     );
@@ -341,7 +341,7 @@ function CallRow({ call }) {
 
     if (!label) {
       return (
-        <span className="inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-d-muted">
+        <span className="inline-flex rounded-full bg-d-surface px-2 py-0.5 text-[11px] text-d-muted">
           \u2014
         </span>
       );
@@ -364,7 +364,7 @@ function CallRow({ call }) {
     }
 
     return (
-      <span className="inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-d-muted">
+      <span className="inline-flex rounded-full bg-d-surface px-2 py-0.5 text-[11px] text-d-muted">
         {direction}
       </span>
     );
@@ -375,7 +375,7 @@ function CallRow({ call }) {
       Yes
     </span>
   ) : (
-    <span className="inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-d-muted">
+    <span className="inline-flex rounded-full bg-d-surface px-2 py-0.5 text-[11px] text-d-muted">
       No
     </span>
   );

@@ -19,12 +19,12 @@ function formatDate(dateString) {
 
 const STATUS_OPTIONS = [
   { value: "new", label: "New", color: "bg-d-primary/10 text-d-primary border-d-primary/40" },
-  { value: "active", label: "Active", color: "bg-emerald-500/10 text-emerald-300 border-emerald-500/40" },
-  { value: "in_convo", label: "In convo", color: "bg-indigo-500/10 text-indigo-300 border-indigo-500/40" },
-  { value: "quoted", label: "Quoted", color: "bg-amber-500/10 text-amber-300 border-amber-500/40" },
-  { value: "won", label: "Won", color: "bg-emerald-500/15 text-emerald-200 border-emerald-500/60" },
-  { value: "lost", label: "Lost", color: "bg-rose-500/10 text-rose-300 border-rose-500/40" },
-  { value: "dead", label: "Dead", color: "bg-slate-600/60 text-d-text border-slate-500/60" },
+  { value: "active", label: "Active", color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/40" },
+  { value: "in_convo", label: "In convo", color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/40" },
+  { value: "quoted", label: "Quoted", color: "bg-amber-500/10 text-amber-500 border-amber-500/40" },
+  { value: "won", label: "Won", color: "bg-emerald-500/15 text-emerald-500 border-emerald-500/60" },
+  { value: "lost", label: "Lost", color: "bg-rose-500/10 text-rose-500 border-rose-500/40" },
+  { value: "dead", label: "Dead", color: "bg-d-border/60 text-d-text border-d-border/60" },
 ];
 
 function StatusSelector({ status, onChange, loading }) {
@@ -37,7 +37,7 @@ function StatusSelector({ status, onChange, loading }) {
         type="button"
         onClick={() => !loading && setOpen(!open)}
         disabled={loading}
-        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border shadow-sm shadow-slate-900/40 transition hover:ring-2 hover:ring-d-primary/40 ${current.color} ${loading ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
+        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border shadow-sm shadow-black/20 transition hover:ring-2 hover:ring-d-primary/40 ${current.color} ${loading ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
       >
         {loading ? "Saving\u2026" : current.label}
         {!loading && (
@@ -76,22 +76,22 @@ function StatusSelector({ status, onChange, loading }) {
 
 function StatusBadge({ status }) {
   if (!status)
-    return <span className="px-2 py-1 rounded-full text-xs bg-slate-700/60">unknown</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-d-border/60">unknown</span>;
 
   const colorMap = {
-    active: "bg-emerald-500/10 text-emerald-300 border-emerald-500/40",
+    active: "bg-emerald-500/10 text-emerald-500 border-emerald-500/40",
     new: "bg-d-primary/10 text-d-primary border-d-primary/40",
-    in_convo: "bg-indigo-500/10 text-indigo-300 border-indigo-500/40",
-    quoted: "bg-amber-500/10 text-amber-300 border-amber-500/40",
-    won: "bg-emerald-500/15 text-emerald-200 border-emerald-500/60",
-    lost: "bg-rose-500/10 text-rose-300 border-rose-500/40",
-    dead: "bg-slate-600/60 text-d-text border-slate-500/60",
+    in_convo: "bg-indigo-500/10 text-indigo-500 border-indigo-500/40",
+    quoted: "bg-amber-500/10 text-amber-500 border-amber-500/40",
+    won: "bg-emerald-500/15 text-emerald-500 border-emerald-500/60",
+    lost: "bg-rose-500/10 text-rose-500 border-rose-500/40",
+    dead: "bg-d-border/60 text-d-text border-d-border/60",
   };
 
   const base =
-    "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border shadow-sm shadow-slate-900/40";
+    "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border shadow-sm shadow-black/20";
 
-  const cls = colorMap[status] || "bg-slate-700/60 text-d-text border-slate-500/60";
+  const cls = colorMap[status] || "bg-d-border/60 text-d-text border-d-border/60";
   return <span className={`${base} ${cls}`}>{status.replace(/_/g, " ")}</span>;
 }
 
@@ -189,7 +189,7 @@ function TimelineItem({ item }) {
     const channelClass = classifyChannel(item.channel);
 
     pill = (
-      <span className="uppercase tracking-wide text-[0.65rem] px-1.5 py-0.5 rounded-full bg-slate-800/80 text-d-muted">
+      <span className="uppercase tracking-wide text-[0.65rem] px-1.5 py-0.5 rounded-full bg-d-surface/80 text-d-muted">
         {channelClass}
       </span>
     );
@@ -234,7 +234,7 @@ function TimelineItem({ item }) {
 
   return (
     <div className="relative pl-6 pb-6 last:pb-0">
-      <div className="absolute left-1 top-0 bottom-0 w-px bg-slate-700/70" />
+      <div className="absolute left-1 top-0 bottom-0 w-px bg-d-border/70" />
       <div className="absolute left-0 top-1 w-2 h-2 rounded-full bg-d-primary shadow-[0_0_10px_rgb(var(--d-primary-rgb)/0.8)]" />
 
       <div className="bg-d-surface border border-d-border rounded-xl px-4 py-3 flex flex-col gap-1">
@@ -263,7 +263,7 @@ function Modal({ open, title, children, onClose }) {
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl rounded-2xl border border-d-border bg-slate-950 shadow-2xl shadow-black/60">
+        <div className="w-full max-w-2xl rounded-2xl border border-d-border bg-d-bg shadow-2xl shadow-black/60">
           <div className="flex items-center justify-between gap-3 border-b border-d-border px-5 py-4">
             <div className="min-w-0">
               <p className="text-sm font-semibold text-d-text">{title}</p>
@@ -641,7 +641,7 @@ export default function LeadDetailPage() {
             </div>
 
             {loading && <p className="text-sm text-d-muted">Loading timeline\u2026</p>}
-            {error && !loading && <p className="text-sm text-rose-300">{error}</p>}
+            {error && !loading && <p className="text-sm text-rose-500">{error}</p>}
 
             {!loading && !error && filteredTimeline.length === 0 && (
               <p className="text-sm text-d-muted">No items match this filter yet.</p>
@@ -667,8 +667,8 @@ export default function LeadDetailPage() {
                   className={cx(
                     "px-3 py-1.5 rounded-xl text-xs font-medium shadow-[0_0_18px_rgb(var(--d-primary-rgb)/0.55)] transition",
                     lead?.phone
-                      ? "bg-d-primary/90 hover:bg-d-primary/80 text-slate-950"
-                      : "bg-slate-800 text-d-muted cursor-not-allowed"
+                      ? "bg-d-primary/90 hover:bg-d-primary/80 text-white"
+                      : "bg-d-surface text-d-muted cursor-not-allowed"
                   )}
                   disabled={!lead?.phone}
                   title={!lead?.phone ? "Lead has no phone number" : "Send SMS"}
@@ -682,7 +682,7 @@ export default function LeadDetailPage() {
                   className={cx(
                     "px-3 py-1.5 rounded-xl text-xs font-medium border transition",
                     lead?.email
-                      ? "bg-slate-800 hover:bg-slate-700 text-d-text border-slate-600/70"
+                      ? "bg-d-surface hover:bg-d-surface/80 text-d-text border-d-border/70"
                       : "bg-d-surface text-d-text0 border-d-border cursor-not-allowed"
                   )}
                   disabled={!lead?.email}
@@ -770,10 +770,10 @@ export default function LeadDetailPage() {
                         <div className="text-right">
                           <span className={cx(
                             "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border",
-                            job.status === "completed" ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/40" :
+                            job.status === "completed" ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/40" :
                             job.status === "signed" || job.status === "scheduled" ? "bg-d-primary/15 text-d-primary border-d-primary/40" :
-                            job.status === "cancelled" ? "bg-rose-500/10 text-rose-300 border-rose-500/40" :
-                            "bg-slate-700/60 text-d-text border-slate-500/40"
+                            job.status === "cancelled" ? "bg-rose-500/10 text-rose-500 border-rose-500/40" :
+                            "bg-d-border/60 text-d-text border-d-border/40"
                           )}>
                             {(job.status || "draft").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
                           </span>
@@ -798,7 +798,7 @@ export default function LeadDetailPage() {
                     Open: <span className="text-d-primary">{openTasks.length}</span>
                   </span>
                   <span>
-                    Completed: <span className="text-emerald-300">{completedTasks.length}</span>
+                    Completed: <span className="text-emerald-500">{completedTasks.length}</span>
                   </span>
                 </div>
               </div>
@@ -821,7 +821,7 @@ export default function LeadDetailPage() {
                       typeof task.sequenceStage === "number" ? `Step ${task.sequenceStage}` : "\u2014";
 
                     const badge = isCompleted ? (
-                      <span className="inline-flex rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] text-emerald-200">
+                      <span className="inline-flex rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] text-emerald-500">
                         Completed
                       </span>
                     ) : (
@@ -948,12 +948,12 @@ export default function LeadDetailPage() {
               </div>
             ) : null}
 
-            {sendError ? <p className="text-xs text-rose-300">{sendError}</p> : null}
+            {sendError ? <p className="text-xs text-rose-500">{sendError}</p> : null}
 
             {sendSuccess ? (
               <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
-                <p className="text-xs font-semibold text-emerald-200">Sent successfully</p>
-                <p className="mt-1 text-[11px] text-emerald-100">
+                <p className="text-xs font-semibold text-emerald-500">Sent successfully</p>
+                <p className="mt-1 text-[11px] text-emerald-500/80">
                   Provider: {sendSuccess.provider} \u00b7 Message ID: {sendSuccess.message_id}
                 </p>
               </div>
@@ -972,7 +972,7 @@ export default function LeadDetailPage() {
                 type="button"
                 onClick={submitSend}
                 disabled={sendLoading}
-                className="rounded-xl bg-d-primary px-4 py-2 text-[11px] font-semibold text-slate-950 shadow shadow-d-primary/40 hover:bg-d-primary/80 disabled:opacity-60"
+                className="rounded-xl bg-d-primary px-4 py-2 text-[11px] font-semibold text-white shadow shadow-d-primary/40 hover:bg-d-primary/80 disabled:opacity-60"
               >
                 {sendLoading ? "Sending\u2026" : "Send"}
               </button>

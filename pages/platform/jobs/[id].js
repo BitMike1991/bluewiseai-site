@@ -7,14 +7,14 @@ import { useBranding } from '../../../src/components/dashboard/BrandingContext';
 import { getBrandingStyles, getStatusBadgeStyle } from '../../../src/components/dashboard/brandingUtils';
 
 const STATUS_COLORS = {
-  draft: 'bg-slate-700/60 text-d-text border-slate-500/40',
-  quote_sent: 'bg-violet-500/15 text-violet-300 border-violet-500/40',
-  contract_sent: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
+  draft: 'bg-d-border/60 text-d-text border-d-border/40',
+  quote_sent: 'bg-violet-500/15 text-violet-500 border-violet-500/40',
+  contract_sent: 'bg-amber-500/15 text-amber-500 border-amber-500/40',
   signed: 'bg-d-primary/15 text-d-primary border-d-primary/40',
-  scheduled: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/40',
-  in_progress: 'bg-orange-500/15 text-orange-300 border-orange-500/40',
-  completed: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
-  cancelled: 'bg-rose-500/10 text-rose-300 border-rose-500/40',
+  scheduled: 'bg-indigo-500/15 text-indigo-500 border-indigo-500/40',
+  in_progress: 'bg-orange-500/15 text-orange-500 border-orange-500/40',
+  completed: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/40',
+  cancelled: 'bg-rose-500/10 text-rose-500 border-rose-500/40',
 };
 
 const STATUS_PIPELINE = [
@@ -243,12 +243,12 @@ export default function JobDetailPage() {
                           ? 'bg-d-primary border-d-primary/80 shadow-[0_0_8px_rgb(var(--d-primary-rgb)/0.6)]'
                           : isCompleted
                           ? 'bg-emerald-500 border-emerald-400'
-                          : 'bg-slate-800 border-slate-600'
+                          : 'bg-d-surface border-d-border'
                       }`}
                     />
                     <span
                       className={`text-[10px] mt-1 hidden md:block ${
-                        isCurrent ? 'text-d-primary font-medium' : isCompleted ? 'text-emerald-400' : 'text-slate-600'
+                        isCurrent ? 'text-d-primary font-medium' : isCompleted ? 'text-emerald-400' : 'text-d-muted'
                       }`}
                     >
                       {statusLabel(step)}
@@ -257,7 +257,7 @@ export default function JobDetailPage() {
                   {i < STATUS_PIPELINE.length - 1 && (
                     <div
                       className={`flex-1 h-0.5 mx-1 ${
-                        i < currentStatusIndex ? 'bg-emerald-500/60' : 'bg-slate-700/60'
+                        i < currentStatusIndex ? 'bg-emerald-500/60' : 'bg-d-border/60'
                       }`}
                     />
                   )}
@@ -279,19 +279,19 @@ export default function JobDetailPage() {
 
         {/* Tax Breakdown */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-          <div className="px-3 py-2 rounded-lg bg-slate-800/40 border border-d-border/50">
+          <div className="px-3 py-2 rounded-lg bg-d-surface/40 border border-d-border/50">
             <p className="text-[10px] text-d-text0 mb-0.5">Subtotal</p>
             <p className="text-sm font-medium text-d-text">{formatCurrency(subtotal)}</p>
           </div>
-          <div className="px-3 py-2 rounded-lg bg-slate-800/40 border border-d-border/50">
+          <div className="px-3 py-2 rounded-lg bg-d-surface/40 border border-d-border/50">
             <p className="text-[10px] text-d-text0 mb-0.5">TPS (5%)</p>
             <p className="text-sm font-medium text-d-text">{formatCurrency(tps)}</p>
           </div>
-          <div className="px-3 py-2 rounded-lg bg-slate-800/40 border border-d-border/50">
+          <div className="px-3 py-2 rounded-lg bg-d-surface/40 border border-d-border/50">
             <p className="text-[10px] text-d-text0 mb-0.5">TVQ (9.975%)</p>
             <p className="text-sm font-medium text-d-text">{formatCurrency(tvq)}</p>
           </div>
-          <div className="px-3 py-2 rounded-lg bg-slate-800/40 border border-d-border/50">
+          <div className="px-3 py-2 rounded-lg bg-d-surface/40 border border-d-border/50">
             <p className="text-[10px] text-d-text0 mb-0.5">Total TTC</p>
             <p className="text-sm font-semibold text-d-text">{formatCurrency(ttc)}</p>
           </div>
@@ -305,7 +305,7 @@ export default function JobDetailPage() {
               {progressPct}%
             </span>
           </div>
-          <div className="h-2 rounded-full bg-slate-700 overflow-hidden">
+          <div className="h-2 rounded-full bg-d-surface overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
                 progressPct >= 100 ? 'bg-emerald-500' : 'bg-d-primary'
@@ -340,7 +340,7 @@ export default function JobDetailPage() {
           }`}>
             <span className="text-xs text-d-muted">Balance Remaining</span>
             <span className={`text-sm font-semibold ${
-              balanceRemaining <= 0 ? 'text-emerald-400' : 'text-amber-300'
+              balanceRemaining <= 0 ? 'text-emerald-400' : 'text-amber-500'
             }`}>
               {formatCurrency(Math.max(0, balanceRemaining))}
             </span>
@@ -403,7 +403,7 @@ export default function JobDetailPage() {
                 {contracts.map((c) => (
                   <div
                     key={c.id}
-                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/40 border border-d-border/50"
+                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-d-surface/40 border border-d-border/50"
                   >
                     <div>
                       <p className="text-sm text-d-text">
@@ -415,8 +415,8 @@ export default function JobDetailPage() {
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
                           c.signature_status === 'signed'
-                            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
-                            : 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+                            ? 'bg-emerald-500/15 text-emerald-500 border-emerald-500/40'
+                            : 'bg-amber-500/15 text-amber-500 border-amber-500/40'
                         }`}
                       >
                         {c.signature_status === 'signed' ? 'Signed' : 'Pending'}
@@ -446,7 +446,7 @@ export default function JobDetailPage() {
                 {payments.map((p) => (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/40 border border-d-border/50"
+                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-d-surface/40 border border-d-border/50"
                   >
                     <div>
                       <p className="text-sm text-d-text">
@@ -458,15 +458,15 @@ export default function JobDetailPage() {
                     </div>
                     <div className="text-right">
                       <p className={`text-sm font-medium ${
-                        p.status === 'paid' || p.status === 'succeeded' ? 'text-emerald-400' : 'text-amber-300'
+                        p.status === 'paid' || p.status === 'succeeded' ? 'text-emerald-400' : 'text-amber-500'
                       }`}>
                         {formatCurrency(p.amount)}
                       </p>
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${
                           p.status === 'paid' || p.status === 'succeeded'
-                            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
-                            : 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+                            ? 'bg-emerald-500/15 text-emerald-500 border-emerald-500/40'
+                            : 'bg-amber-500/15 text-amber-500 border-amber-500/40'
                         }`}
                       >
                         {(p.status || 'pending').replace(/\b\w/g, (c) => c.toUpperCase())}
@@ -483,7 +483,7 @@ export default function JobDetailPage() {
                 {remaining > 0 && (
                   <div className="flex items-center justify-between px-3 py-1">
                     <span className="text-xs text-d-text0">Remaining</span>
-                    <span className="text-sm font-medium text-amber-300">{formatCurrency(remaining)}</span>
+                    <span className="text-sm font-medium text-amber-500">{formatCurrency(remaining)}</span>
                   </div>
                 )}
               </div>
@@ -505,7 +505,7 @@ export default function JobDetailPage() {
                   {expenses.map((exp, i) => (
                     <div
                       key={exp.id ?? i}
-                      className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/40 border border-d-border/50"
+                      className="flex items-center justify-between px-3 py-2 rounded-lg bg-d-surface/40 border border-d-border/50"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
@@ -513,7 +513,7 @@ export default function JobDetailPage() {
                             {exp.vendor || 'Unknown Vendor'}
                           </p>
                           {exp.category && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-700/60 text-d-muted border border-slate-600/40 flex-shrink-0">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-d-border/60 text-d-muted border border-d-border/40 flex-shrink-0">
                               {exp.category}
                             </span>
                           )}
@@ -582,7 +582,7 @@ export default function JobDetailPage() {
                       {ev.payload && ev.payload.note && (
                         <p className="text-xs text-d-text0 mt-0.5">{ev.payload.note}</p>
                       )}
-                      <p className="text-[10px] text-slate-600 mt-0.5">{formatDate(ev.created_at)}</p>
+                      <p className="text-[10px] text-d-muted mt-0.5">{formatDate(ev.created_at)}</p>
                     </div>
                   </div>
                 ))}

@@ -74,12 +74,9 @@ export default function DashboardLayout({ children }) {
     setSidebarOpen(false);
   };
 
-  // If suspended, show blocked screen instead of CRM
-  if (suspended) return <SuspendedScreen />;
-
   return (
     <BrandingProvider>
-      <DashboardShell
+      {suspended ? <SuspendedScreen /> : <DashboardShell
         sidebarOpen={sidebarOpen}
         closeSidebar={closeSidebar}
         toggleSidebar={toggleSidebar}
@@ -87,7 +84,7 @@ export default function DashboardLayout({ children }) {
         userInfo={userInfo}
       >
         {children}
-      </DashboardShell>
+      </DashboardShell>}
     </BrandingProvider>
   );
 }
