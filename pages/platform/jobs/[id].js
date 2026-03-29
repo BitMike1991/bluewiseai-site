@@ -663,12 +663,24 @@ export default function JobDetailPage() {
                 <dt className="text-d-text0">Quote</dt>
                 <dd className="text-d-text font-medium">{formatCurrency(quoteAmount)}</dd>
               </div>
-              <div>
-                <dt className="text-d-text0">Deposit ({job.deposit_percentage || 25}%)</dt>
-                <dd className="text-d-text">
-                  {formatCurrency(job.deposit_amount || quoteAmount * ((job.deposit_percentage || 25) / 100))}
-                </dd>
-              </div>
+              {branding.payment_schedule ? (
+                branding.payment_schedule.map((step, i) => (
+                  <div key={i}>
+                    <dt className="text-d-text0">{step.label} ({step.percent}%)</dt>
+                    <dd className="text-d-text">
+                      {formatCurrency(quoteAmount * 1.14975 * (step.percent / 100))}
+                      {step.note && <span className="text-d-muted text-[10px] ml-1">{step.note}</span>}
+                    </dd>
+                  </div>
+                ))
+              ) : (
+                <div>
+                  <dt className="text-d-text0">Deposit ({job.deposit_percentage || 10}%)</dt>
+                  <dd className="text-d-text">
+                    {formatCurrency(job.deposit_amount || quoteAmount * 1.14975 * ((job.deposit_percentage || 10) / 100))}
+                  </dd>
+                </div>
+              )}
               {job.intake_source && (
                 <div>
                   <dt className="text-d-text0">Source</dt>
