@@ -141,52 +141,34 @@ export default async function handler(req, res) {
       e.paid_at && new Date(e.paid_at).toISOString() >= monthStart
     ).reduce((s, e) => s + Number(e.total || 0), 0);
 
-    // 7c) Outstanding balance — ONLY signed/accepted contracts (remaining balance after payments)
+    // 7c) Outstanding = all signed contracts TTC minus all payments = what clients owe
     const { data: signedJobs } = await supabase
       .from("jobs")
       .select("id, quote_amount")
       .eq("customer_id", customerId)
       .in("status", ["signed", "contract_signed", "scheduled", "in_progress", "completed"]);
 
-    let totalTtcOwed = 0;
-    const signedJobIds = [];
-    for (const j of signedJobs || []) {
-      if (j.quote_amount) {
-        totalTtcOwed += Number(j.quote_amount) * 1.14975;
-        signedJobIds.push(j.id);
-      }
-    }
+    const totalSignedTtc = (signedJobs || []).reduce((s, j) => s + Number(j.quote_amount || 0) * 1.14975, 0);
+    const outstandingBalance = Math.max(0, totalSignedTtc - totalRevenue);
 
-    let totalPaidOnJobs = 0;
-    if (signedJobIds.length > 0) {
-      const { data: jobPayments } = await supabase
-        .from("payments")
-        .select("amount")
-        .eq("customer_id", customerId)
-        .eq("status", "succeeded")
-        .in("job_id", signedJobIds);
-
-      totalPaidOnJobs = (jobPayments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
-    }
-
-    const outstandingBalance = Math.max(0, totalTtcOwed - totalPaidOnJobs);
-
-    // 8) Pipeline value — all pre-signing quotes + jobs (NOT signed, those go to outstanding)
+    // 8) Pipeline = last 30 days of all sent quotes + jobs (total business volume)
     const { data: pipelineQuotes } = await supabase
       .from("quotes")
       .select("total_ttc")
       .eq("customer_id", customerId)
-      .in("status", ["sent", "ready"]);
+      .not("status", "eq", "cancelled")
+      .gte("created_at", since30d);
 
-    const { data: pipelineContracts } = await supabase
+    const { data: pipelineJobs } = await supabase
       .from("jobs")
       .select("quote_amount")
       .eq("customer_id", customerId)
-      .in("status", ["draft", "quoted", "quote_sent", "accepted", "contract_sent"]);
+      .not("status", "in", "(cancelled,lost)")
+      .gte("created_at", since30d);
 
     const pipelineValue =
       (pipelineQuotes || []).reduce((s, q) => s + Number(q.total_ttc || 0), 0) +
-      (pipelineContracts || []).reduce((s, j) => s + Number(j.quote_amount || 0) * 1.14975, 0);
+      (pipelineJobs || []).reduce((s, j) => s + Number(j.quote_amount || 0) * 1.14975, 0);
 
     // 8b) Total leads (all time) + conversion rate
     const { data: allLeadRows } = await supabase
