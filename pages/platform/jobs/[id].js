@@ -198,7 +198,7 @@ export default function JobDetailPage() {
             onClick={() => setLightboxUrl(null)}
             className="absolute top-4 right-4 text-white/80 hover:text-white text-2xl"
           >
-            \u2715
+            {"\u2715"}
           </button>
         </div>
       )}
@@ -208,14 +208,14 @@ export default function JobDetailPage() {
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center space-x-3">
-              <h1 className="text-lg font-semibold text-d-text">{job.client_name || 'Unknown'}</h1>
+              <h1 className="text-lg font-semibold text-d-text">Job {job.job_id || 'Unknown'}</h1>
               <span className={statusBadge(job.status)}>{statusLabel(job.status)}</span>
             </div>
             <p className="text-sm text-d-muted mt-0.5">
-              <span className="font-mono text-d-primary">{job.job_id}</span>
+              <span className="text-d-text">{job.client_name || 'Unknown'}</span>
               {job.project_type && (
                 <span className="ml-2 text-d-text0">
-                  \u00b7 {job.project_type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                  {"\u00b7"}{job.project_type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                 </span>
               )}
             </p>
@@ -400,36 +400,44 @@ export default function JobDetailPage() {
               <p className="text-xs text-d-text0">No contracts generated yet.</p>
             ) : (
               <div className="space-y-2">
-                {contracts.map((c) => (
-                  <div
-                    key={c.id}
-                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-d-surface/40 border border-d-border/50"
-                  >
-                    <div>
-                      <p className="text-sm text-d-text">
-                        {c.template_name || 'Contract'} {c.template_version || ''}
-                      </p>
-                      <p className="text-xs text-d-text0">Created {formatDate(c.created_at)}</p>
-                    </div>
-                    <div className="text-right">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
-                          c.signature_status === 'signed'
-                            ? 'bg-emerald-500/15 text-emerald-500 border-emerald-500/40'
-                            : 'bg-amber-500/15 text-amber-500 border-amber-500/40'
-                        }`}
-                      >
-                        {c.signature_status === 'signed' ? 'Signed' : 'Pending'}
-                      </span>
-                      {c.signed_at && (
-                        <p className="text-xs text-d-text0 mt-0.5">{formatDate(c.signed_at)}</p>
-                      )}
-                      {c.signer_name && (
-                        <p className="text-xs text-d-muted">by {c.signer_name}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                {contracts.map((c) => {
+                  const Wrapper = c.signed_pdf_url ? 'a' : 'div';
+                  const wrapperProps = c.signed_pdf_url ? { href: c.signed_pdf_url, target: '_blank', rel: 'noopener noreferrer' } : {};
+                  return (
+                    <Wrapper
+                      key={c.id}
+                      {...wrapperProps}
+                      className={`flex items-center justify-between px-3 py-2 rounded-lg bg-d-surface/40 border border-d-border/50 ${c.signed_pdf_url ? 'cursor-pointer hover:border-d-primary/40 transition-colors' : ''}`}
+                    >
+                      <div>
+                        <p className="text-sm text-d-text">
+                          {c.template_name || 'Contract'} {c.template_version || ''}
+                        </p>
+                        <p className="text-xs text-d-text0">Created {formatDate(c.created_at)}</p>
+                        {c.signed_pdf_url && (
+                          <p className="text-xs text-d-primary mt-0.5">View signed contract</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
+                            c.signature_status === 'signed'
+                              ? 'bg-emerald-500/15 text-emerald-500 border-emerald-500/40'
+                              : 'bg-amber-500/15 text-amber-500 border-amber-500/40'
+                          }`}
+                        >
+                          {c.signature_status === 'signed' ? 'Signed' : 'Pending'}
+                        </span>
+                        {c.signed_at && (
+                          <p className="text-xs text-d-text0 mt-0.5">{formatDate(c.signed_at)}</p>
+                        )}
+                        {c.signer_name && (
+                          <p className="text-xs text-d-muted">by {c.signer_name}</p>
+                        )}
+                      </div>
+                    </Wrapper>
+                  );
+                })}
               </div>
             )}
           </div>

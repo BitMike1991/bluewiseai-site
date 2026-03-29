@@ -41,6 +41,17 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
   const sidebarBg = branding.sidebar_bg || branding.surface_color || "#0a0a12";
   const borderColor = branding.border_color || "#1e1e2e";
 
+  // Auto-detect dark sidebar → use light nav text for contrast
+  const sidebarIsDark = (() => {
+    const hex = sidebarBg.replace('#', '');
+    const r = parseInt(hex.slice(0,2), 16);
+    const g = parseInt(hex.slice(2,4), 16);
+    const b = parseInt(hex.slice(4,6), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
+  })();
+  const navText = sidebarIsDark ? '#b0b4ba' : (branding.text_secondary || '#8888aa');
+  const navIcon = sidebarIsDark ? '#808590' : (branding.text_secondary || '#555577');
+
   return (
     <>
       {/* Backdrop overlay (mobile only) */}
@@ -81,15 +92,15 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
                 </div>
               )}
               <div>
-                <div className="text-sm font-semibold" style={{ color: branding.text_primary || "#f0f0f5" }}>{branding.company_display_name}</div>
-                <div className="text-[10px] tracking-wide" style={{ color: branding.text_secondary || "#8888aa" }}>{branding.tagline}</div>
+                <div className="text-sm font-semibold" style={{ color: sidebarIsDark ? '#f0f0f5' : (branding.text_primary || "#f0f0f5") }}>{branding.company_display_name}</div>
+                <div className="text-[10px] tracking-wide" style={{ color: navText }}>{branding.tagline}</div>
               </div>
             </div>
             {/* Close button (mobile only) */}
             <button
               onClick={onClose}
               className="md:hidden p-1.5 rounded-lg transition-colors"
-              style={{ color: branding.text_secondary || "#8888aa" }}
+              style={{ color: navText }}
               aria-label="Close menu"
             >
               <X className="w-4 h-4" />
@@ -116,13 +127,13 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors"
                 style={
                   isActive
-                    ? { backgroundColor: `${branding.primary_color}15`, color: branding.primary_color, fontWeight: 500 }
-                    : { color: branding.text_secondary || "#8888aa" }
+                    ? { backgroundColor: sidebarIsDark ? `${branding.primary_color}25` : `${branding.primary_color}15`, color: sidebarIsDark ? '#ffffff' : branding.primary_color, fontWeight: 500 }
+                    : { color: navText }
                 }
               >
                 <Icon
                   className="w-4 h-4 flex-shrink-0"
-                  style={{ color: isActive ? branding.primary_color : (branding.text_secondary || "#555577") }}
+                  style={{ color: isActive ? (sidebarIsDark ? '#ffffff' : branding.primary_color) : navIcon }}
                 />
                 {item.label}
               </Link>
@@ -140,7 +151,7 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
               >
                 {customerName.charAt(0).toUpperCase()}
               </div>
-              <div className="text-xs truncate" style={{ color: branding.text_secondary || "#8888aa" }}>{customerName}</div>
+              <div className="text-xs truncate" style={{ color: navText }}>{customerName}</div>
             </div>
           </div>
         )}

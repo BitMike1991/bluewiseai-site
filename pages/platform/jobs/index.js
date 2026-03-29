@@ -172,7 +172,7 @@ export default function JobsPage() {
           </p>
         </div>
         <div className="text-xs text-d-text0">
-          {total} job{total === 1 ? '' : 's'} \u00b7 Page {page} of {totalPages}
+          {total} job{total === 1 ? '' : 's'} {"\u00b7"}Page {page} of {totalPages}
         </div>
       </div>
 
@@ -267,7 +267,7 @@ export default function JobsPage() {
                             <p className="text-sm font-medium text-d-text">{displayName}</p>
                             <p className="text-xs text-d-muted truncate">
                               {job.client_phone && <span>{job.client_phone}</span>}
-                              {job.client_phone && job.client_email && <span> \u00b7 </span>}
+                              {job.client_phone && job.client_email && <span> {"\u00b7"}</span>}
                               {job.client_email && <span>{job.client_email}</span>}
                             </p>
                           </div>
@@ -297,7 +297,7 @@ export default function JobsPage() {
                     </span>
                     {job.contract_signed && (
                       <span className="ml-1.5 text-xs text-emerald-400" title="Contract signed">
-                        \u2713
+                        {"\u2713"}
                       </span>
                     )}
                   </div>
@@ -307,7 +307,7 @@ export default function JobsPage() {
                     {job.total_paid > 0 ? (
                       <span className="text-emerald-400">{formatCurrency(job.total_paid)}</span>
                     ) : (
-                      <span className="text-d-muted">\u2014</span>
+                      <span className="text-d-muted">{"\u2014"}</span>
                     )}
                   </div>
 
@@ -325,7 +325,7 @@ export default function JobsPage() {
         {!loading && jobs.length > 0 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-d-border text-xs text-d-muted">
             <div>
-              Showing {(page - 1) * pageSize + 1}\u2013{Math.min(page * pageSize, total)} of {total}
+              Showing {(page - 1) * pageSize + 1}{"\u2013"}{Math.min(page * pageSize, total)} of {total}
             </div>
             <div className="space-x-2">
               <button
