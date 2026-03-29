@@ -28,14 +28,15 @@ module.exports = {
           neon: "#60A5FA",
         },
         // CSS variable-based tenant branding (set by DashboardLayout)
+        // RGB format enables opacity modifiers: bg-d-primary/15, border-d-accent/40, etc.
         d: {
-          bg: 'var(--d-bg, #0a0a12)',
-          surface: 'var(--d-surface, #111119)',
-          border: 'var(--d-border, #1e1e2e)',
-          text: 'var(--d-text, #f0f0f5)',
-          muted: 'var(--d-muted, #8888aa)',
-          primary: 'var(--d-primary, #6c63ff)',
-          accent: 'var(--d-accent, #00d4aa)',
+          bg: 'rgb(var(--d-bg-rgb, 10 10 18) / <alpha-value>)',
+          surface: 'rgb(var(--d-surface-rgb, 17 17 25) / <alpha-value>)',
+          border: 'rgb(var(--d-border-rgb, 30 30 46) / <alpha-value>)',
+          text: 'rgb(var(--d-text-rgb, 240 240 245) / <alpha-value>)',
+          muted: 'rgb(var(--d-muted-rgb, 136 136 170) / <alpha-value>)',
+          primary: 'rgb(var(--d-primary-rgb, 108 99 255) / <alpha-value>)',
+          accent: 'rgb(var(--d-accent-rgb, 0 212 170) / <alpha-value>)',
         },
         // Legacy premium dark palette (public site)
         bg: '#0a0a0f',

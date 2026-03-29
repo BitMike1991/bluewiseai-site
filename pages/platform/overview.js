@@ -80,7 +80,7 @@ function getActivityDot(type) {
   if (type === "missed_call") return "bg-amber-400";
   if (type === "sms_sent_auto_reply") return "bg-violet-400";
   if (type === "lead_created") return "bg-blue-400";
-  if (type === "message.call") return "bg-sky-400";
+  if (type === "message.call") return "bg-d-primary";
   if (type === "message.sms") return "bg-emerald-400";
   if (type === "message.email") return "bg-indigo-400";
   return "bg-slate-500";
@@ -209,7 +209,7 @@ export default function OverviewPage() {
               <div className="flex items-center gap-3">
                 <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
                   !loading && (kpis.totalProfit || 0) >= 0
-                    ? "bg-sky-500/20 shadow-[0_0_20px_rgba(56,189,248,0.3)]"
+                    ? "bg-d-primary/20 shadow-[0_0_20px_rgb(var(--d-primary-rgb)/0.3)]"
                     : "bg-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.2)]"
                 }`}>
                   <TrendingUp className={`h-5 w-5 ${
@@ -235,7 +235,7 @@ export default function OverviewPage() {
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard icon={AlertCircle} accent="border-l-amber-400" label="Outstanding" subLabel="Balance owed by clients" value={loading ? "\u2026" : fmt(kpis.outstandingBalance)} />
         <StatCard icon={Briefcase} accent="border-l-violet-400" label="Pipeline" subLabel="Active quotes & contracts" value={loading ? "\u2026" : fmt(kpis.pipelineValue)} />
-        <StatCard icon={Zap} accent="border-l-sky-400" label="Active Jobs" subLabel="In progress" value={loading ? "\u2026" : kpis.activeJobs ?? "--"} />
+        <StatCard icon={Zap} accent="border-l-d-primary" label="Active Jobs" subLabel="In progress" value={loading ? "\u2026" : kpis.activeJobs ?? "--"} />
         <StatCard icon={Users} accent="border-l-blue-400" label="Total Leads" subLabel="All time captured" value={loading ? "\u2026" : kpis.totalLeads ?? "--"} />
       </div>
 
@@ -243,7 +243,7 @@ export default function OverviewPage() {
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard icon={UserPlus} accent="border-l-blue-400" label="New Leads" subLabel="This week" value={loading ? "\u2026" : kpis.newLeadsThisWeek ?? "--"} />
         <StatCard icon={PhoneMissed} accent="border-l-amber-400" label="Missed Calls" subLabel="This week" value={loading ? "\u2026" : kpis.missedCallsThisWeek ?? "--"} />
-        <StatCard icon={Bot} accent="border-l-sky-400" label="AI Answered" subLabel="Voice calls" value={loading ? "\u2026" : kpis.voiceCallsThisWeek ?? "--"} />
+        <StatCard icon={Bot} accent="border-l-d-primary" label="AI Answered" subLabel="Voice calls" value={loading ? "\u2026" : kpis.voiceCallsThisWeek ?? "--"} />
         <StatCard icon={Flame} accent="border-l-orange-400" label="Hot Leads" subLabel="Score 40+" value={loading ? "\u2026" : kpis.hotLeadsCount ?? "--"} />
       </div>
 

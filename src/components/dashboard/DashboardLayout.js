@@ -12,6 +12,11 @@ import SuspendedScreen from "./SuspendedScreen";
 import { BrandingProvider, useBranding } from "./BrandingContext";
 import { supabase } from "../../../lib/supabaseClient";
 
+function hexToRgb(hex) {
+  const h = (hex || '#6c63ff').replace('#', '');
+  return `${parseInt(h.slice(0,2),16)} ${parseInt(h.slice(2,4),16)} ${parseInt(h.slice(4,6),16)}`;
+}
+
 export default function DashboardLayout({ children }) {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -97,12 +102,19 @@ function DashboardShell({ sidebarOpen, closeSidebar, toggleSidebar, handleLogout
         backgroundColor: branding.dashboard_bg || "#0a0a12",
         color: branding.text_primary || "#f0f0f5",
         '--d-bg': branding.dashboard_bg || '#0a0a12',
+        '--d-bg-rgb': hexToRgb(branding.dashboard_bg || '#0a0a12'),
         '--d-surface': branding.surface_color || '#111119',
+        '--d-surface-rgb': hexToRgb(branding.surface_color || '#111119'),
         '--d-border': branding.border_color || '#1e1e2e',
+        '--d-border-rgb': hexToRgb(branding.border_color || '#1e1e2e'),
         '--d-text': branding.text_primary || '#f0f0f5',
+        '--d-text-rgb': hexToRgb(branding.text_primary || '#f0f0f5'),
         '--d-muted': branding.text_secondary || '#8888aa',
+        '--d-muted-rgb': hexToRgb(branding.text_secondary || '#8888aa'),
         '--d-primary': branding.primary_color || '#6c63ff',
+        '--d-primary-rgb': hexToRgb(branding.primary_color || '#6c63ff'),
         '--d-accent': branding.accent_color || '#00d4aa',
+        '--d-accent-rgb': hexToRgb(branding.accent_color || '#00d4aa'),
       }}
     >
       <Sidebar

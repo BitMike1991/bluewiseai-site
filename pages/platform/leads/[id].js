@@ -18,7 +18,7 @@ function formatDate(dateString) {
 }
 
 const STATUS_OPTIONS = [
-  { value: "new", label: "New", color: "bg-sky-500/10 text-d-primary border-sky-500/40" },
+  { value: "new", label: "New", color: "bg-d-primary/10 text-d-primary border-d-primary/40" },
   { value: "active", label: "Active", color: "bg-emerald-500/10 text-emerald-300 border-emerald-500/40" },
   { value: "in_convo", label: "In convo", color: "bg-indigo-500/10 text-indigo-300 border-indigo-500/40" },
   { value: "quoted", label: "Quoted", color: "bg-amber-500/10 text-amber-300 border-amber-500/40" },
@@ -37,7 +37,7 @@ function StatusSelector({ status, onChange, loading }) {
         type="button"
         onClick={() => !loading && setOpen(!open)}
         disabled={loading}
-        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border shadow-sm shadow-slate-900/40 transition hover:ring-2 hover:ring-sky-500/40 ${current.color} ${loading ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
+        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border shadow-sm shadow-slate-900/40 transition hover:ring-2 hover:ring-d-primary/40 ${current.color} ${loading ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
       >
         {loading ? "Saving\u2026" : current.label}
         {!loading && (
@@ -80,7 +80,7 @@ function StatusBadge({ status }) {
 
   const colorMap = {
     active: "bg-emerald-500/10 text-emerald-300 border-emerald-500/40",
-    new: "bg-sky-500/10 text-d-primary border-sky-500/40",
+    new: "bg-d-primary/10 text-d-primary border-d-primary/40",
     in_convo: "bg-indigo-500/10 text-indigo-300 border-indigo-500/40",
     quoted: "bg-amber-500/10 text-amber-300 border-amber-500/40",
     won: "bg-emerald-500/15 text-emerald-200 border-emerald-500/60",
@@ -235,7 +235,7 @@ function TimelineItem({ item }) {
   return (
     <div className="relative pl-6 pb-6 last:pb-0">
       <div className="absolute left-1 top-0 bottom-0 w-px bg-slate-700/70" />
-      <div className="absolute left-0 top-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.8)]" />
+      <div className="absolute left-0 top-1 w-2 h-2 rounded-full bg-d-primary shadow-[0_0_10px_rgb(var(--d-primary-rgb)/0.8)]" />
 
       <div className="bg-d-surface border border-d-border rounded-xl px-4 py-3 flex flex-col gap-1">
         <div className="flex items-center justify-between gap-2 text-xs text-d-muted">
@@ -573,7 +573,7 @@ export default function LeadDetailPage() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-500/15 border border-sky-500/40 shadow-[0_0_20px_rgba(56,189,248,0.5)]">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-d-primary/15 border border-d-primary/40 shadow-[0_0_20px_rgb(var(--d-primary-rgb)/0.5)]">
                 <span className="text-sm font-semibold text-d-primary">
                   {lead?.name?.[0]?.toUpperCase() || lead?.phone?.slice(-2) || lead?.email?.[0]?.toUpperCase() || "L"}
                 </span>
@@ -619,7 +619,7 @@ export default function LeadDetailPage() {
                   <select
                     value={timelineFilter}
                     onChange={(e) => setTimelineFilter(e.target.value)}
-                    className="rounded-xl border border-d-border bg-d-surface px-3 py-2 text-xs text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
+                    className="rounded-xl border border-d-border bg-d-surface px-3 py-2 text-xs text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60"
                   >
                     <option value="all">All</option>
                     <option value="sms">SMS only</option>
@@ -665,9 +665,9 @@ export default function LeadDetailPage() {
                   type="button"
                   onClick={() => openSendModal("sms")}
                   className={cx(
-                    "px-3 py-1.5 rounded-xl text-xs font-medium shadow-[0_0_18px_rgba(56,189,248,0.55)] transition",
+                    "px-3 py-1.5 rounded-xl text-xs font-medium shadow-[0_0_18px_rgb(var(--d-primary-rgb)/0.55)] transition",
                     lead?.phone
-                      ? "bg-sky-500/90 hover:bg-sky-400 text-slate-950"
+                      ? "bg-d-primary/90 hover:bg-d-primary/80 text-slate-950"
                       : "bg-slate-800 text-d-muted cursor-not-allowed"
                   )}
                   disabled={!lead?.phone}
@@ -705,7 +705,7 @@ export default function LeadDetailPage() {
                     <button
                       key={photo.id}
                       onClick={() => setLightboxUrl(photo.file_url)}
-                      className="aspect-square rounded-lg overflow-hidden border border-d-border/60 hover:border-sky-500/60 transition group"
+                      className="aspect-square rounded-lg overflow-hidden border border-d-border/60 hover:border-d-primary/60 transition group"
                     >
                       <img
                         src={photo.file_url}
@@ -759,7 +759,7 @@ export default function LeadDetailPage() {
                     <li key={job.id}>
                       <Link
                         href={`/platform/jobs/${job.id}`}
-                        className="flex items-center justify-between rounded-xl border border-d-border bg-d-surface px-3 py-2 hover:border-sky-500/40 transition"
+                        className="flex items-center justify-between rounded-xl border border-d-border bg-d-surface px-3 py-2 hover:border-d-primary/40 transition"
                       >
                         <div className="flex flex-col text-xs">
                           <span className="font-mono text-d-primary">{job.job_id}</span>
@@ -771,7 +771,7 @@ export default function LeadDetailPage() {
                           <span className={cx(
                             "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border",
                             job.status === "completed" ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/40" :
-                            job.status === "signed" || job.status === "scheduled" ? "bg-sky-500/15 text-d-primary border-sky-500/40" :
+                            job.status === "signed" || job.status === "scheduled" ? "bg-d-primary/15 text-d-primary border-d-primary/40" :
                             job.status === "cancelled" ? "bg-rose-500/10 text-rose-300 border-rose-500/40" :
                             "bg-slate-700/60 text-d-text border-slate-500/40"
                           )}>
@@ -825,7 +825,7 @@ export default function LeadDetailPage() {
                         Completed
                       </span>
                     ) : (
-                      <span className="inline-flex rounded-full bg-sky-500/20 px-2 py-0.5 text-[10px] text-d-primary">
+                      <span className="inline-flex rounded-full bg-d-primary/20 px-2 py-0.5 text-[10px] text-d-primary">
                         Open
                       </span>
                     );
@@ -868,8 +868,8 @@ export default function LeadDetailPage() {
               className={cx(
                 "rounded-xl border px-3 py-1.5 text-[11px] font-semibold",
                 sendChannel === "sms"
-                  ? "border-sky-500/60 bg-sky-500/10 text-d-primary"
-                  : "border-d-border bg-d-surface/60 text-d-muted hover:border-sky-500/40"
+                  ? "border-d-primary/60 bg-d-primary/10 text-d-primary"
+                  : "border-d-border bg-d-surface/60 text-d-muted hover:border-d-primary/40"
               )}
             >
               SMS
@@ -880,8 +880,8 @@ export default function LeadDetailPage() {
               className={cx(
                 "rounded-xl border px-3 py-1.5 text-[11px] font-semibold",
                 sendChannel === "email"
-                  ? "border-sky-500/60 bg-sky-500/10 text-d-primary"
-                  : "border-d-border bg-d-surface/60 text-d-muted hover:border-sky-500/40"
+                  ? "border-d-primary/60 bg-d-primary/10 text-d-primary"
+                  : "border-d-border bg-d-surface/60 text-d-muted hover:border-d-primary/40"
               )}
             >
               Email
@@ -895,7 +895,7 @@ export default function LeadDetailPage() {
                 value={sendTo}
                 onChange={(e) => setSendTo(e.target.value)}
                 placeholder={sendChannel === "sms" ? "+1..." : "name@email.com"}
-                className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
+                className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60"
               />
               <p className="mt-1 text-[11px] text-d-text0">
                 Default is the lead's phone/email. You can override if needed.
@@ -909,7 +909,7 @@ export default function LeadDetailPage() {
                   value={sendSubject}
                   onChange={(e) => setSendSubject(e.target.value)}
                   placeholder="Subject..."
-                  className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
+                  className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60"
                 />
               </div>
             ) : null}
@@ -923,7 +923,7 @@ export default function LeadDetailPage() {
                 onChange={(e) => setSendBody(e.target.value)}
                 rows={sendChannel === "sms" ? 5 : 7}
                 placeholder={sendChannel === "sms" ? "Write your SMS..." : "Write your email..."}
-                className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
+                className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60"
               />
               {sendChannel === "sms" ? (
                 <p className="mt-1 text-[11px] text-d-text0">
@@ -940,7 +940,7 @@ export default function LeadDetailPage() {
                   onChange={(e) => setSendHtml(e.target.value)}
                   rows={4}
                   placeholder="<p>Optional HTML version...</p>"
-                  className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-xs font-mono text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
+                  className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-xs font-mono text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60"
                 />
                 <p className="mt-1 text-[11px] text-d-text0">
                   If provided, Mailgun will send both HTML + Text.
@@ -972,7 +972,7 @@ export default function LeadDetailPage() {
                 type="button"
                 onClick={submitSend}
                 disabled={sendLoading}
-                className="rounded-xl bg-sky-500 px-4 py-2 text-[11px] font-semibold text-white shadow shadow-sky-500/40 hover:bg-sky-400 disabled:opacity-60"
+                className="rounded-xl bg-d-primary px-4 py-2 text-[11px] font-semibold text-slate-950 shadow shadow-d-primary/40 hover:bg-d-primary/80 disabled:opacity-60"
               >
                 {sendLoading ? "Sending\u2026" : "Send"}
               </button>

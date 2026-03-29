@@ -338,7 +338,7 @@ export default function SettingsPage() {
                 type="button"
                 onClick={connectOutlook}
                 disabled={outlookLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-d-primary hover:bg-d-primary/80 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
               >
                 {outlookLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
                 Connect Outlook
@@ -485,7 +485,7 @@ export default function SettingsPage() {
                 type="checkbox"
                 checked={form.smsEnabled}
                 onChange={(e) => updateField('smsEnabled', e.target.checked)}
-                className="h-4 w-4 rounded border-slate-600 bg-d-surface text-sky-500 focus:ring-sky-500"
+                className="h-4 w-4 rounded border-slate-600 bg-d-surface text-d-primary focus:ring-d-primary"
               />
               <label
                 htmlFor="smsEnabled"
@@ -657,7 +657,7 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={saving || loading}
-            className="px-4 py-2 rounded-xl text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-[0_0_18px_rgba(56,189,248,0.9)] disabled:opacity-60 disabled:cursor-default transition"
+            className="px-4 py-2 rounded-xl text-xs font-semibold bg-d-primary hover:bg-d-primary/80 text-slate-950 shadow-[0_0_18px_rgb(var(--d-primary-rgb)/0.9)] disabled:opacity-60 disabled:cursor-default transition"
           >
             {saving ? 'Saving…' : 'Save settings'}
           </button>

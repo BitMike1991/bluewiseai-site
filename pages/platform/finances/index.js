@@ -17,7 +17,10 @@ const PieChart = dynamic(() => import("recharts").then(m => m.PieChart), { ssr: 
 const Pie = dynamic(() => import("recharts").then(m => m.Pie), { ssr: false });
 const Cell = dynamic(() => import("recharts").then(m => m.Cell), { ssr: false });
 
-const PIE_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
+// First color = tenant primary, rest = semantic categorical
+function getPieColors(primary) {
+  return [primary || "#6c63ff", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
+}
 
 function fmt(n) {
   if (n == null) return "\u2014";
@@ -171,8 +174,8 @@ export default function FinancesPage() {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.monthlyTrend} barGap={2}>
-                  <XAxis dataKey="month" tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="month" tick={{ fill: branding.text_secondary || "#8888aa", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: branding.text_secondary || "#8888aa", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="revenue" name="Revenue" fill="#10b981" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="expenses" name="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
@@ -197,7 +200,7 @@ export default function FinancesPage() {
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     >
                       {data.paymentMethods.map((_, i) => (
-                        <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                        <Cell key={i} fill={getPieColors(branding.primary_color)[i % 6]} />
                       ))}
                     </Pie>
                     <Tooltip formatter={(v) => fmt(v)} />

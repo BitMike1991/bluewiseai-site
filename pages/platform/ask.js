@@ -156,7 +156,7 @@ function MetricPill({ label, value, color }) {
     amber: "bg-amber-500/15 border-amber-500/30 text-amber-200",
     emerald: "bg-emerald-500/15 border-emerald-500/30 text-emerald-200",
     violet: "bg-violet-500/15 border-violet-500/30 text-violet-200",
-    sky: "bg-sky-500/15 border-sky-500/30 text-d-primary",
+    sky: "bg-d-primary/15 border-d-primary/30 text-d-primary",
     slate: "bg-slate-800/60 border-d-border text-d-text",
   };
   return (
@@ -250,13 +250,13 @@ function HistoryPanel({ open, onClose, history, onReuse, onView, onClear }) {
                 <div className="mt-2 flex gap-2">
                   <button
                     onClick={() => onReuse(h.q)}
-                    className="rounded-lg border border-d-border bg-d-surface/60 px-2.5 py-1 text-xs font-semibold text-d-text hover:border-sky-500/60 hover:text-d-primary"
+                    className="rounded-lg border border-d-border bg-d-surface/60 px-2.5 py-1 text-xs font-semibold text-d-text hover:border-d-primary/60 hover:text-d-primary"
                   >
                     Reuse
                   </button>
                   <button
                     onClick={() => onView(h.raw)}
-                    className="rounded-lg border border-sky-500/60 px-2.5 py-1 text-xs font-semibold text-d-primary hover:border-sky-400 hover:bg-sky-500/10"
+                    className="rounded-lg border border-d-primary/60 px-2.5 py-1 text-xs font-semibold text-d-primary hover:border-d-primary hover:bg-d-primary/10"
                   >
                     View
                   </button>
@@ -289,8 +289,8 @@ function SavedDropdown({ saved, onApply, onRemove, onSave, question }) {
         className={cx(
           "rounded-xl border px-3 py-2 text-sm font-semibold transition-colors",
           open
-            ? "border-sky-500/60 bg-sky-500/10 text-d-primary"
-            : "border-d-border bg-d-surface text-d-muted hover:border-sky-500/40 hover:text-d-primary"
+            ? "border-d-primary/60 bg-d-primary/10 text-d-primary"
+            : "border-d-border bg-d-surface text-d-muted hover:border-d-primary/40 hover:text-d-primary"
         )}
         title="Saved prompts"
       >
@@ -403,7 +403,7 @@ function ResultLeadList({ result, leadRows, onSummarize, onDraft }) {
                   {r.leadId && (
                     <Link
                       href={`/platform/leads/${r.leadId}`}
-                      className="rounded-lg border border-d-border px-2.5 py-1 text-xs font-semibold text-d-text hover:border-sky-500/60 hover:text-d-primary hover:bg-sky-500/10"
+                      className="rounded-lg border border-d-border px-2.5 py-1 text-xs font-semibold text-d-text hover:border-d-primary/60 hover:text-d-primary hover:bg-d-primary/10"
                     >
                       Open
                     </Link>
@@ -411,7 +411,7 @@ function ResultLeadList({ result, leadRows, onSummarize, onDraft }) {
                   {r.leadId && (
                     <button
                       onClick={() => onSummarize(r.leadId)}
-                      className="rounded-lg border border-sky-500/50 px-2.5 py-1 text-xs font-semibold text-d-primary hover:border-sky-400 hover:bg-sky-500/10"
+                      className="rounded-lg border border-d-primary/50 px-2.5 py-1 text-xs font-semibold text-d-primary hover:border-d-primary hover:bg-d-primary/10"
                     >
                       Summarize
                     </button>
@@ -419,7 +419,7 @@ function ResultLeadList({ result, leadRows, onSummarize, onDraft }) {
                   {r.leadId && (
                     <button
                       onClick={() => onDraft(r.leadId)}
-                      className="rounded-lg border border-sky-500/50 px-2.5 py-1 text-xs font-semibold text-d-primary hover:border-sky-400 hover:bg-sky-500/10"
+                      className="rounded-lg border border-d-primary/50 px-2.5 py-1 text-xs font-semibold text-d-primary hover:border-d-primary hover:bg-d-primary/10"
                     >
                       Draft
                     </button>
@@ -478,7 +478,7 @@ function ResultSummary({ result, convoItem, onCreateTask, onDraft }) {
         {convoItem?.leadId && (
           <Link
             href={`/platform/leads/${convoItem.leadId}`}
-            className="rounded-xl border border-sky-500/60 px-4 py-2 text-sm font-semibold text-d-primary hover:border-sky-400 hover:bg-sky-500/10"
+            className="rounded-xl border border-d-primary/60 px-4 py-2 text-sm font-semibold text-d-primary hover:border-d-primary hover:bg-d-primary/10"
           >
             Open lead
           </Link>
@@ -486,7 +486,7 @@ function ResultSummary({ result, convoItem, onCreateTask, onDraft }) {
         {convoItem?.leadId && (
           <button
             onClick={() => onCreateTask(convoItem.leadId, convoItem.recommendedFollowUpType || "call")}
-            className="rounded-xl border border-d-border px-4 py-2 text-sm font-semibold text-d-text hover:border-sky-500/60 hover:text-d-primary hover:bg-sky-500/10"
+            className="rounded-xl border border-d-border px-4 py-2 text-sm font-semibold text-d-text hover:border-d-primary/60 hover:text-d-primary hover:bg-d-primary/10"
           >
             Create follow-up
           </button>
@@ -494,7 +494,7 @@ function ResultSummary({ result, convoItem, onCreateTask, onDraft }) {
         {convoItem?.leadId && (
           <button
             onClick={() => onDraft(convoItem.leadId)}
-            className="rounded-xl border border-sky-500/60 px-4 py-2 text-sm font-semibold text-d-primary hover:border-sky-400 hover:bg-sky-500/10"
+            className="rounded-xl border border-d-primary/60 px-4 py-2 text-sm font-semibold text-d-primary hover:border-d-primary hover:bg-d-primary/10"
           >
             Draft reply
           </button>
@@ -535,7 +535,7 @@ function ResultDraft({
         {draftItem?.leadId && (
           <Link
             href={`/platform/leads/${draftItem.leadId}`}
-            className="shrink-0 rounded-xl border border-sky-500/60 px-3 py-2 text-sm font-semibold text-d-primary hover:border-sky-400 hover:bg-sky-500/10"
+            className="shrink-0 rounded-xl border border-d-primary/60 px-3 py-2 text-sm font-semibold text-d-primary hover:border-d-primary hover:bg-d-primary/10"
           >
             Open lead
           </Link>
@@ -551,7 +551,7 @@ function ResultDraft({
           "rounded-full border px-2.5 py-1 text-xs font-semibold",
           computedDraftChannel === "sms"
             ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-            : "border-sky-500/40 bg-sky-500/10 text-d-primary"
+            : "border-d-primary/40 bg-d-primary/10 text-d-primary"
         )}>
           {computedDraftChannel === "sms" ? "SMS" : "Email"}
         </span>
@@ -564,7 +564,7 @@ function ResultDraft({
           <input
             value={draftSubject}
             onChange={(e) => setDraftSubject(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-d-border bg-d-surface px-4 py-2.5 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
+            className="mt-1.5 w-full rounded-xl border border-d-border bg-d-surface px-4 py-2.5 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60"
             placeholder="Email subject"
           />
         </div>
@@ -577,7 +577,7 @@ function ResultDraft({
           value={draftBody}
           onChange={(e) => setDraftBody(e.target.value)}
           rows={computedDraftChannel === "sms" ? 4 : 6}
-          className="mt-1.5 w-full rounded-xl border border-d-border bg-d-surface px-4 py-2.5 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
+          className="mt-1.5 w-full rounded-xl border border-d-border bg-d-surface px-4 py-2.5 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60"
           placeholder={computedDraftChannel === "sms" ? "SMS message..." : "Email body..."}
         />
         {computedDraftChannel === "sms" && (
@@ -636,7 +636,7 @@ function ResultDraft({
         <button
           onClick={sendDraftNow}
           disabled={sending}
-          className="rounded-xl bg-sky-500 px-5 py-2.5 text-sm font-semibold text-white shadow shadow-sky-500/40 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-d-muted"
+          className="rounded-xl bg-d-primary px-5 py-2.5 text-sm font-semibold text-white shadow shadow-d-primary/40 transition hover:bg-d-primary/80 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-d-muted"
         >
           {sending ? "Sending\u2026" : `Send ${computedDraftChannel === "sms" ? "SMS" : "Email"}`}
         </button>
@@ -684,7 +684,7 @@ function ResultTaskList({ result, tasks }) {
                 "w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold",
                 t.status === "completed"
                   ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
-                  : "bg-sky-500/15 text-d-primary border border-sky-500/30"
+                  : "bg-d-primary/15 text-d-primary border border-d-primary/30"
               )}>
                 {t.status === "completed" ? (
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -712,7 +712,7 @@ function ResultTaskList({ result, tasks }) {
               {t.leadId && (
                 <Link
                   href={`/platform/leads/${t.leadId}`}
-                  className="shrink-0 rounded-lg border border-sky-500/50 px-2.5 py-1 text-xs font-semibold text-d-primary hover:border-sky-400 hover:bg-sky-500/10"
+                  className="shrink-0 rounded-lg border border-d-primary/50 px-2.5 py-1 text-xs font-semibold text-d-primary hover:border-d-primary hover:bg-d-primary/10"
                 >
                   Lead #{t.leadId}
                 </Link>
@@ -1111,7 +1111,7 @@ export default function AskPage() {
             />
             <button
               onClick={() => setHistoryOpen(true)}
-              className="rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm font-semibold text-d-muted hover:border-sky-500/40 hover:text-d-primary"
+              className="rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm font-semibold text-d-muted hover:border-d-primary/40 hover:text-d-primary"
             >
               <svg className="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1122,7 +1122,7 @@ export default function AskPage() {
         </div>
 
         {/* Query composer */}
-        <div className="rounded-2xl border border-sky-700/40 bg-d-surface p-5 shadow-[0_0_24px_rgba(56,189,248,0.15)]">
+        <div className="rounded-2xl border border-d-primary/40 bg-d-surface p-5 shadow-[0_0_24px_rgb(var(--d-primary-rgb)/0.15)]">
           <form onSubmit={handleSubmit} className="flex gap-3">
             <input
               ref={inputRef}
@@ -1130,12 +1130,12 @@ export default function AskPage() {
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="Ask a question..."
-              className="flex-1 rounded-xl border border-d-border bg-d-surface px-4 py-3 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
+              className="flex-1 rounded-xl border border-d-border bg-d-surface px-4 py-3 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60"
             />
             <button
               type="submit"
               disabled={loading}
-              className="rounded-xl bg-sky-500 px-5 py-3 text-sm font-semibold text-white shadow shadow-sky-500/40 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-d-muted"
+              className="rounded-xl bg-d-primary px-5 py-3 text-sm font-semibold text-white shadow shadow-d-primary/40 transition hover:bg-d-primary/80 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-d-muted"
             >
               {loading ? "Thinking\u2026" : "Ask"}
             </button>
@@ -1149,7 +1149,7 @@ export default function AskPage() {
               <button
                 key={ex.label}
                 onClick={() => applyPrompt(ex.q)}
-                className="rounded-full border border-d-border bg-d-surface px-3 py-1.5 text-sm text-d-muted hover:border-sky-500/40 hover:text-d-primary transition-colors"
+                className="rounded-full border border-d-border bg-d-surface px-3 py-1.5 text-sm text-d-muted hover:border-d-primary/40 hover:text-d-primary transition-colors"
               >
                 {ex.label}
               </button>

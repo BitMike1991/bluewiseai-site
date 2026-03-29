@@ -33,7 +33,7 @@ function typeBadgeColor(t) {
     unpaid_deposit: "bg-rose-500/15 text-rose-300 border-rose-500/40",
     review_request: "bg-violet-500/15 text-violet-300 border-violet-500/40",
     referral_request: "bg-emerald-500/15 text-emerald-300 border-emerald-500/40",
-    payment_reminder: "bg-sky-500/15 text-d-primary border-sky-500/40",
+    payment_reminder: "bg-d-primary/15 text-d-primary border-d-primary/40",
   };
   return map[t] || "bg-slate-700/60 text-d-muted border-slate-500/40";
 }

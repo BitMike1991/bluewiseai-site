@@ -60,7 +60,7 @@ function statusBadgeClasses(status) {
       return `${base} bg-amber-500/15 text-amber-300 border-amber-500/50`;
     case "active":
     case "in_convo":
-      return `${base} bg-sky-500/15 text-d-primary border-sky-500/50`;
+      return `${base} bg-d-primary/15 text-d-primary border-d-primary/50`;
     case "new":
       return `${base} bg-indigo-500/15 text-indigo-300 border-indigo-500/50`;
     default:
@@ -72,7 +72,7 @@ function channelPill(channel) {
   const c = (channel || "").toLowerCase();
   const base =
     "inline-flex items-center rounded-full border px-2 py-0.5 text-[0.7rem] font-medium";
-  if (c === "sms") return `${base} bg-sky-500/10 border-sky-500/40 text-d-primary`;
+  if (c === "sms") return `${base} bg-d-primary/10 border-d-primary/40 text-d-primary`;
   if (c === "email") return `${base} bg-indigo-500/10 border-indigo-500/40 text-indigo-200`;
   if (c === "call") return `${base} bg-emerald-500/10 border-emerald-500/40 text-emerald-200`;
   return `${base} bg-slate-700/50 border-slate-600/60 text-d-text`;
@@ -264,7 +264,7 @@ export default function InboxPage() {
             >
               <div className="px-4 py-3 flex items-start gap-3">
                 {/* Avatar */}
-                <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-500/10 border border-sky-500/40 shadow-[0_0_14px_rgba(56,189,248,0.35)]">
+                <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-d-primary/10 border border-d-primary/40 shadow-[0_0_14px_rgb(var(--d-primary-rgb)/0.35)]">
                   <span className="text-xs font-semibold text-d-primary">
                     {conv.name?.[0]?.toUpperCase() ||
                       conv.phone?.slice(-2) ||

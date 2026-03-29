@@ -10,7 +10,7 @@ const STATUS_COLORS = {
   draft: 'bg-slate-700/60 text-d-text border-slate-500/40',
   quote_sent: 'bg-violet-500/15 text-violet-300 border-violet-500/40',
   contract_sent: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
-  signed: 'bg-sky-500/15 text-d-primary border-sky-500/40',
+  signed: 'bg-d-primary/15 text-d-primary border-d-primary/40',
   scheduled: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/40',
   in_progress: 'bg-orange-500/15 text-orange-300 border-orange-500/40',
   completed: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
@@ -240,7 +240,7 @@ export default function JobDetailPage() {
                     <div
                       className={`w-3 h-3 rounded-full border-2 transition ${
                         isCurrent
-                          ? 'bg-sky-500 border-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.6)]'
+                          ? 'bg-d-primary border-d-primary/80 shadow-[0_0_8px_rgb(var(--d-primary-rgb)/0.6)]'
                           : isCompleted
                           ? 'bg-emerald-500 border-emerald-400'
                           : 'bg-slate-800 border-slate-600'
@@ -378,7 +378,7 @@ export default function JobDetailPage() {
                   <button
                     key={photo.id}
                     onClick={() => setLightboxUrl(photo.file_url)}
-                    className="aspect-square rounded-lg overflow-hidden border border-d-border/60 hover:border-sky-500/60 transition group"
+                    className="aspect-square rounded-lg overflow-hidden border border-d-border/60 hover:border-d-primary/60 transition group"
                   >
                     <img
                       src={photo.file_url}
@@ -576,7 +576,7 @@ export default function JobDetailPage() {
               <div className="space-y-3">
                 {events.map((ev) => (
                   <div key={ev.id} className="flex items-start space-x-3">
-                    <div className="w-2 h-2 mt-1.5 rounded-full bg-sky-500/60 flex-shrink-0" />
+                    <div className="w-2 h-2 mt-1.5 rounded-full bg-d-primary/60 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-d-text">{eventLabel(ev.event_type)}</p>
                       {ev.payload && ev.payload.note && (

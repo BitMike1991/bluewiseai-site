@@ -79,7 +79,7 @@ function statusBadgeClasses(status) {
       return `${base} bg-amber-500/15 text-amber-300 border border-amber-500/40`;
     case 'active':
     case 'in_convo':
-      return `${base} bg-sky-500/15 text-d-primary border border-sky-500/40`;
+      return `${base} bg-d-primary/15 text-d-primary border border-d-primary/40`;
     default:
       return `${base} bg-slate-700/60 text-d-text border border-slate-500/40`;
   }

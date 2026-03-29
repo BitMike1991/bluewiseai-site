@@ -112,7 +112,7 @@ export default function CallsPage() {
                 className={classNames(
                   "rounded-full px-3 py-1 transition",
                   outcomeFilter === "all"
-                    ? "bg-sky-500/80 text-d-text shadow-[0_0_12px_rgba(56,189,248,0.7)]"
+                    ? "bg-d-primary/80 text-d-text shadow-[0_0_12px_rgb(var(--d-primary-rgb)/0.7)]"
                     : "text-d-muted hover:bg-d-surface"
                 )}
               >
@@ -183,7 +183,7 @@ export default function CallsPage() {
                   "rounded-lg border px-3 py-1 text-xs sm:text-sm",
                   page <= 1 || loading
                     ? "cursor-not-allowed border-d-border text-d-text0"
-                    : "border-slate-600 text-d-text hover:border-sky-500 hover:text-d-primary"
+                    : "border-slate-600 text-d-text hover:border-d-primary hover:text-d-primary"
                 )}
               >
                 Previous
@@ -199,7 +199,7 @@ export default function CallsPage() {
                   "rounded-lg border px-3 py-1 text-xs sm:text-sm",
                   !pagination?.hasMore || loading
                     ? "cursor-not-allowed border-d-border text-d-text0"
-                    : "border-slate-600 text-d-text hover:border-sky-500 hover:text-d-primary"
+                    : "border-slate-600 text-d-text hover:border-d-primary hover:text-d-primary"
                 )}
               >
                 Next
@@ -349,7 +349,7 @@ function CallRow({ call }) {
 
     if (label.includes("in")) {
       return (
-        <span className="inline-flex rounded-full bg-sky-500/20 px-2 py-0.5 text-[11px] text-d-primary">
+        <span className="inline-flex rounded-full bg-d-primary/20 px-2 py-0.5 text-[11px] text-d-primary">
           Inbound
         </span>
       );
@@ -371,7 +371,7 @@ function CallRow({ call }) {
   })();
 
   const aiBadge = answeredByAi ? (
-    <span className="inline-flex rounded-full bg-sky-500/20 px-2 py-0.5 text-[11px] text-d-primary">
+    <span className="inline-flex rounded-full bg-d-primary/20 px-2 py-0.5 text-[11px] text-d-primary">
       Yes
     </span>
   ) : (

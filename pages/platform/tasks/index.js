@@ -165,7 +165,7 @@ export default function TasksPage() {
                 className={classNames(
                   "rounded-full px-3 py-1 transition",
                   statusFilter === "open"
-                    ? "bg-sky-500/80 text-d-text shadow-[0_0_12px_rgba(56,189,248,0.7)]"
+                    ? "bg-d-primary/80 text-d-text shadow-[0_0_12px_rgb(var(--d-primary-rgb)/0.7)]"
                     : "text-d-muted hover:bg-d-surface"
                 )}
               >
@@ -232,7 +232,7 @@ export default function TasksPage() {
                   "rounded-lg border px-3 py-1 text-xs sm:text-sm",
                   page <= 1 || loading
                     ? "cursor-not-allowed border-d-border text-d-text0"
-                    : "border-slate-600 text-d-text hover:border-sky-500 hover:text-d-primary"
+                    : "border-slate-600 text-d-text hover:border-d-primary hover:text-d-primary"
                 )}
               >
                 Previous
@@ -248,7 +248,7 @@ export default function TasksPage() {
                   "rounded-lg border px-3 py-1 text-xs sm:text-sm",
                   !pagination?.hasMore || loading
                     ? "cursor-not-allowed border-d-border text-d-text0"
-                    : "border-slate-600 text-d-text hover:border-sky-500 hover:text-d-primary"
+                    : "border-slate-600 text-d-text hover:border-d-primary hover:text-d-primary"
                 )}
               >
                 Next
@@ -389,7 +389,7 @@ function TaskRow({ task, onComplete, isCompleting }) {
     }
 
     return (
-      <span className="inline-flex rounded-full bg-sky-500/20 px-2 py-0.5 text-[11px] text-d-primary">
+      <span className="inline-flex rounded-full bg-d-primary/20 px-2 py-0.5 text-[11px] text-d-primary">
         Pending
       </span>
     );
@@ -475,7 +475,7 @@ function TaskRow({ task, onComplete, isCompleting }) {
               "rounded-lg border px-2 py-1 text-[11px] font-medium",
               isCompleting
                 ? "cursor-not-allowed border-d-border text-d-text0 bg-d-surface"
-                : "border-sky-500/70 text-d-primary hover:border-sky-400 hover:text-d-primary/80 hover:bg-sky-500/10"
+                : "border-d-primary/70 text-d-primary hover:border-d-primary hover:text-d-primary/80 hover:bg-d-primary/10"
             )}
           >
             {isCompleting ? "Completing\u2026" : "Complete"}

@@ -21,7 +21,7 @@ const STATUS_COLORS = {
   draft: 'bg-slate-700/60 text-d-text border-slate-500/40',
   quote_sent: 'bg-violet-500/15 text-violet-300 border-violet-500/40',
   contract_sent: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
-  signed: 'bg-sky-500/15 text-d-primary border-sky-500/40',
+  signed: 'bg-d-primary/15 text-d-primary border-d-primary/40',
   scheduled: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/40',
   in_progress: 'bg-orange-500/15 text-orange-300 border-orange-500/40',
   completed: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
@@ -188,12 +188,12 @@ export default function JobsPage() {
               placeholder="Search by name, phone, email, job ID, or project type..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-d-surface border border-d-border rounded-xl px-3 py-2 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
+              className="w-full bg-d-surface border border-d-border rounded-xl px-3 py-2 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60"
             />
           </div>
           <button
             type="submit"
-            className="px-4 py-2.5 md:py-2 rounded-xl text-xs font-medium bg-sky-500 hover:bg-sky-400 text-white shadow-sm shadow-sky-500/40 transition min-h-[44px] md:min-h-0"
+            className="px-4 py-2.5 md:py-2 rounded-xl text-xs font-medium bg-d-primary hover:bg-d-primary/80 text-white shadow-sm shadow-d-primary/40 transition min-h-[44px] md:min-h-0"
           >
             Search
           </button>
@@ -203,7 +203,7 @@ export default function JobsPage() {
           <select
             value={statusFilter}
             onChange={handleStatusChange}
-            className="w-full bg-d-surface border border-d-border rounded-xl px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
+            className="w-full bg-d-surface border border-d-border rounded-xl px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60"
           >
             {STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
