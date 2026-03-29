@@ -33,16 +33,16 @@ function typeBadgeColor(t) {
     unpaid_deposit: "bg-rose-500/15 text-rose-300 border-rose-500/40",
     review_request: "bg-violet-500/15 text-violet-300 border-violet-500/40",
     referral_request: "bg-emerald-500/15 text-emerald-300 border-emerald-500/40",
-    payment_reminder: "bg-sky-500/15 text-sky-300 border-sky-500/40",
+    payment_reminder: "bg-sky-500/15 text-d-primary border-sky-500/40",
   };
-  return map[t] || "bg-slate-700/60 text-slate-300 border-slate-500/40";
+  return map[t] || "bg-slate-700/60 text-d-muted border-slate-500/40";
 }
 
 function statusBadge(status) {
   if (status === "sent") return "bg-emerald-500/15 text-emerald-300";
   if (status === "scheduled" || status === "pending") return "bg-amber-500/15 text-amber-300";
   if (status === "failed") return "bg-rose-500/15 text-rose-300";
-  return "bg-slate-700/60 text-slate-300";
+  return "bg-slate-700/60 text-d-muted";
 }
 
 function eventTypeLabel(t) {
@@ -78,7 +78,7 @@ export default function CampaignsPage() {
     return (
       <DashboardLayout title="Campaigns">
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full" />
+          <div className="animate-spin h-8 w-8 border-2 border-d-primary border-t-transparent rounded-full" />
         </div>
       </DashboardLayout>
     );
@@ -87,7 +87,7 @@ export default function CampaignsPage() {
   if (!data) {
     return (
       <DashboardLayout title="Campaigns">
-        <p className="text-slate-400 text-center py-12">Unable to load campaign data.</p>
+        <p className="text-d-muted text-center py-12">Unable to load campaign data.</p>
       </DashboardLayout>
     );
   }
@@ -138,20 +138,20 @@ export default function CampaignsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 border-b border-slate-800 pb-0">
+        <div className="flex gap-1 border-b border-d-border pb-0">
           {tabs.map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
                 activeTab === tab.key
-                  ? "bg-slate-800 text-slate-100 border-b-2 border-blue-500"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                  ? "bg-slate-800 text-d-text border-b-2 border-d-primary"
+                  : "text-d-muted hover:text-d-text hover:bg-d-surface/50"
               }`}
             >
               {tab.label}
               {tab.count > 0 && (
-                <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-slate-700 px-1.5 py-0.5 text-[10px] text-slate-300">
+                <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-slate-700 px-1.5 py-0.5 text-[10px] text-d-muted">
                   {tab.count}
                 </span>
               )}
@@ -160,24 +160,24 @@ export default function CampaignsPage() {
         </div>
 
         {/* Tab Content */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-950/70">
+        <div className="rounded-2xl border border-d-border bg-d-surface">
           {activeTab === "followups" && (
-            <div className="divide-y divide-slate-800/50">
+            <div className="divide-y divide-d-border/50">
               {activeFollowups.length === 0 ? (
-                <div className="p-8 text-center text-slate-500">No follow-ups recorded yet</div>
+                <div className="p-8 text-center text-d-text0">No follow-ups recorded yet</div>
               ) : activeFollowups.map(f => (
                 <div key={f.id} className="flex items-center justify-between px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <Send className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    <Send className="w-4 h-4 text-d-text0 flex-shrink-0" />
                     <div>
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${typeBadgeColor(f.type)}`}>
                         {typeLabel(f.type)}
                       </span>
                       {f.payload?.client_name && (
-                        <span className="ml-2 text-sm text-slate-200">{f.payload.client_name}</span>
+                        <span className="ml-2 text-sm text-d-text">{f.payload.client_name}</span>
                       )}
                       {f.payload?.job_id && (
-                        <span className="ml-1 text-xs text-slate-500">({f.payload.job_id})</span>
+                        <span className="ml-1 text-xs text-d-text0">({f.payload.job_id})</span>
                       )}
                     </div>
                   </div>
@@ -185,7 +185,7 @@ export default function CampaignsPage() {
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${statusBadge(f.status)}`}>
                       {f.status || "unknown"}
                     </span>
-                    <span className="text-xs text-slate-500 whitespace-nowrap">
+                    <span className="text-xs text-d-text0 whitespace-nowrap">
                       {f.sentAt ? fmtDate(f.sentAt) : f.scheduledFor ? `Due ${fmtShortDate(f.scheduledFor)}` : fmtDate(f.createdAt)}
                     </span>
                   </div>
@@ -195,16 +195,16 @@ export default function CampaignsPage() {
           )}
 
           {activeTab === "reviews" && (
-            <div className="divide-y divide-slate-800/50">
+            <div className="divide-y divide-d-border/50">
               {reviewRequests.length === 0 ? (
-                <div className="p-8 text-center text-slate-500">No review requests sent yet</div>
+                <div className="p-8 text-center text-d-text0">No review requests sent yet</div>
               ) : reviewRequests.map(r => (
                 <div key={r.id} className="flex items-center justify-between px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <Star className={`w-4 h-4 flex-shrink-0 ${r.rating ? "text-amber-400" : "text-slate-500"}`} />
+                    <Star className={`w-4 h-4 flex-shrink-0 ${r.rating ? "text-amber-400" : "text-d-text0"}`} />
                     <div>
-                      <span className="text-sm text-slate-200">{r.client}</span>
-                      <span className="ml-2 text-xs text-slate-500">{r.jobNumber}</span>
+                      <span className="text-sm text-d-text">{r.client}</span>
+                      <span className="ml-2 text-xs text-d-text0">{r.jobNumber}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -212,12 +212,12 @@ export default function CampaignsPage() {
                       <span className="text-sm font-medium text-amber-400">{r.rating}/5</span>
                     )}
                     {r.googleClicked && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-500/15 text-blue-300">Google</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-d-primary/15 text-blue-300">Google</span>
                     )}
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${r.respondedAt ? "bg-emerald-500/15 text-emerald-300" : "bg-amber-500/15 text-amber-300"}`}>
                       {r.respondedAt ? "Responded" : "Pending"}
                     </span>
-                    <span className="text-xs text-slate-500">{fmtShortDate(r.sentAt)}</span>
+                    <span className="text-xs text-d-text0">{fmtShortDate(r.sentAt)}</span>
                   </div>
                 </div>
               ))}
@@ -225,26 +225,26 @@ export default function CampaignsPage() {
           )}
 
           {activeTab === "referrals" && (
-            <div className="divide-y divide-slate-800/50">
+            <div className="divide-y divide-d-border/50">
               {referrals.length === 0 ? (
-                <div className="p-8 text-center text-slate-500">No referrals yet</div>
+                <div className="p-8 text-center text-d-text0">No referrals yet</div>
               ) : referrals.map(r => (
                 <div key={r.id} className="flex items-center justify-between px-4 py-3">
                   <div className="flex items-center gap-3">
                     <Users className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                     <div>
-                      <span className="text-sm text-slate-200">{r.referrerName}</span>
-                      <span className="mx-1 text-slate-500">&rarr;</span>
+                      <span className="text-sm text-d-text">{r.referrerName}</span>
+                      <span className="mx-1 text-d-text0">&rarr;</span>
                       <span className="text-sm text-emerald-300">{r.referredName || r.referredPhone}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                      r.status === "converted" ? "bg-emerald-500/15 text-emerald-300" : "bg-slate-700/60 text-slate-300"
+                      r.status === "converted" ? "bg-emerald-500/15 text-emerald-300" : "bg-slate-700/60 text-d-muted"
                     }`}>
                       {r.status || "new"}
                     </span>
-                    <span className="text-xs text-slate-500">{fmtShortDate(r.createdAt)}</span>
+                    <span className="text-xs text-d-text0">{fmtShortDate(r.createdAt)}</span>
                   </div>
                 </div>
               ))}
@@ -252,22 +252,22 @@ export default function CampaignsPage() {
           )}
 
           {activeTab === "activity" && (
-            <div className="divide-y divide-slate-800/50">
+            <div className="divide-y divide-d-border/50">
               {recentActivity.length === 0 ? (
-                <div className="p-8 text-center text-slate-500">No recent automation activity</div>
+                <div className="p-8 text-center text-d-text0">No recent automation activity</div>
               ) : recentActivity.map(a => (
                 <div key={a.id} className="flex items-center justify-between px-4 py-3">
                   <div className="flex items-center gap-3">
                     <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0" />
                     <div>
-                      <span className="text-sm text-slate-200">{a.client}</span>
-                      <span className="ml-2 text-xs text-slate-500">{a.jobNumber}</span>
-                      <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-700/60 text-slate-300 border border-slate-600/40">
+                      <span className="text-sm text-d-text">{a.client}</span>
+                      <span className="ml-2 text-xs text-d-text0">{a.jobNumber}</span>
+                      <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-700/60 text-d-muted border border-slate-600/40">
                         {eventTypeLabel(a.eventType)}
                       </span>
                     </div>
                   </div>
-                  <span className="text-xs text-slate-500">{fmtDate(a.createdAt)}</span>
+                  <span className="text-xs text-d-text0">{fmtDate(a.createdAt)}</span>
                 </div>
               ))}
             </div>

@@ -60,11 +60,11 @@ function statusBadgeClasses(status) {
       return `${base} bg-amber-500/15 text-amber-300 border-amber-500/50`;
     case "active":
     case "in_convo":
-      return `${base} bg-sky-500/15 text-sky-300 border-sky-500/50`;
+      return `${base} bg-sky-500/15 text-d-primary border-sky-500/50`;
     case "new":
       return `${base} bg-indigo-500/15 text-indigo-300 border-indigo-500/50`;
     default:
-      return `${base} bg-slate-700/70 text-slate-100 border-slate-500/60`;
+      return `${base} bg-slate-700/70 text-d-text border-slate-500/60`;
   }
 }
 
@@ -72,10 +72,10 @@ function channelPill(channel) {
   const c = (channel || "").toLowerCase();
   const base =
     "inline-flex items-center rounded-full border px-2 py-0.5 text-[0.7rem] font-medium";
-  if (c === "sms") return `${base} bg-sky-500/10 border-sky-500/40 text-sky-200`;
+  if (c === "sms") return `${base} bg-sky-500/10 border-sky-500/40 text-d-primary`;
   if (c === "email") return `${base} bg-indigo-500/10 border-indigo-500/40 text-indigo-200`;
   if (c === "call") return `${base} bg-emerald-500/10 border-emerald-500/40 text-emerald-200`;
-  return `${base} bg-slate-700/50 border-slate-600/60 text-slate-200`;
+  return `${base} bg-slate-700/50 border-slate-600/60 text-d-text`;
 }
 
 export default function InboxPage() {
@@ -156,11 +156,11 @@ export default function InboxPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-lg font-semibold" style={{ color: styles.text.primary }}>Inbox</h1>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-d-muted">
             One thread per lead. Latest activity comes from SMS, Email, and Calls. Click a row to open the full lead timeline.
           </p>
         </div>
-        <div className="text-right text-xs text-slate-500 space-y-0.5">
+        <div className="text-right text-xs text-d-text0 space-y-0.5">
           <div>
             {openCount} thread{openCount === 1 ? "" : "s"}
           </div>
@@ -181,12 +181,12 @@ export default function InboxPage() {
               placeholder="Search by name, phone, or email\u2026"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-900/70 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="w-full bg-d-surface border border-d-border rounded-xl px-3 py-2 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50"
             />
           </div>
           <button
             type="submit"
-            className="px-4 py-2.5 md:py-2 rounded-xl text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white transition min-h-[44px] md:min-h-0"
+            className="px-4 py-2.5 md:py-2 rounded-xl text-xs font-medium bg-d-primary hover:bg-d-primary/80 text-white transition min-h-[44px] md:min-h-0"
           >
             Search
           </button>
@@ -196,7 +196,7 @@ export default function InboxPage() {
           <select
             value={channelFilter}
             onChange={(e) => { const v = e.target.value; setChannelFilter(v); loadInbox({ channel: v }); }}
-            className="bg-slate-900/70 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="bg-d-surface border border-d-border rounded-lg px-2.5 py-1.5 text-xs text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
           >
             {CHANNEL_FILTERS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -204,7 +204,7 @@ export default function InboxPage() {
           <select
             value={statusFilter}
             onChange={(e) => { const v = e.target.value; setStatusFilter(v); loadInbox({ status: v }); }}
-            className="bg-slate-900/70 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="bg-d-surface border border-d-border rounded-lg px-2.5 py-1.5 text-xs text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
           >
             {STATUS_FILTERS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -212,7 +212,7 @@ export default function InboxPage() {
           <select
             value={dateFilter}
             onChange={(e) => { const v = e.target.value; setDateFilter(v); loadInbox({ dateRange: v }); }}
-            className="bg-slate-900/70 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="bg-d-surface border border-d-border rounded-lg px-2.5 py-1.5 text-xs text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
           >
             {DATE_FILTERS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -220,7 +220,7 @@ export default function InboxPage() {
           <select
             value={sortBy}
             onChange={(e) => { const v = e.target.value; setSortBy(v); loadInbox({ sort: v }); }}
-            className="bg-slate-900/70 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="bg-d-surface border border-d-border rounded-lg px-2.5 py-1.5 text-xs text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
           >
             {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -240,8 +240,8 @@ export default function InboxPage() {
       ) : null}
 
       {/* Conversation list */}
-      <div className="rounded-2xl bg-slate-900/60 border border-slate-800/80 shadow-lg shadow-slate-950/60 overflow-hidden">
-        {loading && <div className="px-4 py-6 text-sm text-slate-400">Loading inbox\u2026</div>}
+      <div className="rounded-2xl bg-d-surface border border-d-border shadow-lg shadow-d-bg/60 overflow-hidden">
+        {loading && <div className="px-4 py-6 text-sm text-d-muted">Loading inbox\u2026</div>}
 
         {!loading && error && (
           <div className="px-4 py-6 text-sm text-rose-400">
@@ -250,22 +250,22 @@ export default function InboxPage() {
         )}
 
         {!loading && !error && conversations.length === 0 && (
-          <div className="px-4 py-6 text-sm text-slate-400">
+          <div className="px-4 py-6 text-sm text-d-muted">
             No threads yet. Once your workflows capture calls, SMS, or emails, leads will appear here.
           </div>
         )}
 
-        <ul className="divide-y divide-slate-800/80">
+        <ul className="divide-y divide-d-border">
           {conversations.map((conv) => (
             <li
               key={conv.id}
               onClick={() => handleCardClick(conv)}
-              className="cursor-pointer hover:bg-slate-900/80 transition-colors"
+              className="cursor-pointer hover:bg-d-surface transition-colors"
             >
               <div className="px-4 py-3 flex items-start gap-3">
                 {/* Avatar */}
                 <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-500/10 border border-sky-500/40 shadow-[0_0_14px_rgba(56,189,248,0.35)]">
-                  <span className="text-xs font-semibold text-sky-300">
+                  <span className="text-xs font-semibold text-d-primary">
                     {conv.name?.[0]?.toUpperCase() ||
                       conv.phone?.slice(-2) ||
                       conv.email?.[0]?.toUpperCase() ||
@@ -280,10 +280,10 @@ export default function InboxPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-50 truncate">
+                      <p className="text-sm font-semibold text-d-text truncate">
                         {conv.name || conv.phone || conv.email || "Lead"}
                       </p>
-                      <p className="text-xs text-slate-400 truncate">
+                      <p className="text-xs text-d-muted truncate">
                         {conv.phone ? <span>{conv.phone}</span> : null}
                         {conv.phone && conv.email ? <span> \u00b7 </span> : null}
                         {conv.email ? <span>{conv.email}</span> : null}
@@ -294,7 +294,7 @@ export default function InboxPage() {
                       <span className={statusBadgeClasses(conv.status)}>
                         {conv.status || "new"}
                       </span>
-                      <span className="text-[0.7rem] text-slate-500">
+                      <span className="text-[0.7rem] text-d-text0">
                         {formatDateTime(conv.lastContactAt || conv.createdAt)}
                       </span>
                     </div>
@@ -302,7 +302,7 @@ export default function InboxPage() {
 
                   <div className="mt-1 flex items-center justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs text-slate-300 line-clamp-1">
+                      <p className="text-xs text-d-muted line-clamp-1">
                         {conv.preview || "No preview yet. Open the lead to view full timeline."}
                       </p>
                       <div className="mt-1 flex items-center gap-2">
@@ -310,7 +310,7 @@ export default function InboxPage() {
                           {(conv.previewLabel || conv.previewChannel || "activity").toString()}
                           {conv.previewDirection ? ` \u00b7 ${conv.previewDirection}` : ""}
                         </span>
-                        <span className="hidden md:inline-flex text-[0.7rem] text-slate-500 capitalize">
+                        <span className="hidden md:inline-flex text-[0.7rem] text-d-text0 capitalize">
                           {conv.source || "unknown"}
                         </span>
                       </div>

@@ -60,12 +60,12 @@ function badgeTone(kind) {
   const k = (kind || "").toLowerCase();
   if (k === "high") return "border-rose-500/40 bg-rose-500/10 text-rose-200";
   if (k === "medium") return "border-amber-500/40 bg-amber-500/10 text-amber-200";
-  if (k === "low") return "border-slate-700 bg-slate-900/40 text-slate-200";
+  if (k === "low") return "border-d-border bg-d-surface/60 text-d-text";
   if (k === "positive") return "border-emerald-500/40 bg-emerald-500/10 text-emerald-200";
   if (k === "negative") return "border-rose-500/40 bg-rose-500/10 text-rose-200";
   if (k === "mixed") return "border-violet-500/40 bg-violet-500/10 text-violet-200";
-  if (k === "neutral") return "border-slate-700 bg-slate-900/40 text-slate-200";
-  return "border-slate-700 bg-slate-900/40 text-slate-200";
+  if (k === "neutral") return "border-d-border bg-d-surface/60 text-d-text";
+  return "border-d-border bg-d-surface/60 text-d-text";
 }
 
 // Color avatar (deterministic by name)
@@ -121,7 +121,7 @@ function saveJson(key, value) {
 function LoadingSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
-      <div className="rounded-2xl border border-slate-800 bg-slate-800/40 p-6">
+      <div className="rounded-2xl border border-d-border bg-slate-800/40 p-6">
         <div className="h-5 w-48 rounded-lg bg-slate-700/60" />
         <div className="mt-4 space-y-3">
           <div className="h-4 w-full rounded-lg bg-slate-700/40" />
@@ -156,44 +156,44 @@ function MetricPill({ label, value, color }) {
     amber: "bg-amber-500/15 border-amber-500/30 text-amber-200",
     emerald: "bg-emerald-500/15 border-emerald-500/30 text-emerald-200",
     violet: "bg-violet-500/15 border-violet-500/30 text-violet-200",
-    sky: "bg-sky-500/15 border-sky-500/30 text-sky-200",
-    slate: "bg-slate-800/60 border-slate-700 text-slate-200",
+    sky: "bg-sky-500/15 border-sky-500/30 text-d-primary",
+    slate: "bg-slate-800/60 border-d-border text-d-text",
   };
   return (
     <div className={cx("rounded-xl border px-4 py-2.5 text-center", colorMap[color] || colorMap.slate)}>
       <p className="text-lg font-bold">{value}</p>
-      <p className="text-xs uppercase tracking-wide text-slate-400 mt-0.5">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-d-muted mt-0.5">{label}</p>
     </div>
   );
 }
 
 function SectionLabel({ children }) {
-  return <p className="text-xs uppercase tracking-wide font-semibold text-slate-400">{children}</p>;
+  return <p className="text-xs uppercase tracking-wide font-semibold text-d-muted">{children}</p>;
 }
 
 function DetailSection({ title, items }) {
   const [open, setOpen] = useState(false);
   if (!items || items.length === 0) return null;
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/40 overflow-hidden">
+    <div className="rounded-xl border border-d-border bg-d-surface/60 overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-800/40 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-d-surface/40 transition-colors"
       >
-        <span className="text-sm font-semibold text-slate-200">{title}</span>
+        <span className="text-sm font-semibold text-d-text">{title}</span>
         <svg
-          className={cx("w-4 h-4 text-slate-400 transition-transform", open && "rotate-180")}
+          className={cx("w-4 h-4 text-d-muted transition-transform", open && "rotate-180")}
           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       {open && (
-        <div className="px-4 pb-3 border-t border-slate-800">
+        <div className="px-4 pb-3 border-t border-d-border">
           <ul className="mt-2 space-y-1.5">
             {items.slice(0, 8).map((s, i) => (
-              <li key={i} className="flex gap-2 text-sm text-slate-300">
-                <span className="text-slate-500 shrink-0">&#8226;</span>
+              <li key={i} className="flex gap-2 text-sm text-d-muted">
+                <span className="text-d-text0 shrink-0">&#8226;</span>
                 <span>{safeText(s)}</span>
               </li>
             ))}
@@ -209,24 +209,24 @@ function HistoryPanel({ open, onClose, history, onReuse, onView, onClear }) {
   return (
     <>
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 w-full max-w-md bg-slate-950 border-l border-slate-800 z-50 flex flex-col shadow-2xl">
-        <div className="flex items-center justify-between p-4 border-b border-slate-800">
+      <div className="fixed inset-y-0 right-0 w-full max-w-md bg-slate-950 border-l border-d-border z-50 flex flex-col shadow-2xl">
+        <div className="flex items-center justify-between p-4 border-b border-d-border">
           <div>
-            <p className="text-base font-semibold text-slate-100">History</p>
-            <p className="text-xs text-slate-400 mt-0.5">Last 40 queries, stored locally</p>
+            <p className="text-base font-semibold text-d-text">History</p>
+            <p className="text-xs text-d-muted mt-0.5">Last 40 queries, stored locally</p>
           </div>
           <div className="flex items-center gap-2">
             {history.length > 0 && (
               <button
                 onClick={onClear}
-                className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-rose-500/40 hover:text-rose-200 hover:bg-rose-500/10"
+                className="rounded-lg border border-d-border px-3 py-1.5 text-xs font-semibold text-d-muted hover:border-rose-500/40 hover:text-rose-200 hover:bg-rose-500/10"
               >
                 Clear
               </button>
             )}
             <button
               onClick={onClose}
-              className="rounded-lg border border-slate-700 p-1.5 text-slate-400 hover:text-slate-200 hover:border-slate-600"
+              className="rounded-lg border border-d-border p-1.5 text-d-muted hover:text-d-text hover:border-slate-600"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -237,26 +237,26 @@ function HistoryPanel({ open, onClose, history, onReuse, onView, onClear }) {
 
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
           {history.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center mt-8">No history yet.</p>
+            <p className="text-sm text-d-text0 text-center mt-8">No history yet.</p>
           ) : (
             history.map((h) => (
-              <div key={h.id} className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
-                <p className="text-sm font-semibold text-slate-100 leading-snug">{h.q}</p>
-                <p className="mt-1 text-xs text-slate-500">
+              <div key={h.id} className="rounded-xl border border-d-border bg-d-surface/60 p-3">
+                <p className="text-sm font-semibold text-d-text leading-snug">{h.q}</p>
+                <p className="mt-1 text-xs text-d-text0">
                   {formatTimeAgo(h.at)}
                   {h.resultType ? ` \u00b7 ${h.resultType}` : ""}
                 </p>
-                {h.snapshot ? <p className="mt-2 text-sm text-slate-400 line-clamp-2">{h.snapshot}</p> : null}
+                {h.snapshot ? <p className="mt-2 text-sm text-d-muted line-clamp-2">{h.snapshot}</p> : null}
                 <div className="mt-2 flex gap-2">
                   <button
                     onClick={() => onReuse(h.q)}
-                    className="rounded-lg border border-slate-700 bg-slate-900/40 px-2.5 py-1 text-xs font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200"
+                    className="rounded-lg border border-d-border bg-d-surface/60 px-2.5 py-1 text-xs font-semibold text-d-text hover:border-sky-500/60 hover:text-d-primary"
                   >
                     Reuse
                   </button>
                   <button
                     onClick={() => onView(h.raw)}
-                    className="rounded-lg border border-sky-500/60 px-2.5 py-1 text-xs font-semibold text-sky-200 hover:border-sky-400 hover:bg-sky-500/10"
+                    className="rounded-lg border border-sky-500/60 px-2.5 py-1 text-xs font-semibold text-d-primary hover:border-sky-400 hover:bg-sky-500/10"
                   >
                     View
                   </button>
@@ -289,8 +289,8 @@ function SavedDropdown({ saved, onApply, onRemove, onSave, question }) {
         className={cx(
           "rounded-xl border px-3 py-2 text-sm font-semibold transition-colors",
           open
-            ? "border-sky-500/60 bg-sky-500/10 text-sky-200"
-            : "border-slate-700 bg-slate-900/60 text-slate-300 hover:border-sky-500/40 hover:text-sky-200"
+            ? "border-sky-500/60 bg-sky-500/10 text-d-primary"
+            : "border-d-border bg-d-surface text-d-muted hover:border-sky-500/40 hover:text-d-primary"
         )}
         title="Saved prompts"
       >
@@ -301,13 +301,13 @@ function SavedDropdown({ saved, onApply, onRemove, onSave, question }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-72 rounded-xl border border-slate-800 bg-slate-950 shadow-xl z-30">
-          <div className="p-3 border-b border-slate-800 flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-300">Saved prompts</span>
+        <div className="absolute right-0 top-full mt-2 w-72 rounded-xl border border-d-border bg-slate-950 shadow-xl z-30">
+          <div className="p-3 border-b border-d-border flex items-center justify-between">
+            <span className="text-xs font-semibold text-d-muted">Saved prompts</span>
             {question?.trim() && (
               <button
                 onClick={() => { onSave(); setOpen(false); }}
-                className="text-xs font-semibold text-sky-300 hover:text-sky-200"
+                className="text-xs font-semibold text-d-primary hover:text-d-primary"
               >
                 + Save current
               </button>
@@ -315,22 +315,22 @@ function SavedDropdown({ saved, onApply, onRemove, onSave, question }) {
           </div>
           <div className="max-h-64 overflow-y-auto p-2 space-y-1">
             {saved.length === 0 ? (
-              <p className="text-xs text-slate-500 text-center py-3">No saved prompts yet.</p>
+              <p className="text-xs text-d-text0 text-center py-3">No saved prompts yet.</p>
             ) : (
               saved.map((s) => (
                 <div
                   key={s.id}
-                  className="flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 hover:bg-slate-800/60 group"
+                  className="flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 hover:bg-d-surface/60 group"
                 >
                   <button
                     onClick={() => { onApply(s.q); setOpen(false); }}
                     className="min-w-0 text-left flex-1"
                   >
-                    <p className="text-sm font-medium text-slate-200 truncate">{s.label}</p>
+                    <p className="text-sm font-medium text-d-text truncate">{s.label}</p>
                   </button>
                   <button
                     onClick={() => onRemove(s.id)}
-                    className="shrink-0 text-xs text-slate-500 hover:text-rose-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="shrink-0 text-xs text-d-text0 hover:text-rose-300 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     Remove
                   </button>
@@ -350,14 +350,14 @@ function SavedDropdown({ saved, onApply, onRemove, onSave, question }) {
 
 function ResultEcho() {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 text-center">
+    <div className="rounded-2xl border border-d-border bg-d-surface p-6 text-center">
       <div className="mx-auto w-12 h-12 rounded-full bg-slate-800/80 flex items-center justify-center mb-4">
-        <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg className="w-6 h-6 text-d-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
         </svg>
       </div>
-      <p className="text-base font-semibold text-slate-100">Couldn&apos;t match a tool</p>
-      <p className="mt-2 text-sm text-slate-400 max-w-sm mx-auto">
+      <p className="text-base font-semibold text-d-text">Couldn&apos;t match a tool</p>
+      <p className="mt-2 text-sm text-d-muted max-w-sm mx-auto">
         Try a more specific query like &quot;Show open tasks&quot;, &quot;Summarize Marc&apos;s conversation&quot;, or &quot;Leads no reply 24h&quot;.
       </p>
     </div>
@@ -366,35 +366,35 @@ function ResultEcho() {
 
 function ResultLeadList({ result, leadRows, onSummarize, onDraft }) {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+    <div className="rounded-2xl border border-d-border bg-d-surface p-5">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <p className="text-lg font-semibold text-slate-100">{result.title || "Lead list"}</p>
-          <p className="text-sm text-slate-400 mt-0.5">
+          <p className="text-lg font-semibold text-d-text">{result.title || "Lead list"}</p>
+          <p className="text-sm text-d-muted mt-0.5">
             {leadRows.length} match{leadRows.length === 1 ? "" : "es"}
           </p>
         </div>
       </div>
 
       {leadRows.length === 0 ? (
-        <p className="text-sm text-slate-500">No matching leads.</p>
+        <p className="text-sm text-d-text0">No matching leads.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {leadRows.map((r) => (
-            <div key={r.key} className="rounded-xl border border-slate-800 bg-slate-950/50 p-4 flex gap-3">
+            <div key={r.key} className="rounded-xl border border-d-border bg-slate-950/50 p-4 flex gap-3">
               <div className={cx("w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-bold text-white", avatarColor(r.name))}>
                 {avatarInitials(r.name)}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-semibold text-slate-100 truncate">{r.name}</p>
+                  <p className="text-sm font-semibold text-d-text truncate">{r.name}</p>
                   <StatusPill label={r.status} tone="low" />
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5 truncate">
+                <p className="text-xs text-d-text0 mt-0.5 truncate">
                   {r.phone || ""}{r.phone && r.email ? " \u00b7 " : ""}{r.email || ""}
                 </p>
                 {r.lastContactAt && (
-                  <p className="text-xs text-slate-500 mt-1">Last contact: {formatTimeAgo(r.lastContactAt)}</p>
+                  <p className="text-xs text-d-text0 mt-1">Last contact: {formatTimeAgo(r.lastContactAt)}</p>
                 )}
                 {r.missedCallCount > 0 && (
                   <p className="text-xs text-rose-300 mt-0.5">{r.missedCallCount} missed call{r.missedCallCount > 1 ? "s" : ""}</p>
@@ -403,7 +403,7 @@ function ResultLeadList({ result, leadRows, onSummarize, onDraft }) {
                   {r.leadId && (
                     <Link
                       href={`/platform/leads/${r.leadId}`}
-                      className="rounded-lg border border-slate-700 px-2.5 py-1 text-xs font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
+                      className="rounded-lg border border-d-border px-2.5 py-1 text-xs font-semibold text-d-text hover:border-sky-500/60 hover:text-d-primary hover:bg-sky-500/10"
                     >
                       Open
                     </Link>
@@ -411,7 +411,7 @@ function ResultLeadList({ result, leadRows, onSummarize, onDraft }) {
                   {r.leadId && (
                     <button
                       onClick={() => onSummarize(r.leadId)}
-                      className="rounded-lg border border-sky-500/50 px-2.5 py-1 text-xs font-semibold text-sky-200 hover:border-sky-400 hover:bg-sky-500/10"
+                      className="rounded-lg border border-sky-500/50 px-2.5 py-1 text-xs font-semibold text-d-primary hover:border-sky-400 hover:bg-sky-500/10"
                     >
                       Summarize
                     </button>
@@ -419,7 +419,7 @@ function ResultLeadList({ result, leadRows, onSummarize, onDraft }) {
                   {r.leadId && (
                     <button
                       onClick={() => onDraft(r.leadId)}
-                      className="rounded-lg border border-sky-500/50 px-2.5 py-1 text-xs font-semibold text-sky-200 hover:border-sky-400 hover:bg-sky-500/10"
+                      className="rounded-lg border border-sky-500/50 px-2.5 py-1 text-xs font-semibold text-d-primary hover:border-sky-400 hover:bg-sky-500/10"
                     >
                       Draft
                     </button>
@@ -443,8 +443,8 @@ function ResultSummary({ result, convoItem, onCreateTask, onDraft }) {
   };
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-      <p className="text-lg font-semibold text-slate-100">{result.title || "Conversation summary"}</p>
+    <div className="rounded-2xl border border-d-border bg-d-surface p-5">
+      <p className="text-lg font-semibold text-d-text">{result.title || "Conversation summary"}</p>
 
       {/* Metric pills */}
       <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -464,12 +464,12 @@ function ResultSummary({ result, convoItem, onCreateTask, onDraft }) {
 
       {/* Summary text */}
       {convoItem?.summary && (
-        <p className="mt-5 text-base text-slate-200 leading-relaxed">{safeText(convoItem.summary)}</p>
+        <p className="mt-5 text-base text-d-text leading-relaxed">{safeText(convoItem.summary)}</p>
       )}
 
       {convoItem?.leadIntent && (
-        <p className="mt-3 text-sm text-slate-400">
-          <span className="font-semibold text-slate-300">Lead intent:</span> {safeText(convoItem.leadIntent)}
+        <p className="mt-3 text-sm text-d-muted">
+          <span className="font-semibold text-d-muted">Lead intent:</span> {safeText(convoItem.leadIntent)}
         </p>
       )}
 
@@ -478,7 +478,7 @@ function ResultSummary({ result, convoItem, onCreateTask, onDraft }) {
         {convoItem?.leadId && (
           <Link
             href={`/platform/leads/${convoItem.leadId}`}
-            className="rounded-xl border border-sky-500/60 px-4 py-2 text-sm font-semibold text-sky-200 hover:border-sky-400 hover:bg-sky-500/10"
+            className="rounded-xl border border-sky-500/60 px-4 py-2 text-sm font-semibold text-d-primary hover:border-sky-400 hover:bg-sky-500/10"
           >
             Open lead
           </Link>
@@ -486,7 +486,7 @@ function ResultSummary({ result, convoItem, onCreateTask, onDraft }) {
         {convoItem?.leadId && (
           <button
             onClick={() => onCreateTask(convoItem.leadId, convoItem.recommendedFollowUpType || "call")}
-            className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-sky-500/60 hover:text-sky-200 hover:bg-sky-500/10"
+            className="rounded-xl border border-d-border px-4 py-2 text-sm font-semibold text-d-text hover:border-sky-500/60 hover:text-d-primary hover:bg-sky-500/10"
           >
             Create follow-up
           </button>
@@ -494,7 +494,7 @@ function ResultSummary({ result, convoItem, onCreateTask, onDraft }) {
         {convoItem?.leadId && (
           <button
             onClick={() => onDraft(convoItem.leadId)}
-            className="rounded-xl border border-sky-500/60 px-4 py-2 text-sm font-semibold text-sky-200 hover:border-sky-400 hover:bg-sky-500/10"
+            className="rounded-xl border border-sky-500/60 px-4 py-2 text-sm font-semibold text-d-primary hover:border-sky-400 hover:bg-sky-500/10"
           >
             Draft reply
           </button>
@@ -523,11 +523,11 @@ function ResultDraft({
   const variants = Array.isArray(draftItem?.variants) ? draftItem.variants : [];
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+    <div className="rounded-2xl border border-d-border bg-d-surface p-5">
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
-          <p className="text-lg font-semibold text-slate-100">{result.title || "Draft reply"}</p>
-          <p className="text-sm text-slate-400 mt-0.5">
+          <p className="text-lg font-semibold text-d-text">{result.title || "Draft reply"}</p>
+          <p className="text-sm text-d-muted mt-0.5">
             Lead #{draftItem?.leadId}
             {draftItem?.leadName ? ` \u00b7 ${draftItem.leadName}` : ""}
           </p>
@@ -535,7 +535,7 @@ function ResultDraft({
         {draftItem?.leadId && (
           <Link
             href={`/platform/leads/${draftItem.leadId}`}
-            className="shrink-0 rounded-xl border border-sky-500/60 px-3 py-2 text-sm font-semibold text-sky-200 hover:border-sky-400 hover:bg-sky-500/10"
+            className="shrink-0 rounded-xl border border-sky-500/60 px-3 py-2 text-sm font-semibold text-d-primary hover:border-sky-400 hover:bg-sky-500/10"
           >
             Open lead
           </Link>
@@ -543,15 +543,15 @@ function ResultDraft({
       </div>
 
       {/* To + Channel */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/40 px-4 py-3 flex items-center justify-between gap-3">
-        <p className="text-sm text-slate-300">
-          To: <span className="font-semibold text-slate-100">{computedSendTo || "\u2014"}</span>
+      <div className="rounded-xl border border-d-border bg-d-surface/60 px-4 py-3 flex items-center justify-between gap-3">
+        <p className="text-sm text-d-muted">
+          To: <span className="font-semibold text-d-text">{computedSendTo || "\u2014"}</span>
         </p>
         <span className={cx(
           "rounded-full border px-2.5 py-1 text-xs font-semibold",
           computedDraftChannel === "sms"
             ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-            : "border-sky-500/40 bg-sky-500/10 text-sky-200"
+            : "border-sky-500/40 bg-sky-500/10 text-d-primary"
         )}>
           {computedDraftChannel === "sms" ? "SMS" : "Email"}
         </span>
@@ -564,7 +564,7 @@ function ResultDraft({
           <input
             value={draftSubject}
             onChange={(e) => setDraftSubject(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+            className="mt-1.5 w-full rounded-xl border border-d-border bg-d-surface px-4 py-2.5 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
             placeholder="Email subject"
           />
         </div>
@@ -577,30 +577,30 @@ function ResultDraft({
           value={draftBody}
           onChange={(e) => setDraftBody(e.target.value)}
           rows={computedDraftChannel === "sms" ? 4 : 6}
-          className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+          className="mt-1.5 w-full rounded-xl border border-d-border bg-d-surface px-4 py-2.5 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
           placeholder={computedDraftChannel === "sms" ? "SMS message..." : "Email body..."}
         />
         {computedDraftChannel === "sms" && (
-          <p className="mt-1 text-xs text-slate-500">{draftBody?.length || 0} characters</p>
+          <p className="mt-1 text-xs text-d-text0">{draftBody?.length || 0} characters</p>
         )}
       </div>
 
       {/* Advanced toggle */}
       <button
         onClick={() => setShowAdvanced(!showAdvanced)}
-        className="mt-3 text-xs font-semibold text-slate-400 hover:text-slate-300"
+        className="mt-3 text-xs font-semibold text-d-muted hover:text-d-muted"
       >
         {showAdvanced ? "Hide advanced" : "Advanced options"}
       </button>
 
       {showAdvanced && (
-        <div className="mt-2 flex flex-wrap items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/40 p-3">
+        <div className="mt-2 flex flex-wrap items-center gap-3 rounded-xl border border-d-border bg-d-surface/60 p-3">
           <div>
-            <label className="text-xs text-slate-500 block mb-1">Channel</label>
+            <label className="text-xs text-d-text0 block mb-1">Channel</label>
             <select
               value={draftChannelOverride}
               onChange={(e) => setDraftChannelOverride(e.target.value)}
-              className="rounded-lg border border-slate-700 bg-slate-900/70 px-2.5 py-1.5 text-xs text-slate-200"
+              className="rounded-lg border border-d-border bg-d-surface px-2.5 py-1.5 text-xs text-d-text"
             >
               <option value="auto">Auto</option>
               <option value="email">Email</option>
@@ -609,11 +609,11 @@ function ResultDraft({
           </div>
           {variants.length > 1 && (
             <div>
-              <label className="text-xs text-slate-500 block mb-1">Variant</label>
+              <label className="text-xs text-d-text0 block mb-1">Variant</label>
               <select
                 value={draftVariantId}
                 onChange={(e) => applyVariant(e.target.value)}
-                className="rounded-lg border border-slate-700 bg-slate-900/70 px-2.5 py-1.5 text-xs text-slate-200"
+                className="rounded-lg border border-d-border bg-d-surface px-2.5 py-1.5 text-xs text-d-text"
               >
                 {variants.map((v) => (
                   <option key={v.id} value={v.id}>Variant {v.id}</option>
@@ -630,13 +630,13 @@ function ResultDraft({
 
       {/* Send button */}
       <div className="mt-4 flex items-center justify-between gap-3">
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-d-text0">
           {draftItem?.scheduledForLocal ? `Follow-up time: ${draftItem.scheduledForLocal}` : ""}
         </div>
         <button
           onClick={sendDraftNow}
           disabled={sending}
-          className="rounded-xl bg-sky-500 px-5 py-2.5 text-sm font-semibold text-white shadow shadow-sky-500/40 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+          className="rounded-xl bg-sky-500 px-5 py-2.5 text-sm font-semibold text-white shadow shadow-sky-500/40 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-d-muted"
         >
           {sending ? "Sending\u2026" : `Send ${computedDraftChannel === "sms" ? "SMS" : "Email"}`}
         </button>
@@ -648,7 +648,7 @@ function ResultDraft({
       {sendResult?.success && (
         <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
           <p className="text-sm font-semibold text-emerald-200">Sent successfully</p>
-          <p className="mt-1 text-xs text-slate-300">
+          <p className="mt-1 text-xs text-d-muted">
             Provider: {sendResult.provider || "\u2014"} \u00b7 ID: {sendResult.message_id || "\u2014"}
           </p>
         </div>
@@ -657,7 +657,7 @@ function ResultDraft({
       {sendResult && sendResult.success === false && (
         <div className="mt-3 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4">
           <p className="text-sm font-semibold text-rose-200">Send failed</p>
-          <p className="mt-1 text-xs text-slate-300">{safeText(sendResult.error || "Unknown error")}</p>
+          <p className="mt-1 text-xs text-d-muted">{safeText(sendResult.error || "Unknown error")}</p>
         </div>
       )}
     </div>
@@ -666,25 +666,25 @@ function ResultDraft({
 
 function ResultTaskList({ result, tasks }) {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+    <div className="rounded-2xl border border-d-border bg-d-surface p-5">
       <div className="mb-4">
-        <p className="text-lg font-semibold text-slate-100">{result.title || "Follow-up tasks"}</p>
-        <p className="text-sm text-slate-400 mt-0.5">
+        <p className="text-lg font-semibold text-d-text">{result.title || "Follow-up tasks"}</p>
+        <p className="text-sm text-d-muted mt-0.5">
           {tasks.length} task{tasks.length === 1 ? "" : "s"}
         </p>
       </div>
 
       {tasks.length === 0 ? (
-        <p className="text-sm text-slate-500">No matching tasks.</p>
+        <p className="text-sm text-d-text0">No matching tasks.</p>
       ) : (
         <div className="space-y-3">
           {tasks.map((t) => (
-            <div key={t.id} className="rounded-xl border border-slate-800 bg-slate-950/50 p-4 flex items-start gap-4">
+            <div key={t.id} className="rounded-xl border border-d-border bg-slate-950/50 p-4 flex items-start gap-4">
               <div className={cx(
                 "w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold",
                 t.status === "completed"
                   ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
-                  : "bg-sky-500/15 text-sky-300 border border-sky-500/30"
+                  : "bg-sky-500/15 text-d-primary border border-sky-500/30"
               )}>
                 {t.status === "completed" ? (
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -698,21 +698,21 @@ function ResultTaskList({ result, tasks }) {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-semibold text-slate-100">
+                  <p className="text-sm font-semibold text-d-text">
                     {t.followupType.charAt(0).toUpperCase() + t.followupType.slice(1)} follow-up
                   </p>
                   <StatusPill label={t.status} tone={t.status === "completed" ? "positive" : "low"} />
                 </div>
-                <p className="text-sm text-slate-400 mt-0.5">
+                <p className="text-sm text-d-muted mt-0.5">
                   {t.scheduledFor ? formatWhen(t.scheduledFor) : "No date"}
                   {t.createdAt ? ` \u00b7 Created ${formatTimeAgo(t.createdAt)}` : ""}
                 </p>
-                {t.note && <p className="mt-2 text-sm text-slate-300">{safeText(t.note)}</p>}
+                {t.note && <p className="mt-2 text-sm text-d-muted">{safeText(t.note)}</p>}
               </div>
               {t.leadId && (
                 <Link
                   href={`/platform/leads/${t.leadId}`}
-                  className="shrink-0 rounded-lg border border-sky-500/50 px-2.5 py-1 text-xs font-semibold text-sky-200 hover:border-sky-400 hover:bg-sky-500/10"
+                  className="shrink-0 rounded-lg border border-sky-500/50 px-2.5 py-1 text-xs font-semibold text-d-primary hover:border-sky-400 hover:bg-sky-500/10"
                 >
                   Lead #{t.leadId}
                 </Link>
@@ -727,24 +727,24 @@ function ResultTaskList({ result, tasks }) {
 
 function ResultTaskConfirm({ result, isCreated }) {
   return (
-    <div className="rounded-2xl border border-emerald-500/30 bg-slate-900/60 p-5">
+    <div className="rounded-2xl border border-emerald-500/30 bg-d-surface p-5">
       <div className="flex items-center gap-3 mb-3">
         <div className="w-10 h-10 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
           <svg className="w-5 h-5 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <p className="text-lg font-semibold text-slate-100">
+        <p className="text-lg font-semibold text-d-text">
           {result.title || (isCreated ? "Follow-up created" : "Follow-up updated")}
         </p>
       </div>
-      <p className="text-sm text-slate-200 leading-relaxed">
+      <p className="text-sm text-d-text leading-relaxed">
         {result.items?.[0]?.leadId ? (
           <>
             Lead{" "}
             <Link
               href={`/platform/leads/${result.items[0].leadId}`}
-              className="text-sky-200 hover:text-sky-100 hover:underline underline-offset-4"
+              className="text-d-primary hover:text-d-primary/80 hover:underline underline-offset-4"
             >
               #{result.items[0].leadId}
             </Link>
@@ -760,9 +760,9 @@ function ResultTaskConfirm({ result, isCreated }) {
 
 function ResultOther({ result }) {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-      <p className="text-lg font-semibold text-slate-100">{result.title || "Result"}</p>
-      <p className="mt-3 text-sm text-slate-200 whitespace-pre-line leading-relaxed">
+    <div className="rounded-2xl border border-d-border bg-d-surface p-5">
+      <p className="text-lg font-semibold text-d-text">{result.title || "Result"}</p>
+      <p className="mt-3 text-sm text-d-text whitespace-pre-line leading-relaxed">
         {truncateText(result.aiSummary || "", 900)}
       </p>
     </div>
@@ -1098,8 +1098,8 @@ export default function AskPage() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-lg font-semibold text-slate-100">Command Center</h1>
-            <p className="text-sm text-slate-400 mt-0.5">Ask anything about your leads and tasks</p>
+            <h1 className="text-lg font-semibold text-d-text">Command Center</h1>
+            <p className="text-sm text-d-muted mt-0.5">Ask anything about your leads and tasks</p>
           </div>
           <div className="flex items-center gap-2">
             <SavedDropdown
@@ -1111,7 +1111,7 @@ export default function AskPage() {
             />
             <button
               onClick={() => setHistoryOpen(true)}
-              className="rounded-xl border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-slate-300 hover:border-sky-500/40 hover:text-sky-200"
+              className="rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm font-semibold text-d-muted hover:border-sky-500/40 hover:text-d-primary"
             >
               <svg className="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1122,7 +1122,7 @@ export default function AskPage() {
         </div>
 
         {/* Query composer */}
-        <div className="rounded-2xl border border-sky-700/40 bg-slate-950/80 p-5 shadow-[0_0_24px_rgba(56,189,248,0.15)]">
+        <div className="rounded-2xl border border-sky-700/40 bg-d-surface p-5 shadow-[0_0_24px_rgba(56,189,248,0.15)]">
           <form onSubmit={handleSubmit} className="flex gap-3">
             <input
               ref={inputRef}
@@ -1130,12 +1130,12 @@ export default function AskPage() {
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="Ask a question..."
-              className="flex-1 rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+              className="flex-1 rounded-xl border border-d-border bg-d-surface px-4 py-3 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
             />
             <button
               type="submit"
               disabled={loading}
-              className="rounded-xl bg-sky-500 px-5 py-3 text-sm font-semibold text-white shadow shadow-sky-500/40 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+              className="rounded-xl bg-sky-500 px-5 py-3 text-sm font-semibold text-white shadow shadow-sky-500/40 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-d-muted"
             >
               {loading ? "Thinking\u2026" : "Ask"}
             </button>
@@ -1149,7 +1149,7 @@ export default function AskPage() {
               <button
                 key={ex.label}
                 onClick={() => applyPrompt(ex.q)}
-                className="rounded-full border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-sm text-slate-300 hover:border-sky-500/40 hover:text-sky-200 transition-colors"
+                className="rounded-full border border-d-border bg-d-surface px-3 py-1.5 text-sm text-d-muted hover:border-sky-500/40 hover:text-d-primary transition-colors"
               >
                 {ex.label}
               </button>
@@ -1159,8 +1159,8 @@ export default function AskPage() {
 
         {/* AI Summary (system note) */}
         {result?.aiSummary && !isConversationSummary && !isDraftReply && (
-          <div className="rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3">
-            <p className="text-sm text-slate-300 whitespace-pre-line">{truncateText(result.aiSummary, 520)}</p>
+          <div className="rounded-xl border border-d-border bg-d-surface/60 px-4 py-3">
+            <p className="text-sm text-d-muted whitespace-pre-line">{truncateText(result.aiSummary, 520)}</p>
           </div>
         )}
 
@@ -1168,14 +1168,14 @@ export default function AskPage() {
         {loading && <LoadingSkeleton />}
 
         {!result && !loading && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-8 text-center">
+          <div className="rounded-2xl border border-d-border bg-d-surface p-8 text-center">
             <div className="mx-auto w-14 h-14 rounded-full bg-slate-800/80 flex items-center justify-center mb-4">
-              <svg className="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="w-7 h-7 text-d-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
               </svg>
             </div>
-            <p className="text-base font-semibold text-slate-100">Ready to assist</p>
-            <p className="text-sm text-slate-400 mt-1">Ask a question or pick an example above to get started.</p>
+            <p className="text-base font-semibold text-d-text">Ready to assist</p>
+            <p className="text-sm text-d-muted mt-1">Ask a question or pick an example above to get started.</p>
           </div>
         )}
 

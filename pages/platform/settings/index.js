@@ -205,15 +205,15 @@ export default function SettingsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-lg font-semibold" style={{ color: styles.text.primary }}>Settings</h1>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-d-muted">
             Configure how Lead Rescue and Inbox Agents behave for this customer.
           </p>
         </div>
-        <div className="text-xs text-slate-500 flex flex-col items-end gap-1">
+        <div className="text-xs text-d-text0 flex flex-col items-end gap-1">
           {lastSavedLabel && (
-            <span>Last saved: <span className="text-slate-300">{lastSavedLabel}</span></span>
+            <span>Last saved: <span className="text-d-muted">{lastSavedLabel}</span></span>
           )}
-          <span className="text-[11px] text-slate-500">
+          <span className="text-[11px] text-d-text0">
             Changes apply to new leads & messages going forward.
           </span>
         </div>
@@ -235,8 +235,8 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3">
             <Mail className="w-4 h-4 text-blue-400" />
             <div>
-              <h2 className="text-sm font-semibold text-slate-100">Email Integration</h2>
-              <p className="text-xs text-slate-400">Connect your Gmail to let your AI assistant read and respond to client emails.</p>
+              <h2 className="text-sm font-semibold text-d-text">Email Integration</h2>
+              <p className="text-xs text-d-muted">Connect your Gmail to let your AI assistant read and respond to client emails.</p>
             </div>
           </div>
 
@@ -274,7 +274,7 @@ export default function SettingsPage() {
                 type="button"
                 onClick={connectGmail}
                 disabled={gmailLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-d-primary hover:bg-d-primary/80 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
               >
                 {gmailLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
                 Connect Gmail
@@ -297,10 +297,10 @@ export default function SettingsPage() {
         {/* Outlook Integration */}
         <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           <div className="flex items-center gap-3">
-            <Mail className="w-4 h-4 text-sky-400" />
+            <Mail className="w-4 h-4 text-d-primary" />
             <div>
-              <h2 className="text-sm font-semibold text-slate-100">Outlook Integration</h2>
-              <p className="text-xs text-slate-400">Connect your Outlook / Hotmail / Microsoft 365 email.</p>
+              <h2 className="text-sm font-semibold text-d-text">Outlook Integration</h2>
+              <p className="text-xs text-d-muted">Connect your Outlook / Hotmail / Microsoft 365 email.</p>
             </div>
           </div>
 
@@ -362,8 +362,8 @@ export default function SettingsPage() {
         <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-sm font-semibold text-slate-100">Business profile</h2>
-              <p className="text-xs text-slate-400">
+              <h2 className="text-sm font-semibold text-d-text">Business profile</h2>
+              <p className="text-xs text-d-muted">
                 Basic info used across SMS, emails and dashboards.
               </p>
             </div>
@@ -371,39 +371,39 @@ export default function SettingsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-d-muted mb-1">
                 Business name
               </label>
               <input
                 type="text"
                 value={form.businessName}
                 onChange={(e) => updateField('businessName', e.target.value)}
-                className="w-full rounded-xl bg-slate-900/70 border border-slate-700/80 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                className="w-full rounded-xl bg-d-surface border border-d-border px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
                 placeholder="BlueWise AI – Lead Rescue"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-d-muted mb-1">
                 Industry / niche
               </label>
               <input
                 type="text"
                 value={form.industry}
                 onChange={(e) => updateField('industry', e.target.value)}
-                className="w-full rounded-xl bg-slate-900/70 border border-slate-700/80 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                className="w-full rounded-xl bg-d-surface border border-d-border px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
                 placeholder="Chimney, HVAC, Roofing…"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-d-muted mb-1">
                 Timezone
               </label>
               <select
                 value={form.timezone}
                 onChange={(e) => updateField('timezone', e.target.value)}
-                className="w-full rounded-xl bg-slate-900/70 border border-slate-700/80 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                className="w-full rounded-xl bg-d-surface border border-d-border px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
               >
                 {TIMEZONES.map((tz) => (
                   <option key={tz} value={tz}>
@@ -414,14 +414,14 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-d-muted mb-1">
                 Booking link (Calendly, TidyCal, etc.)
               </label>
               <input
                 type="url"
                 value={form.bookingLink}
                 onChange={(e) => updateField('bookingLink', e.target.value)}
-                className="w-full rounded-xl bg-slate-900/70 border border-slate-700/80 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                className="w-full rounded-xl bg-d-surface border border-d-border px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
                 placeholder="https://calendly.com/..."
               />
             </div>
@@ -431,50 +431,50 @@ export default function SettingsPage() {
         {/* Phone + inbox */}
         <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           <div>
-            <h2 className="text-sm font-semibold text-slate-100">
+            <h2 className="text-sm font-semibold text-d-text">
               Phone & inbox routing
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-d-muted">
               Numbers and emails used by your automations (Telnyx, n8n, Inbox Agents).
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-d-muted mb-1">
                 Telnyx number (main DID)
               </label>
               <input
                 type="text"
                 value={form.telnyxNumber}
                 onChange={(e) => updateField('telnyxNumber', e.target.value)}
-                className="w-full rounded-xl bg-slate-900/70 border border-slate-700/80 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                className="w-full rounded-xl bg-d-surface border border-d-border px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
                 placeholder="+14505550123"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-d-muted mb-1">
                 SMS sender number (if different)
               </label>
               <input
                 type="text"
                 value={form.smsNumber}
                 onChange={(e) => updateField('smsNumber', e.target.value)}
-                className="w-full rounded-xl bg-slate-900/70 border border-slate-700/80 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                className="w-full rounded-xl bg-d-surface border border-d-border px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
                 placeholder="+14505550123"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-d-muted mb-1">
                 Inbox email (connected to n8n / Gmail)
               </label>
               <input
                 type="email"
                 value={form.inboxEmail}
                 onChange={(e) => updateField('inboxEmail', e.target.value)}
-                className="w-full rounded-xl bg-slate-900/70 border border-slate-700/80 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                className="w-full rounded-xl bg-d-surface border border-d-border px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
                 placeholder="leads@yourdomain.com"
               />
             </div>
@@ -485,11 +485,11 @@ export default function SettingsPage() {
                 type="checkbox"
                 checked={form.smsEnabled}
                 onChange={(e) => updateField('smsEnabled', e.target.checked)}
-                className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-sky-500 focus:ring-sky-500"
+                className="h-4 w-4 rounded border-slate-600 bg-d-surface text-sky-500 focus:ring-sky-500"
               />
               <label
                 htmlFor="smsEnabled"
-                className="text-xs text-slate-300"
+                className="text-xs text-d-muted"
               >
                 Enable SMS automation for this customer
               </label>
@@ -500,48 +500,48 @@ export default function SettingsPage() {
         {/* AI persona + offer */}
         <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           <div>
-            <h2 className="text-sm font-semibold text-slate-100">AI persona & offer</h2>
-            <p className="text-xs text-slate-400">
+            <h2 className="text-sm font-semibold text-d-text">AI persona & offer</h2>
+            <p className="text-xs text-d-muted">
               How your AI talks, and what it’s trying to sell or book.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-d-muted mb-1">
                 Service niche
               </label>
               <input
                 type="text"
                 value={form.serviceNiche}
                 onChange={(e) => updateField('serviceNiche', e.target.value)}
-                className="w-full rounded-xl bg-slate-900/70 border border-slate-700/80 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                className="w-full rounded-xl bg-d-surface border border-d-border px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
                 placeholder="Chimney installs, wood stoves, etc."
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-d-muted mb-1">
                 Main offer / outcome
               </label>
               <input
                 type="text"
                 value={form.mainOffer}
                 onChange={(e) => updateField('mainOffer', e.target.value)}
-                className="w-full rounded-xl bg-slate-900/70 border border-slate-700/80 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                className="w-full rounded-xl bg-d-surface border border-d-border px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
                 placeholder="We install X in Y days with Z guarantee…"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-d-muted mb-1">
                 Tone / language instructions (tone_profile)
               </label>
               <textarea
                 rows={3}
                 value={form.toneProfile}
                 onChange={(e) => updateField('toneProfile', e.target.value)}
-                className="w-full rounded-xl bg-slate-900/70 border border-slate-700/80 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                className="w-full rounded-xl bg-d-surface border border-d-border px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
                 placeholder='Ex: "friendly, direct, Québec French when possible, no emojis, concise".'
               />
             </div>
@@ -551,43 +551,43 @@ export default function SettingsPage() {
         {/* Signatures & templates */}
         <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           <div>
-            <h2 className="text-sm font-semibold text-slate-100">
+            <h2 className="text-sm font-semibold text-d-text">
               Email & SMS templates
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-d-muted">
               Base templates your automations plug into. You can keep these simple for now.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="md:col-span-2">
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-d-muted mb-1">
                 Email signature (HTML allowed)
               </label>
               <textarea
                 rows={4}
                 value={form.emailSignature}
                 onChange={(e) => updateField('emailSignature', e.target.value)}
-                className="w-full rounded-xl bg-slate-900/70 border border-slate-700/80 px-3 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                className="w-full rounded-xl bg-d-surface border border-d-border px-3 py-2 text-xs text-d-text font-mono focus:outline-none focus:ring-2 focus:ring-d-primary/50"
                 placeholder="<p>Your name<br>Company<br>Phone</p>"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-d-muted mb-1">
                 Default SMS template (business hours)
               </label>
               <textarea
                 rows={4}
                 value={form.smsTemplate}
                 onChange={(e) => updateField('smsTemplate', e.target.value)}
-                className="w-full rounded-xl bg-slate-900/70 border border-slate-700/80 px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                className="w-full rounded-xl bg-d-surface border border-d-border px-3 py-2 text-xs text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
                 placeholder="Hey {{name}}, we just missed your call. What can we help you with?"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-d-muted mb-1">
                 After-hours SMS template
               </label>
               <textarea
@@ -596,7 +596,7 @@ export default function SettingsPage() {
                 onChange={(e) =>
                   updateField('afterHoursSmsTemplate', e.target.value)
                 }
-                className="w-full rounded-xl bg-slate-900/70 border border-slate-700/80 px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                className="w-full rounded-xl bg-d-surface border border-d-border px-3 py-2 text-xs text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
                 placeholder="We’re currently closed, but our system captured your request. We’ll get back to you next business day."
               />
             </div>
@@ -606,17 +606,17 @@ export default function SettingsPage() {
         {/* Hours */}
         <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           <div>
-            <h2 className="text-sm font-semibold text-slate-100">
+            <h2 className="text-sm font-semibold text-d-text">
               Business hours
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-d-muted">
               Used to decide when to send normal vs. after-hours replies.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm items-end">
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-d-muted mb-1">
                 Start time
               </label>
               <input
@@ -625,12 +625,12 @@ export default function SettingsPage() {
                 onChange={(e) =>
                   updateField('businessHoursStart', e.target.value)
                 }
-                className="w-full rounded-xl bg-slate-900/70 border border-slate-700/80 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                className="w-full rounded-xl bg-d-surface border border-d-border px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-d-muted mb-1">
                 End time
               </label>
               <input
@@ -639,11 +639,11 @@ export default function SettingsPage() {
                 onChange={(e) =>
                   updateField('businessHoursEnd', e.target.value)
                 }
-                className="w-full rounded-xl bg-slate-900/70 border border-slate-700/80 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                className="w-full rounded-xl bg-d-surface border border-d-border px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50"
               />
             </div>
 
-            <div className="text-xs text-slate-400">
+            <div className="text-xs text-d-muted">
               <p>
                 SMS rules will later check these hours (in your timezone) to
                 decide which template to use.
@@ -664,7 +664,7 @@ export default function SettingsPage() {
         </div>
 
         {loading && (
-          <p className="text-xs text-slate-500 mt-2">
+          <p className="text-xs text-d-text0 mt-2">
             Loading current settings from Supabase…
           </p>
         )}

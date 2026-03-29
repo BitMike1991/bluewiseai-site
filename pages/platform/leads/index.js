@@ -42,7 +42,7 @@ const SORT_OPTIONS = [
 ];
 
 const AVATAR_COLORS = [
-  'bg-blue-500/20 text-blue-300',
+  'bg-d-primary/20 text-blue-300',
   'bg-emerald-500/20 text-emerald-300',
   'bg-violet-500/20 text-violet-300',
   'bg-amber-500/20 text-amber-300',
@@ -79,9 +79,9 @@ function statusBadgeClasses(status) {
       return `${base} bg-amber-500/15 text-amber-300 border border-amber-500/40`;
     case 'active':
     case 'in_convo':
-      return `${base} bg-sky-500/15 text-sky-300 border border-sky-500/40`;
+      return `${base} bg-sky-500/15 text-d-primary border border-sky-500/40`;
     default:
-      return `${base} bg-slate-700/60 text-slate-100 border border-slate-500/40`;
+      return `${base} bg-slate-700/60 text-d-text border border-slate-500/40`;
   }
 }
 
@@ -210,7 +210,7 @@ export default function LeadsPage() {
               placeholder="Search by name, email, or phone\u2026"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full border rounded-xl px-3 py-2 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2"
+              className="w-full border rounded-xl px-3 py-2 text-sm placeholder:text-d-text0 focus:outline-none focus:ring-2"
               style={styles.input}
             />
           </div>

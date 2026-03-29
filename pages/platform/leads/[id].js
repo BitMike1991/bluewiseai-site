@@ -18,13 +18,13 @@ function formatDate(dateString) {
 }
 
 const STATUS_OPTIONS = [
-  { value: "new", label: "New", color: "bg-sky-500/10 text-sky-300 border-sky-500/40" },
+  { value: "new", label: "New", color: "bg-sky-500/10 text-d-primary border-sky-500/40" },
   { value: "active", label: "Active", color: "bg-emerald-500/10 text-emerald-300 border-emerald-500/40" },
   { value: "in_convo", label: "In convo", color: "bg-indigo-500/10 text-indigo-300 border-indigo-500/40" },
   { value: "quoted", label: "Quoted", color: "bg-amber-500/10 text-amber-300 border-amber-500/40" },
   { value: "won", label: "Won", color: "bg-emerald-500/15 text-emerald-200 border-emerald-500/60" },
   { value: "lost", label: "Lost", color: "bg-rose-500/10 text-rose-300 border-rose-500/40" },
-  { value: "dead", label: "Dead", color: "bg-slate-600/60 text-slate-200 border-slate-500/60" },
+  { value: "dead", label: "Dead", color: "bg-slate-600/60 text-d-text border-slate-500/60" },
 ];
 
 function StatusSelector({ status, onChange, loading }) {
@@ -50,7 +50,7 @@ function StatusSelector({ status, onChange, loading }) {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-50 w-40 rounded-xl border border-slate-700 bg-slate-900 shadow-xl shadow-black/60 py-1">
+          <div className="absolute right-0 top-full mt-1 z-50 w-40 rounded-xl border border-d-border bg-d-surface shadow-xl shadow-black/60 py-1">
             {STATUS_OPTIONS.map((s) => (
               <button
                 key={s.value}
@@ -59,8 +59,8 @@ function StatusSelector({ status, onChange, loading }) {
                   if (s.value !== status) onChange(s.value);
                   setOpen(false);
                 }}
-                className={`w-full text-left px-3 py-1.5 text-xs hover:bg-slate-800 transition flex items-center gap-2 ${
-                  s.value === status ? "font-semibold text-sky-300" : "text-slate-300"
+                className={`w-full text-left px-3 py-1.5 text-xs hover:bg-d-surface transition flex items-center gap-2 ${
+                  s.value === status ? "font-semibold text-d-primary" : "text-d-muted"
                 }`}
               >
                 <span className={`inline-block w-2 h-2 rounded-full border ${s.color}`} />
@@ -80,18 +80,18 @@ function StatusBadge({ status }) {
 
   const colorMap = {
     active: "bg-emerald-500/10 text-emerald-300 border-emerald-500/40",
-    new: "bg-sky-500/10 text-sky-300 border-sky-500/40",
+    new: "bg-sky-500/10 text-d-primary border-sky-500/40",
     in_convo: "bg-indigo-500/10 text-indigo-300 border-indigo-500/40",
     quoted: "bg-amber-500/10 text-amber-300 border-amber-500/40",
     won: "bg-emerald-500/15 text-emerald-200 border-emerald-500/60",
     lost: "bg-rose-500/10 text-rose-300 border-rose-500/40",
-    dead: "bg-slate-600/60 text-slate-200 border-slate-500/60",
+    dead: "bg-slate-600/60 text-d-text border-slate-500/60",
   };
 
   const base =
     "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border shadow-sm shadow-slate-900/40";
 
-  const cls = colorMap[status] || "bg-slate-700/60 text-slate-200 border-slate-500/60";
+  const cls = colorMap[status] || "bg-slate-700/60 text-d-text border-slate-500/60";
   return <span className={`${base} ${cls}`}>{status.replace(/_/g, " ")}</span>;
 }
 
@@ -189,7 +189,7 @@ function TimelineItem({ item }) {
     const channelClass = classifyChannel(item.channel);
 
     pill = (
-      <span className="uppercase tracking-wide text-[0.65rem] px-1.5 py-0.5 rounded-full bg-slate-800/80 text-slate-300">
+      <span className="uppercase tracking-wide text-[0.65rem] px-1.5 py-0.5 rounded-full bg-slate-800/80 text-d-muted">
         {channelClass}
       </span>
     );
@@ -211,13 +211,13 @@ function TimelineItem({ item }) {
 
     body = (
       <div className="space-y-2">
-        <p className="text-sm text-slate-100 whitespace-pre-line">{shownBody}</p>
+        <p className="text-sm text-d-text whitespace-pre-line">{shownBody}</p>
 
         {tooLong ? (
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="text-[11px] font-medium text-sky-200 hover:text-sky-100"
+            className="text-[11px] font-medium text-d-primary hover:text-d-primary/80"
           >
             {expanded ? "Show less" : "Show more"}
           </button>
@@ -226,8 +226,8 @@ function TimelineItem({ item }) {
     );
   } else {
     body = (
-      <p className="text-xs text-slate-300">
-        <span className="font-mono text-slate-400/90">{item.description || item.eventType}</span>
+      <p className="text-xs text-d-muted">
+        <span className="font-mono text-d-muted/90">{item.description || item.eventType}</span>
       </p>
     );
   }
@@ -237,10 +237,10 @@ function TimelineItem({ item }) {
       <div className="absolute left-1 top-0 bottom-0 w-px bg-slate-700/70" />
       <div className="absolute left-0 top-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.8)]" />
 
-      <div className="bg-slate-900/80 border border-slate-700/70 rounded-xl px-4 py-3 flex flex-col gap-1">
-        <div className="flex items-center justify-between gap-2 text-xs text-slate-400">
+      <div className="bg-d-surface border border-d-border rounded-xl px-4 py-3 flex flex-col gap-1">
+        <div className="flex items-center justify-between gap-2 text-xs text-d-muted">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-slate-200">{title}</span>
+            <span className="font-medium text-d-text">{title}</span>
             {pill}
           </div>
           <span>{formatDate(item.at)}</span>
@@ -263,16 +263,16 @@ function Modal({ open, title, children, onClose }) {
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl shadow-black/60">
-          <div className="flex items-center justify-between gap-3 border-b border-slate-800 px-5 py-4">
+        <div className="w-full max-w-2xl rounded-2xl border border-d-border bg-slate-950 shadow-2xl shadow-black/60">
+          <div className="flex items-center justify-between gap-3 border-b border-d-border px-5 py-4">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-slate-100">{title}</p>
-              <p className="mt-1 text-xs text-slate-400">Send an outbound message and log it to the timeline.</p>
+              <p className="text-sm font-semibold text-d-text">{title}</p>
+              <p className="mt-1 text-xs text-d-muted">Send an outbound message and log it to the timeline.</p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-slate-700"
+              className="rounded-xl border border-d-border bg-d-surface/60 px-3 py-1.5 text-[11px] font-semibold text-d-text hover:border-d-border"
             >
               Close
             </button>
@@ -569,20 +569,20 @@ export default function LeadDetailPage() {
           </button>
         </div>
       )}
-      <div className="h-full w-full px-6 py-6 text-slate-100">
+      <div className="h-full w-full px-6 py-6 text-d-text">
         <div className="flex items-center justify-between mb-6">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-500/15 border border-sky-500/40 shadow-[0_0_20px_rgba(56,189,248,0.5)]">
-                <span className="text-sm font-semibold text-sky-300">
+                <span className="text-sm font-semibold text-d-primary">
                   {lead?.name?.[0]?.toUpperCase() || lead?.phone?.slice(-2) || lead?.email?.[0]?.toUpperCase() || "L"}
                 </span>
               </div>
               <div className="flex flex-col">
-                <h1 className="text-xl font-semibold text-slate-50 tracking-tight">
+                <h1 className="text-xl font-semibold text-d-text tracking-tight">
                   {lead?.name || lead?.phone || lead?.email || "Lead"}
                 </h1>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-d-muted">
                   {lead?.source ? `Source: ${lead.source}` : "Captured by your automations"}
                 </p>
               </div>
@@ -597,29 +597,29 @@ export default function LeadDetailPage() {
                 loading={statusLoading}
               />
             )}
-            <p className="text-xs text-slate-400">
-              Last contact: <span className="text-slate-200">{formatDate(lead?.lastContactAt)}</span>
+            <p className="text-xs text-d-muted">
+              Last contact: <span className="text-d-text">{formatDate(lead?.lastContactAt)}</span>
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-6">
-          <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
+          <div className="bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40">
             <div className="flex items-center justify-between mb-4 gap-4">
               <div className="min-w-0">
-                <h2 className="text-sm font-semibold text-slate-100 tracking-wide">Conversation timeline</h2>
-                <p className="text-xs text-slate-400">
+                <h2 className="text-sm font-semibold text-d-text tracking-wide">Conversation timeline</h2>
+                <p className="text-xs text-d-muted">
                   All activity related to this lead (messages, calls, cold outreach events).
                 </p>
               </div>
 
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-slate-400">Filter</span>
+                  <span className="text-[11px] text-d-muted">Filter</span>
                   <select
                     value={timelineFilter}
                     onChange={(e) => setTimelineFilter(e.target.value)}
-                    className="rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+                    className="rounded-xl border border-d-border bg-d-surface px-3 py-2 text-xs text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
                   >
                     <option value="all">All</option>
                     <option value="sms">SMS only</option>
@@ -629,22 +629,22 @@ export default function LeadDetailPage() {
                   </select>
                 </div>
 
-                <div className="hidden sm:flex items-center gap-3 text-xs text-slate-400">
+                <div className="hidden sm:flex items-center gap-3 text-xs text-d-muted">
                   <span>
-                    In: <span className="text-slate-100">{stats.inboundMessages}</span>
+                    In: <span className="text-d-text">{stats.inboundMessages}</span>
                   </span>
                   <span>
-                    Out: <span className="text-slate-100">{stats.outboundMessages}</span>
+                    Out: <span className="text-d-text">{stats.outboundMessages}</span>
                   </span>
                 </div>
               </div>
             </div>
 
-            {loading && <p className="text-sm text-slate-400">Loading timeline\u2026</p>}
+            {loading && <p className="text-sm text-d-muted">Loading timeline\u2026</p>}
             {error && !loading && <p className="text-sm text-rose-300">{error}</p>}
 
             {!loading && !error && filteredTimeline.length === 0 && (
-              <p className="text-sm text-slate-400">No items match this filter yet.</p>
+              <p className="text-sm text-d-muted">No items match this filter yet.</p>
             )}
 
             {!loading && !error && filteredTimeline.length > 0 && (
@@ -657,8 +657,8 @@ export default function LeadDetailPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
-              <h2 className="text-sm font-semibold text-slate-100 mb-3 tracking-wide">Quick actions</h2>
+            <div className="bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40">
+              <h2 className="text-sm font-semibold text-d-text mb-3 tracking-wide">Quick actions</h2>
 
               <div className="flex flex-wrap gap-3">
                 <button
@@ -668,7 +668,7 @@ export default function LeadDetailPage() {
                     "px-3 py-1.5 rounded-xl text-xs font-medium shadow-[0_0_18px_rgba(56,189,248,0.55)] transition",
                     lead?.phone
                       ? "bg-sky-500/90 hover:bg-sky-400 text-slate-950"
-                      : "bg-slate-800 text-slate-400 cursor-not-allowed"
+                      : "bg-slate-800 text-d-muted cursor-not-allowed"
                   )}
                   disabled={!lead?.phone}
                   title={!lead?.phone ? "Lead has no phone number" : "Send SMS"}
@@ -682,8 +682,8 @@ export default function LeadDetailPage() {
                   className={cx(
                     "px-3 py-1.5 rounded-xl text-xs font-medium border transition",
                     lead?.email
-                      ? "bg-slate-800 hover:bg-slate-700 text-slate-100 border-slate-600/70"
-                      : "bg-slate-900 text-slate-500 border-slate-800 cursor-not-allowed"
+                      ? "bg-slate-800 hover:bg-slate-700 text-d-text border-slate-600/70"
+                      : "bg-d-surface text-d-text0 border-d-border cursor-not-allowed"
                   )}
                   disabled={!lead?.email}
                   title={!lead?.email ? "Lead has no email" : "Send email"}
@@ -696,8 +696,8 @@ export default function LeadDetailPage() {
 
             {/* Photos */}
             {photos.length > 0 && (
-              <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
-                <h2 className="text-sm font-semibold text-slate-100 mb-3 tracking-wide">
+              <div className="bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40">
+                <h2 className="text-sm font-semibold text-d-text mb-3 tracking-wide">
                   Photos ({photos.length})
                 </h2>
                 <div className="grid grid-cols-3 gap-2">
@@ -705,7 +705,7 @@ export default function LeadDetailPage() {
                     <button
                       key={photo.id}
                       onClick={() => setLightboxUrl(photo.file_url)}
-                      className="aspect-square rounded-lg overflow-hidden border border-slate-700/60 hover:border-sky-500/60 transition group"
+                      className="aspect-square rounded-lg overflow-hidden border border-d-border/60 hover:border-sky-500/60 transition group"
                     >
                       <img
                         src={photo.file_url}
@@ -718,31 +718,31 @@ export default function LeadDetailPage() {
               </div>
             )}
 
-            <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
-              <h2 className="text-sm font-semibold text-slate-100 mb-3 tracking-wide">Lead details</h2>
-              <dl className="grid grid-cols-1 gap-y-2 text-sm text-slate-200">
+            <div className="bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40">
+              <h2 className="text-sm font-semibold text-d-text mb-3 tracking-wide">Lead details</h2>
+              <dl className="grid grid-cols-1 gap-y-2 text-sm text-d-text">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-400 text-xs uppercase tracking-wide">Phone</dt>
+                  <dt className="text-d-muted text-xs uppercase tracking-wide">Phone</dt>
                   <dd className="font-medium">{lead?.phone || "\u2014"}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-400 text-xs uppercase tracking-wide">Email</dt>
+                  <dt className="text-d-muted text-xs uppercase tracking-wide">Email</dt>
                   <dd className="font-medium">{lead?.email || "\u2014"}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-400 text-xs uppercase tracking-wide">First seen</dt>
+                  <dt className="text-d-muted text-xs uppercase tracking-wide">First seen</dt>
                   <dd>{formatDate(lead?.firstSeenAt || lead?.createdAt)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-400 text-xs uppercase tracking-wide">Last contact</dt>
+                  <dt className="text-d-muted text-xs uppercase tracking-wide">Last contact</dt>
                   <dd>{formatDate(lead?.lastContactAt)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-400 text-xs uppercase tracking-wide">Source</dt>
+                  <dt className="text-d-muted text-xs uppercase tracking-wide">Source</dt>
                   <dd className="capitalize">{lead?.source || "\u2014"}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-400 text-xs uppercase tracking-wide">Missed calls</dt>
+                  <dt className="text-d-muted text-xs uppercase tracking-wide">Missed calls</dt>
                   <dd className="font-medium">{lead?.missed_call_count ?? 0}</dd>
                 </div>
               </dl>
@@ -750,8 +750,8 @@ export default function LeadDetailPage() {
 
             {/* Linked Jobs */}
             {jobs.length > 0 && (
-              <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
-                <h2 className="text-sm font-semibold text-slate-100 mb-3 tracking-wide">
+              <div className="bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40">
+                <h2 className="text-sm font-semibold text-d-text mb-3 tracking-wide">
                   Jobs ({jobs.length})
                 </h2>
                 <ul className="space-y-2">
@@ -759,11 +759,11 @@ export default function LeadDetailPage() {
                     <li key={job.id}>
                       <Link
                         href={`/platform/jobs/${job.id}`}
-                        className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-2 hover:border-sky-500/40 transition"
+                        className="flex items-center justify-between rounded-xl border border-d-border bg-d-surface px-3 py-2 hover:border-sky-500/40 transition"
                       >
                         <div className="flex flex-col text-xs">
-                          <span className="font-mono text-sky-400">{job.job_id}</span>
-                          <span className="text-slate-400">
+                          <span className="font-mono text-d-primary">{job.job_id}</span>
+                          <span className="text-d-muted">
                             {(job.project_type || "N/A").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
                           </span>
                         </div>
@@ -771,14 +771,14 @@ export default function LeadDetailPage() {
                           <span className={cx(
                             "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border",
                             job.status === "completed" ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/40" :
-                            job.status === "signed" || job.status === "scheduled" ? "bg-sky-500/15 text-sky-300 border-sky-500/40" :
+                            job.status === "signed" || job.status === "scheduled" ? "bg-sky-500/15 text-d-primary border-sky-500/40" :
                             job.status === "cancelled" ? "bg-rose-500/10 text-rose-300 border-rose-500/40" :
-                            "bg-slate-700/60 text-slate-100 border-slate-500/40"
+                            "bg-slate-700/60 text-d-text border-slate-500/40"
                           )}>
                             {(job.status || "draft").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
                           </span>
                           {job.quote_amount && (
-                            <p className="text-[10px] text-slate-500 mt-0.5">
+                            <p className="text-[10px] text-d-text0 mt-0.5">
                               {new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(job.quote_amount)}
                             </p>
                           )}
@@ -790,12 +790,12 @@ export default function LeadDetailPage() {
               </div>
             )}
 
-            <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/40">
+            <div className="bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40">
               <div className="flex items-center justify-between mb-2">
-                <h2 className="text-sm font-semibold text-slate-100 tracking-wide">Follow-up tasks</h2>
-                <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                <h2 className="text-sm font-semibold text-d-text tracking-wide">Follow-up tasks</h2>
+                <div className="flex items-center gap-2 text-[11px] text-d-muted">
                   <span>
-                    Open: <span className="text-sky-300">{openTasks.length}</span>
+                    Open: <span className="text-d-primary">{openTasks.length}</span>
                   </span>
                   <span>
                     Completed: <span className="text-emerald-300">{completedTasks.length}</span>
@@ -803,10 +803,10 @@ export default function LeadDetailPage() {
                 </div>
               </div>
 
-              {loading && <p className="text-xs text-slate-400">Loading tasks\u2026</p>}
+              {loading && <p className="text-xs text-d-muted">Loading tasks\u2026</p>}
 
               {!loading && tasks.length === 0 && (
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-d-muted">
                   No follow-up tasks yet for this lead. When your AI creates follow-ups, they'll appear here.
                 </p>
               )}
@@ -825,7 +825,7 @@ export default function LeadDetailPage() {
                         Completed
                       </span>
                     ) : (
-                      <span className="inline-flex rounded-full bg-sky-500/20 px-2 py-0.5 text-[10px] text-sky-200">
+                      <span className="inline-flex rounded-full bg-sky-500/20 px-2 py-0.5 text-[10px] text-d-primary">
                         Open
                       </span>
                     );
@@ -833,14 +833,14 @@ export default function LeadDetailPage() {
                     return (
                       <li
                         key={task.id}
-                        className="flex items-start justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-2"
+                        className="flex items-start justify-between gap-3 rounded-xl border border-d-border bg-d-surface px-3 py-2"
                       >
                         <div className="flex flex-col text-xs">
-                          <span className="font-medium text-slate-100">{task.followupType || "Follow-up"}</span>
-                          <span className="text-slate-400">
+                          <span className="font-medium text-d-text">{task.followupType || "Follow-up"}</span>
+                          <span className="text-d-muted">
                             {stageLabel} \u00b7 {dueText}
                           </span>
-                          <span className="text-slate-500">Source: {task.source || "unknown"}</span>
+                          <span className="text-d-text0">Source: {task.source || "unknown"}</span>
                         </div>
                         <div className="mt-0.5">{badge}</div>
                       </li>
@@ -868,8 +868,8 @@ export default function LeadDetailPage() {
               className={cx(
                 "rounded-xl border px-3 py-1.5 text-[11px] font-semibold",
                 sendChannel === "sms"
-                  ? "border-sky-500/60 bg-sky-500/10 text-sky-200"
-                  : "border-slate-800 bg-slate-950/40 text-slate-300 hover:border-sky-500/40"
+                  ? "border-sky-500/60 bg-sky-500/10 text-d-primary"
+                  : "border-d-border bg-d-surface/60 text-d-muted hover:border-sky-500/40"
               )}
             >
               SMS
@@ -880,8 +880,8 @@ export default function LeadDetailPage() {
               className={cx(
                 "rounded-xl border px-3 py-1.5 text-[11px] font-semibold",
                 sendChannel === "email"
-                  ? "border-sky-500/60 bg-sky-500/10 text-sky-200"
-                  : "border-slate-800 bg-slate-950/40 text-slate-300 hover:border-sky-500/40"
+                  ? "border-sky-500/60 bg-sky-500/10 text-d-primary"
+                  : "border-d-border bg-d-surface/60 text-d-muted hover:border-sky-500/40"
               )}
             >
               Email
@@ -890,32 +890,32 @@ export default function LeadDetailPage() {
 
           <div className="space-y-3">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-300 mb-1">To</label>
+              <label className="block text-[11px] font-semibold text-d-muted mb-1">To</label>
               <input
                 value={sendTo}
                 onChange={(e) => setSendTo(e.target.value)}
                 placeholder={sendChannel === "sms" ? "+1..." : "name@email.com"}
-                className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+                className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
               />
-              <p className="mt-1 text-[11px] text-slate-500">
+              <p className="mt-1 text-[11px] text-d-text0">
                 Default is the lead's phone/email. You can override if needed.
               </p>
             </div>
 
             {sendChannel === "email" ? (
               <div>
-                <label className="block text-[11px] font-semibold text-slate-300 mb-1">Subject</label>
+                <label className="block text-[11px] font-semibold text-d-muted mb-1">Subject</label>
                 <input
                   value={sendSubject}
                   onChange={(e) => setSendSubject(e.target.value)}
                   placeholder="Subject..."
-                  className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+                  className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
                 />
               </div>
             ) : null}
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+              <label className="block text-[11px] font-semibold text-d-muted mb-1">
                 Message {sendChannel === "sms" ? "(text)" : "(text body)"}
               </label>
               <textarea
@@ -923,10 +923,10 @@ export default function LeadDetailPage() {
                 onChange={(e) => setSendBody(e.target.value)}
                 rows={sendChannel === "sms" ? 5 : 7}
                 placeholder={sendChannel === "sms" ? "Write your SMS..." : "Write your email..."}
-                className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+                className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
               />
               {sendChannel === "sms" ? (
-                <p className="mt-1 text-[11px] text-slate-500">
+                <p className="mt-1 text-[11px] text-d-text0">
                   Keep it concise. (Server hard cap enforced.)
                 </p>
               ) : null}
@@ -934,15 +934,15 @@ export default function LeadDetailPage() {
 
             {sendChannel === "email" ? (
               <div>
-                <label className="block text-[11px] font-semibold text-slate-300 mb-1">Optional HTML</label>
+                <label className="block text-[11px] font-semibold text-d-muted mb-1">Optional HTML</label>
                 <textarea
                   value={sendHtml}
                   onChange={(e) => setSendHtml(e.target.value)}
                   rows={4}
                   placeholder="<p>Optional HTML version...</p>"
-                  className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs font-mono text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+                  className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-xs font-mono text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
                 />
-                <p className="mt-1 text-[11px] text-slate-500">
+                <p className="mt-1 text-[11px] text-d-text0">
                   If provided, Mailgun will send both HTML + Text.
                 </p>
               </div>
@@ -964,7 +964,7 @@ export default function LeadDetailPage() {
                 type="button"
                 onClick={() => setSendOpen(false)}
                 disabled={sendLoading}
-                className="rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-2 text-[11px] font-semibold text-slate-200 hover:border-slate-700 disabled:opacity-60"
+                className="rounded-xl border border-d-border bg-d-surface/60 px-4 py-2 text-[11px] font-semibold text-d-text hover:border-d-border disabled:opacity-60"
               >
                 Cancel
               </button>

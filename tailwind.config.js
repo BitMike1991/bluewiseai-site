@@ -27,7 +27,17 @@ module.exports = {
           blue: "#3B82F6",
           neon: "#60A5FA",
         },
-        // New premium dark palette
+        // CSS variable-based tenant branding (set by DashboardLayout)
+        d: {
+          bg: 'var(--d-bg, #0a0a12)',
+          surface: 'var(--d-surface, #111119)',
+          border: 'var(--d-border, #1e1e2e)',
+          text: 'var(--d-text, #f0f0f5)',
+          muted: 'var(--d-muted, #8888aa)',
+          primary: 'var(--d-primary, #6c63ff)',
+          accent: 'var(--d-accent, #00d4aa)',
+        },
+        // Legacy premium dark palette (public site)
         bg: '#0a0a0f',
         surface: '#111118',
         surface2: '#1a1a24',

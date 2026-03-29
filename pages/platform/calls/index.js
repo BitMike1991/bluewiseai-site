@@ -87,13 +87,13 @@ export default function CallsPage() {
   return (
     <DashboardLayout title="Calls">
       {/* Header */}
-      <header className="mb-4 border-b border-slate-800 pb-3">
+      <header className="mb-4 border-b border-d-border pb-3">
         <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div className="space-y-1">
             <h1 className="text-xl font-semibold sm:text-2xl" style={{ color: styles.text.primary }}>
               Calls
             </h1>
-            <p className="text-xs text-slate-400 sm:text-sm">
+            <p className="text-xs text-d-muted sm:text-sm">
               See every inbound and outbound call, track missed calls, and
               confirm whether your AI followed up.
             </p>
@@ -102,7 +102,7 @@ export default function CallsPage() {
           {/* RIGHT SIDE: Filter pills */}
           <div className="flex items-center gap-3">
             {/* Simple filter pill group */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/60 px-1 py-1 text-xs sm:text-sm">
+            <div className="inline-flex items-center gap-2 rounded-full border border-d-border bg-d-surface px-1 py-1 text-xs sm:text-sm">
               <button
                 type="button"
                 onClick={() => {
@@ -112,8 +112,8 @@ export default function CallsPage() {
                 className={classNames(
                   "rounded-full px-3 py-1 transition",
                   outcomeFilter === "all"
-                    ? "bg-sky-500/80 text-slate-50 shadow-[0_0_12px_rgba(56,189,248,0.7)]"
-                    : "text-slate-300 hover:bg-slate-800"
+                    ? "bg-sky-500/80 text-d-text shadow-[0_0_12px_rgba(56,189,248,0.7)]"
+                    : "text-d-muted hover:bg-d-surface"
                 )}
               >
                 All
@@ -127,8 +127,8 @@ export default function CallsPage() {
                 className={classNames(
                   "rounded-full px-3 py-1 transition",
                   outcomeFilter === "missed"
-                    ? "bg-rose-500/80 text-slate-50 shadow-[0_0_12px_rgba(244,63,94,0.7)]"
-                    : "text-slate-300 hover:bg-slate-800"
+                    ? "bg-rose-500/80 text-d-text shadow-[0_0_12px_rgba(244,63,94,0.7)]"
+                    : "text-d-muted hover:bg-d-surface"
                 )}
               >
                 Missed
@@ -142,8 +142,8 @@ export default function CallsPage() {
                 className={classNames(
                   "rounded-full px-3 py-1 transition",
                   outcomeFilter === "answered"
-                    ? "bg-emerald-500/80 text-slate-50 shadow-[0_0_12px_rgba(16,185,129,0.7)]"
-                    : "text-slate-300 hover:bg-slate-800"
+                    ? "bg-emerald-500/80 text-d-text shadow-[0_0_12px_rgba(16,185,129,0.7)]"
+                    : "text-d-muted hover:bg-d-surface"
                 )}
               >
                 Answered
@@ -157,10 +157,10 @@ export default function CallsPage() {
       <main className="flex w-full flex-1 flex-col gap-4">
         <section className="rounded-2xl border shadow-xl" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           {/* Table header row */}
-          <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3 sm:px-6">
+          <div className="flex items-center justify-between border-b border-d-border px-4 py-3 sm:px-6">
             <div>
-              <h2 className="text-sm font-medium text-slate-100">Call log</h2>
-              <p className="mt-1 text-xs text-slate-400">
+              <h2 className="text-sm font-medium text-d-text">Call log</h2>
+              <p className="mt-1 text-xs text-d-muted">
                 {loading
                   ? "Loading calls\u2026"
                   : `Showing ${calls.length} calls on page ${
@@ -182,13 +182,13 @@ export default function CallsPage() {
                 className={classNames(
                   "rounded-lg border px-3 py-1 text-xs sm:text-sm",
                   page <= 1 || loading
-                    ? "cursor-not-allowed border-slate-700 text-slate-500"
-                    : "border-slate-600 text-slate-100 hover:border-sky-500 hover:text-sky-300"
+                    ? "cursor-not-allowed border-d-border text-d-text0"
+                    : "border-slate-600 text-d-text hover:border-sky-500 hover:text-d-primary"
                 )}
               >
                 Previous
               </button>
-              <span className="text-xs text-slate-400 sm:text-sm">
+              <span className="text-xs text-d-muted sm:text-sm">
                 Page {pagination?.page ?? page}
               </span>
               <button
@@ -198,8 +198,8 @@ export default function CallsPage() {
                 className={classNames(
                   "rounded-lg border px-3 py-1 text-xs sm:text-sm",
                   !pagination?.hasMore || loading
-                    ? "cursor-not-allowed border-slate-700 text-slate-500"
-                    : "border-slate-600 text-slate-100 hover:border-sky-500 hover:text-sky-300"
+                    ? "cursor-not-allowed border-d-border text-d-text0"
+                    : "border-slate-600 text-d-text hover:border-sky-500 hover:text-d-primary"
                 )}
               >
                 Next
@@ -209,15 +209,15 @@ export default function CallsPage() {
 
           {/* Error state */}
           {error && (
-            <div className="border-b border-slate-800 bg-rose-500/10 px-4 py-3 text-xs text-rose-300 sm:px-6">
+            <div className="border-b border-d-border bg-rose-500/10 px-4 py-3 text-xs text-rose-300 sm:px-6">
               {error}
             </div>
           )}
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-800 text-xs sm:text-sm">
-              <thead className="bg-slate-900/80">
+            <table className="min-w-full divide-y divide-d-border text-xs sm:text-sm">
+              <thead className="bg-d-surface">
                 <tr>
                   <Th>Date / Time</Th>
                   <Th>Direction</Th>
@@ -229,12 +229,12 @@ export default function CallsPage() {
                   <Th>Lead</Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800 bg-slate-950/40">
+              <tbody className="divide-y divide-d-border bg-d-surface/60">
                 {loading && calls.length === 0 ? (
                   <tr>
                     <td
                       colSpan={8}
-                      className="px-4 py-8 text-center text-slate-400 sm:px-6"
+                      className="px-4 py-8 text-center text-d-muted sm:px-6"
                     >
                       Loading calls\u2026
                     </td>
@@ -243,7 +243,7 @@ export default function CallsPage() {
                   <tr>
                     <td
                       colSpan={8}
-                      className="px-4 py-8 text-center text-slate-500 sm:px-6"
+                      className="px-4 py-8 text-center text-d-text0 sm:px-6"
                     >
                       No calls found for this filter.
                     </td>
@@ -264,7 +264,7 @@ function Th({ children }) {
   return (
     <th
       scope="col"
-      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400 sm:px-6"
+      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-d-muted sm:px-6"
     >
       {children}
     </th>
@@ -295,7 +295,7 @@ function CallRow({ call }) {
 
     if (!label) {
       return (
-        <span className="inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-300">
+        <span className="inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-d-muted">
           Unknown
         </span>
       );
@@ -330,7 +330,7 @@ function CallRow({ call }) {
     }
 
     return (
-      <span className="inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-300">
+      <span className="inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-d-muted">
         {outcome}
       </span>
     );
@@ -341,7 +341,7 @@ function CallRow({ call }) {
 
     if (!label) {
       return (
-        <span className="inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-300">
+        <span className="inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-d-muted">
           \u2014
         </span>
       );
@@ -349,7 +349,7 @@ function CallRow({ call }) {
 
     if (label.includes("in")) {
       return (
-        <span className="inline-flex rounded-full bg-sky-500/20 px-2 py-0.5 text-[11px] text-sky-300">
+        <span className="inline-flex rounded-full bg-sky-500/20 px-2 py-0.5 text-[11px] text-d-primary">
           Inbound
         </span>
       );
@@ -364,18 +364,18 @@ function CallRow({ call }) {
     }
 
     return (
-      <span className="inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-300">
+      <span className="inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-d-muted">
         {direction}
       </span>
     );
   })();
 
   const aiBadge = answeredByAi ? (
-    <span className="inline-flex rounded-full bg-sky-500/20 px-2 py-0.5 text-[11px] text-sky-200">
+    <span className="inline-flex rounded-full bg-sky-500/20 px-2 py-0.5 text-[11px] text-d-primary">
       Yes
     </span>
   ) : (
-    <span className="inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-400">
+    <span className="inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-d-muted">
       No
     </span>
   );
@@ -392,17 +392,17 @@ function CallRow({ call }) {
   })();
 
   return (
-    <tr className="hover:bg-slate-900/60">
-      <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-200 sm:px-6">
+    <tr className="hover:bg-d-surface">
+      <td className="whitespace-nowrap px-4 py-3 text-xs text-d-text sm:px-6">
         {dateLabel}
       </td>
       <td className="whitespace-nowrap px-4 py-3 text-xs sm:px-6">
         {directionBadge}
       </td>
-      <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-200 sm:px-6">
+      <td className="whitespace-nowrap px-4 py-3 text-xs text-d-text sm:px-6">
         {fromNumber || "\u2014"}
       </td>
-      <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-200 sm:px-6">
+      <td className="whitespace-nowrap px-4 py-3 text-xs text-d-text sm:px-6">
         {toNumber || "\u2014"}
       </td>
       <td className="whitespace-nowrap px-4 py-3 text-xs sm:px-6">
@@ -411,19 +411,19 @@ function CallRow({ call }) {
       <td className="whitespace-nowrap px-4 py-3 text-xs sm:px-6">
         {aiBadge}
       </td>
-      <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-200 sm:px-6">
+      <td className="whitespace-nowrap px-4 py-3 text-xs text-d-text sm:px-6">
         {durationLabel}
       </td>
       <td className="whitespace-nowrap px-4 py-3 text-xs sm:px-6">
         {leadId ? (
           <Link
             href={`/platform/leads/${leadId}`}
-            className="text-sky-300 underline-offset-2 hover:text-sky-200 hover:underline"
+            className="text-d-primary underline-offset-2 hover:text-d-primary hover:underline"
           >
             View lead
           </Link>
         ) : (
-          <span className="text-slate-500">Unlinked</span>
+          <span className="text-d-text0">Unlinked</span>
         )}
       </td>
     </tr>

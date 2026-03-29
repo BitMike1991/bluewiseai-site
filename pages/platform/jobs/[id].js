@@ -7,10 +7,10 @@ import { useBranding } from '../../../src/components/dashboard/BrandingContext';
 import { getBrandingStyles, getStatusBadgeStyle } from '../../../src/components/dashboard/brandingUtils';
 
 const STATUS_COLORS = {
-  draft: 'bg-slate-700/60 text-slate-100 border-slate-500/40',
+  draft: 'bg-slate-700/60 text-d-text border-slate-500/40',
   quote_sent: 'bg-violet-500/15 text-violet-300 border-violet-500/40',
   contract_sent: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
-  signed: 'bg-sky-500/15 text-sky-300 border-sky-500/40',
+  signed: 'bg-sky-500/15 text-d-primary border-sky-500/40',
   scheduled: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/40',
   in_progress: 'bg-orange-500/15 text-orange-300 border-orange-500/40',
   completed: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
@@ -133,7 +133,7 @@ export default function JobDetailPage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="text-sm text-slate-400 py-12 text-center">Loading job...</div>
+        <div className="text-sm text-d-muted py-12 text-center">Loading job...</div>
       </DashboardLayout>
     );
   }
@@ -143,7 +143,7 @@ export default function JobDetailPage() {
       <DashboardLayout>
         <div className="py-12 text-center">
           <p className="text-rose-400 text-sm mb-4">{error || 'Job not found'}</p>
-          <Link href="/platform/jobs" className="text-sky-400 text-sm hover:underline">
+          <Link href="/platform/jobs" className="text-d-primary text-sm hover:underline">
             Go to Jobs
           </Link>
         </div>
@@ -208,21 +208,21 @@ export default function JobDetailPage() {
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center space-x-3">
-              <h1 className="text-lg font-semibold text-slate-50">{job.client_name || 'Unknown'}</h1>
+              <h1 className="text-lg font-semibold text-d-text">{job.client_name || 'Unknown'}</h1>
               <span className={statusBadge(job.status)}>{statusLabel(job.status)}</span>
             </div>
-            <p className="text-sm text-slate-400 mt-0.5">
-              <span className="font-mono text-sky-400">{job.job_id}</span>
+            <p className="text-sm text-d-muted mt-0.5">
+              <span className="font-mono text-d-primary">{job.job_id}</span>
               {job.project_type && (
-                <span className="ml-2 text-slate-500">
+                <span className="ml-2 text-d-text0">
                   \u00b7 {job.project_type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                 </span>
               )}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-lg font-semibold text-slate-50">{formatCurrency(quoteAmount)}</p>
-            <p className="text-xs text-slate-500">Quote amount</p>
+            <p className="text-lg font-semibold text-d-text">{formatCurrency(quoteAmount)}</p>
+            <p className="text-xs text-d-text0">Quote amount</p>
           </div>
         </div>
       </div>
@@ -248,7 +248,7 @@ export default function JobDetailPage() {
                     />
                     <span
                       className={`text-[10px] mt-1 hidden md:block ${
-                        isCurrent ? 'text-sky-400 font-medium' : isCompleted ? 'text-emerald-400' : 'text-slate-600'
+                        isCurrent ? 'text-d-primary font-medium' : isCompleted ? 'text-emerald-400' : 'text-slate-600'
                       }`}
                     >
                       {statusLabel(step)}
@@ -271,65 +271,65 @@ export default function JobDetailPage() {
       {/* Financial Summary Card */}
       <div className="mb-6 rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-slate-300">Financial Summary</h2>
+          <h2 className="text-sm font-semibold text-d-muted">Financial Summary</h2>
           {financesLoading && (
-            <span className="text-[10px] text-slate-500 animate-pulse">Loading...</span>
+            <span className="text-[10px] text-d-text0 animate-pulse">Loading...</span>
           )}
         </div>
 
         {/* Tax Breakdown */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-          <div className="px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40">
-            <p className="text-[10px] text-slate-500 mb-0.5">Subtotal</p>
-            <p className="text-sm font-medium text-slate-200">{formatCurrency(subtotal)}</p>
+          <div className="px-3 py-2 rounded-lg bg-slate-800/40 border border-d-border/50">
+            <p className="text-[10px] text-d-text0 mb-0.5">Subtotal</p>
+            <p className="text-sm font-medium text-d-text">{formatCurrency(subtotal)}</p>
           </div>
-          <div className="px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40">
-            <p className="text-[10px] text-slate-500 mb-0.5">TPS (5%)</p>
-            <p className="text-sm font-medium text-slate-200">{formatCurrency(tps)}</p>
+          <div className="px-3 py-2 rounded-lg bg-slate-800/40 border border-d-border/50">
+            <p className="text-[10px] text-d-text0 mb-0.5">TPS (5%)</p>
+            <p className="text-sm font-medium text-d-text">{formatCurrency(tps)}</p>
           </div>
-          <div className="px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40">
-            <p className="text-[10px] text-slate-500 mb-0.5">TVQ (9.975%)</p>
-            <p className="text-sm font-medium text-slate-200">{formatCurrency(tvq)}</p>
+          <div className="px-3 py-2 rounded-lg bg-slate-800/40 border border-d-border/50">
+            <p className="text-[10px] text-d-text0 mb-0.5">TVQ (9.975%)</p>
+            <p className="text-sm font-medium text-d-text">{formatCurrency(tvq)}</p>
           </div>
-          <div className="px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40">
-            <p className="text-[10px] text-slate-500 mb-0.5">Total TTC</p>
-            <p className="text-sm font-semibold text-slate-50">{formatCurrency(ttc)}</p>
+          <div className="px-3 py-2 rounded-lg bg-slate-800/40 border border-d-border/50">
+            <p className="text-[10px] text-d-text0 mb-0.5">Total TTC</p>
+            <p className="text-sm font-semibold text-d-text">{formatCurrency(ttc)}</p>
           </div>
         </div>
 
         {/* Progress Bar */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] text-slate-500">Payment Progress</span>
-            <span className={`text-[10px] font-medium ${progressPct >= 100 ? 'text-emerald-400' : 'text-sky-400'}`}>
+            <span className="text-[10px] text-d-text0">Payment Progress</span>
+            <span className={`text-[10px] font-medium ${progressPct >= 100 ? 'text-emerald-400' : 'text-d-primary'}`}>
               {progressPct}%
             </span>
           </div>
           <div className="h-2 rounded-full bg-slate-700 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                progressPct >= 100 ? 'bg-emerald-500' : 'bg-blue-500'
+                progressPct >= 100 ? 'bg-emerald-500' : 'bg-d-primary'
               }`}
               style={{ width: `${Math.min(100, progressPct)}%` }}
             />
           </div>
         </div>
 
-        <div className="border-t border-slate-700/60 my-3" />
+        <div className="border-t border-d-border/60 my-3" />
 
         {/* Paid / Expenses */}
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-            <span className="text-xs text-slate-400">Total Paid</span>
+            <span className="text-xs text-d-muted">Total Paid</span>
             <span className="text-sm font-semibold text-emerald-400">{formatCurrency(finTotalPaid)}</span>
           </div>
           <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/20">
-            <span className="text-xs text-slate-400">Total Expenses</span>
+            <span className="text-xs text-d-muted">Total Expenses</span>
             <span className="text-sm font-semibold text-rose-400">{formatCurrency(totalExpenses)}</span>
           </div>
         </div>
 
-        <div className="border-t border-slate-700/60 my-3" />
+        <div className="border-t border-d-border/60 my-3" />
 
         {/* Balance + Margin */}
         <div className="grid grid-cols-2 gap-3">
@@ -338,7 +338,7 @@ export default function JobDetailPage() {
               ? 'bg-emerald-500/10 border-emerald-500/20'
               : 'bg-amber-500/10 border-amber-500/20'
           }`}>
-            <span className="text-xs text-slate-400">Balance Remaining</span>
+            <span className="text-xs text-d-muted">Balance Remaining</span>
             <span className={`text-sm font-semibold ${
               balanceRemaining <= 0 ? 'text-emerald-400' : 'text-amber-300'
             }`}>
@@ -350,7 +350,7 @@ export default function JobDetailPage() {
               ? 'bg-emerald-500/10 border-emerald-500/20'
               : 'bg-rose-500/10 border-rose-500/20'
           }`}>
-            <span className="text-xs text-slate-400">Margin</span>
+            <span className="text-xs text-d-muted">Margin</span>
             <div className="text-right">
               <p className={`text-sm font-semibold ${margin >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                 {formatCurrency(margin)}
@@ -370,7 +370,7 @@ export default function JobDetailPage() {
           {/* Photos */}
           {photos && photos.length > 0 && (
             <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
-              <h2 className="text-sm font-semibold text-slate-300 mb-3">
+              <h2 className="text-sm font-semibold text-d-muted mb-3">
                 Photos ({photos.length})
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
@@ -378,7 +378,7 @@ export default function JobDetailPage() {
                   <button
                     key={photo.id}
                     onClick={() => setLightboxUrl(photo.file_url)}
-                    className="aspect-square rounded-lg overflow-hidden border border-slate-700/60 hover:border-sky-500/60 transition group"
+                    className="aspect-square rounded-lg overflow-hidden border border-d-border/60 hover:border-sky-500/60 transition group"
                   >
                     <img
                       src={photo.file_url}
@@ -393,23 +393,23 @@ export default function JobDetailPage() {
 
           {/* Contracts */}
           <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
-            <h2 className="text-sm font-semibold text-slate-300 mb-3">
+            <h2 className="text-sm font-semibold text-d-muted mb-3">
               Contracts ({contracts.length})
             </h2>
             {contracts.length === 0 ? (
-              <p className="text-xs text-slate-500">No contracts generated yet.</p>
+              <p className="text-xs text-d-text0">No contracts generated yet.</p>
             ) : (
               <div className="space-y-2">
                 {contracts.map((c) => (
                   <div
                     key={c.id}
-                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40"
+                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/40 border border-d-border/50"
                   >
                     <div>
-                      <p className="text-sm text-slate-200">
+                      <p className="text-sm text-d-text">
                         {c.template_name || 'Contract'} {c.template_version || ''}
                       </p>
-                      <p className="text-xs text-slate-500">Created {formatDate(c.created_at)}</p>
+                      <p className="text-xs text-d-text0">Created {formatDate(c.created_at)}</p>
                     </div>
                     <div className="text-right">
                       <span
@@ -422,10 +422,10 @@ export default function JobDetailPage() {
                         {c.signature_status === 'signed' ? 'Signed' : 'Pending'}
                       </span>
                       {c.signed_at && (
-                        <p className="text-xs text-slate-500 mt-0.5">{formatDate(c.signed_at)}</p>
+                        <p className="text-xs text-d-text0 mt-0.5">{formatDate(c.signed_at)}</p>
                       )}
                       {c.signer_name && (
-                        <p className="text-xs text-slate-400">by {c.signer_name}</p>
+                        <p className="text-xs text-d-muted">by {c.signer_name}</p>
                       )}
                     </div>
                   </div>
@@ -436,23 +436,23 @@ export default function JobDetailPage() {
 
           {/* Payments */}
           <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
-            <h2 className="text-sm font-semibold text-slate-300 mb-3">
+            <h2 className="text-sm font-semibold text-d-muted mb-3">
               Payments ({payments.length})
             </h2>
             {payments.length === 0 ? (
-              <p className="text-xs text-slate-500">No payments recorded yet.</p>
+              <p className="text-xs text-d-text0">No payments recorded yet.</p>
             ) : (
               <div className="space-y-2">
                 {payments.map((p) => (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40"
+                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/40 border border-d-border/50"
                   >
                     <div>
-                      <p className="text-sm text-slate-200">
+                      <p className="text-sm text-d-text">
                         {(p.payment_type || 'payment').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-d-text0">
                         {p.paid_at ? formatDate(p.paid_at) : formatDate(p.created_at)}
                       </p>
                     </div>
@@ -476,13 +476,13 @@ export default function JobDetailPage() {
                 ))}
 
                 {/* Total */}
-                <div className="flex items-center justify-between px-3 py-2 mt-2 border-t border-slate-700/40">
-                  <span className="text-xs text-slate-400">Total paid</span>
+                <div className="flex items-center justify-between px-3 py-2 mt-2 border-t border-d-border/50">
+                  <span className="text-xs text-d-muted">Total paid</span>
                   <span className="text-sm font-semibold text-emerald-400">{formatCurrency(totalPaid)}</span>
                 </div>
                 {remaining > 0 && (
                   <div className="flex items-center justify-between px-3 py-1">
-                    <span className="text-xs text-slate-500">Remaining</span>
+                    <span className="text-xs text-d-text0">Remaining</span>
                     <span className="text-sm font-medium text-amber-300">{formatCurrency(remaining)}</span>
                   </div>
                 )}
@@ -493,32 +493,32 @@ export default function JobDetailPage() {
           {/* Expenses */}
           {(expenses.length > 0 || financesLoading) && (
             <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
-              <h2 className="text-sm font-semibold text-slate-300 mb-3">
+              <h2 className="text-sm font-semibold text-d-muted mb-3">
                 Expenses ({expenses.length})
               </h2>
               {financesLoading && expenses.length === 0 ? (
-                <p className="text-xs text-slate-500 animate-pulse">Loading expenses...</p>
+                <p className="text-xs text-d-text0 animate-pulse">Loading expenses...</p>
               ) : expenses.length === 0 ? (
-                <p className="text-xs text-slate-500">No expenses recorded.</p>
+                <p className="text-xs text-d-text0">No expenses recorded.</p>
               ) : (
                 <div className="space-y-2">
                   {expenses.map((exp, i) => (
                     <div
                       key={exp.id ?? i}
-                      className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40"
+                      className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/40 border border-d-border/50"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm text-slate-200 truncate">
+                          <p className="text-sm text-d-text truncate">
                             {exp.vendor || 'Unknown Vendor'}
                           </p>
                           {exp.category && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-700/60 text-slate-400 border border-slate-600/40 flex-shrink-0">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-700/60 text-d-muted border border-slate-600/40 flex-shrink-0">
                               {exp.category}
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-500 mt-0.5">
+                        <p className="text-xs text-d-text0 mt-0.5">
                           {exp.date ? formatShortDate(exp.date) : formatDate(exp.created_at)}
                         </p>
                       </div>
@@ -531,7 +531,7 @@ export default function JobDetailPage() {
                             href={exp.receipt_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sky-400 hover:text-sky-300 transition"
+                            className="text-d-primary hover:text-d-primary transition"
                             title="View Receipt"
                           >
                             <svg
@@ -558,8 +558,8 @@ export default function JobDetailPage() {
                   ))}
 
                   {/* Expenses total */}
-                  <div className="flex items-center justify-between px-3 py-2 mt-2 border-t border-slate-700/40">
-                    <span className="text-xs text-slate-400">Total expenses</span>
+                  <div className="flex items-center justify-between px-3 py-2 mt-2 border-t border-d-border/50">
+                    <span className="text-xs text-d-muted">Total expenses</span>
                     <span className="text-sm font-semibold text-rose-400">{formatCurrency(totalExpenses)}</span>
                   </div>
                 </div>
@@ -569,18 +569,18 @@ export default function JobDetailPage() {
 
           {/* Activity Timeline */}
           <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
-            <h2 className="text-sm font-semibold text-slate-300 mb-3">Activity</h2>
+            <h2 className="text-sm font-semibold text-d-muted mb-3">Activity</h2>
             {events.length === 0 ? (
-              <p className="text-xs text-slate-500">No activity recorded yet.</p>
+              <p className="text-xs text-d-text0">No activity recorded yet.</p>
             ) : (
               <div className="space-y-3">
                 {events.map((ev) => (
                   <div key={ev.id} className="flex items-start space-x-3">
                     <div className="w-2 h-2 mt-1.5 rounded-full bg-sky-500/60 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-slate-200">{eventLabel(ev.event_type)}</p>
+                      <p className="text-xs text-d-text">{eventLabel(ev.event_type)}</p>
                       {ev.payload && ev.payload.note && (
-                        <p className="text-xs text-slate-500 mt-0.5">{ev.payload.note}</p>
+                        <p className="text-xs text-d-text0 mt-0.5">{ev.payload.note}</p>
                       )}
                       <p className="text-[10px] text-slate-600 mt-0.5">{formatDate(ev.created_at)}</p>
                     </div>
@@ -595,33 +595,33 @@ export default function JobDetailPage() {
         <div className="space-y-4">
           {/* Client Info */}
           <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
-            <h2 className="text-sm font-semibold text-slate-300 mb-3">Client Info</h2>
+            <h2 className="text-sm font-semibold text-d-muted mb-3">Client Info</h2>
             <dl className="space-y-2 text-xs">
               <div>
-                <dt className="text-slate-500">Name</dt>
-                <dd className="text-slate-200">{job.client_name || '\u2014'}</dd>
+                <dt className="text-d-text0">Name</dt>
+                <dd className="text-d-text">{job.client_name || '\u2014'}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Phone</dt>
-                <dd className="text-slate-200">{job.client_phone || '\u2014'}</dd>
+                <dt className="text-d-text0">Phone</dt>
+                <dd className="text-d-text">{job.client_phone || '\u2014'}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Email</dt>
-                <dd className="text-slate-200">{job.client_email || '\u2014'}</dd>
+                <dt className="text-d-text0">Email</dt>
+                <dd className="text-d-text">{job.client_email || '\u2014'}</dd>
               </div>
               {addressStr && (
                 <div>
-                  <dt className="text-slate-500">Address</dt>
-                  <dd className="text-slate-200">{addressStr}</dd>
+                  <dt className="text-d-text0">Address</dt>
+                  <dd className="text-d-text">{addressStr}</dd>
                 </div>
               )}
               {lead && (
-                <div className="pt-2 border-t border-slate-800/60">
-                  <dt className="text-slate-500">Linked Lead</dt>
+                <div className="pt-2 border-t border-d-border">
+                  <dt className="text-d-text0">Linked Lead</dt>
                   <dd>
                     <Link
                       href={`/platform/leads/${lead.id}`}
-                      className="text-sky-400 hover:underline"
+                      className="text-d-primary hover:underline"
                     >
                       {lead.name || lead.first_name || lead.phone || `Lead #${lead.id}`}
                     </Link>
@@ -633,34 +633,34 @@ export default function JobDetailPage() {
 
           {/* Job Details */}
           <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
-            <h2 className="text-sm font-semibold text-slate-300 mb-3">Job Details</h2>
+            <h2 className="text-sm font-semibold text-d-muted mb-3">Job Details</h2>
             <dl className="space-y-2 text-xs">
               <div>
-                <dt className="text-slate-500">Project Type</dt>
-                <dd className="text-slate-200">
+                <dt className="text-d-text0">Project Type</dt>
+                <dd className="text-d-text">
                   {(job.project_type || '\u2014').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                 </dd>
               </div>
               {job.project_description && (
                 <div>
-                  <dt className="text-slate-500">Description</dt>
-                  <dd className="text-slate-200">{job.project_description}</dd>
+                  <dt className="text-d-text0">Description</dt>
+                  <dd className="text-d-text">{job.project_description}</dd>
                 </div>
               )}
               <div>
-                <dt className="text-slate-500">Quote</dt>
-                <dd className="text-slate-200 font-medium">{formatCurrency(quoteAmount)}</dd>
+                <dt className="text-d-text0">Quote</dt>
+                <dd className="text-d-text font-medium">{formatCurrency(quoteAmount)}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Deposit ({job.deposit_percentage || 25}%)</dt>
-                <dd className="text-slate-200">
+                <dt className="text-d-text0">Deposit ({job.deposit_percentage || 25}%)</dt>
+                <dd className="text-d-text">
                   {formatCurrency(job.deposit_amount || quoteAmount * ((job.deposit_percentage || 25) / 100))}
                 </dd>
               </div>
               {job.intake_source && (
                 <div>
-                  <dt className="text-slate-500">Source</dt>
-                  <dd className="text-slate-200">{job.intake_source}</dd>
+                  <dt className="text-d-text0">Source</dt>
+                  <dd className="text-d-text">{job.intake_source}</dd>
                 </div>
               )}
             </dl>
@@ -668,57 +668,57 @@ export default function JobDetailPage() {
 
           {/* Key Dates */}
           <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
-            <h2 className="text-sm font-semibold text-slate-300 mb-3">Key Dates</h2>
+            <h2 className="text-sm font-semibold text-d-muted mb-3">Key Dates</h2>
             <dl className="space-y-2 text-xs">
               <div className="flex justify-between">
-                <dt className="text-slate-500">Created</dt>
-                <dd className="text-slate-300">{formatDate(job.created_at)}</dd>
+                <dt className="text-d-text0">Created</dt>
+                <dd className="text-d-muted">{formatDate(job.created_at)}</dd>
               </div>
               {job.quote_sent_at && (
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Quote Sent</dt>
-                  <dd className="text-slate-300">{formatDate(job.quote_sent_at)}</dd>
+                  <dt className="text-d-text0">Quote Sent</dt>
+                  <dd className="text-d-muted">{formatDate(job.quote_sent_at)}</dd>
                 </div>
               )}
               {job.contract_sent_at && (
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Contract Sent</dt>
-                  <dd className="text-slate-300">{formatDate(job.contract_sent_at)}</dd>
+                  <dt className="text-d-text0">Contract Sent</dt>
+                  <dd className="text-d-muted">{formatDate(job.contract_sent_at)}</dd>
                 </div>
               )}
               {job.signed_at && (
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Signed</dt>
+                  <dt className="text-d-text0">Signed</dt>
                   <dd className="text-emerald-400">{formatDate(job.signed_at)}</dd>
                 </div>
               )}
               {job.deposit_paid_at && (
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Deposit Paid</dt>
+                  <dt className="text-d-text0">Deposit Paid</dt>
                   <dd className="text-emerald-400">{formatDate(job.deposit_paid_at)}</dd>
                 </div>
               )}
               {job.scheduled_at && (
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Scheduled</dt>
+                  <dt className="text-d-text0">Scheduled</dt>
                   <dd className="text-indigo-400">{formatDate(job.scheduled_at)}</dd>
                 </div>
               )}
               {job.started_at && (
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Started</dt>
+                  <dt className="text-d-text0">Started</dt>
                   <dd className="text-orange-400">{formatDate(job.started_at)}</dd>
                 </div>
               )}
               {job.completed_at && (
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Completed</dt>
+                  <dt className="text-d-text0">Completed</dt>
                   <dd className="text-emerald-400">{formatDate(job.completed_at)}</dd>
                 </div>
               )}
               {job.cancelled_at && (
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Cancelled</dt>
+                  <dt className="text-d-text0">Cancelled</dt>
                   <dd className="text-rose-400">{formatDate(job.cancelled_at)}</dd>
                 </div>
               )}

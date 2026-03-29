@@ -18,10 +18,10 @@ const STATUS_OPTIONS = [
 ];
 
 const STATUS_COLORS = {
-  draft: 'bg-slate-700/60 text-slate-100 border-slate-500/40',
+  draft: 'bg-slate-700/60 text-d-text border-slate-500/40',
   quote_sent: 'bg-violet-500/15 text-violet-300 border-violet-500/40',
   contract_sent: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
-  signed: 'bg-sky-500/15 text-sky-300 border-sky-500/40',
+  signed: 'bg-sky-500/15 text-d-primary border-sky-500/40',
   scheduled: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/40',
   in_progress: 'bg-orange-500/15 text-orange-300 border-orange-500/40',
   completed: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
@@ -29,7 +29,7 @@ const STATUS_COLORS = {
 };
 
 const AVATAR_COLORS = [
-  'bg-blue-500/20 text-blue-300',
+  'bg-d-primary/20 text-blue-300',
   'bg-emerald-500/20 text-emerald-300',
   'bg-violet-500/20 text-violet-300',
   'bg-amber-500/20 text-amber-300',
@@ -167,11 +167,11 @@ export default function JobsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-lg font-semibold" style={{ color: styles.text.primary }}>Jobs</h1>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-d-muted">
             Track all jobs from quote to completion.
           </p>
         </div>
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-d-text0">
           {total} job{total === 1 ? '' : 's'} \u00b7 Page {page} of {totalPages}
         </div>
       </div>
@@ -188,7 +188,7 @@ export default function JobsPage() {
               placeholder="Search by name, phone, email, job ID, or project type..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-900/70 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 focus:border-sky-500/60"
+              className="w-full bg-d-surface border border-d-border rounded-xl px-3 py-2 text-sm text-d-text placeholder:text-d-text0 focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
             />
           </div>
           <button
@@ -203,7 +203,7 @@ export default function JobsPage() {
           <select
             value={statusFilter}
             onChange={handleStatusChange}
-            className="w-full bg-slate-900/70 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/60"
+            className="w-full bg-d-surface border border-d-border rounded-xl px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-sky-500/60"
           >
             {STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -216,7 +216,7 @@ export default function JobsPage() {
 
       {/* Jobs table */}
       <div className="rounded-2xl border shadow-lg overflow-hidden" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
-        <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 text-xs font-semibold text-slate-400 border-b border-slate-800/80">
+        <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 text-xs font-semibold text-d-muted border-b border-d-border">
           <div className="col-span-1">Job ID</div>
           <div className="col-span-3">Client</div>
           <div className="col-span-2">Project</div>
@@ -227,18 +227,18 @@ export default function JobsPage() {
         </div>
 
         {loading && (
-          <div className="px-4 py-6 text-sm text-slate-400">
+          <div className="px-4 py-6 text-sm text-d-muted">
             Loading jobs...
           </div>
         )}
 
         {!loading && jobs.length === 0 && (
-          <div className="px-4 py-6 text-sm text-slate-400">
+          <div className="px-4 py-6 text-sm text-d-muted">
             No jobs found. Jobs created from the contract pipeline will appear here.
           </div>
         )}
 
-        <ul className="divide-y divide-slate-800/80">
+        <ul className="divide-y divide-d-border">
           {jobs.map((job) => {
             const jobPk = job.id;
             const displayName = job.client_name || job.client_email || job.client_phone || 'Unknown';
@@ -247,12 +247,12 @@ export default function JobsPage() {
               <li
                 key={jobPk}
                 onClick={() => handleRowClick(jobPk)}
-                className="cursor-pointer hover:bg-slate-900/80 transition-colors"
+                className="cursor-pointer hover:bg-d-surface transition-colors"
               >
                 <div className="px-4 py-3 grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-center">
                   {/* Job ID */}
                   <div className="md:col-span-1">
-                    <p className="text-xs font-mono text-sky-400">{job.job_id || `#${jobPk}`}</p>
+                    <p className="text-xs font-mono text-d-primary">{job.job_id || `#${jobPk}`}</p>
                   </div>
 
                   {/* Client */}
@@ -264,8 +264,8 @@ export default function JobsPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between md:block">
                           <div>
-                            <p className="text-sm font-medium text-slate-50">{displayName}</p>
-                            <p className="text-xs text-slate-400 truncate">
+                            <p className="text-sm font-medium text-d-text">{displayName}</p>
+                            <p className="text-xs text-d-muted truncate">
                               {job.client_phone && <span>{job.client_phone}</span>}
                               {job.client_phone && job.client_email && <span> \u00b7 </span>}
                               {job.client_email && <span>{job.client_email}</span>}
@@ -281,12 +281,12 @@ export default function JobsPage() {
                   </div>
 
                   {/* Project type */}
-                  <div className="md:col-span-2 text-xs text-slate-400">
+                  <div className="md:col-span-2 text-xs text-d-muted">
                     {(job.project_type || 'N/A').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                   </div>
 
                   {/* Quote */}
-                  <div className="md:col-span-1 text-xs text-slate-300 font-medium">
+                  <div className="md:col-span-1 text-xs text-d-muted font-medium">
                     {formatCurrency(job.quote_amount)}
                   </div>
 
@@ -312,7 +312,7 @@ export default function JobsPage() {
                   </div>
 
                   {/* Date */}
-                  <div className="md:col-span-2 text-xs text-slate-400 text-right">
+                  <div className="md:col-span-2 text-xs text-d-muted text-right">
                     {formatDate(job.created_at)}
                   </div>
                 </div>
@@ -323,7 +323,7 @@ export default function JobsPage() {
 
         {/* Pagination */}
         {!loading && jobs.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-800/80 text-xs text-slate-400">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-d-border text-xs text-d-muted">
             <div>
               Showing {(page - 1) * pageSize + 1}\u2013{Math.min(page * pageSize, total)} of {total}
             </div>
@@ -331,14 +331,14 @@ export default function JobsPage() {
               <button
                 onClick={handlePrev}
                 disabled={page <= 1}
-                className="px-4 py-2 md:py-1 rounded-lg border border-slate-700/80 text-xs disabled:opacity-40 disabled:cursor-default hover:bg-slate-800/80 transition min-h-[44px] md:min-h-0"
+                className="px-4 py-2 md:py-1 rounded-lg border border-d-border text-xs disabled:opacity-40 disabled:cursor-default hover:bg-d-surface/80 transition min-h-[44px] md:min-h-0"
               >
                 Prev
               </button>
               <button
                 onClick={handleNext}
                 disabled={page >= totalPages}
-                className="px-4 py-2 md:py-1 rounded-lg border border-slate-700/80 text-xs disabled:opacity-40 disabled:cursor-default hover:bg-slate-800/80 transition min-h-[44px] md:min-h-0"
+                className="px-4 py-2 md:py-1 rounded-lg border border-d-border text-xs disabled:opacity-40 disabled:cursor-default hover:bg-d-surface/80 transition min-h-[44px] md:min-h-0"
               >
                 Next
               </button>
@@ -347,7 +347,7 @@ export default function JobsPage() {
         )}
 
         {error && (
-          <div className="px-4 py-3 text-xs text-rose-400 border-t border-slate-800/80">
+          <div className="px-4 py-3 text-xs text-rose-400 border-t border-d-border">
             Error loading jobs: {error}
           </div>
         )}

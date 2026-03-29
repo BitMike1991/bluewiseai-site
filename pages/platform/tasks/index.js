@@ -144,13 +144,13 @@ export default function TasksPage() {
   return (
     <DashboardLayout title="Tasks">
       {/* Header */}
-      <header className="mb-4 border-b border-slate-800 pb-3">
+      <header className="mb-4 border-b border-d-border pb-3">
         <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div className="space-y-1">
             <h1 className="text-xl font-semibold sm:text-2xl" style={{ color: styles.text.primary }}>
               Tasks
             </h1>
-            <p className="text-xs text-slate-400 sm:text-sm">
+            <p className="text-xs text-d-muted sm:text-sm">
               See every follow-up your AI created and make sure no hot lead
               slips through the cracks.
             </p>
@@ -158,15 +158,15 @@ export default function TasksPage() {
 
           <div className="flex items-center gap-3">
             {/* Status filter pills */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/60 px-1 py-1 text-xs sm:text-sm">
+            <div className="inline-flex items-center gap-2 rounded-full border border-d-border bg-d-surface px-1 py-1 text-xs sm:text-sm">
               <button
                 type="button"
                 onClick={() => setStatusFilter("open")}
                 className={classNames(
                   "rounded-full px-3 py-1 transition",
                   statusFilter === "open"
-                    ? "bg-sky-500/80 text-slate-50 shadow-[0_0_12px_rgba(56,189,248,0.7)]"
-                    : "text-slate-300 hover:bg-slate-800"
+                    ? "bg-sky-500/80 text-d-text shadow-[0_0_12px_rgba(56,189,248,0.7)]"
+                    : "text-d-muted hover:bg-d-surface"
                 )}
               >
                 Open
@@ -177,8 +177,8 @@ export default function TasksPage() {
                 className={classNames(
                   "rounded-full px-3 py-1 transition",
                   statusFilter === "completed"
-                    ? "bg-emerald-500/80 text-slate-50 shadow-[0_0_12px_rgba(16,185,129,0.7)]"
-                    : "text-slate-300 hover:bg-slate-800"
+                    ? "bg-emerald-500/80 text-d-text shadow-[0_0_12px_rgba(16,185,129,0.7)]"
+                    : "text-d-muted hover:bg-d-surface"
                 )}
               >
                 Completed
@@ -189,8 +189,8 @@ export default function TasksPage() {
                 className={classNames(
                   "rounded-full px-3 py-1 transition",
                   statusFilter === "all"
-                    ? "bg-slate-700 text-slate-50"
-                    : "text-slate-300 hover:bg-slate-800"
+                    ? "bg-slate-700 text-d-text"
+                    : "text-d-muted hover:bg-d-surface"
                 )}
               >
                 All
@@ -204,12 +204,12 @@ export default function TasksPage() {
       <main className="flex w-full flex-1 flex-col gap-4">
         <section className="rounded-2xl border shadow-xl" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           {/* Table header row */}
-          <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3 sm:px-6">
+          <div className="flex items-center justify-between border-b border-d-border px-4 py-3 sm:px-6">
             <div>
-              <h2 className="text-sm font-medium text-slate-100">
+              <h2 className="text-sm font-medium text-d-text">
                 Follow-up tasks
               </h2>
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-d-muted">
                 {loading
                   ? "Loading tasks\u2026"
                   : `Showing ${filteredTasks.length} tasks on page ${
@@ -231,13 +231,13 @@ export default function TasksPage() {
                 className={classNames(
                   "rounded-lg border px-3 py-1 text-xs sm:text-sm",
                   page <= 1 || loading
-                    ? "cursor-not-allowed border-slate-700 text-slate-500"
-                    : "border-slate-600 text-slate-100 hover:border-sky-500 hover:text-sky-300"
+                    ? "cursor-not-allowed border-d-border text-d-text0"
+                    : "border-slate-600 text-d-text hover:border-sky-500 hover:text-d-primary"
                 )}
               >
                 Previous
               </button>
-              <span className="text-xs text-slate-400 sm:text-sm">
+              <span className="text-xs text-d-muted sm:text-sm">
                 Page {pagination?.page ?? page}
               </span>
               <button
@@ -247,8 +247,8 @@ export default function TasksPage() {
                 className={classNames(
                   "rounded-lg border px-3 py-1 text-xs sm:text-sm",
                   !pagination?.hasMore || loading
-                    ? "cursor-not-allowed border-slate-700 text-slate-500"
-                    : "border-slate-600 text-slate-100 hover:border-sky-500 hover:text-sky-300"
+                    ? "cursor-not-allowed border-d-border text-d-text0"
+                    : "border-slate-600 text-d-text hover:border-sky-500 hover:text-d-primary"
                 )}
               >
                 Next
@@ -258,15 +258,15 @@ export default function TasksPage() {
 
           {/* Error state */}
           {error && (
-            <div className="border-b border-slate-800 bg-rose-500/10 px-4 py-3 text-xs text-rose-300 sm:px-6">
+            <div className="border-b border-d-border bg-rose-500/10 px-4 py-3 text-xs text-rose-300 sm:px-6">
               {error}
             </div>
           )}
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-800 text-xs sm:text-sm">
-              <thead className="bg-slate-900/80">
+            <table className="min-w-full divide-y divide-d-border text-xs sm:text-sm">
+              <thead className="bg-d-surface">
                 <tr>
                   <Th>Due</Th>
                   <Th>Lead</Th>
@@ -278,12 +278,12 @@ export default function TasksPage() {
                   <Th>Actions</Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800 bg-slate-950/40">
+              <tbody className="divide-y divide-d-border bg-d-surface/60">
                 {loading && filteredTasks.length === 0 ? (
                   <tr>
                     <td
                       colSpan={8}
-                      className="px-4 py-8 text-center text-slate-400 sm:px-6"
+                      className="px-4 py-8 text-center text-d-muted sm:px-6"
                     >
                       Loading tasks\u2026
                     </td>
@@ -292,7 +292,7 @@ export default function TasksPage() {
                   <tr>
                     <td
                       colSpan={8}
-                      className="px-4 py-8 text-center text-slate-500 sm:px-6"
+                      className="px-4 py-8 text-center text-d-text0 sm:px-6"
                     >
                       No tasks found for this filter.
                     </td>
@@ -320,7 +320,7 @@ function Th({ children }) {
   return (
     <th
       scope="col"
-      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400 sm:px-6"
+      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-d-muted sm:px-6"
     >
       {children}
     </th>
@@ -389,7 +389,7 @@ function TaskRow({ task, onComplete, isCompleting }) {
     }
 
     return (
-      <span className="inline-flex rounded-full bg-sky-500/20 px-2 py-0.5 text-[11px] text-sky-200">
+      <span className="inline-flex rounded-full bg-sky-500/20 px-2 py-0.5 text-[11px] text-d-primary">
         Pending
       </span>
     );
@@ -415,8 +415,8 @@ function TaskRow({ task, onComplete, isCompleting }) {
   };
 
   return (
-    <tr className="hover:bg-slate-900/60">
-      <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-200 sm:px-6">
+    <tr className="hover:bg-d-surface">
+      <td className="whitespace-nowrap px-4 py-3 text-xs text-d-text sm:px-6">
         {dueLabel}
       </td>
 
@@ -424,12 +424,12 @@ function TaskRow({ task, onComplete, isCompleting }) {
         {canLinkToLeadPage ? (
           <Link
             href={`/platform/leads/${leadId}`}
-            className="text-sky-300 underline-offset-2 hover:text-sky-200 hover:underline"
+            className="text-d-primary underline-offset-2 hover:text-d-primary hover:underline"
           >
             {leadName || `Lead #${leadId}`}
           </Link>
         ) : (
-          <span className="text-slate-400">
+          <span className="text-d-muted">
             {leadName ||
               (leadSource === "cold_outreach"
                 ? `Cold lead #${leadId}`
@@ -438,29 +438,29 @@ function TaskRow({ task, onComplete, isCompleting }) {
         )}
       </td>
 
-      <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-300 sm:px-6">
+      <td className="whitespace-nowrap px-4 py-3 text-xs text-d-muted sm:px-6">
         {contactSnippet}
       </td>
-      <td className="px-4 py-3 text-xs text-slate-200 sm:px-6">
+      <td className="px-4 py-3 text-xs text-d-text sm:px-6">
         <div className="flex items-center gap-1">
           {priorityBadge && <span>{priorityBadge}</span>}
           <span className="truncate max-w-xs">{titleLabel}</span>
         </div>
         {description && (
-          <div className="text-[10px] text-slate-400 mt-0.5 truncate max-w-xs">
+          <div className="text-[10px] text-d-muted mt-0.5 truncate max-w-xs">
             {description}
           </div>
         )}
       </td>
-      <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-200 sm:px-6">
-        <span className="inline-flex rounded-full bg-slate-700/40 px-2 py-0.5 text-[10px] text-slate-300">
+      <td className="whitespace-nowrap px-4 py-3 text-xs text-d-text sm:px-6">
+        <span className="inline-flex rounded-full bg-slate-700/40 px-2 py-0.5 text-[10px] text-d-muted">
           {typeLabel}
         </span>
       </td>
       <td className="whitespace-nowrap px-4 py-3 text-xs sm:px-6">
         {statusBadge}
       </td>
-      <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-300 sm:px-6">
+      <td className="whitespace-nowrap px-4 py-3 text-xs text-d-muted sm:px-6">
         {leadSource || "\u2014"}
       </td>
       <td className="whitespace-nowrap px-4 py-3 text-xs sm:px-6">
@@ -474,8 +474,8 @@ function TaskRow({ task, onComplete, isCompleting }) {
             className={classNames(
               "rounded-lg border px-2 py-1 text-[11px] font-medium",
               isCompleting
-                ? "cursor-not-allowed border-slate-700 text-slate-500 bg-slate-900"
-                : "border-sky-500/70 text-sky-200 hover:border-sky-400 hover:text-sky-100 hover:bg-sky-500/10"
+                ? "cursor-not-allowed border-d-border text-d-text0 bg-d-surface"
+                : "border-sky-500/70 text-d-primary hover:border-sky-400 hover:text-d-primary/80 hover:bg-sky-500/10"
             )}
           >
             {isCompleting ? "Completing\u2026" : "Complete"}

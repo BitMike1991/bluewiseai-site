@@ -93,7 +93,17 @@ function DashboardShell({ sidebarOpen, closeSidebar, toggleSidebar, handleLogout
   return (
     <div
       className="flex h-screen"
-      style={{ backgroundColor: branding.dashboard_bg || "#0a0a12", color: branding.text_primary || "#f0f0f5" }}
+      style={{
+        backgroundColor: branding.dashboard_bg || "#0a0a12",
+        color: branding.text_primary || "#f0f0f5",
+        '--d-bg': branding.dashboard_bg || '#0a0a12',
+        '--d-surface': branding.surface_color || '#111119',
+        '--d-border': branding.border_color || '#1e1e2e',
+        '--d-text': branding.text_primary || '#f0f0f5',
+        '--d-muted': branding.text_secondary || '#8888aa',
+        '--d-primary': branding.primary_color || '#6c63ff',
+        '--d-accent': branding.accent_color || '#00d4aa',
+      }}
     >
       <Sidebar
         isOpen={sidebarOpen}

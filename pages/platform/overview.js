@@ -52,7 +52,7 @@ function fmt(n) {
 }
 
 const AVATAR_COLORS = [
-  "bg-blue-500/20 text-blue-300",
+  "bg-d-primary/20 text-blue-300",
   "bg-emerald-500/20 text-emerald-300",
   "bg-violet-500/20 text-violet-300",
   "bg-amber-500/20 text-amber-300",
@@ -213,13 +213,13 @@ export default function OverviewPage() {
                     : "bg-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.2)]"
                 }`}>
                   <TrendingUp className={`h-5 w-5 ${
-                    !loading && (kpis.totalProfit || 0) >= 0 ? "text-sky-400" : "text-rose-400"
+                    !loading && (kpis.totalProfit || 0) >= 0 ? "text-d-primary" : "text-rose-400"
                   }`} />
                 </div>
                 <div>
-                  <p className="text-[11px] font-medium uppercase tracking-wider text-sky-400/80">Net Profit</p>
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-d-primary/80">Net Profit</p>
                   <p className={`text-2xl font-bold ${
-                    !loading && (kpis.totalProfit || 0) >= 0 ? "text-sky-400" : "text-rose-400"
+                    !loading && (kpis.totalProfit || 0) >= 0 ? "text-d-primary" : "text-rose-400"
                   }`}>
                     {loading ? "\u2026" : fmt(kpis.totalProfit)}
                   </p>
