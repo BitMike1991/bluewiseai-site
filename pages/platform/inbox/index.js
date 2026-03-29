@@ -155,7 +155,7 @@ export default function InboxPage() {
     <DashboardLayout title="Inbox">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-lg font-semibold" style={{ color: styles.text.primary }}>Inbox</h1>
+          <h1 className="text-lg font-semibold">Inbox</h1>
           <p className="text-sm text-d-muted">
             One thread per lead. Latest activity comes from SMS, Email, and Calls. Click a row to open the full lead timeline.
           </p>

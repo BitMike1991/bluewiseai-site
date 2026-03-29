@@ -8,8 +8,7 @@ export default function StatCard({ label, value, subLabel, icon: Icon, accent })
 
   return (
     <div
-      className={["rounded-2xl border px-4 py-3 shadow-lg", accent ? `border-l-4 ${accent}` : ""].join(" ")}
-      style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}
+      className={["rounded-2xl border border-d-border bg-d-surface px-4 py-3 shadow-lg text-d-text", accent ? `border-l-4 ${accent}` : ""].join(" ")}
     >
       <div className="flex items-start gap-3">
         {Icon && (
@@ -18,14 +17,14 @@ export default function StatCard({ label, value, subLabel, icon: Icon, accent })
           </div>
         )}
         <div className="flex flex-col gap-1 min-w-0">
-          <div className="text-[11px] font-medium uppercase tracking-wide" style={{ color: styles.text.secondary }}>
+          <div className="text-[11px] font-medium uppercase tracking-wide text-d-muted">
             {label}
           </div>
-          <div className="text-2xl font-semibold" style={{ color: styles.text.primary }}>
+          <div className="text-2xl font-semibold text-d-text">
             {value ?? "—"}
           </div>
           {subLabel && (
-            <div className="text-[11px]" style={{ color: styles.text.secondary }}>
+            <div className="text-[11px] text-d-muted">
               {subLabel}
             </div>
           )}

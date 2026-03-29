@@ -25,17 +25,17 @@ export default function ActivityFeed({ items, loading }) {
 
   if (loading) {
     return (
-      <div className="rounded-2xl border px-4 py-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
-        <h3 className="mb-3 text-sm font-medium" style={{ color: styles.text.primary }}>
+      <div className="rounded-2xl border border-d-border bg-d-surface px-4 py-4">
+        <h3 className="mb-3 text-sm font-medium text-d-text">
           Recent Activity
         </h3>
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex items-start gap-3 animate-pulse text-sm">
-              <div className="mt-1 h-2 w-2 rounded-full" style={{ backgroundColor: styles.colors.border }} />
+              <div className="mt-1 h-2 w-2 rounded-full" />
               <div className="flex-1 space-y-1">
-                <div className="h-3 w-32 rounded" style={{ backgroundColor: styles.colors.border }} />
-                <div className="h-2 w-20 rounded" style={{ backgroundColor: styles.colors.surface }} />
+                <div className="h-3 w-32 rounded" />
+                <div className="h-2 w-20 rounded" />
               </div>
             </div>
           ))}
@@ -46,15 +46,15 @@ export default function ActivityFeed({ items, loading }) {
 
   if (!items || items.length === 0) {
     return (
-      <div className="rounded-2xl border px-4 py-4 text-sm" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor, color: styles.text.secondary }}>
+      <div className="rounded-2xl border px-4 py-4 text-sm">
         No recent activity yet. Once your automations run, you'll see them here.
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border px-4 py-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
-      <h3 className="mb-3 text-sm font-medium" style={{ color: styles.text.primary }}>
+    <div className="rounded-2xl border px-4 py-4">
+      <h3 className="mb-3 text-sm font-medium">
         Recent Activity
       </h3>
       <ul className="space-y-3 text-sm">
@@ -71,16 +71,15 @@ export default function ActivityFeed({ items, loading }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="truncate" style={{ color: styles.text.primary }}>
+                    <div className="truncate">
                       {item.label || item.message}
                     </div>
-                    <div className="text-xs" style={{ color: styles.text.secondary }}>{timeAgo}</div>
+                    <div className="text-xs">{timeAgo}</div>
                   </div>
                   {hasLead && (
                     <a
                       href={`/platform/leads/${item.leadId}`}
                       className="shrink-0 rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors"
-                      style={{ borderColor: styles.colors.primary + '60', color: styles.colors.primary }}
                     >
                       View lead
                     </a>

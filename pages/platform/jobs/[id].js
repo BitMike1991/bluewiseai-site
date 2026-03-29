@@ -229,7 +229,7 @@ export default function JobDetailPage() {
 
       {/* Status Pipeline */}
       {!isCancelled && (
-        <div className="mb-6 rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+        <div className="mb-6 rounded-xl border p-4">
           <div className="flex items-center justify-between">
             {STATUS_PIPELINE.map((step, i) => {
               const isCompleted = i <= currentStatusIndex;
@@ -269,7 +269,7 @@ export default function JobDetailPage() {
       )}
 
       {/* Financial Summary Card */}
-      <div className="mb-6 rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+      <div className="mb-6 rounded-xl border p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-d-muted">Financial Summary</h2>
           {financesLoading && (
@@ -369,7 +369,7 @@ export default function JobDetailPage() {
         <div className="lg:col-span-2 space-y-4">
           {/* Photos */}
           {photos && photos.length > 0 && (
-            <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+            <div className="rounded-xl border p-4">
               <h2 className="text-sm font-semibold text-d-muted mb-3">
                 Photos ({photos.length})
               </h2>
@@ -392,7 +392,7 @@ export default function JobDetailPage() {
           )}
 
           {/* Contracts */}
-          <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+          <div className="rounded-xl border p-4">
             <h2 className="text-sm font-semibold text-d-muted mb-3">
               Contracts ({contracts.length})
             </h2>
@@ -435,7 +435,7 @@ export default function JobDetailPage() {
           </div>
 
           {/* Payments */}
-          <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+          <div className="rounded-xl border p-4">
             <h2 className="text-sm font-semibold text-d-muted mb-3">
               Payments ({payments.length})
             </h2>
@@ -492,7 +492,7 @@ export default function JobDetailPage() {
 
           {/* Expenses */}
           {(expenses.length > 0 || financesLoading) && (
-            <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+            <div className="rounded-xl border p-4">
               <h2 className="text-sm font-semibold text-d-muted mb-3">
                 Expenses ({expenses.length})
               </h2>
@@ -568,7 +568,7 @@ export default function JobDetailPage() {
           )}
 
           {/* Activity Timeline */}
-          <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+          <div className="rounded-xl border p-4">
             <h2 className="text-sm font-semibold text-d-muted mb-3">Activity</h2>
             {events.length === 0 ? (
               <p className="text-xs text-d-text0">No activity recorded yet.</p>
@@ -594,7 +594,7 @@ export default function JobDetailPage() {
         {/* Right column (1/3) */}
         <div className="space-y-4">
           {/* Client Info */}
-          <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+          <div className="rounded-xl border p-4">
             <h2 className="text-sm font-semibold text-d-muted mb-3">Client Info</h2>
             <dl className="space-y-2 text-xs">
               <div>
@@ -632,7 +632,7 @@ export default function JobDetailPage() {
           </div>
 
           {/* Job Details */}
-          <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+          <div className="rounded-xl border p-4">
             <h2 className="text-sm font-semibold text-d-muted mb-3">Job Details</h2>
             <dl className="space-y-2 text-xs">
               <div>
@@ -667,7 +667,7 @@ export default function JobDetailPage() {
           </div>
 
           {/* Key Dates */}
-          <div className="rounded-xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+          <div className="rounded-xl border p-4">
             <h2 className="text-sm font-semibold text-d-muted mb-3">Key Dates</h2>
             <dl className="space-y-2 text-xs">
               <div className="flex justify-between">

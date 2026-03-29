@@ -31,8 +31,7 @@ export default function AskBar({ onResult }) {
   return (
     <form onSubmit={handleSubmit} className="mb-6">
       <div
-        className="flex items-center rounded-2xl border px-4 py-2 shadow-inner"
-        style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}
+        className="flex items-center rounded-2xl border border-d-border bg-d-surface px-4 py-2 shadow-inner"
       >
         <input
           type="text"
@@ -40,13 +39,11 @@ export default function AskBar({ onResult }) {
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="Ask anything about your leads…"
           className="flex-1 bg-transparent text-sm focus:outline-none"
-          style={{ color: styles.text.primary }}
         />
         <button
           type="submit"
           disabled={loading}
-          className="ml-3 rounded-xl px-4 py-1.5 text-xs font-semibold shadow-lg disabled:opacity-50"
-          style={{ backgroundColor: styles.button.backgroundColor, color: styles.button.color, boxShadow: `0 0 16px ${styles.colors.primary}90` }}
+          className="ml-3 rounded-xl bg-d-primary text-white px-4 py-1.5 text-xs font-semibold shadow-lg disabled:opacity-50"
         >
           {loading ? "Thinking…" : "Ask"}
         </button>

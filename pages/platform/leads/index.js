@@ -191,12 +191,12 @@ export default function LeadsPage() {
     <DashboardLayout title="Leads">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-lg font-semibold" style={{ color: styles.text.primary }}>Leads</h1>
-          <p className="text-sm" style={{ color: styles.text.secondary }}>
+          <h1 className="text-lg font-semibold">Leads</h1>
+          <p className="text-sm">
             All leads captured by your automations (missed calls, emails, forms, cold outreach).
           </p>
         </div>
-        <div className="text-xs" style={{ color: styles.text.secondary }}>
+        <div className="text-xs">
           {total} lead{total === 1 ? '' : 's'} · Page {page} of {totalPages}
         </div>
       </div>
@@ -211,13 +211,13 @@ export default function LeadsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full border rounded-xl px-3 py-2 text-sm placeholder:text-d-text0 focus:outline-none focus:ring-2"
-              style={styles.input}
+             
             />
           </div>
           <button
             type="submit"
             className="px-4 py-2.5 md:py-2 rounded-xl text-xs font-medium transition min-h-[44px] md:min-h-0"
-            style={styles.button}
+           
           >
             Search
           </button>
@@ -228,7 +228,7 @@ export default function LeadsPage() {
             value={statusFilter}
             onChange={handleStatusChange}
             className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2"
-            style={styles.input}
+           
           >
             {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -237,7 +237,7 @@ export default function LeadsPage() {
             value={sourceFilter}
             onChange={(e) => { const v = e.target.value; setSourceFilter(v); loadLeads({ page: 1, sourceFilter: v }); }}
             className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2"
-            style={styles.input}
+           
           >
             {SOURCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -246,7 +246,7 @@ export default function LeadsPage() {
             value={dateFilter}
             onChange={(e) => { const v = e.target.value; setDateFilter(v); loadLeads({ page: 1, dateFilter: v }); }}
             className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2"
-            style={styles.input}
+           
           >
             {DATE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -255,7 +255,7 @@ export default function LeadsPage() {
             value={sortBy}
             onChange={(e) => { const v = e.target.value; setSortBy(v); loadLeads({ page: 1, sortBy: v }); }}
             className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2"
-            style={styles.input}
+           
           >
             {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -263,7 +263,7 @@ export default function LeadsPage() {
       </div>
 
       {/* Leads table/card hybrid */}
-      <div className="rounded-2xl border shadow-lg overflow-hidden" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+      <div className="rounded-2xl border shadow-lg overflow-hidden">
         <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 text-xs font-semibold border-b" style={{ color: styles.text.secondary, borderColor: styles.card.borderColor }}>
           <div className="col-span-4">Lead</div>
           <div className="col-span-2">Source</div>
@@ -273,18 +273,18 @@ export default function LeadsPage() {
         </div>
 
         {loading && (
-          <div className="px-4 py-6 text-sm" style={{ color: styles.text.secondary }}>
+          <div className="px-4 py-6 text-sm">
             Loading leads\u2026
           </div>
         )}
 
         {!loading && leads.length === 0 && (
-          <div className="px-4 py-6 text-sm" style={{ color: styles.text.secondary }}>
+          <div className="px-4 py-6 text-sm">
             No leads found. Once your automations capture calls or emails, they'll appear here.
           </div>
         )}
 
-        <ul className="divide-y" style={{ borderColor: styles.card.borderColor }}>
+        <ul className="divide-y">
           {leads.map((lead) => {
             // IDs coming from API
             const leadId = lead.lead_id ?? lead.id;
@@ -318,7 +318,6 @@ export default function LeadsPage() {
                 key={leadId}
                 onClick={() => handleRowClick(leadId)}
                 className="cursor-pointer transition-colors"
-                style={{ borderColor: styles.card.borderColor }}
               >
                 <div className="px-4 py-3 grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-center">
                   {/* Lead main info */}
@@ -330,10 +329,10 @@ export default function LeadsPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between md:block">
                           <div>
-                            <p className="text-sm font-medium" style={{ color: styles.text.primary }}>
+                            <p className="text-sm font-medium">
                               {displayName}
                             </p>
-                            <p className="text-xs truncate" style={{ color: styles.text.secondary }}>
+                            <p className="text-xs truncate">
                               {lead.phone && <span>{lead.phone}</span>}
                               {lead.phone && lead.email && <span> \u00b7 </span>}
                               {lead.email && <span>{lead.email}</span>}
@@ -348,7 +347,7 @@ export default function LeadsPage() {
                           </span>
                         </div>
                         {lead.city && (
-                          <p className="hidden md:block text-xs mt-0.5" style={{ color: styles.text.secondary }}>
+                          <p className="hidden md:block text-xs mt-0.5">
                             {lead.city}
                           </p>
                         )}
@@ -357,7 +356,7 @@ export default function LeadsPage() {
                   </div>
 
                   {/* Source */}
-                  <div className="md:col-span-2 text-xs" style={{ color: styles.text.secondary }}>
+                  <div className="md:col-span-2 text-xs">
                     {lead.source || 'unknown'}
                   </div>
 
@@ -369,12 +368,12 @@ export default function LeadsPage() {
                   </div>
 
                   {/* Last contact */}
-                  <div className="md:col-span-2 text-xs" style={{ color: styles.text.secondary }}>
+                  <div className="md:col-span-2 text-xs">
                     {lastContactLabel}
                   </div>
 
                   {/* Summary */}
-                  <div className="md:col-span-2 text-xs text-right md:text-right" style={{ color: styles.text.secondary }}>
+                  <div className="md:col-span-2 text-xs text-right md:text-right">
                     {lead.summary ? (
                       <span className="line-clamp-1">{lead.summary}</span>
                     ) : (
@@ -389,7 +388,7 @@ export default function LeadsPage() {
 
         {/* Pagination footer */}
         {!loading && leads.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t text-xs" style={{ borderColor: styles.card.borderColor, color: styles.text.secondary }}>
+          <div className="flex items-center justify-between px-4 py-3 border-t text-xs">
             <div>
               Showing {(page - 1) * pageSize + 1}\u2013
               {Math.min(page * pageSize, total)} of {total}
@@ -398,14 +397,14 @@ export default function LeadsPage() {
               <button
                 onClick={handlePrev}
                 disabled={page <= 1}
-                className="px-4 py-2 md:py-1 rounded-lg border text-xs disabled:opacity-40 disabled:cursor-default transition min-h-[44px] md:min-h-0" style={{ borderColor: styles.card.borderColor, color: styles.text.secondary }}
+                className="px-4 py-2 md:py-1 rounded-lg border text-xs disabled:opacity-40 disabled:cursor-default transition min-h-[44px] md:min-h-0"
               >
                 Prev
               </button>
               <button
                 onClick={handleNext}
                 disabled={page >= totalPages}
-                className="px-4 py-2 md:py-1 rounded-lg border text-xs disabled:opacity-40 disabled:cursor-default transition min-h-[44px] md:min-h-0" style={{ borderColor: styles.card.borderColor, color: styles.text.secondary }}
+                className="px-4 py-2 md:py-1 rounded-lg border text-xs disabled:opacity-40 disabled:cursor-default transition min-h-[44px] md:min-h-0"
               >
                 Next
               </button>
@@ -414,7 +413,7 @@ export default function LeadsPage() {
         )}
 
         {error && (
-          <div className="px-4 py-3 text-xs text-rose-400 border-t" style={{ borderColor: styles.card.borderColor }}>
+          <div className="px-4 py-3 text-xs text-rose-400 border-t">
             Error loading leads: {error}
           </div>
         )}

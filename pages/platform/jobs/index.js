@@ -166,7 +166,7 @@ export default function JobsPage() {
     <DashboardLayout title="Jobs">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-lg font-semibold" style={{ color: styles.text.primary }}>Jobs</h1>
+          <h1 className="text-lg font-semibold">Jobs</h1>
           <p className="text-sm text-d-muted">
             Track all jobs from quote to completion.
           </p>
@@ -215,7 +215,7 @@ export default function JobsPage() {
       </div>
 
       {/* Jobs table */}
-      <div className="rounded-2xl border shadow-lg overflow-hidden" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+      <div className="rounded-2xl border shadow-lg overflow-hidden">
         <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 text-xs font-semibold text-d-muted border-b border-d-border">
           <div className="col-span-1">Job ID</div>
           <div className="col-span-3">Client</div>

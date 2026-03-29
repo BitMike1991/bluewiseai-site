@@ -90,7 +90,7 @@ export default function CallsPage() {
       <header className="mb-4 border-b border-d-border pb-3">
         <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div className="space-y-1">
-            <h1 className="text-xl font-semibold sm:text-2xl" style={{ color: styles.text.primary }}>
+            <h1 className="text-xl font-semibold sm:text-2xl">
               Calls
             </h1>
             <p className="text-xs text-d-muted sm:text-sm">
@@ -155,7 +155,7 @@ export default function CallsPage() {
 
       {/* Content */}
       <main className="flex w-full flex-1 flex-col gap-4">
-        <section className="rounded-2xl border shadow-xl" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+        <section className="rounded-2xl border shadow-xl">
           {/* Table header row */}
           <div className="flex items-center justify-between border-b border-d-border px-4 py-3 sm:px-6">
             <div>

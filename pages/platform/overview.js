@@ -160,16 +160,16 @@ export default function OverviewPage() {
     <DashboardLayout title="Overview">
       {/* Greeting */}
       <div className="mb-6">
-        <h1 suppressHydrationWarning className="text-xl font-semibold" style={{ color: styles.text.primary }}>
+        <h1 suppressHydrationWarning className="text-xl font-semibold">
           {mounted ? getGreeting(userName) : "Welcome!"}
         </h1>
-        <p className="mt-1 text-sm" style={{ color: styles.text.secondary }}>{"Here's your business at a glance."}</p>
+        <p className="mt-1 text-sm">{"Here's your business at a glance."}</p>
       </div>
 
       {/* Hero Banner: Revenue | Expenses | Net Profit */}
       <div className="mb-6">
-        <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
-          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x" style={{ borderColor: styles.colors.border + '60' }}>
+        <div className="rounded-2xl border overflow-hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x">
             {/* Revenue */}
             <div className="px-5 py-5">
               <div className="flex items-center gap-3">
@@ -181,7 +181,7 @@ export default function OverviewPage() {
                   <p className="text-2xl font-bold text-emerald-400">
                     {loading ? "\u2026" : fmt(kpis.totalRevenue)}
                   </p>
-                  <p className="text-[11px]" style={{ color: styles.text.secondary }}>
+                  <p className="text-[11px]">
                     {loading ? "" : `MTD ${fmt(kpis.revenueMtd)} \u00b7 WTD ${fmt(kpis.revenueWtd)}`}
                   </p>
                 </div>
@@ -198,7 +198,7 @@ export default function OverviewPage() {
                   <p className="text-2xl font-bold text-rose-400">
                     {loading ? "\u2026" : fmt(kpis.totalExpenses)}
                   </p>
-                  <p className="text-[11px]" style={{ color: styles.text.secondary }}>
+                  <p className="text-[11px]">
                     {loading ? "" : `MTD ${fmt(kpis.expensesMtd)}`}
                   </p>
                 </div>
@@ -223,7 +223,7 @@ export default function OverviewPage() {
                   }`}>
                     {loading ? "\u2026" : fmt(kpis.totalProfit)}
                   </p>
-                  <p className="text-[11px]" style={{ color: styles.text.secondary }}>Revenue minus expenses</p>
+                  <p className="text-[11px]">Revenue minus expenses</p>
                 </div>
               </div>
             </div>
@@ -257,7 +257,6 @@ export default function OverviewPage() {
             onChange={(e) => setAskInput(e.target.value)}
             placeholder="Ask anything\u2026"
             className="flex-1 rounded-xl border px-4 py-2.5 text-sm focus:outline-none focus:ring-2"
-            style={{ ...styles.input, boxShadow: undefined }}
           />
           <button
             type="submit"
@@ -277,13 +276,12 @@ export default function OverviewPage() {
                 type="button"
                 onClick={() => handleQuickPrompt(p.q)}
                 className="rounded-lg border px-3 py-1.5 text-xs transition-colors"
-                style={{ borderColor: styles.colors.border, color: styles.text.secondary }}
               >
                 {p.label}
               </button>
             ))}
           </div>
-          <Link href="/platform/ask" className="shrink-0 ml-3 text-xs font-medium" style={{ color: styles.colors.primary }}>
+          <Link href="/platform/ask" className="shrink-0 ml-3 text-xs font-medium">
             Command Center &rarr;
           </Link>
         </div>
@@ -292,12 +290,12 @@ export default function OverviewPage() {
       {/* Activity Feed + Recent Leads */}
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Activity Feed */}
-        <div className="rounded-2xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
-          <h2 className="text-sm font-semibold" style={{ color: styles.text.primary }}>Recent Activity</h2>
+        <div className="rounded-2xl border p-4">
+          <h2 className="text-sm font-semibold">Recent Activity</h2>
           {loading ? (
-            <p className="mt-3 text-xs" style={{ color: styles.text.secondary }}>Loading&hellip;</p>
+            <p className="mt-3 text-xs">Loading&hellip;</p>
           ) : activity.length === 0 ? (
-            <p className="mt-3 text-xs" style={{ color: styles.text.secondary }}>No recent activity.</p>
+            <p className="mt-3 text-xs">No recent activity.</p>
           ) : (
             <ul className="mt-3 space-y-0">
               {activity.slice(0, 8).map((item) => (
@@ -307,13 +305,13 @@ export default function OverviewPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     {item.leadId ? (
-                      <Link href={`/platform/leads/${item.leadId}`} className="text-sm line-clamp-1" style={{ color: styles.text.primary }}>
+                      <Link href={`/platform/leads/${item.leadId}`} className="text-sm line-clamp-1">
                         {item.label}
                       </Link>
                     ) : (
-                      <p className="text-sm line-clamp-1" style={{ color: styles.text.primary }}>{item.label}</p>
+                      <p className="text-sm line-clamp-1">{item.label}</p>
                     )}
-                    <p suppressHydrationWarning className="text-[11px]" style={{ color: styles.text.secondary }}>
+                    <p suppressHydrationWarning className="text-[11px]">
                       {mounted ? formatTimeAgo(item.timestamp) : ""}
                     </p>
                   </div>
@@ -322,24 +320,24 @@ export default function OverviewPage() {
             </ul>
           )}
           {activity.length > 8 && (
-            <p className="mt-2 text-xs" style={{ color: styles.text.secondary }}>Showing 8 of {activity.length} events</p>
+            <p className="mt-2 text-xs">Showing 8 of {activity.length} events</p>
           )}
         </div>
 
         {/* Recent Leads */}
-        <div className="rounded-2xl border p-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
+        <div className="rounded-2xl border p-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold" style={{ color: styles.text.primary }}>Recent Leads</h2>
-            <Link href="/platform/leads" className="text-xs" style={{ color: styles.colors.primary }}>
+            <h2 className="text-sm font-semibold">Recent Leads</h2>
+            <Link href="/platform/leads" className="text-xs">
               View all &rarr;
             </Link>
           </div>
           {loading ? (
-            <p className="mt-3 text-xs" style={{ color: styles.text.secondary }}>Loading&hellip;</p>
+            <p className="mt-3 text-xs">Loading&hellip;</p>
           ) : recentLeads.length === 0 ? (
-            <p className="mt-3 text-xs" style={{ color: styles.text.secondary }}>No leads yet.</p>
+            <p className="mt-3 text-xs">No leads yet.</p>
           ) : (
-            <ul className="mt-3 divide-y" style={{ borderColor: styles.colors.border + '60' }}>
+            <ul className="mt-3 divide-y">
               {recentLeads.slice(0, 6).map((lead) => (
                 <li key={lead.id}>
                   <Link href={`/platform/leads/${lead.id}`} className="flex items-center gap-3 py-2.5 group">
@@ -347,10 +345,10 @@ export default function OverviewPage() {
                       {getInitial(lead.name)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium" style={{ color: styles.text.primary }}>
+                      <p className="truncate text-sm font-medium">
                         {lead.name}
                       </p>
-                      <p className="text-[11px]" style={{ color: styles.text.secondary }}>
+                      <p className="text-[11px]">
                         {lead.source ? getSourceLabel(lead.source) : ""}
                         {lead.status ? ` \u00b7 ${lead.status}` : ""}
                       </p>
