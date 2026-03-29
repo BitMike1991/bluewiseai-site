@@ -295,7 +295,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Outlook Integration */}
-        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-s="">
+        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           <div className="flex items-center gap-3">
             <Mail className="w-4 h-4 text-sky-400" />
             <div>
@@ -359,7 +359,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Business profile */}
-        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-s="">
+        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="text-sm font-semibold text-slate-100">Business profile</h2>
@@ -429,7 +429,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Phone + inbox */}
-        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-s="">
+        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           <div>
             <h2 className="text-sm font-semibold text-slate-100">
               Phone & inbox routing
@@ -498,7 +498,7 @@ export default function SettingsPage() {
         </section>
 
         {/* AI persona + offer */}
-        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-s="">
+        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           <div>
             <h2 className="text-sm font-semibold text-slate-100">AI persona & offer</h2>
             <p className="text-xs text-slate-400">
@@ -549,7 +549,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Signatures & templates */}
-        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-s="">
+        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           <div>
             <h2 className="text-sm font-semibold text-slate-100">
               Email & SMS templates
@@ -604,7 +604,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Hours */}
-        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-s="">
+        <section className="rounded-2xl border shadow-xl p-5 space-y-4" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
           <div>
             <h2 className="text-sm font-semibold text-slate-100">
               Business hours

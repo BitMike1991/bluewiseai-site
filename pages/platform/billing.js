@@ -223,7 +223,7 @@ export default function BillingPage() {
 
         {/* Current Period Preview (admin only) */}
         {isAdmin && preview && (
-          <div className="rounded-xl border" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-b=" p-6">
+          <div className="p-6 rounded-xl border" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
             <h2 className="text-sm font-semibold text-slate-300 mb-4">Current Period Preview</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
@@ -276,7 +276,7 @@ export default function BillingPage() {
 
         {/* Invoices Table */}
         {data.invoices?.length > 0 && (
-          <div className="rounded-xl border" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-b=" overflow-hidden">
+          <div className="overflow-hidden rounded-xl border" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
             <div className="px-6 py-4 border-b border-slate-800">
               <h2 className="text-sm font-semibold text-slate-300">Invoices</h2>
             </div>
@@ -321,7 +321,7 @@ export default function BillingPage() {
 
         {/* Events Log (admin only) */}
         {isAdmin && data.events?.length > 0 && (
-          <div className="rounded-xl border" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }} data-b=" overflow-hidden">
+          <div className="overflow-hidden rounded-xl border" style={{ backgroundColor: styles.card.backgroundColor, borderColor: styles.card.borderColor }}>
             <div className="px-6 py-4 border-b border-slate-800">
               <h2 className="text-sm font-semibold text-slate-300">Audit Log</h2>
             </div>
