@@ -141,12 +141,12 @@ export default async function handler(req, res) {
       e.paid_at && new Date(e.paid_at).toISOString() >= monthStart
     ).reduce((s, e) => s + Number(e.total || 0), 0);
 
-    // 7c) Outstanding balance — ONLY signed contracts (remaining balance after payments)
+    // 7c) Outstanding balance — ONLY signed/accepted contracts (remaining balance after payments)
     const { data: signedJobs } = await supabase
       .from("jobs")
       .select("id, quote_amount")
       .eq("customer_id", customerId)
-      .in("status", ["signed", "scheduled", "in_progress", "completed"]);
+      .in("status", ["signed", "contract_signed", "scheduled", "in_progress", "completed"]);
 
     let totalTtcOwed = 0;
     const signedJobIds = [];
@@ -171,7 +171,7 @@ export default async function handler(req, res) {
 
     const outstandingBalance = Math.max(0, totalTtcOwed - totalPaidOnJobs);
 
-    // 8) Pipeline value — all quotes + unsigned contracts (NOT signed, those go to outstanding)
+    // 8) Pipeline value — all pre-signing quotes + jobs (NOT signed, those go to outstanding)
     const { data: pipelineQuotes } = await supabase
       .from("quotes")
       .select("total_ttc")
@@ -182,7 +182,7 @@ export default async function handler(req, res) {
       .from("jobs")
       .select("quote_amount")
       .eq("customer_id", customerId)
-      .in("status", ["draft", "quote_sent", "contract_sent"]);
+      .in("status", ["draft", "quoted", "quote_sent", "accepted", "contract_sent"]);
 
     const pipelineValue =
       (pipelineQuotes || []).reduce((s, q) => s + Number(q.total_ttc || 0), 0) +

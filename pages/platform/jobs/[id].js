@@ -401,21 +401,25 @@ export default function JobDetailPage() {
             ) : (
               <div className="space-y-2">
                 {contracts.map((c) => {
-                  const Wrapper = c.signed_pdf_url ? 'a' : 'div';
-                  const wrapperProps = c.signed_pdf_url ? { href: c.signed_pdf_url, target: '_blank', rel: 'noopener noreferrer' } : {};
+                  const hasContent = !!c.html_content;
+                  function openContract() {
+                    if (!c.html_content) return;
+                    const win = window.open('', '_blank');
+                    if (win) { win.document.write(c.html_content); win.document.close(); }
+                  }
                   return (
-                    <Wrapper
+                    <div
                       key={c.id}
-                      {...wrapperProps}
-                      className={`flex items-center justify-between px-3 py-2 rounded-lg bg-d-surface/40 border border-d-border/50 ${c.signed_pdf_url ? 'cursor-pointer hover:border-d-primary/40 transition-colors' : ''}`}
+                      onClick={hasContent ? openContract : undefined}
+                      className={`flex items-center justify-between px-3 py-2 rounded-lg bg-d-surface/40 border border-d-border/50 ${hasContent ? 'cursor-pointer hover:border-d-primary/40 transition-colors' : ''}`}
                     >
                       <div>
                         <p className="text-sm text-d-text">
                           {c.template_name || 'Contract'} {c.template_version || ''}
                         </p>
                         <p className="text-xs text-d-text0">Created {formatDate(c.created_at)}</p>
-                        {c.signed_pdf_url && (
-                          <p className="text-xs text-d-primary mt-0.5">View signed contract</p>
+                        {hasContent && (
+                          <p className="text-xs text-d-primary mt-0.5">Click to view contract</p>
                         )}
                       </div>
                       <div className="text-right">
@@ -435,7 +439,7 @@ export default function JobDetailPage() {
                           <p className="text-xs text-d-muted">by {c.signer_name}</p>
                         )}
                       </div>
-                    </Wrapper>
+                    </div>
                   );
                 })}
               </div>
