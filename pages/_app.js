@@ -1,10 +1,13 @@
 import { Analytics } from "@vercel/analytics/react";
 import Head from "next/head";
+import Script from "next/script";
 import { useRouter } from "next/router";
 import { Inter, Space_Grotesk, DM_Sans } from "next/font/google";
 import '@/styles/globals.css';
 import Layout from '@/components/Layout';
 import { getLocale } from "@/lib/locale";
+
+const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID;
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,6 +41,7 @@ const OG_DESC = {
 export default function App({ Component, pageProps }) {
   const { pathname } = useRouter();
   const locale = getLocale(pathname);
+  const isMarketing = FB_PIXEL_ID && !pathname.startsWith("/platform");
 
   return (
     <>
@@ -55,6 +59,34 @@ export default function App({ Component, pageProps }) {
         <meta name="twitter:description" content={OG_DESC[locale]} />
         <meta name="twitter:image" content="https://bluewiseai.com/bluewise-logo.png" />
       </Head>
+      {isMarketing && (
+        <>
+          <Script
+            id="fb-pixel"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+                !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+                n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+                n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+                t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+                document,'script','https://connect.facebook.net/en_US/fbevents.js');
+                fbq('init', '${FB_PIXEL_ID}');
+                fbq('track', 'PageView');
+              `,
+            }}
+          />
+          <noscript>
+            <img
+              height="1"
+              width="1"
+              style={{ display: "none" }}
+              src={`https://www.facebook.com/tr?id=${FB_PIXEL_ID}&ev=PageView&noscript=1`}
+              alt=""
+            />
+          </noscript>
+        </>
+      )}
       <div className={`${inter.variable} ${spaceGrotesk.variable} ${dmSans.variable} font-sans`}>
         <Layout>
           <Component {...pageProps} />

@@ -13,6 +13,7 @@ import {
   DollarSign,
   CreditCard,
   Settings,
+  BarChart2,
   X,
 } from "lucide-react";
 
@@ -24,6 +25,7 @@ const ALL_NAV_ITEMS = [
   { key: "calls", href: "/platform/calls", label: "Calls", icon: Phone },
   { key: "finances", href: "/platform/finances", label: "Finances", icon: DollarSign },
   { key: "campaigns", href: "/platform/campaigns", label: "Campaigns", icon: Target },
+  { key: "analytics", href: "/platform/analytics", label: "Analytics", icon: BarChart2 },
   { key: "tasks", href: "/platform/tasks", label: "Tasks", icon: CheckSquare },
   { key: "billing", href: "/platform/billing", label: "Billing", icon: CreditCard },
   { key: "settings", href: "/platform/settings", label: "Settings", icon: Settings },

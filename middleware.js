@@ -35,6 +35,7 @@ export async function middleware(req) {
     pathname.startsWith("/api/jobs") ||
     pathname.startsWith("/api/finances") ||
     pathname.startsWith("/api/campaigns") ||
+    pathname.startsWith("/api/analytics") ||
     pathname.startsWith("/api/admin");
 
   if (!isProtected) return res;
@@ -109,6 +110,7 @@ export const config = {
     "/api/jobs/:path*",
     "/api/finances/:path*",
     "/api/campaigns/:path*",
+    "/api/analytics/:path*",
     "/api/admin/:path*",
     "/api/subscription/:path*",
   ],

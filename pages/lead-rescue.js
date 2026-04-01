@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import {
@@ -147,6 +147,8 @@ export default function LeadRescueOffer() {
 
   const [selectedTier, setSelectedTier] = useState("pro");
   const [openFaq, setOpenFaq] = useState(null);
+
+  useEffect(() => { window.fbq?.("track", "ViewContent", { content_name: "Lead Rescue", content_category: "product" }); }, []);
 
   return (
     <div className="min-h-screen bg-bg text-white">

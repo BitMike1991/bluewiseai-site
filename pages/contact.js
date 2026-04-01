@@ -133,6 +133,7 @@ export default function Contact() {
       });
       setStatus(T.successMsg[locale]);
       setForm({ name: "", email: "", phone: "", industry: "", callsPerWeek: "", message: "" });
+      window.fbq?.("track", "Lead");
     } catch (err) {
       console.error(err);
       setStatus(T.errorMsg[locale]);

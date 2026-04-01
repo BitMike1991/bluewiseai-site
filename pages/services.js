@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import {
@@ -137,6 +138,8 @@ export default function Services() {
   const steps = STEPS[locale];
   const features = FEATURES[locale];
   const replacements = REPLACEMENTS[locale];
+
+  useEffect(() => { window.fbq?.("track", "ViewContent", { content_name: "Services", content_category: "product" }); }, []);
 
   return (
     <div className="min-h-screen bg-bg text-white">
