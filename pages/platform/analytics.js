@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "../../src/components/dashboard/DashboardLayout";
 import { useBranding } from "../../src/components/dashboard/BrandingContext";
-import { BarChart2, TrendingUp, Users, Phone, MessageSquare } from "lucide-react";
+import { BarChart2, TrendingUp, Users, Phone, MessageSquare, DollarSign } from "lucide-react";
 
 const RANGES = [
   { value: "7d", label: "7 days" },
@@ -186,7 +186,48 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Row 4: AI Performance + Message Volume */}
+        {/* Row 4: Paid Ads (if available) */}
+        {data.adsInsights && (
+          <>
+            <div className="rounded-2xl border border-d-border bg-d-surface p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <DollarSign className="w-4 h-4 text-d-primary" />
+                <h3 className="text-sm font-medium text-d-muted">Paid Ads Performance</h3>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+                {[
+                  { label: "Spend", value: `$${data.adsInsights.totalSpend}` },
+                  { label: "Impressions", value: data.adsInsights.totalImpressions.toLocaleString() },
+                  { label: "Clicks", value: data.adsInsights.totalClicks.toLocaleString() },
+                  { label: "Leads (Ads)", value: data.adsInsights.totalLeads },
+                  { label: "CPL", value: data.adsInsights.cpl != null ? `$${data.adsInsights.cpl}` : "—" },
+                  { label: "CTR", value: `${data.adsInsights.ctr}%` },
+                ].map((m) => (
+                  <div key={m.label} className="rounded-xl border border-d-border bg-d-bg p-3 text-center">
+                    <div className="text-lg font-semibold text-d-text">{m.value}</div>
+                    <div className="text-[11px] text-d-muted mt-0.5">{m.label}</div>
+                  </div>
+                ))}
+              </div>
+              {data.adsInsights.dailySpend?.length > 0 && (
+                <div className="h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={data.adsInsights.dailySpend} barSize={range === "90d" || range === "all" ? 3 : 10}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={borderHex} vertical={false} />
+                      <XAxis dataKey="date" tickFormatter={(v) => v.slice(5)} tick={tickProps} {...axisProps}
+                        interval={range === "7d" ? 0 : "preserveStartEnd"} />
+                      <YAxis tick={tickProps} {...axisProps} tickFormatter={(v) => `$${v}`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="spend" name="Spend ($)" fill={primary} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Row 5: AI Performance + Message Volume */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="rounded-2xl border border-d-border bg-d-surface p-4">
             <div className="flex items-center gap-2 mb-3">

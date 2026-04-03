@@ -179,6 +179,70 @@ export default async function handler(req, res) {
       email: msgEmailMap[weekKey] || 0,
     }));
 
+    // ── 6. Facebook Ads insights (optional — only if customer has ad account) ──
+    let adsInsights = null;
+    const metaToken = process.env.META_SYSTEM_TOKEN;
+    if (metaToken) {
+      const { data: custRow } = await supabase
+        .from("customers").select("fb_ad_account_id").eq("id", customerId).single();
+      const adAccountId = custRow?.fb_ad_account_id;
+      if (adAccountId) {
+        try {
+          const adsSince = sinceIso ? sinceIso.slice(0, 10) : "2020-01-01";
+          const adsUntil = now.toISOString().slice(0, 10);
+          const insightsUrl = `https://graph.facebook.com/v21.0/${adAccountId}/insights?fields=spend,impressions,clicks,cpc,cpm,actions,cost_per_action_type&time_range={"since":"${adsSince}","until":"${adsUntil}"}&time_increment=1&limit=100&access_token=${metaToken}`;
+          const adsResp = await fetch(insightsUrl);
+          const adsJson = await adsResp.json();
+
+          if (adsJson.data && adsJson.data.length > 0) {
+            let totalSpend = 0, totalImpressions = 0, totalClicks = 0, totalLeads = 0;
+            const dailySpend = [];
+
+            for (const day of adsJson.data) {
+              const spend = parseFloat(day.spend || 0);
+              const impressions = parseInt(day.impressions || 0);
+              const clicks = parseInt(day.clicks || 0);
+              totalSpend += spend;
+              totalImpressions += impressions;
+              totalClicks += clicks;
+
+              let leads = 0;
+              if (day.actions) {
+                const leadAction = day.actions.find(a => a.action_type === "lead" || a.action_type === "onsite_conversion.lead_grouped");
+                if (leadAction) leads = parseInt(leadAction.value || 0);
+              }
+              totalLeads += leads;
+
+              dailySpend.push({
+                date: day.date_start,
+                spend: Math.round(spend * 100) / 100,
+                impressions,
+                clicks,
+                leads,
+              });
+            }
+
+            const cpl = totalLeads > 0 ? Math.round(totalSpend / totalLeads * 100) / 100 : null;
+            const ctr = totalImpressions > 0 ? Math.round(totalClicks / totalImpressions * 10000) / 100 : 0;
+            const cpc = totalClicks > 0 ? Math.round(totalSpend / totalClicks * 100) / 100 : null;
+
+            adsInsights = {
+              totalSpend: Math.round(totalSpend * 100) / 100,
+              totalImpressions,
+              totalClicks,
+              totalLeads,
+              cpl,
+              ctr,
+              cpc,
+              dailySpend,
+            };
+          }
+        } catch (adsErr) {
+          console.error("[api/analytics] Facebook Ads fetch error:", adsErr.message);
+        }
+      }
+    }
+
     const result = {
       leadsPerDay,
       leadsBySource,
@@ -186,8 +250,9 @@ export default async function handler(req, res) {
       revenuePerWeek,
       aiPerformance,
       messageVolume,
+      adsInsights,
     };
-    console.log("[analytics] success:", { customerId, leads: leadsPerDay.length, sources: leadsBySource.length, funnel: conversionFunnel.length });
+    console.log("[analytics] success:", { customerId, leads: leadsPerDay.length, sources: leadsBySource.length, funnel: conversionFunnel.length, hasAds: !!adsInsights });
     return res.status(200).json(result);
   } catch (err) {
     console.error("[api/analytics] Error:", err);
