@@ -184,36 +184,14 @@ export default async function handler(req, res) {
     const metaToken = process.env.META_SYSTEM_TOKEN;
     if (metaToken) {
       const { data: custRow } = await supabase
-        .from("customers").select("fb_ad_account_id, fb_page_id").eq("id", customerId).single();
+        .from("customers").select("fb_ad_account_id, fb_campaign_ids").eq("id", customerId).single();
       const adAccountId = custRow?.fb_ad_account_id;
-      const pageId = custRow?.fb_page_id;
-      if (adAccountId) {
+      const campaignIds = custRow?.fb_campaign_ids;
+      if (adAccountId && campaignIds && campaignIds.length > 0) {
         try {
           const adsSince = sinceIso ? sinceIso.slice(0, 10) : "2020-01-01";
           const adsUntil = now.toISOString().slice(0, 10);
-
-          // Get campaign IDs that promote this customer's page
-          let campaignFilter = "";
-          if (pageId) {
-            const campUrl = `https://graph.facebook.com/v21.0/${adAccountId}/campaigns?fields=id,promoted_object&filtering=[{"field":"effective_status","operator":"IN","value":["ACTIVE","PAUSED"]}]&limit=100&access_token=${metaToken}`;
-            const campResp = await fetch(campUrl);
-            const campJson = await campResp.json();
-            if (campJson.data) {
-              const myCampaigns = campJson.data
-                .filter(c => {
-                  const po = c.promoted_object;
-                  return po && po.page_id === pageId;
-                })
-                .map(c => c.id);
-              if (myCampaigns.length > 0) {
-                campaignFilter = `&filtering=[{"field":"campaign.id","operator":"IN","value":${JSON.stringify(myCampaigns)}}]`;
-              } else {
-                // No campaigns for this page — skip
-                throw new Error("No campaigns for this page");
-              }
-            }
-          }
-
+          const campaignFilter = `&filtering=[{"field":"campaign.id","operator":"IN","value":${JSON.stringify(campaignIds)}}]`;
           const insightsUrl = `https://graph.facebook.com/v21.0/${adAccountId}/insights?fields=spend,impressions,clicks,cpc,cpm,actions,cost_per_action_type&time_range={"since":"${adsSince}","until":"${adsUntil}"}&time_increment=1&limit=100${campaignFilter}&access_token=${metaToken}`;
           const adsResp = await fetch(insightsUrl);
           const adsJson = await adsResp.json();
