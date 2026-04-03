@@ -191,9 +191,15 @@ export default async function handler(req, res) {
         try {
           const adsSince = sinceIso ? sinceIso.slice(0, 10) : "2020-01-01";
           const adsUntil = now.toISOString().slice(0, 10);
-          const campaignFilter = `&filtering=[{"field":"campaign.id","operator":"IN","value":${JSON.stringify(campaignIds)}}]`;
-          const insightsUrl = `https://graph.facebook.com/v21.0/${adAccountId}/insights?fields=spend,impressions,clicks,cpc,cpm,actions,cost_per_action_type&time_range={"since":"${adsSince}","until":"${adsUntil}"}&time_increment=1&limit=100${campaignFilter}&access_token=${metaToken}`;
-          const adsResp = await fetch(insightsUrl);
+          const insightsParams = new URLSearchParams({
+            fields: "spend,impressions,clicks,cpc,cpm,actions,cost_per_action_type",
+            time_range: JSON.stringify({ since: adsSince, until: adsUntil }),
+            time_increment: "1",
+            limit: "100",
+            filtering: JSON.stringify([{ field: "campaign.id", operator: "IN", value: campaignIds }]),
+            access_token: metaToken,
+          });
+          const adsResp = await fetch(`https://graph.facebook.com/v21.0/${adAccountId}/insights?${insightsParams}`);
           const adsJson = await adsResp.json();
 
           if (adsJson.data && adsJson.data.length > 0) {
