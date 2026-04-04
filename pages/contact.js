@@ -174,7 +174,7 @@ export default function Contact() {
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-accent2 flex-shrink-0" />{T.customROI[locale]}</li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-accent2 flex-shrink-0" />{T.actionable[locale]}</li>
               </ul>
-              <a href="https://calendar.google.com/calendar/appointments/schedules/AcZssZ0" target="_blank" rel="noopener noreferrer">
+              <a href="https://calendar.app.google/ht4zTrzoTZNoTXCfA" target="_blank" rel="noopener noreferrer">
                 <ShimmerButton className="text-base px-8 py-4">{T.pickTime[locale]}</ShimmerButton>
               </a>
               <p className="text-txt3 text-xs mt-3">{T.calNote[locale]}</p>
