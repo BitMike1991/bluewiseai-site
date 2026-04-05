@@ -11,7 +11,7 @@ export default function PillarsFrIndex() {
     <div
       className="
         min-h-screen
-        bg-[url('/styles/backgroundpages.png')]
+        bg-[url('/styles/backgroundpages.jpg')]
         bg-cover bg-center
         text-white
       "

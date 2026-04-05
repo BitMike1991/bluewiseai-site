@@ -303,7 +303,7 @@ export default function LeadRescueOnboardingFR() {
   const serviceOptions = serviceOptionsByType[businessType] || serviceOptionsByType.other;
 
   return (
-    <div className="min-h-screen bg-[url('/styles/backgroundpages.png')] bg-cover bg-center text-white">
+    <div className="min-h-screen bg-[url('/styles/backgroundpages.jpg')] bg-cover bg-center text-white">
       <div className="min-h-screen py-16 px-4 backdrop-brightness-110">
         <section className="max-w-4xl mx-auto space-y-10 px-6 sm:px-12 py-10 rounded-3xl bg-slate-950/80 border border-white/10 backdrop-blur-md shadow-[0_0_45px_rgba(15,23,42,0.9)]">
           <h1 className="text-4xl font-heading text-center drop-shadow-md">
