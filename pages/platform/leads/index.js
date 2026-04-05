@@ -346,9 +346,9 @@ export default function LeadsPage() {
                             {lead.status || 'new'}
                           </span>
                         </div>
-                        {lead.city && (
-                          <p className="hidden md:block text-xs mt-0.5">
-                            {lead.city}
+                        {(lead.city || lead.notes) && (
+                          <p className="hidden md:block text-xs mt-0.5" style={{ color: styles.text.secondary }}>
+                            {[lead.city, lead.notes].filter(Boolean).join(' · ')}
                           </p>
                         )}
                       </div>

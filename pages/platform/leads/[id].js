@@ -737,6 +737,12 @@ export default function LeadDetailPage() {
                   <dt className="text-d-muted text-xs uppercase tracking-wide">Last contact</dt>
                   <dd>{formatDate(lead?.lastContactAt)}</dd>
                 </div>
+                {lead?.city && (
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-d-muted text-xs uppercase tracking-wide">City</dt>
+                    <dd className="font-medium">{lead.city}</dd>
+                  </div>
+                )}
                 <div className="flex justify-between gap-4">
                   <dt className="text-d-muted text-xs uppercase tracking-wide">Source</dt>
                   <dd className="capitalize">{lead?.source || "\u2014"}</dd>
@@ -745,6 +751,12 @@ export default function LeadDetailPage() {
                   <dt className="text-d-muted text-xs uppercase tracking-wide">Missed calls</dt>
                   <dd className="font-medium">{lead?.missed_call_count ?? 0}</dd>
                 </div>
+                {lead?.notes && (
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-d-muted text-xs uppercase tracking-wide">Notes</dt>
+                    <dd className="font-medium text-right">{lead.notes}</dd>
+                  </div>
+                )}
               </dl>
             </div>
 

@@ -40,6 +40,7 @@ export default async function handler(req, res) {
         phone,
         email,
         city,
+        notes,
         status,
         source,
         language,
