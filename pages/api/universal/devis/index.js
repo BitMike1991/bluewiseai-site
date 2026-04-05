@@ -456,9 +456,11 @@ export default async function handler(req, res) {
       api_key
     } = req.body;
 
-    // Auth: universal key (env var or fallback) or per-customer key
-    const universalKey = process.env.UNIVERSAL_API_KEY || 'f888cf0a7b229281f2c85d9164dbcf27ef55ce2cf75ac9a3';
-    const validKeys = [universalKey, 'f888cf0a7b229281f2c85d9164dbcf27ef55ce2cf75ac9a3'];
+    // Auth: universal key (env var only) or per-customer key
+    if (!process.env.UNIVERSAL_API_KEY) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const validKeys = [process.env.UNIVERSAL_API_KEY];
     if (!validKeys.includes(api_key)) {
       // Try per-customer key
       if (customer_id) {

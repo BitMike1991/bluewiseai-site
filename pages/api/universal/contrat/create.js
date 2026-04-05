@@ -889,7 +889,10 @@ export default async function handler(req, res) {
     } = body;
 
     // ── Auth ──
-    const validKeys = [process.env.UNIVERSAL_API_KEY, 'f888cf0a7b229281f2c85d9164dbcf27ef55ce2cf75ac9a3'].filter(Boolean);
+    if (!process.env.UNIVERSAL_API_KEY) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const validKeys = [process.env.UNIVERSAL_API_KEY];
     const isUniversalAuth = validKeys.includes(api_key);
 
     if (!isUniversalAuth && !api_key) {

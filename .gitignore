@@ -44,3 +44,6 @@ next-env.d.ts
 # IDE junk
 .idea/
 *.code-workspace
+
+# Private — client contracts with PII (never commit)
+/private/
