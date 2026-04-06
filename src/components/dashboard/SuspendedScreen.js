@@ -5,6 +5,12 @@ import { useBranding } from "./BrandingContext";
 export default function SuspendedScreen() {
   const { branding } = useBranding();
 
+  const supportEmail = branding.support_email || "mikael@bluewiseai.com";
+  const interacEmail = branding.billing_email || supportEmail;
+  const interacQuestion = branding.interac_question || null;
+  const interacAnswer = branding.interac_answer || null;
+  const companyName = branding.company_name || "BlueWise AI";
+
   return (
     <div className="flex h-screen bg-d-bg text-d-text items-center justify-center p-6">
       <div className="max-w-lg w-full text-center space-y-8">
@@ -34,23 +40,27 @@ export default function SuspendedScreen() {
               <Mail className="w-4 h-4 text-d-primary mt-0.5 flex-shrink-0" />
               <div>
                 <div className="text-xs text-d-muted">Send to</div>
-                <div className="text-sm text-d-text font-medium">mikael@bluewiseai.com</div>
+                <div className="text-sm text-d-text font-medium">{interacEmail}</div>
               </div>
             </div>
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-              <div>
-                <div className="text-xs text-d-muted">Security question</div>
-                <div className="text-sm text-d-text font-medium">Quel type de service?</div>
+            {interacQuestion && (
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <div className="text-xs text-d-muted">Security question</div>
+                  <div className="text-sm text-d-text font-medium">{interacQuestion}</div>
+                </div>
               </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-              <div>
-                <div className="text-xs text-d-muted">Answer</div>
-                <div className="text-sm text-d-text font-medium">plus</div>
+            )}
+            {interacAnswer && (
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <div className="text-xs text-d-muted">Answer</div>
+                  <div className="text-sm text-d-text font-medium">{interacAnswer}</div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -66,7 +76,7 @@ export default function SuspendedScreen() {
         {/* Contact */}
         <div className="flex items-center justify-center gap-2 text-xs text-d-muted">
           <Phone className="w-3 h-3" />
-          <span>Need help? Contact support at mikael@bluewiseai.com</span>
+          <span>Need help? Contact {companyName} support at {supportEmail}</span>
         </div>
       </div>
     </div>
