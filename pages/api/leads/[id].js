@@ -182,321 +182,123 @@ export default async function handler(req, res) {
     };
 
     //
-    // 2) Fetch PROFILE
-    //
-    let profile = null;
-    if (lead.profile_id) {
-      const { data: profileRow, error: profileError } = await supabase
-        .from("lead_profiles")
-        .select("*")
-        .eq("customer_id", customerId)
-        .eq("id", lead.profile_id)
-        .maybeSingle();
-
-      if (profileError)
-        console.error("[api/leads/[id]] profileError", profileError);
-      if (profileRow) profile = profileRow;
-    }
-
-    //
-    // 3) Fetch IDENTITIES
-    //
-    let identities = [];
-    if (lead.profile_id) {
-      const { data: identityRows, error: identitiesError } = await supabase
-        .from("lead_identities")
-        .select(
-          `
-          id,
-          customer_id,
-          profile_id,
-          kind,
-          value,
-          normalized_value,
-          identity_type,
-          identity_value,
-          phone_last7,
-          is_primary,
-          created_at
-        `
-        )
-        .eq("customer_id", customerId)
-        .eq("profile_id", lead.profile_id)
-        .order("is_primary", { ascending: false });
-
-      if (identitiesError)
-        console.error("[api/leads/[id]] identitiesError", identitiesError);
-      identities = identityRows || [];
-    }
-
-    //
-    // 4) Fetch primary INBOX_LEAD thread(s) for this lead
-    //
-    const { data: inboxRows, error: inboxError } = await supabase
-      .from("inbox_leads")
-      .select(
-        `
-        id,
-        customer_id,
-        lead_id,
-        profile_id,
-        source,
-        status,
-        priority,
-        is_emergency,
-        service_type,
-        subject,
-        summary,
-        first_seen_at,
-        last_contact_at,
-        last_missed_call_at,
-        missed_call_count,
-        next_follow_up_at,
-        created_at,
-        updated_at
-      `
-      )
-      .eq("customer_id", String(customerId))
-      .eq("lead_id", leadId)
-      .order("last_contact_at", { ascending: false, nullsFirst: false })
-      .order("created_at", { ascending: false });
-
-    if (inboxError) console.error("[api/leads/[id]] inboxError", inboxError);
-
-    const inbox_leads = inboxRows || [];
-    const primaryInboxLead = inbox_leads.length > 0 ? inbox_leads[0] : null;
-
-    //
-    // 5) Fetch EVENTS for primary inbox_lead
-    //
-    let events = [];
-    if (primaryInboxLead) {
-      const { data: eventRows, error: eventsError } = await supabase
-        .from("inbox_lead_events")
-        .select(
-          `
-          id,
-          customer_id,
-          lead_id,
-          profile_id,
-          event_type,
-          payload,
-          created_at
-        `
-        )
-        .eq("customer_id", customerId)
-        .eq("lead_id", primaryInboxLead.id)
-        .order("created_at", { ascending: true });
-
-      if (eventsError) console.error("[api/leads/[id]] eventsError", eventsError);
-
-      events =
-        (eventRows || []).map((e) => ({
-          id: e.id,
-          inbox_lead_id: e.lead_id,
-          profile_id: e.profile_id,
-          event_type: e.event_type,
-          payload: e.payload,
-          created_at: e.created_at,
-        })) || [];
-    }
-
-    //
-    // 6) Fetch MESSAGES
+    // 2-4) Fetch PROFILE, IDENTITIES, INBOX_LEADS, TASKS, JOBS, MESSAGES — ALL IN PARALLEL
     //
     const [
-      { data: emailMessageRows, error: emailMessagesError },
-      { data: inboxMessageRows, error: inboxMessagesError },
+      profileResult,
+      identitiesResult,
+      inboxResult,
+      emailMessagesResult,
+      taskResult,
+      jobResult,
     ] = await Promise.all([
-      supabase
-        .from("messages")
-        .select(
-          `
-          id,
-          lead_id,
-          direction,
-          channel,
-          message_type,
-          subject,
-          body,
-          created_at
-        `
-        )
-        .eq("customer_id", customerId)
-        .eq("lead_id", leadId)
-        .order("created_at", { ascending: true }),
-      primaryInboxLead
-        ? supabase
-            .from("inbox_messages")
-            .select(
-              `
-              id,
-              lead_id,
-              direction,
-              message_type,
-              body,
-              telnyx_message_id,
-              created_at
-            `
-            )
-            .eq("lead_id", primaryInboxLead.id)
-            .order("created_at", { ascending: true })
-        : Promise.resolve({ data: [], error: null }),
+      // 2) Profile
+      lead.profile_id
+        ? supabase.from("lead_profiles").select("*").eq("customer_id", customerId).eq("id", lead.profile_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      // 3) Identities
+      lead.profile_id
+        ? supabase.from("lead_identities").select("id, customer_id, profile_id, kind, value, normalized_value, identity_type, identity_value, phone_last7, is_primary, created_at").eq("customer_id", customerId).eq("profile_id", lead.profile_id).order("is_primary", { ascending: false })
+        : Promise.resolve({ data: [] }),
+      // 4) Inbox leads
+      supabase.from("inbox_leads").select("id, customer_id, lead_id, profile_id, source, status, priority, is_emergency, service_type, subject, summary, first_seen_at, last_contact_at, last_missed_call_at, missed_call_count, next_follow_up_at, created_at, updated_at").eq("customer_id", String(customerId)).eq("lead_id", leadId).order("last_contact_at", { ascending: false, nullsFirst: false }).order("created_at", { ascending: false }),
+      // 6) Messages from canonical table
+      supabase.from("messages").select("id, lead_id, direction, channel, message_type, subject, body, created_at").eq("customer_id", customerId).eq("lead_id", leadId).order("created_at", { ascending: true }),
+      // 7) Tasks
+      supabase.from("tasks").select("id, customer_id, lead_id, status, type, title, description, priority, due_at, completed_at, created_at, updated_at").eq("customer_id", customerId).eq("lead_id", leadId).order("due_at", { ascending: true, nullsFirst: false }),
+      // 9) Jobs
+      supabase.from("jobs").select("id, job_id, client_name, project_type, quote_amount, status, created_at").eq("customer_id", customerId).eq("lead_id", leadId).order("created_at", { ascending: false }),
     ]);
 
-    if (emailMessagesError)
-      console.error("[api/leads/[id]] emailMessagesError", emailMessagesError);
-    if (inboxMessagesError)
-      console.error("[api/leads/[id]] inboxMessagesError", inboxMessagesError);
+    const profile = profileResult.data || null;
+    const identities = identitiesResult.data || [];
+    const inbox_leads = inboxResult.data || [];
+    const primaryInboxLead = inbox_leads.length > 0 ? inbox_leads[0] : null;
+    const emailMessageRows = emailMessagesResult.data || [];
 
-    // inbox_messages is the authoritative source for SMS (has telnyx_message_id).
-    // Dedup by epoch ms (raw strings may differ: timestamptz has +00, timestamp doesn't).
+    // 5) Events + inbox_messages + photos — depend on primaryInboxLead, run in parallel
+    const [eventsResult, inboxMessagesResult, photosResult] = await Promise.all([
+      primaryInboxLead
+        ? supabase.from("inbox_lead_events").select("id, customer_id, lead_id, profile_id, event_type, payload, created_at").eq("customer_id", customerId).eq("lead_id", primaryInboxLead.id).order("created_at", { ascending: true })
+        : Promise.resolve({ data: [] }),
+      primaryInboxLead
+        ? supabase.from("inbox_messages").select("id, lead_id, direction, message_type, body, telnyx_message_id, created_at").eq("lead_id", primaryInboxLead.id).order("created_at", { ascending: true })
+        : Promise.resolve({ data: [] }),
+      primaryInboxLead
+        ? supabase.from("inbox_attachments").select("id, message_id, file_url, content_type, created_at").eq("lead_id", primaryInboxLead.id).order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const events = (eventsResult.data || []).map((e) => ({
+      id: e.id,
+      inbox_lead_id: e.lead_id,
+      profile_id: e.profile_id,
+      event_type: e.event_type,
+      payload: e.payload,
+      created_at: e.created_at,
+    }));
+
+    const inboxMessageRows = inboxMessagesResult.data || [];
+    const photos = (photosResult.data || []).filter((a) => (a.content_type || "").startsWith("image/"));
+
+    // Dedup SMS messages
     function toEpoch(ts) {
       if (!ts) return 0;
       return new Date(ts).getTime();
     }
 
-    const smsMessages =
-      (inboxMessageRows || []).map((m) => ({
+    const smsMessages = inboxMessageRows.map((m) => ({
+      id: m.id,
+      lead_id: m.lead_id,
+      channel: "sms",
+      direction: m.direction,
+      message_type: m.message_type,
+      body_text: m.body,
+      body_html: null,
+      provider_message_id: m.telnyx_message_id || null,
+      created_at: m.created_at,
+    }));
+
+    const smsEpochs = new Set(smsMessages.map((m) => toEpoch(m.created_at)).filter(Boolean));
+
+    const generalMessages = emailMessageRows.map((m) => {
+      const ch = (m.channel || m.message_type || "email").toLowerCase();
+      const isSms = ch === "sms" || ch === "mms";
+      return {
         id: m.id,
         lead_id: m.lead_id,
-        channel: "sms",
-        direction: m.direction,
-        message_type: m.message_type,
-        body_text: m.body,
-        body_html: null,
-        provider_message_id: m.telnyx_message_id || null,
+        channel: isSms ? "sms" : "email",
+        direction: m.direction || "outbound",
+        message_type: m.message_type || ch,
+        subject: m.subject || null,
+        body_text: isSms ? (m.body || "") : stripHtmlToText(m.body || ""),
+        body_html: isSms ? null : (m.body || null),
         created_at: m.created_at,
-      })) || [];
-
-    // Build epoch set for dedup (handles timezone format differences)
-    const smsEpochs = new Set(
-      smsMessages.map((m) => toEpoch(m.created_at)).filter(Boolean)
-    );
-
-    const generalMessages =
-      (emailMessageRows || []).map((m) => {
-        const ch = (m.channel || m.message_type || "email").toLowerCase();
-        const isSms = ch === "sms" || ch === "mms";
-        return {
-          id: m.id,
-          lead_id: m.lead_id,
-          channel: isSms ? "sms" : "email",
-          direction: m.direction || "outbound",
-          message_type: m.message_type || ch,
-          subject: m.subject || null,
-          body_text: isSms ? (m.body || "") : stripHtmlToText(m.body || ""),
-          body_html: isSms ? null : (m.body || null),
-          created_at: m.created_at,
-          _isSms: isSms,
-        };
-      }) || [];
-
-    // Filter out SMS from messages table when inbox_messages already has them
-    const dedupedGeneral = generalMessages.filter(
-      (m) => !m._isSms || !smsEpochs.has(toEpoch(m.created_at))
-    );
-    dedupedGeneral.forEach((m) => delete m._isSms);
-
-    const messages = [...dedupedGeneral, ...smsMessages].sort((a, b) => {
-      return toEpoch(a.created_at) - toEpoch(b.created_at);
+        _isSms: isSms,
+      };
     });
 
-    //
-    // 7) Fetch TASKS
-    //
-    const { data: taskRows, error: tasksError } = await supabase
-      .from("tasks")
-      .select(
-        `
-        id,
-        customer_id,
-        lead_id,
-        status,
-        type,
-        title,
-        description,
-        priority,
-        due_at,
-        completed_at,
-        created_at,
-        updated_at
-      `
-      )
-      .eq("customer_id", customerId)
-      .eq("lead_id", leadId)
-      .order("due_at", { ascending: true, nullsFirst: false });
+    const dedupedGeneral = generalMessages.filter((m) => !m._isSms || !smsEpochs.has(toEpoch(m.created_at)));
+    dedupedGeneral.forEach((m) => delete m._isSms);
 
-    if (tasksError)
-      console.error("[api/leads/[id]] tasksError", tasksError);
+    const messages = [...dedupedGeneral, ...smsMessages].sort((a, b) => toEpoch(a.created_at) - toEpoch(b.created_at));
 
-    const tasks =
-      (taskRows || []).map((t) => ({
-        id: t.id,
-        customer_id: t.customer_id,
-        lead_id: t.lead_id,
-        status: t.status || "pending",
-        task_type: t.type || null,
-        title: t.title || null,
-        description: t.description || null,
-        priority: t.priority || "normal",
-        due_at: t.due_at,
-        completed_at: t.completed_at,
-        created_at: t.created_at,
-        updated_at: t.updated_at,
-      })) || [];
+    const tasks = (taskResult.data || []).map((t) => ({
+      id: t.id,
+      customer_id: t.customer_id,
+      lead_id: t.lead_id,
+      status: t.status || "pending",
+      task_type: t.type || null,
+      title: t.title || null,
+      description: t.description || null,
+      priority: t.priority || "normal",
+      due_at: t.due_at,
+      completed_at: t.completed_at,
+      created_at: t.created_at,
+      updated_at: t.updated_at,
+    }));
 
-    //
-    // 8) Fetch PHOTOS
-    //
-    let photos = [];
-    if (primaryInboxLead) {
-      const { data: inboxMsgIds } = await supabase
-        .from("inbox_messages")
-        .select("id")
-        .eq("lead_id", primaryInboxLead.id);
-
-      if (inboxMsgIds && inboxMsgIds.length > 0) {
-        const messageIds = inboxMsgIds.map((m) => m.id);
-        const { data: attachments, error: attachError } = await supabase
-          .from("inbox_attachments")
-          .select("id, message_id, file_url, content_type, created_at")
-          .in("message_id", messageIds)
-          .order("created_at", { ascending: false });
-
-        if (attachError)
-          console.error("[api/leads/[id]] attachError", attachError);
-
-        photos = (attachments || []).filter((a) =>
-          (a.content_type || "").startsWith("image/")
-        );
-      }
-    }
-
-    //
-    // 9) Fetch JOBS linked to this lead
-    //
-    const { data: jobRows, error: jobsError } = await supabase
-      .from("jobs")
-      .select(
-        `
-        id,
-        job_id,
-        client_name,
-        project_type,
-        quote_amount,
-        status,
-        created_at
-      `
-      )
-      .eq("customer_id", customerId)
-      .eq("lead_id", leadId)
-      .order("created_at", { ascending: false });
-
-    if (jobsError)
-      console.error("[api/leads/[id]] jobsError", jobsError);
-
-    const jobs = jobRows || [];
+    const jobs = jobResult.data || [];
 
     //
     // 10) Unified payload

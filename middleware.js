@@ -17,7 +17,6 @@ export async function middleware(req) {
   const isPublic =
     pathname === "/api/contact" ||
     pathname === "/api/onboarding" ||
-    pathname === "/api/export-leads" ||
     pathname === "/api/settings/gcal-token";
 
   if (isPublic) return res;

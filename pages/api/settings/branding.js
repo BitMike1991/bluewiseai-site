@@ -55,6 +55,7 @@ export default async function handler(req, res) {
       }
     }
 
+    res.setHeader("Cache-Control", "private, max-age=300, stale-while-revalidate=600");
     return res.status(200).json({ branding: merged });
   } catch (err) {
     console.error("Branding endpoint error:", err);

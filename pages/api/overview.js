@@ -28,24 +28,60 @@ export default async function handler(req, res) {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const since30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    // 1) New leads this week
-    const { data: newLeadsRows, error: newLeadsError } = await supabase
-      .from("leads")
-      .select("id")
-      .eq("customer_id", customerId)
-      .gte("created_at", sinceIso);
+    // ── ALL QUERIES IN PARALLEL ──
+    const [
+      { data: newLeadsRows },
+      { data: openTasksRows },
+      { data: missedRows },
+      { data: voiceRows },
+      { data: aiRows },
+      { data: hotRows },
+      { data: allPayments },
+      { data: allExpenses },
+      { data: signedJobs },
+      { data: pipelineQuotes },
+      { data: pipelineJobs },
+      { data: allLeadRows },
+      { data: activeJobRows },
+      { data: recentLeadRows },
+      { data: eventRows },
+      { data: messageRows },
+    ] = await Promise.all([
+      // 1) New leads this week
+      supabase.from("leads").select("id").eq("customer_id", customerId).gte("created_at", sinceIso),
+      // 2) Tasks
+      supabase.from("tasks").select("id, status, due_at").eq("customer_id", customerId).not("status", "in", "(completed,cancelled)"),
+      // 3) Missed calls this week
+      supabase.from("leads").select("id").eq("customer_id", customerId).not("last_missed_call_at", "is", null).gte("last_missed_call_at", sinceIso),
+      // 4) Voice AI answered
+      supabase.from("messages").select("id").eq("customer_id", customerId).eq("channel", "call").eq("message_type", "call_transcript").gte("created_at", sinceIso),
+      // 5) AI auto-replies
+      supabase.from("messages").select("id").eq("customer_id", customerId).eq("channel", "sms").eq("direction", "outbound").gte("created_at", sinceIso),
+      // 6) Hot leads
+      supabase.from("leads").select("id").eq("customer_id", customerId).gte("hot_score", 40),
+      // 7) Payments
+      supabase.from("payments").select("amount, created_at").eq("customer_id", customerId).eq("status", "succeeded"),
+      // 7b) Expenses
+      supabase.from("expenses").select("total, paid_at").eq("customer_id", customerId),
+      // 7c) Signed jobs
+      supabase.from("jobs").select("id, quote_amount").eq("customer_id", customerId).in("status", ["signed", "contract_signed", "scheduled", "in_progress", "completed"]),
+      // 8) Pipeline quotes
+      supabase.from("quotes").select("total_ttc").eq("customer_id", customerId).not("status", "eq", "cancelled").gte("created_at", since30d),
+      // 8) Pipeline jobs
+      supabase.from("jobs").select("quote_amount").eq("customer_id", customerId).not("status", "in", "(cancelled,lost)").gte("created_at", since30d),
+      // 8b) All leads
+      supabase.from("leads").select("id, status").eq("customer_id", customerId),
+      // 8c) Active jobs
+      supabase.from("jobs").select("id").eq("customer_id", customerId).in("status", ["in_progress", "signed", "scheduled"]),
+      // 9) Recent leads
+      supabase.from("leads").select("id, name, email, phone, source, status, created_at").eq("customer_id", customerId).order("created_at", { ascending: false }).limit(10),
+      // 10) Events
+      supabase.from("inbox_lead_events").select("id, lead_id, event_type, created_at, payload").eq("customer_id", customerId).order("created_at", { ascending: false }).limit(50),
+      // 11) Messages (select only needed columns, not *)
+      supabase.from("messages").select("id, lead_id, direction, channel, message_type, subject, snippet, preview, body_preview, created_at").eq("customer_id", customerId).order("created_at", { ascending: false }).limit(50),
+    ]);
 
-    if (newLeadsError) throw newLeadsError;
     const newLeadsThisWeek = newLeadsRows?.length || 0;
-
-    // 2) Tasks
-    const { data: openTasksRows, error: openTasksError } = await supabase
-      .from("tasks")
-      .select("id, status, due_at")
-      .eq("customer_id", customerId)
-      .not("status", "in", "(completed,cancelled)");
-
-    if (openTasksError) throw openTasksError;
 
     const openTasks = openTasksRows?.length || 0;
     const tasksDueToday = openTasksRows?.filter((t) => {
@@ -57,147 +93,32 @@ export default async function handler(req, res) {
       return new Date(t.due_at).toISOString().slice(0, 10) < todayStr;
     }).length || 0;
 
-    // 3) Missed calls this week
-    const { data: missedRows, error: missedError } = await supabase
-      .from("leads")
-      .select("id")
-      .eq("customer_id", customerId)
-      .not("last_missed_call_at", "is", null)
-      .gte("last_missed_call_at", sinceIso);
-
-    if (missedError) throw missedError;
     const missedCallsThisWeek = missedRows?.length || 0;
-
-    // 4) Voice AI answered
-    const { data: voiceRows, error: voiceError } = await supabase
-      .from("messages")
-      .select("id")
-      .eq("customer_id", customerId)
-      .eq("channel", "call")
-      .eq("message_type", "call_transcript")
-      .gte("created_at", sinceIso);
-
-    if (voiceError) throw voiceError;
     const voiceCallsThisWeek = voiceRows?.length || 0;
-
-    // 5) AI auto-replies
-    const { data: aiRows, error: aiError } = await supabase
-      .from("messages")
-      .select("id")
-      .eq("customer_id", customerId)
-      .eq("channel", "sms")
-      .eq("direction", "outbound")
-      .gte("created_at", sinceIso);
-
-    if (aiError) throw aiError;
     const aiRepliesThisWeek = aiRows?.length || 0;
-
-    // 6) Hot leads
-    const { data: hotRows, error: hotError } = await supabase
-      .from("leads")
-      .select("id")
-      .eq("customer_id", customerId)
-      .gte("hot_score", 40);
-
-    if (hotError) throw hotError;
     const hotLeadsCount = hotRows?.length || 0;
 
-    // ── FINANCIAL DATA ──
-
-    // 7) ALL payments (succeeded) — for total + time-based breakdowns
-    const { data: allPayments } = await supabase
-      .from("payments")
-      .select("amount, created_at")
-      .eq("customer_id", customerId)
-      .eq("status", "succeeded");
-
+    // ── FINANCIAL CALCULATIONS ──
     const totalRevenue = (allPayments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
-
-    const revenue30d = (allPayments || []).filter((p) =>
-      p.created_at && new Date(p.created_at).toISOString() >= since30d
-    ).reduce((s, p) => s + Number(p.amount || 0), 0);
-
-    const revenueMtd = (allPayments || []).filter((p) =>
-      p.created_at && new Date(p.created_at).toISOString() >= monthStart
-    ).reduce((s, p) => s + Number(p.amount || 0), 0);
-
-    const revenueWtd = (allPayments || []).filter((p) =>
-      p.created_at && new Date(p.created_at).toISOString() >= sinceIso
-    ).reduce((s, p) => s + Number(p.amount || 0), 0);
-
-    // 7b) ALL expenses
-    const { data: allExpenses } = await supabase
-      .from("expenses")
-      .select("total, paid_at")
-      .eq("customer_id", customerId);
+    const revenue30d = (allPayments || []).filter((p) => p.created_at && new Date(p.created_at).toISOString() >= since30d).reduce((s, p) => s + Number(p.amount || 0), 0);
+    const revenueMtd = (allPayments || []).filter((p) => p.created_at && new Date(p.created_at).toISOString() >= monthStart).reduce((s, p) => s + Number(p.amount || 0), 0);
+    const revenueWtd = (allPayments || []).filter((p) => p.created_at && new Date(p.created_at).toISOString() >= sinceIso).reduce((s, p) => s + Number(p.amount || 0), 0);
 
     const totalExpenses = (allExpenses || []).reduce((s, e) => s + Number(e.total || 0), 0);
-
-    const expenses30d = (allExpenses || []).filter((e) =>
-      e.paid_at && new Date(e.paid_at).toISOString() >= since30d
-    ).reduce((s, e) => s + Number(e.total || 0), 0);
-
-    const expensesMtd = (allExpenses || []).filter((e) =>
-      e.paid_at && new Date(e.paid_at).toISOString() >= monthStart
-    ).reduce((s, e) => s + Number(e.total || 0), 0);
-
-    // 7c) Outstanding = all signed contracts TTC minus all payments = what clients owe
-    const { data: signedJobs } = await supabase
-      .from("jobs")
-      .select("id, quote_amount")
-      .eq("customer_id", customerId)
-      .in("status", ["signed", "contract_signed", "scheduled", "in_progress", "completed"]);
+    const expenses30d = (allExpenses || []).filter((e) => e.paid_at && new Date(e.paid_at).toISOString() >= since30d).reduce((s, e) => s + Number(e.total || 0), 0);
+    const expensesMtd = (allExpenses || []).filter((e) => e.paid_at && new Date(e.paid_at).toISOString() >= monthStart).reduce((s, e) => s + Number(e.total || 0), 0);
 
     const totalSignedTtc = (signedJobs || []).reduce((s, j) => s + Number(j.quote_amount || 0) * 1.14975, 0);
     const outstandingBalance = Math.max(0, totalSignedTtc - totalRevenue);
-
-    // 8) Pipeline = last 30 days of all sent quotes + jobs (total business volume)
-    const { data: pipelineQuotes } = await supabase
-      .from("quotes")
-      .select("total_ttc")
-      .eq("customer_id", customerId)
-      .not("status", "eq", "cancelled")
-      .gte("created_at", since30d);
-
-    const { data: pipelineJobs } = await supabase
-      .from("jobs")
-      .select("quote_amount")
-      .eq("customer_id", customerId)
-      .not("status", "in", "(cancelled,lost)")
-      .gte("created_at", since30d);
 
     const pipelineValue =
       (pipelineQuotes || []).reduce((s, q) => s + Number(q.total_ttc || 0), 0) +
       (pipelineJobs || []).reduce((s, j) => s + Number(j.quote_amount || 0) * 1.14975, 0);
 
-    // 8b) Total leads (all time) + conversion rate
-    const { data: allLeadRows } = await supabase
-      .from("leads")
-      .select("id, status")
-      .eq("customer_id", customerId);
-
     const totalLeads = allLeadRows?.length || 0;
     const wonLeads = (allLeadRows || []).filter((l) => l.status === "won").length;
     const conversionRate = totalLeads > 0 ? Math.round((wonLeads / totalLeads) * 100) : 0;
-
-    // 8c) Active jobs
-    const { data: activeJobRows } = await supabase
-      .from("jobs")
-      .select("id")
-      .eq("customer_id", customerId)
-      .in("status", ["in_progress", "signed", "scheduled"]);
-
     const activeJobs = activeJobRows?.length || 0;
-
-    // 9) Recent leads
-    const { data: recentLeadRows, error: recentLeadError } = await supabase
-      .from("leads")
-      .select("id, name, email, phone, source, status, created_at")
-      .eq("customer_id", customerId)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    if (recentLeadError) throw recentLeadError;
 
     const recentLeads = (recentLeadRows || []).map((l) => ({
       id: l.id,
@@ -209,27 +130,7 @@ export default async function handler(req, res) {
       createdAt: l.created_at,
     }));
 
-    // 10) Activity from inbox_lead_events
-    const { data: eventRows, error: activityError } = await supabase
-      .from("inbox_lead_events")
-      .select("id, lead_id, event_type, created_at, payload")
-      .eq("customer_id", customerId)
-      .order("created_at", { ascending: false })
-      .limit(50);
-
-    if (activityError) throw activityError;
-
-    // 11) Activity from messages
-    const { data: messageRows, error: messageError } = await supabase
-      .from("messages")
-      .select("*")
-      .eq("customer_id", customerId)
-      .order("created_at", { ascending: false })
-      .limit(50);
-
-    if (messageError) throw messageError;
-
-    // 12) Map inbox_leads.id -> canonical leads.id
+    // 12) Map inbox_leads.id -> canonical leads.id (only query if needed)
     const inboxLeadIds = Array.from(
       new Set((eventRows || []).map((row) => row.lead_id).filter((id) => id != null))
     );
@@ -303,6 +204,7 @@ export default async function handler(req, res) {
     });
     const activity = combinedActivity.slice(0, 30);
 
+    res.setHeader("Cache-Control", "private, max-age=30, stale-while-revalidate=60");
     return res.status(200).json({
       kpis: {
         // Financial — multiple time ranges

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
@@ -8,7 +8,8 @@ import { ShimmerButton } from "@/components/ui/ShimmerButton";
 import { NumberTicker } from "@/components/ui/NumberTicker";
 import { getLocale, localePath } from "@/lib/locale";
 
-// Lazy-load Spline — never block page render
+// Lazy-load Spline ONLY after user has been on page 5s + idle
+// This prevents 3.9MB JS/WASM from blocking initial render
 const Spline = dynamic(
   () => import("@splinetool/react-spline").then((m) => m.default || m),
   { ssr: false, loading: () => null }
@@ -70,6 +71,25 @@ export default function HeroV2() {
   const pricingHref = `${prefix}/lead-rescue`;
 
   const [splineError, setSplineError] = useState(false);
+  const [loadSpline, setLoadSpline] = useState(false);
+  const splineRef = useRef(null);
+
+  // Defer Spline 3D load: wait 5s after page is interactive, then load only on desktop
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    // Skip on mobile — 3.9MB is too heavy on cellular
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) return;
+
+    const timer = setTimeout(() => {
+      if ("requestIdleCallback" in window) {
+        requestIdleCallback(() => setLoadSpline(true));
+      } else {
+        setLoadSpline(true);
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
@@ -96,12 +116,14 @@ export default function HeroV2() {
         <div className="pointer-events-none absolute bottom-10 left-[10%] w-[500px] h-[500px] rounded-full bg-accent2/8 blur-[120px]" />
         <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-accent/5 blur-[80px]" />
 
-        {/* Spline 3D — robot / AI visualization */}
-        {!splineError && (
-          <div className="absolute right-0 top-0 w-full h-full md:w-[60%] md:right-[-5%] opacity-50 md:opacity-75 transition-opacity duration-1000">
+        {/* Spline 3D — deferred: desktop only, 5s after interactive */}
+        {loadSpline && !splineError && (
+          <div className="absolute right-0 top-0 w-full h-full md:w-[60%] md:right-[-5%] opacity-0 md:opacity-75 transition-opacity duration-[2000ms]" ref={splineRef}
+            onLoad={() => splineRef.current && (splineRef.current.style.opacity = "0.75")}>
             <Spline
               scene="https://prod.spline.design/6Wq1Q7YGyM-iab9i/scene.splinecode"
               onError={() => setSplineError(true)}
+              onLoad={() => splineRef.current && (splineRef.current.style.opacity = "0.75")}
               style={{ width: "100%", height: "100%" }}
             />
           </div>
