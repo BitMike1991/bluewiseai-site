@@ -77,8 +77,8 @@ export default async function handler(req, res) {
       supabase.from("leads").select("id, name, email, phone, source, status, created_at").eq("customer_id", customerId).order("created_at", { ascending: false }).limit(10),
       // 10) Events
       supabase.from("inbox_lead_events").select("id, lead_id, event_type, created_at, payload").eq("customer_id", customerId).order("created_at", { ascending: false }).limit(50),
-      // 11) Messages (select only needed columns, not *)
-      supabase.from("messages").select("id, lead_id, direction, channel, message_type, subject, snippet, preview, body_preview, created_at").eq("customer_id", customerId).order("created_at", { ascending: false }).limit(50),
+      // 11) Messages
+      supabase.from("messages").select("id, lead_id, direction, channel, message_type, subject, body, created_at").eq("customer_id", customerId).order("created_at", { ascending: false }).limit(50),
     ]);
 
     const newLeadsThisWeek = newLeadsRows?.length || 0;
@@ -181,7 +181,7 @@ export default async function handler(req, res) {
       else if (kind === "call") baseLabel = "Voice AI call";
       else baseLabel = direction === "outbound" ? "You sent a message" : "Lead sent a message";
 
-      const preview = row.snippet || row.subject || row.preview || row.body_preview || null;
+      const preview = row.subject || (row.body ? String(row.body).slice(0, 80) : null);
       const label = preview ? `${baseLabel} \u2013 ${String(preview).slice(0, 80)}` : baseLabel;
 
       return {

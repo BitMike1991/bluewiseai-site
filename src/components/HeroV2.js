@@ -118,8 +118,7 @@ export default function HeroV2() {
 
         {/* Spline 3D — deferred: desktop only, 5s after interactive */}
         {loadSpline && !splineError && (
-          <div className="absolute right-0 top-0 w-full h-full md:w-[60%] md:right-[-5%] opacity-0 md:opacity-75 transition-opacity duration-[2000ms]" ref={splineRef}
-            onLoad={() => splineRef.current && (splineRef.current.style.opacity = "0.75")}>
+          <div className="absolute right-0 top-0 w-full h-full md:w-[60%] md:right-[-5%] opacity-0 transition-opacity duration-[2000ms]" ref={splineRef}>
             <Spline
               scene="https://prod.spline.design/6Wq1Q7YGyM-iab9i/scene.splinecode"
               onError={() => setSplineError(true)}

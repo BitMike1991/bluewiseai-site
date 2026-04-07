@@ -225,7 +225,7 @@ export default async function handler(req, res) {
         ? supabase.from("inbox_messages").select("id, lead_id, direction, message_type, body, telnyx_message_id, created_at").eq("lead_id", primaryInboxLead.id).order("created_at", { ascending: true })
         : Promise.resolve({ data: [] }),
       primaryInboxLead
-        ? supabase.from("inbox_attachments").select("id, message_id, file_url, content_type, created_at").eq("lead_id", primaryInboxLead.id).order("created_at", { ascending: false })
+        ? supabase.from("inbox_messages").select("id").eq("lead_id", primaryInboxLead.id)
         : Promise.resolve({ data: [] }),
     ]);
 
@@ -239,7 +239,18 @@ export default async function handler(req, res) {
     }));
 
     const inboxMessageRows = inboxMessagesResult.data || [];
-    const photos = (photosResult.data || []).filter((a) => (a.content_type || "").startsWith("image/"));
+
+    // Photos: need 2nd query since inbox_attachments has no lead_id, only message_id
+    const photoMsgIds = (photosResult.data || []).map((m) => m.id);
+    let photos = [];
+    if (photoMsgIds.length > 0) {
+      const { data: attachments } = await supabase
+        .from("inbox_attachments")
+        .select("id, message_id, file_url, content_type, created_at")
+        .in("message_id", photoMsgIds)
+        .order("created_at", { ascending: false });
+      photos = (attachments || []).filter((a) => (a.content_type || "").startsWith("image/"));
+    }
 
     // Dedup SMS messages
     function toEpoch(ts) {
