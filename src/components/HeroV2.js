@@ -1,19 +1,10 @@
-import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import dynamic from "next/dynamic";
 import { ChevronDown, Zap, Target, ShieldCheck } from "lucide-react";
 import { TextGenerateEffect } from "@/components/ui/TextGenerateEffect";
 import { ShimmerButton } from "@/components/ui/ShimmerButton";
 import { NumberTicker } from "@/components/ui/NumberTicker";
 import { getLocale, localePath } from "@/lib/locale";
-
-// Lazy-load Spline ONLY after user has been on page 5s + idle
-// This prevents 3.9MB JS/WASM from blocking initial render
-const Spline = dynamic(
-  () => import("@splinetool/react-spline").then((m) => m.default || m),
-  { ssr: false, loading: () => null }
-);
 
 const T = {
   pill: {
@@ -70,27 +61,6 @@ export default function HeroV2() {
   const contactHref = `${prefix}/contact`;
   const pricingHref = `${prefix}/lead-rescue`;
 
-  const [splineError, setSplineError] = useState(false);
-  const [loadSpline, setLoadSpline] = useState(false);
-  const splineRef = useRef(null);
-
-  // Defer Spline 3D load: wait 5s after page is interactive, then load only on desktop
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    // Skip on mobile — 3.9MB is too heavy on cellular
-    const isMobile = window.innerWidth < 768;
-    if (isMobile) return;
-
-    const timer = setTimeout(() => {
-      if ("requestIdleCallback" in window) {
-        requestIdleCallback(() => setLoadSpline(true));
-      } else {
-        setLoadSpline(true);
-      }
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* ─── Background layers ─── */}
@@ -115,18 +85,6 @@ export default function HeroV2() {
         <div className="pointer-events-none absolute top-10 right-[15%] w-[600px] h-[600px] rounded-full bg-accent/10 blur-[150px]" />
         <div className="pointer-events-none absolute bottom-10 left-[10%] w-[500px] h-[500px] rounded-full bg-accent2/8 blur-[120px]" />
         <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-accent/5 blur-[80px]" />
-
-        {/* Spline 3D — deferred: desktop only, 5s after interactive */}
-        {loadSpline && !splineError && (
-          <div className="absolute right-0 top-0 w-full h-full md:w-[60%] md:right-[-5%] opacity-0 transition-opacity duration-[2000ms]" ref={splineRef}>
-            <Spline
-              scene="https://prod.spline.design/6Wq1Q7YGyM-iab9i/scene.splinecode"
-              onError={() => setSplineError(true)}
-              onLoad={() => splineRef.current && (splineRef.current.style.opacity = "0.75")}
-              style={{ width: "100%", height: "100%" }}
-            />
-          </div>
-        )}
 
         {/* Gradient overlays for text readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-bg via-bg/95 to-bg/30 z-[1]" />
