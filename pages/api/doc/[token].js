@@ -196,6 +196,22 @@ function getInvoicePUR001() {
     }
     .payment-info .method { font-size: 14px; font-weight: 600; color: #e8e8f0; }
     .payment-info .detail { font-size: 12px; color: #8888aa; margin-top: 2px; }
+    .download-section {
+      padding: 32px 48px; text-align: center;
+      border-bottom: 1px solid #2a2a3a;
+    }
+    .download-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(135deg, #6c63ff, #00d4aa);
+      color: #fff; font-family: 'Inter', sans-serif;
+      font-size: 14px; font-weight: 700; letter-spacing: 0.5px;
+      padding: 14px 32px; border: none; border-radius: 12px;
+      cursor: pointer; transition: opacity 0.2s, transform 0.2s;
+      text-transform: uppercase;
+    }
+    .download-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .download-btn:active { transform: translateY(0); }
+    .download-btn svg { width: 18px; height: 18px; }
     .footer {
       padding: 32px 48px; text-align: center;
       background: linear-gradient(135deg, #0a0a0f 0%, #111118 100%);
@@ -205,29 +221,44 @@ function getInvoicePUR001() {
     .footer-contact { margin-top: 16px; font-size: 12px; color: #555570; }
     .footer-contact a { color: #6c63ff; text-decoration: none; }
     @media (max-width: 640px) {
-      body { padding: 0; }
-      .invoice { border-radius: 0; border: none; }
-      .header { padding: 28px 20px; }
-      .header-content { flex-direction: column; gap: 20px; }
+      body { padding: 8px; }
+      .invoice { border-radius: 16px; }
+      .header { padding: 24px 16px; }
+      .header-content { flex-direction: column; gap: 16px; }
       .invoice-badge { text-align: left; }
-      .invoice-badge .number { font-size: 22px; }
-      .brand img { width: 44px; height: 44px; }
-      .brand-text h1 { font-size: 20px; }
-      .parties { grid-template-columns: 1fr; gap: 24px; padding: 28px 20px; }
-      .items-section { padding: 28px 20px; }
+      .invoice-badge .number { font-size: 20px; }
+      .invoice-badge .label { font-size: 10px; }
+      .brand img { width: 40px; height: 40px; border-radius: 10px; }
+      .brand-text h1 { font-size: 18px; }
+      .brand-text p { font-size: 10px; letter-spacing: 1.5px; }
+      .parties { grid-template-columns: 1fr; gap: 20px; padding: 24px 16px; }
+      .party-name { font-size: 14px; }
+      .party-details { font-size: 12px; word-break: break-word; }
+      .items-section { padding: 24px 16px; }
       .items-header { padding: 10px 12px; }
-      .item { grid-template-columns: 1fr; gap: 8px; padding: 16px 12px; }
-      .item-amount { justify-content: flex-start; font-size: 16px; color: #00d4aa; }
-      .totals { padding: 24px 20px; }
+      .items-header span { font-size: 9px; }
+      .item { grid-template-columns: 1fr auto; gap: 4px; padding: 14px 12px; }
+      .item-name { font-size: 13px; }
+      .item-desc { font-size: 11px; }
+      .item-amount { font-size: 14px; }
+      .totals { padding: 20px 16px; }
       .totals-box { width: 100%; }
-      .total-row.grand .value { font-size: 20px; }
-      .payment { padding: 28px 20px; }
-      .payment-method { flex-direction: column; text-align: center; padding: 16px; }
-      .footer { padding: 24px 20px; }
+      .total-row { font-size: 13px; }
+      .total-row.grand .label { font-size: 14px; }
+      .total-row.grand .value { font-size: 18px; }
+      .payment { padding: 24px 16px; }
+      .payment-method { flex-direction: column; text-align: center; padding: 16px; gap: 12px; }
+      .payment-info .detail { word-break: break-all; }
+      .download-section { padding: 24px 16px; }
+      .download-btn { width: 100%; justify-content: center; padding: 16px; font-size: 13px; }
+      .footer { padding: 20px 16px; }
+      .footer-thanks { font-size: 13px; }
+      .footer-tagline { font-size: 10px; }
     }
     @media print {
       body { background: white; padding: 0; }
       .invoice { box-shadow: none; border: none; border-radius: 0; width: 100%; }
+      .download-section { display: none; }
     }
   </style>
 </head>
@@ -335,6 +366,13 @@ function getInvoicePUR001() {
           <div class="detail">admin@bluewiseai.com — Payable à la réception</div>
         </div>
       </div>
+    </div>
+
+    <div class="download-section">
+      <button class="download-btn" onclick="window.print()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+        Télécharger PDF
+      </button>
     </div>
 
     <div class="footer">
