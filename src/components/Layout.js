@@ -51,9 +51,9 @@ export default function Layout({ children }) {
 
     // 🔵 NEW: platform/dashboard pages use their own layout
   const isPlatformPage = pathname.startsWith("/platform");
+  const is404 = pathname === "/404";
 
-  if (isPlatformPage) {
-    // Dashboard pages (we'll wrap them in DashboardLayout directly)
+  if (isPlatformPage || is404) {
     return <>{children}</>;
   }
 
