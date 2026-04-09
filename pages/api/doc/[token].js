@@ -364,6 +364,7 @@ function getInvoicePUR001() {
         <div class="payment-info">
           <div class="method">Virement Interac</div>
           <div class="detail">admin@bluewiseai.com — Payable à la réception</div>
+          <div class="detail" style="margin-top:6px; color:#00d4aa;">Question : <strong>Quelle couleur?</strong> &nbsp;→&nbsp; Réponse : <strong>bleu</strong></div>
         </div>
       </div>
     </div>
