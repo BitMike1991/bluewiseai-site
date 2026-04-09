@@ -55,7 +55,8 @@ function getInvoicePUR001() {
       padding: 40px 20px;
     }
     .invoice {
-      width: 800px;
+      width: 100%;
+      max-width: 800px;
       background: #111118;
       border-radius: 24px;
       border: 1px solid #2a2a3a;
@@ -203,6 +204,27 @@ function getInvoicePUR001() {
     .footer-tagline { font-size: 11px; color: #555570; letter-spacing: 2px; text-transform: uppercase; }
     .footer-contact { margin-top: 16px; font-size: 12px; color: #555570; }
     .footer-contact a { color: #6c63ff; text-decoration: none; }
+    @media (max-width: 640px) {
+      body { padding: 0; }
+      .invoice { border-radius: 0; border: none; }
+      .header { padding: 28px 20px; }
+      .header-content { flex-direction: column; gap: 20px; }
+      .invoice-badge { text-align: left; }
+      .invoice-badge .number { font-size: 22px; }
+      .brand img { width: 44px; height: 44px; }
+      .brand-text h1 { font-size: 20px; }
+      .parties { grid-template-columns: 1fr; gap: 24px; padding: 28px 20px; }
+      .items-section { padding: 28px 20px; }
+      .items-header { padding: 10px 12px; }
+      .item { grid-template-columns: 1fr; gap: 8px; padding: 16px 12px; }
+      .item-amount { justify-content: flex-start; font-size: 16px; color: #00d4aa; }
+      .totals { padding: 24px 20px; }
+      .totals-box { width: 100%; }
+      .total-row.grand .value { font-size: 20px; }
+      .payment { padding: 28px 20px; }
+      .payment-method { flex-direction: column; text-align: center; padding: 16px; }
+      .footer { padding: 24px 20px; }
+    }
     @media print {
       body { background: white; padding: 0; }
       .invoice { box-shadow: none; border: none; border-radius: 0; width: 100%; }
