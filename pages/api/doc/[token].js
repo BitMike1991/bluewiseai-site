@@ -277,10 +277,6 @@ function getInvoicePUR001() {
           <div class="label">Facture</div>
           <div class="number">BW-2026-001</div>
           <div class="date">9 avril 2026</div>
-          <div class="status">
-            <span class="status-dot"></span>
-            En attente
-          </div>
         </div>
       </div>
     </div>
