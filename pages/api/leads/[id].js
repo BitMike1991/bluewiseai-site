@@ -73,21 +73,34 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Invalid lead id" });
   }
 
-  // ── PATCH: update lead status ──
+  // ── PATCH: update lead fields (status, notes) ──
   if (req.method === "PATCH") {
     try {
-      const { status } = req.body;
+      const { status, notes } = req.body;
       const validStatuses = ["new", "active", "in_convo", "quoted", "won", "lost", "dead"];
 
-      if (!status || !validStatuses.includes(status)) {
-        return res.status(400).json({
-          error: `Invalid status. Valid: ${validStatuses.join(", ")}`,
-        });
+      const updates = { updated_at: new Date().toISOString() };
+
+      if (status) {
+        if (!validStatuses.includes(status)) {
+          return res.status(400).json({
+            error: `Invalid status. Valid: ${validStatuses.join(", ")}`,
+          });
+        }
+        updates.status = status;
+      }
+
+      if (notes !== undefined) {
+        updates.notes = notes;
+      }
+
+      if (Object.keys(updates).length === 1) {
+        return res.status(400).json({ error: "Nothing to update" });
       }
 
       const { data, error: updateError } = await supabase
         .from("leads")
-        .update({ status, updated_at: new Date().toISOString() })
+        .update(updates)
         .eq("id", leadId)
         .eq("customer_id", customerId)
         .select()
@@ -95,7 +108,7 @@ export default async function handler(req, res) {
 
       if (updateError) {
         console.error("[api/leads/[id]] updateError", updateError);
-        return res.status(500).json({ error: "Failed to update lead status" });
+        return res.status(500).json({ error: "Failed to update lead" });
       }
 
       if (!data) {

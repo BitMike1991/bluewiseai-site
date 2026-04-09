@@ -80,6 +80,64 @@ function eventLabel(eventType) {
   return labels[eventType] || eventType?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'Event';
 }
 
+function NotesSection({ notes, onSave }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(notes);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { setDraft(notes); }, [notes]);
+
+  const handleSave = async () => {
+    if (draft === notes) { setEditing(false); return; }
+    setSaving(true);
+    try {
+      await onSave(draft);
+      setEditing(false);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-semibold text-d-text tracking-wide">Notes</h2>
+        {!editing && (
+          <button onClick={() => setEditing(true)} className="text-xs text-d-primary hover:underline">
+            {notes ? "Edit" : "Add note"}
+          </button>
+        )}
+      </div>
+      {editing ? (
+        <div>
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            rows={4}
+            className="w-full rounded-xl border border-d-border bg-d-bg px-3 py-2 text-sm text-d-text placeholder:text-d-muted/40 focus:outline-none focus:ring-2 focus:ring-d-primary/40 resize-y"
+            placeholder="Add notes about this job..."
+            autoFocus
+          />
+          <div className="flex gap-2 mt-2 justify-end">
+            <button onClick={() => { setDraft(notes); setEditing(false); }} className="px-3 py-1.5 text-xs text-d-muted hover:text-d-text rounded-lg transition">
+              Cancel
+            </button>
+            <button onClick={handleSave} disabled={saving} className="px-3 py-1.5 text-xs font-semibold bg-d-primary text-white rounded-lg hover:opacity-90 transition disabled:opacity-50">
+              {saving ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-d-muted whitespace-pre-wrap leading-relaxed">
+          {notes || "No notes yet."}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function JobDetailPage() {
   const router = useRouter();
   const { id } = router.query;
@@ -445,6 +503,20 @@ export default function JobDetailPage() {
               </div>
             )}
           </div>
+
+          {/* Notes */}
+          <NotesSection
+            notes={job?.notes || ""}
+            onSave={async (notes) => {
+              const res = await fetch(`/api/jobs/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ notes }),
+              });
+              if (!res.ok) throw new Error("Failed to save notes");
+              setData((prev) => prev ? { ...prev, job: { ...prev.job, notes } } : prev);
+            }}
+          />
 
           {/* Payments */}
           <div className="rounded-xl border p-4">

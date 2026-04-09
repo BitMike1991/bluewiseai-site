@@ -2,8 +2,9 @@
 import { getAuthContext } from "../../../lib/supabaseServer";
 
 export default async function handler(req, res) {
-  if (req.method !== "GET") {
-    res.setHeader("Allow", ["GET"]);
+  const allowed = ["GET", "PATCH"];
+  if (!allowed.includes(req.method)) {
+    res.setHeader("Allow", allowed);
     return res.status(405).json({ error: "Method not allowed" });
   }
 
@@ -15,6 +16,39 @@ export default async function handler(req, res) {
 
   const { id } = req.query;
   if (!id) return res.status(400).json({ error: "Missing job id" });
+
+  // ── PATCH: update job fields (notes, status) ──
+  if (req.method === "PATCH") {
+    try {
+      const { notes, status } = req.body;
+      const updates = { updated_at: new Date().toISOString() };
+      if (notes !== undefined) updates.notes = notes;
+      if (status) updates.status = status;
+
+      if (Object.keys(updates).length === 1) {
+        return res.status(400).json({ error: "Nothing to update" });
+      }
+
+      const { data, error: updateError } = await supabase
+        .from("jobs")
+        .update(updates)
+        .eq("id", id)
+        .eq("customer_id", customerId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error("[api/jobs/[id]] updateError", updateError);
+        return res.status(500).json({ error: "Failed to update job" });
+      }
+      if (!data) return res.status(404).json({ error: "Job not found" });
+
+      return res.status(200).json({ success: true, job: data });
+    } catch (err) {
+      console.error("[api/jobs/[id]] PATCH error", err);
+      return res.status(500).json({ error: "Server error" });
+    }
+  }
 
   try {
     // Fetch job
