@@ -1696,17 +1696,12 @@ function readInputs() {
 
   state.labor.workers = parseInt(document.getElementById('workers').value) || 2;
   state.labor.days = parseFloat(document.getElementById('days').value) || 1;
-  // Read per-worker rates from the rendered inputs
+  // Keep worker_rates array sized to worker count.
+  // NOTE: on ne lit PAS les inputs DOM ici — onWorkerRateInput() gère ça directement
+  // pour éviter de réécrire la valeur dans l'input pendant que l'utilisateur tape.
   const n = state.labor.workers;
-  if (state.labor.worker_rates.length !== n) {
-    // Pad or trim to match, defaulting new workers to 50 $/h
-    while (state.labor.worker_rates.length < n) state.labor.worker_rates.push(LABOR.default_hourly_rate);
-    state.labor.worker_rates.length = n;
-  }
-  for (let i = 0; i < n; i++) {
-    const el = document.getElementById(`worker-rate-${i}`);
-    if (el) state.labor.worker_rates[i] = parseFloat(el.value) || 0;
-  }
+  while (state.labor.worker_rates.length < n) state.labor.worker_rates.push(LABOR.default_hourly_rate);
+  state.labor.worker_rates.length = n;
 
   state.fee_values.essence = parseFloat(document.getElementById('essence').value) || 0;
   state.fee_values.transport = parseFloat(document.getElementById('transport').value) || 0;
@@ -1800,7 +1795,9 @@ function updateState() {
       const el = document.getElementById('auto-labor-readout');
       if (el) el.style.display = 'none';
     }
-    renderWorkerRates();
+    // NE PAS re-render la structure ici — ça tue le focus input.
+    // On met juste à jour les valeurs affichées (labels brut/employeur/subtotal).
+    updateWorkerRatesValues();
   }
 }
 
@@ -2066,48 +2063,74 @@ function resetWizard() {
 }
 
 // ---------- Per-worker hourly rate inputs ----------
+// CRITICAL UX: ne jamais rebuild le HTML pendant que l'utilisateur tape dans un input.
+// Structure (nb de gars) → rebuild via renderWorkerRates().
+// Valeurs affichées (brut/employeur/subtotal) → update via updateWorkerRatesValues().
+// L'updateState() appelle SEULEMENT updateWorkerRatesValues() pour préserver le focus.
+
 function renderWorkerRates() {
   const container = document.getElementById('worker-rates-list');
   if (!container) return;
   const n = state.labor.workers;
-  // Ensure rates array matches worker count
   while (state.labor.worker_rates.length < n) state.labor.worker_rates.push(LABOR.default_hourly_rate);
   state.labor.worker_rates.length = n;
-
-  const hours = state.labor.hours_per_day || LABOR.hours_per_day;
-  const days = state.labor.days || 1;
-  const markup = LABOR.employer_markup || 0.20;
 
   let html = '';
   for (let i = 0; i < n; i++) {
     const rate = state.labor.worker_rates[i];
-    const gross = rate * hours * days;
-    const emp = gross * (1 + markup);
     html += `
       <div class="worker-rate-row" style="display:grid;grid-template-columns:100px 1fr 1fr 1fr;gap:10px;align-items:center;padding:10px 12px;background:var(--ice);border:1px solid var(--border);border-radius:5px;margin-bottom:8px;">
         <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--navy);letter-spacing:0.05em;text-transform:uppercase;">Gars ${i + 1}</div>
         <div class="input-suffix">
-          <input type="number" class="input" id="worker-rate-${i}" value="${rate}" min="0" step="0.5" oninput="updateState()" style="padding:8px 10px;font-size:13px;min-height:36px;">
+          <input type="number" class="input" id="worker-rate-${i}" value="${rate}" min="0" step="0.5" oninput="onWorkerRateInput(${i}, this.value)" style="padding:8px 10px;font-size:13px;min-height:36px;">
           <span class="suffix">$/h</span>
         </div>
-        <div style="font-size:11px;color:var(--text-muted);text-align:right;font-family:monospace;">brut ${formatCAD(gross)}</div>
-        <div style="font-size:12px;color:var(--navy);text-align:right;font-family:monospace;font-weight:700;">+20 % = ${formatCAD(emp)}</div>
+        <div id="worker-gross-${i}" style="font-size:11px;color:var(--text-muted);text-align:right;font-family:monospace;">—</div>
+        <div id="worker-emp-${i}" style="font-size:12px;color:var(--navy);text-align:right;font-family:monospace;font-weight:700;">—</div>
       </div>
     `;
   }
-  const total = state.labor.worker_rates.reduce((s, r) => s + r, 0) * hours * days * (1 + markup);
   html += `
     <div style="margin-top:10px;padding:10px 14px;background:var(--sage-light);border-left:3px solid var(--navy);border-radius:3px;display:flex;justify-content:space-between;font-family:monospace;font-size:13px;">
       <span style="opacity:0.7;">Sous-total main d'œuvre</span>
-      <span style="font-weight:700;">${formatCAD(total)}</span>
+      <span id="worker-subtotal" style="font-weight:700;">—</span>
     </div>
   `;
   container.innerHTML = html;
+  updateWorkerRatesValues();
+}
+
+function updateWorkerRatesValues() {
+  const n = state.labor.workers;
+  // Derive effective hours/day from the live result so auto-labor shows correctly
+  const r = state.lastResult;
+  const hours = (r && r.labor_line && r.labor_line.hours_per_day) || state.labor.hours_per_day || LABOR.hours_per_day;
+  const days = (r && r.days) || state.labor.days || 1;
+  const markup = LABOR.employer_markup || 0.20;
+  let total = 0;
+  for (let i = 0; i < n; i++) {
+    const rate = state.labor.worker_rates[i] || 0;
+    const gross = rate * hours * days;
+    const emp = gross * (1 + markup);
+    total += emp;
+    const grossEl = document.getElementById(`worker-gross-${i}`);
+    const empEl = document.getElementById(`worker-emp-${i}`);
+    if (grossEl) grossEl.textContent = 'brut ' + formatCAD(gross);
+    if (empEl) empEl.textContent = '+20 % = ' + formatCAD(emp);
+  }
+  const subEl = document.getElementById('worker-subtotal');
+  if (subEl) subEl.textContent = formatCAD(total);
+}
+
+function onWorkerRateInput(index, val) {
+  // Mise à jour state sans toucher au DOM de l'input (on préserve le focus).
+  state.labor.worker_rates[index] = parseFloat(val) || 0;
+  updateState();
 }
 
 function onWorkerCountChange() {
   state.labor.workers = parseInt(document.getElementById('workers').value) || 2;
-  renderWorkerRates();
+  renderWorkerRates();  // structural change → full rebuild
   updateState();
 }
 
