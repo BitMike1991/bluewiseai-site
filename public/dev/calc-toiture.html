@@ -1,0 +1,1970 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <meta name="format-detection" content="telephone=no">
+  <title>BlueWise Roofing — Calculateur instantané</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #2A2C35;
+      --navy-light: #3A3D47;
+      --navy-dark: #1C1E25;
+      --sage: #E9EFE7;
+      --sage-dark: #D8E0D4;
+      --sage-light: #F2F5F0;
+      --ice: #F5F7F4;
+      --mist: #F0F1F3;
+      --pure: #FFFFFF;
+      --green: #16a34a;
+      --green-light: #dcfce7;
+      --yellow: #eab308;
+      --yellow-light: #fef9c3;
+      --red: #dc2626;
+      --red-light: #fee2e2;
+      --border: #e5e7eb;
+      --text-muted: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--ice);
+      color: var(--navy);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3, h4 { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+    button { font-family: inherit; cursor: pointer; }
+    input, select, textarea { font-family: inherit; font-size: inherit; }
+
+    /* ============ TOPBAR ============ */
+    .topbar {
+      background: var(--navy);
+      color: var(--pure);
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .topbar-brand img {
+      height: 48px;
+      width: auto;
+    }
+    .topbar-brand .name {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 1.1;
+    }
+    .topbar-brand .sub {
+      font-size: 10px;
+      opacity: 0.55;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+    .topbar-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      opacity: 0.85;
+      text-align: center;
+      flex: 1;
+    }
+    .topbar-actions { display: flex; gap: 10px; }
+    .topbar-btn {
+      background: transparent;
+      color: var(--pure);
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 10px 18px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: all 0.15s;
+    }
+    .topbar-btn:hover { background: rgba(255,255,255,0.1); }
+    .topbar-btn.primary {
+      background: var(--sage);
+      color: var(--navy);
+      border-color: var(--sage);
+    }
+    .topbar-btn.primary:hover { background: var(--sage-dark); }
+
+    /* ============ PROGRESS BAR ============ */
+    .progress {
+      background: var(--pure);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+    }
+    .progress-steps {
+      display: flex;
+      gap: 8px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .progress-step {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .progress-step .num {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--mist);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .progress-step .label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+    .progress-step.active .num {
+      background: var(--navy);
+      color: var(--pure);
+      box-shadow: 0 0 0 4px var(--sage);
+    }
+    .progress-step.active .label { color: var(--navy); }
+    .progress-step.done .num {
+      background: var(--green);
+      color: var(--pure);
+    }
+    .progress-step.done .label { color: var(--navy); opacity: 0.75; }
+
+    /* ============ MAIN LAYOUT ============ */
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 0;
+      min-height: calc(100vh - 140px);
+    }
+    .wizard {
+      padding: 40px 48px 160px;
+      max-width: 820px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .step-header { margin-bottom: 32px; }
+    .step-header .step-tag {
+      display: inline-block;
+      background: var(--sage);
+      color: var(--navy);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 3px;
+      margin-bottom: 14px;
+    }
+    .step-header h1 {
+      font-size: 34px;
+      margin-bottom: 10px;
+      letter-spacing: -0.02em;
+    }
+    .step-header .desc {
+      font-size: 16px;
+      color: var(--text-muted);
+      line-height: 1.55;
+      max-width: 620px;
+    }
+
+    /* ============ FORM CONTROLS ============ */
+    .field {
+      margin-bottom: 24px;
+    }
+    .field-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+    .field-label .required { color: var(--red); margin-left: 4px; }
+    .field-label .optional {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .field-hint {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+    .field-hint strong { color: var(--navy); }
+    .input,
+    .select,
+    .textarea {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 16px;
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      background: var(--pure);
+      color: var(--navy);
+      transition: border-color 0.15s, box-shadow 0.15s;
+      min-height: 52px;
+    }
+    .input:focus,
+    .select:focus,
+    .textarea:focus {
+      outline: none;
+      border-color: var(--navy);
+      box-shadow: 0 0 0 3px rgba(42,44,53,0.12);
+    }
+    .input-big {
+      font-size: 24px;
+      font-weight: 700;
+      padding: 18px 20px;
+      min-height: 64px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .input-suffix {
+      position: relative;
+    }
+    .input-suffix .suffix {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 600;
+      pointer-events: none;
+    }
+    .textarea { resize: vertical; min-height: 90px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    /* ============ OPTION CARDS (pitch selector, shingle, etc.) ============ */
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .option-card {
+      background: var(--pure);
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      padding: 22px 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: left;
+      position: relative;
+    }
+    .option-card:hover {
+      border-color: var(--navy-light);
+      transform: translateY(-1px);
+    }
+    .option-card.active {
+      border-color: var(--navy);
+      background: var(--sage-light);
+      box-shadow: 0 4px 12px rgba(42,44,53,0.08);
+    }
+    .option-card .title {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--navy);
+      margin-bottom: 4px;
+    }
+    .option-card .desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      margin-bottom: 10px;
+    }
+    .option-card .price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--green);
+    }
+    .option-card .price .unit { font-size: 11px; opacity: 0.55; font-weight: 500; }
+    .option-card.active::before {
+      content: '✓';
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      width: 24px;
+      height: 24px;
+      background: var(--navy);
+      color: var(--pure);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    /* ============ QUANTITY TABLE ============ */
+    .qty-table {
+      background: var(--pure);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .qty-row {
+      display: grid;
+      grid-template-columns: 1fr 160px 140px 120px 42px;
+      gap: 12px;
+      padding: 14px 18px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .qty-row:last-child { border-bottom: none; }
+    .qty-row.header {
+      background: var(--sage-light);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .qty-row.excluded .qty-name,
+    .qty-row.excluded .qty-unit-price,
+    .qty-row.excluded .qty-total { opacity: 0.35; text-decoration: line-through; }
+    .qty-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .qty-name .label {
+      display: block;
+      line-height: 1.3;
+    }
+    .qty-name .hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-top: 2px;
+    }
+    .qty-stepper {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      height: 42px;
+      background: var(--pure);
+    }
+    .qty-stepper button {
+      width: 40px;
+      height: 40px;
+      background: var(--sage-light);
+      border: none;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--navy);
+      transition: background 0.1s;
+    }
+    .qty-stepper button:hover { background: var(--sage-dark); }
+    .qty-stepper button:active { background: var(--navy); color: var(--pure); }
+    .qty-stepper input {
+      flex: 1;
+      border: none;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+      min-height: 40px;
+      outline: none;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 0;
+      background: var(--pure);
+    }
+    .qty-unit-price,
+    .qty-total {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: right;
+    }
+    .qty-total { color: var(--navy); }
+    .qty-exclude {
+      background: transparent;
+      border: 1px solid var(--border);
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 16px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qty-exclude:hover { background: var(--red-light); color: var(--red); border-color: var(--red); }
+    .qty-row.excluded .qty-exclude { background: var(--red-light); color: var(--red); border-color: var(--red); }
+
+    .qty-summary {
+      padding: 18px;
+      background: var(--sage-light);
+      border-top: 2px solid var(--navy);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .qty-summary .label {
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      opacity: 0.7;
+    }
+    .qty-summary .value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    /* ============ TOGGLE / CHECKBOX ============ */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: var(--pure);
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .toggle-row:hover { border-color: var(--navy-light); }
+    .toggle-row.active { border-color: var(--navy); background: var(--sage-light); }
+    .toggle-row .tinfo .tname {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--navy);
+    }
+    .toggle-row .tinfo .tdesc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+    .toggle-row .tprice {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--navy);
+    }
+
+    /* ============ NAV BUTTONS ============ */
+    .nav-buttons {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 360px;
+      background: var(--pure);
+      border-top: 1px solid var(--border);
+      padding: 18px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      z-index: 50;
+    }
+    .btn {
+      padding: 16px 36px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 3px;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-primary {
+      background: var(--navy);
+      color: var(--pure);
+    }
+    .btn-primary:hover { background: var(--navy-dark); transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--navy);
+      border: 2px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--mist); }
+    .btn-big { padding: 20px 48px; font-size: 15px; }
+    .btn-success {
+      background: var(--green);
+      color: var(--pure);
+    }
+    .btn-success:hover { background: #15803d; }
+
+    /* ============ SIDEBAR — MARGIN PANEL ============ */
+    .sidebar {
+      background: var(--navy);
+      color: var(--pure);
+      padding: 32px 24px;
+      position: sticky;
+      top: 84px;
+      height: calc(100vh - 84px);
+      overflow-y: auto;
+    }
+    .sidebar h2 {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.5;
+      margin-bottom: 18px;
+    }
+    .sb-section {
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .sb-section:last-child { border-bottom: none; }
+    .sb-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 13px;
+    }
+    .sb-row .lbl { opacity: 0.65; }
+    .sb-row .val {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+    .sb-row.total {
+      padding-top: 12px;
+      margin-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 15px;
+    }
+    .sb-row.total .lbl { opacity: 0.85; font-weight: 700; }
+    .sb-row.total .val { font-size: 16px; }
+
+    .sb-highlight {
+      background: rgba(255,255,255,0.05);
+      border-radius: 4px;
+      padding: 18px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .sb-highlight .lbl {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      opacity: 0.55;
+      margin-bottom: 8px;
+    }
+    .sb-highlight .val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .sb-highlight .val .cents { font-size: 18px; opacity: 0.6; }
+    .sb-highlight .sub {
+      font-size: 11px;
+      opacity: 0.55;
+      margin-top: 6px;
+    }
+
+    .margin-box {
+      background: var(--green);
+      color: var(--pure);
+      border-radius: 4px;
+      padding: 16px;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+    .margin-box.medium { background: var(--yellow); }
+    .margin-box.low { background: var(--red); }
+    .margin-box .lbl {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      opacity: 0.85;
+      margin-bottom: 4px;
+      font-weight: 700;
+    }
+    .margin-box .val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .margin-box .pct {
+      font-size: 13px;
+      opacity: 0.85;
+      margin-top: 4px;
+    }
+
+    /* ============ STEP VISIBILITY ============ */
+    .step-panel { display: none; }
+    .step-panel.active { display: block; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============ SUMMARY / REVIEW ============ */
+    .review-card {
+      background: var(--pure);
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      padding: 22px 26px;
+      margin-bottom: 16px;
+    }
+    .review-card h3 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--navy);
+      opacity: 0.6;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .review-card .review-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 14px;
+    }
+    .review-card .review-row .lbl { color: var(--text-muted); }
+    .review-card .review-row .val { font-weight: 600; }
+
+    .final-price {
+      background: var(--navy);
+      color: var(--pure);
+      padding: 36px 28px;
+      border-radius: 6px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .final-price .lbl {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.55;
+      margin-bottom: 12px;
+    }
+    .final-price .amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 48px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .final-price .amount .cents { font-size: 28px; opacity: 0.6; }
+    .final-price .sub {
+      font-size: 12px;
+      opacity: 0.55;
+      margin-top: 10px;
+    }
+
+    /* ============ RESPONSIVE ============ */
+    @media (max-width: 1100px) {
+      .main { grid-template-columns: 1fr; }
+      .sidebar {
+        position: relative;
+        height: auto;
+        top: auto;
+      }
+      .nav-buttons { right: 0; }
+    }
+    @media (max-width: 640px) {
+      .topbar { padding: 14px 16px; flex-direction: column; gap: 12px; }
+      .topbar-title { display: none; }
+      .progress { padding: 12px 16px; }
+      .progress-steps { gap: 4px; }
+      .progress-step .num { width: 28px; height: 28px; font-size: 12px; }
+      .progress-step .label { font-size: 9px; }
+      .wizard { padding: 24px 16px 180px; }
+      .step-header h1 { font-size: 24px; }
+      .step-header .desc { font-size: 14px; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .qty-row { grid-template-columns: 1fr; gap: 8px; padding: 14px; }
+      .qty-row.header { display: none; }
+      .nav-buttons { padding: 14px 16px; }
+      .btn { padding: 12px 20px; font-size: 11px; }
+      .btn-big { padding: 14px 28px; font-size: 13px; }
+      .sidebar { padding: 24px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============ TOPBAR ============ -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div style="width:42px;height:42px;border-radius:8px;background:linear-gradient(135deg,var(--sage),var(--sage-dark));display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:800;color:var(--navy);font-size:18px;">BW</div>
+    <div>
+      <div class="name">BLUEWISE ROOFING</div>
+      <div class="sub">Calculateur instantané · démo</div>
+    </div>
+  </div>
+  <div class="topbar-title">Nouveau devis — <span id="client-name-display">Nouveau client</span></div>
+  <div class="topbar-actions">
+    <button class="topbar-btn" onclick="resetWizard()">↺ Recommencer</button>
+  </div>
+</div>
+
+<!-- ============ PROGRESS ============ -->
+<div class="progress">
+  <div class="progress-steps" id="progress-steps">
+    <div class="progress-step" data-step="1"><div class="num">1</div><div class="label">Client</div></div>
+    <div class="progress-step" data-step="2"><div class="num">2</div><div class="label">Mesures</div></div>
+    <div class="progress-step" data-step="3"><div class="num">3</div><div class="label">Matériaux</div></div>
+    <div class="progress-step" data-step="4"><div class="num">4</div><div class="label">Main d'œuvre</div></div>
+    <div class="progress-step" data-step="5"><div class="num">5</div><div class="label">Prix</div></div>
+    <div class="progress-step" data-step="6"><div class="num">6</div><div class="label">Résumé</div></div>
+  </div>
+</div>
+
+<!-- ============ MAIN ============ -->
+<div class="main">
+
+  <div class="wizard">
+
+    <!-- =========================================================== -->
+    <!-- STEP 1: CLIENT -->
+    <!-- =========================================================== -->
+    <div class="step-panel" data-step="1">
+      <div class="step-header">
+        <div class="step-tag">Étape 1 / 6</div>
+        <h1>Qui est le client?</h1>
+        <p class="desc">Commence par les informations du client. Rien de compliqué — tu peux toujours revenir en arrière.</p>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Nom complet du client <span class="required">*</span></label>
+        <input type="text" class="input" id="client-name" placeholder="ex : Éric Brisson" oninput="updateState()">
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label class="field-label">Téléphone <span class="required">*</span></label>
+          <input type="tel" class="input" id="client-phone" placeholder="514-555-1234" oninput="updateState()">
+        </div>
+        <div class="field">
+          <label class="field-label">Courriel <span class="optional">Optionnel</span></label>
+          <input type="email" class="input" id="client-email" placeholder="client@exemple.com" oninput="updateState()">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Adresse du chantier <span class="required">*</span></label>
+        <input type="text" class="input" id="client-address" placeholder="ex : 544 Chemin des Peupliers" oninput="updateState()">
+        <div class="field-hint">L'adresse où les travaux seront exécutés.</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label class="field-label">Ville <span class="required">*</span></label>
+          <input type="text" class="input" id="client-city" placeholder="ex : Piedmont" oninput="updateState()">
+        </div>
+        <div class="field">
+          <label class="field-label">Code postal</label>
+          <input type="text" class="input" id="client-postal" placeholder="J0R 1K0" oninput="updateState()">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Notes internes <span class="optional">Privé — ne sera pas sur le devis</span></label>
+        <textarea class="textarea" id="client-notes" placeholder="ex : Maison 2 étages, toit en L, accès limité par l'arrière..." oninput="updateState()"></textarea>
+      </div>
+    </div>
+
+    <!-- =========================================================== -->
+    <!-- STEP 2: MEASURES -->
+    <!-- =========================================================== -->
+    <div class="step-panel" data-step="2">
+      <div class="step-header">
+        <div class="step-tag">Étape 2 / 6</div>
+        <h1>Mesures du toit</h1>
+        <p class="desc">Entre la surface totale du toit. Si tu connais juste les dimensions de la maison, on peut aider à calculer.</p>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Surface totale du toit <span class="required">*</span></label>
+        <div class="input-suffix">
+          <input type="number" class="input input-big" id="surface" placeholder="2080" min="0" step="10" oninput="updateState()">
+          <span class="suffix">pi²</span>
+        </div>
+        <div class="field-hint">
+          <strong>Astuce :</strong> pour une maison rectangulaire, mesure longueur × largeur × facteur de pente.<br>
+          Facteurs : 4/12 = 1,05 · 6/12 = 1,12 · 8/12 = 1,20 · 10/12 = 1,30 · 12/12 = 1,41
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label class="field-label">Longueur bas de pente <span class="optional">pi linéaires</span></label>
+          <div class="input-suffix">
+            <input type="number" class="input" id="eaves-length" placeholder="160" min="0" oninput="updateState()">
+            <span class="suffix">pi lin.</span>
+          </div>
+          <div class="field-hint">Longueur totale du bas de toit (gouttières). Sert à calculer la membrane glace &amp; eau.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Longueur des faîtes <span class="optional">pi linéaires</span></label>
+          <div class="input-suffix">
+            <input type="number" class="input" id="ridge" placeholder="60" min="0" oninput="updateState()">
+            <span class="suffix">pi lin.</span>
+          </div>
+          <div class="field-hint">Les lignes de partage sur le dessus du toit. Sert à calculer le cap bardeau.</div>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top: 32px;">
+        <label class="field-label">Pente du toit <span class="required">*</span></label>
+        <div class="field-hint" style="margin-top: 0; margin-bottom: 14px;">Choisis le type de pente. Le prix change selon la difficulté d'installation.</div>
+        <div class="option-grid">
+          <button type="button" class="option-card" data-pitch="easy" onclick="selectPitch('easy')">
+            <div class="title">Pente facile</div>
+            <div class="desc">4/12 à 6/12<br>Marche debout, installation rapide</div>
+            <div class="price">3,75 <span class="unit">$/pi²</span></div>
+          </button>
+          <button type="button" class="option-card" data-pitch="medium" onclick="selectPitch('medium')">
+            <div class="title">Pente moyenne</div>
+            <div class="desc">7/12 à 10/12 simple<br>Harnais requis, rythme normal</div>
+            <div class="price">4,25 <span class="unit">$/pi²</span></div>
+          </button>
+          <button type="button" class="option-card" data-pitch="complex" onclick="selectPitch('complex')">
+            <div class="title">Pente raide ou complexe</div>
+            <div class="desc">10/12 complexe à 12/12<br>Lucarnes, noues, difficulté élevée</div>
+            <div class="price">4,75 <span class="unit">$/pi²</span></div>
+          </button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Complexité du toit <span class="required">*</span></label>
+        <div class="option-grid" style="grid-template-columns: 1fr 1fr;">
+          <button type="button" class="option-card" data-complexity="1" onclick="selectComplexity(1)">
+            <div class="title">Simple</div>
+            <div class="desc">Toit régulier, peu d'obstacles (cheminées, lanterneaux, noues)</div>
+          </button>
+          <button type="button" class="option-card" data-complexity="2" onclick="selectComplexity(2)">
+            <div class="title">Complexe</div>
+            <div class="desc">Plusieurs lucarnes, noues, obstacles, détails</div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================== -->
+    <!-- STEP 3: MATERIALS -->
+    <!-- =========================================================== -->
+    <div class="step-panel" data-step="3">
+      <div class="step-header">
+        <div class="step-tag">Étape 3 / 6</div>
+        <h1>Matériaux</h1>
+        <p class="desc">Les quantités sont calculées automatiquement selon tes mesures. Ajuste avec les boutons <strong>+</strong> et <strong>−</strong> si besoin.</p>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Type de bardeau <span class="required">*</span></label>
+        <div class="option-grid">
+          <button type="button" class="option-card" data-shingle="bardeau_standard" onclick="selectShingle('bardeau_standard')">
+            <div class="title">IKO Cambridge</div>
+            <div class="desc">Standard, garantie 25 ans</div>
+            <div class="price">41,89 <span class="unit">$/paquet</span></div>
+          </button>
+          <button type="button" class="option-card" data-shingle="bardeau_dynasty" onclick="selectShingle('bardeau_dynasty')">
+            <div class="title">IKO Dynasty</div>
+            <div class="desc">Performance, garantie étendue</div>
+            <div class="price">44,59 <span class="unit">$/paquet</span></div>
+          </button>
+          <button type="button" class="option-card" data-shingle="bardeau_target_50" onclick="selectShingle('bardeau_target_50')">
+            <div class="title">Target 50 ans</div>
+            <div class="desc">Premium, garantie 50 ans</div>
+            <div class="price">163,75 <span class="unit">$/paquet</span></div>
+          </button>
+          <button type="button" class="option-card" data-shingle="bardeau_target_100" onclick="selectShingle('bardeau_target_100')">
+            <div class="title">Target 100 ans</div>
+            <div class="desc">Haut de gamme, garantie à vie</div>
+            <div class="price">100,76 <span class="unit">$/paquet</span></div>
+          </button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Quantités matériaux</label>
+        <div class="field-hint" style="margin-top: 0; margin-bottom: 12px;">Les chiffres sont calculés selon ta surface. Ajuste avec <strong>+</strong> / <strong>−</strong> ou clique <strong>✕</strong> pour exclure une ligne.</div>
+        <div class="qty-table" id="qty-table"></div>
+      </div>
+    </div>
+
+    <!-- =========================================================== -->
+    <!-- STEP 4: LABOR + FEES -->
+    <!-- =========================================================== -->
+    <div class="step-panel" data-step="4">
+      <div class="step-header">
+        <div class="step-tag">Étape 4 / 6</div>
+        <h1>Main d'œuvre et frais</h1>
+        <p class="desc">Combien de temps ça va prendre ? Combien de gars sur le chantier ?</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label class="field-label">Nombre de gars <span class="required">*</span></label>
+          <select class="select" id="workers" onchange="onWorkerCountChange()">
+            <option value="1">1 travailleur</option>
+            <option value="2" selected>2 travailleurs</option>
+            <option value="3">3 travailleurs</option>
+            <option value="4">4 travailleurs</option>
+            <option value="5">5 travailleurs</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Nombre de jours <span class="required">*</span></label>
+          <div class="input-suffix">
+            <input type="number" class="input" id="days" value="1" min="0.5" max="15" step="0.5" oninput="updateState()">
+            <span class="suffix">jour(s)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Taux horaire par travailleur <span class="optional">charges employeur +20 % ajoutées automatiquement</span></label>
+        <div id="worker-rates-list"></div>
+        <div class="field-hint">
+          Chaque travailleur peut avoir un taux différent. Le coût employeur = taux × 10 h × jours × <strong>1,20</strong> (markup fixe couvrant RRQ, RQAP, AE, FSS, CNESST).
+        </div>
+      </div>
+
+      <h3 style="margin-top: 32px; margin-bottom: 14px; font-size: 16px; color: var(--navy);">Frais de chantier</h3>
+
+      <div class="toggle-row" data-fee="conteneur" onclick="toggleFee('conteneur')">
+        <div class="tinfo">
+          <div class="tname">Conteneur à rebuts</div>
+          <div class="tdesc">Location pour disposer du vieux bardeau</div>
+        </div>
+        <div class="tprice">500,00 $</div>
+      </div>
+
+      <div class="field" style="margin-top: 14px;">
+        <label class="field-label">Essence / déplacements</label>
+        <div class="input-suffix">
+          <input type="number" class="input" id="essence" value="100" min="0" step="10" oninput="updateState()">
+          <span class="suffix">$</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Transport matériaux</label>
+        <div class="input-suffix">
+          <input type="number" class="input" id="transport" value="75" min="0" step="5" oninput="updateState()">
+          <span class="suffix">$</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================== -->
+    <!-- STEP 5: PRICING -->
+    <!-- =========================================================== -->
+    <div class="step-panel" data-step="5">
+      <div class="step-header">
+        <div class="step-tag">Étape 5 / 6</div>
+        <h1>Prix client</h1>
+        <p class="desc">Comment tu veux calculer le prix à facturer au client ?</p>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Méthode de calcul du prix <span class="required">*</span></label>
+        <div class="option-grid">
+          <button type="button" class="option-card active" data-mode="auto" onclick="selectPricingMode('auto')">
+            <div class="title">Taux $/pi² auto</div>
+            <div class="desc">Prix calculé selon la pente et la complexité choisies. Recommandé.</div>
+          </button>
+          <button type="button" class="option-card" data-mode="markup" onclick="selectPricingMode('markup')">
+            <div class="title">Marge sur coûtant</div>
+            <div class="desc">Tu fixes une marge cible (%) et le prix s'ajuste.</div>
+          </button>
+          <button type="button" class="option-card" data-mode="forfait" onclick="selectPricingMode('forfait')">
+            <div class="title">Prix forfaitaire manuel</div>
+            <div class="desc">Tu entres directement le montant HT. Full override.</div>
+          </button>
+        </div>
+      </div>
+
+      <div id="pricing-auto-opts">
+        <div class="field">
+          <label class="field-label">Tier de prix dans la catégorie</label>
+          <div class="option-grid" style="grid-template-columns: 1fr 1fr;">
+            <button type="button" class="option-card" data-tier="1" onclick="selectTier(1)">
+              <div class="title">Tier 1 — Standard</div>
+              <div class="desc" id="tier1-desc">3,75 $/pi²</div>
+            </button>
+            <button type="button" class="option-card" data-tier="2" onclick="selectTier(2)">
+              <div class="title">Tier 2 — Premium</div>
+              <div class="desc" id="tier2-desc">4,00 $/pi²</div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="pricing-markup-opts" style="display:none;">
+        <div class="field">
+          <label class="field-label">Marge cible</label>
+          <div class="input-suffix">
+            <input type="number" class="input input-big" id="markup-pct" value="40" min="0" max="200" step="1" oninput="updateState()">
+            <span class="suffix">%</span>
+          </div>
+          <div class="field-hint">Ex : marge de 40 % sur coûtant 5 000 $ = prix HT 7 000 $.</div>
+        </div>
+      </div>
+
+      <div id="pricing-forfait-opts" style="display:none;">
+        <div class="field">
+          <label class="field-label">Prix forfaitaire HT (avant taxes)</label>
+          <div class="input-suffix">
+            <input type="number" class="input input-big" id="forfait-amount" min="0" step="100" placeholder="7800" oninput="updateState()">
+            <span class="suffix">$</span>
+          </div>
+          <div class="field-hint">Montant total avant TPS et TVQ. Les taxes se calculent automatiquement.</div>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top: 32px;">
+        <label class="field-label">Escompte cash <span class="optional">Optionnel — montant retiré du total</span></label>
+        <div class="input-suffix">
+          <input type="number" class="input" id="cash-discount" value="0" min="0" step="50" oninput="updateState()">
+          <span class="suffix">$</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================== -->
+    <!-- STEP 6: REVIEW -->
+    <!-- =========================================================== -->
+    <div class="step-panel" data-step="6">
+      <div class="step-header">
+        <div class="step-tag">Étape 6 / 6</div>
+        <h1>Révision finale</h1>
+        <p class="desc">Vérifie tout avant de générer le devis. Tu peux revenir en arrière si besoin.</p>
+      </div>
+
+      <div class="final-price">
+        <div class="lbl">Total client TTC</div>
+        <div class="amount" id="review-total">0<span class="cents">,00</span></div>
+        <div class="sub" id="review-sub">Toutes taxes incluses</div>
+      </div>
+
+      <div class="review-card">
+        <h3>Client</h3>
+        <div id="review-client"></div>
+      </div>
+
+      <div class="review-card">
+        <h3>Travaux</h3>
+        <div id="review-work"></div>
+      </div>
+
+      <div class="review-card">
+        <h3>Détail fiscal complet</h3>
+        <div id="review-fiscal"></div>
+      </div>
+
+      <div class="review-card">
+        <h3>Profit final pour l'entrepreneur</h3>
+        <div id="review-margin"></div>
+      </div>
+
+      <div style="display: flex; gap: 14px; margin-top: 28px;">
+        <button id="generate-btn" class="btn btn-success btn-big" style="flex: 1;" onclick="generateQuote()">
+          ✓ Générer lien client
+        </button>
+        <button class="btn btn-ghost btn-big" onclick="showPreview()">
+          Aperçu devis
+        </button>
+      </div>
+
+      <div class="field-hint" style="margin-top: 14px; text-align: center;">
+        Le devis sera stocké de manière sécurisée. Le client accède via un lien avec gate 4 chiffres (son téléphone).
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ SIDEBAR ============ -->
+  <div class="sidebar">
+    <h2>Aperçu en direct</h2>
+
+    <div class="sb-highlight">
+      <div class="lbl">Prix client TTC</div>
+      <div class="val" id="sb-total">0<span class="cents">,00</span> $</div>
+      <div class="sub" id="sb-surface">0 pi² · 0 $/pi²</div>
+    </div>
+
+    <div class="margin-box" id="sb-margin-box">
+      <div class="lbl">Profit net</div>
+      <div class="val" id="sb-net-profit">0,00 $</div>
+      <div class="pct" id="sb-net-pct">0 % de marge</div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-row"><span class="lbl">Revenu HT</span><span class="val" id="sb-revenue">0,00 $</span></div>
+      <div class="sb-row"><span class="lbl">Matériaux</span><span class="val" id="sb-materials">0,00 $</span></div>
+      <div class="sb-row"><span class="lbl">Frais chantier</span><span class="val" id="sb-fees">0,00 $</span></div>
+      <div class="sb-row"><span class="lbl">Main d'œuvre</span><span class="val" id="sb-labor">0,00 $</span></div>
+      <div class="sb-row total"><span class="lbl">Coût total</span><span class="val" id="sb-cost">0,00 $</span></div>
+      <div class="sb-row"><span class="lbl">Profit brut HT</span><span class="val" id="sb-gross-profit">0,00 $</span></div>
+    </div>
+
+    <div class="sb-section" style="font-size:11px;opacity:0.8;">
+      <div class="sb-row" style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.55;margin-bottom:4px;">Détail fiscal complet → étape 6</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ NAV BUTTONS ============ -->
+<div class="nav-buttons">
+  <button class="btn btn-ghost" id="btn-back" onclick="prevStep()" style="visibility: hidden;">← Retour</button>
+  <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted);">
+    Étape <span id="nav-current">1</span> sur 6
+  </div>
+  <button class="btn btn-primary" id="btn-next" onclick="nextStep()">Suivant →</button>
+</div>
+
+<!-- ============ CALCULATOR LOGIC ============ -->
+<script>
+// ============================================================================
+// CALCULATEUR TOITURE — inline (copie de lib/toiture-calc.js)
+// ============================================================================
+const TAX_GST = 0.05;
+const TAX_QST = 0.09975;
+const TAX_COMBINED = 0.14975;
+const SQFT_PER_PAQUET = 32;
+
+const MATERIALS = {
+  bardeau_standard: { id: 'bardeau_standard', label: 'Bardeau IKO Cambridge', price: 41.89, unit: 'paquet', sqft_per: 32, category: 'shingle' },
+  bardeau_dynasty:  { id: 'bardeau_dynasty',  label: 'Bardeau IKO Dynasty',   price: 44.59, unit: 'paquet', sqft_per: 32, category: 'shingle' },
+  bardeau_target_50: { id: 'bardeau_target_50', label: 'Bardeau Target 50 ans', price: 163.75, unit: 'paquet', sqft_per: 32, category: 'shingle_premium' },
+  bardeau_target_100: { id: 'bardeau_target_100', label: 'Bardeau Target 100 ans', price: 100.76, unit: 'paquet', sqft_per: 32, category: 'shingle_premium' },
+  cap_bardeau: { id: 'cap_bardeau', label: 'Cap bardeau (faîte)', price: 61.53, unit: 'paquet', category: 'ridge' },
+  pitch: { id: 'pitch', label: 'Pitch / étanchéité', price: 59.06, unit: 'unité', category: 'sealing' },
+  syntec: { id: 'syntec', label: 'Syntec — sous-couche', price: 64.71, unit: 'rouleau', sqft_per: 1000, category: 'underlayment' },
+  glace_eau: { id: 'glace_eau', label: 'Membrane glace et eau', price: 62.25, unit: 'rouleau', category: 'underlayment' },
+  maximum: { id: 'maximum', label: 'Ventilateur Maximum', price: 129.99, unit: 'unité', category: 'ventilation' },
+  event: { id: 'event', label: 'Évent de toit', price: 34.99, unit: 'unité', category: 'ventilation' },
+  clou: { id: 'clou', label: 'Clous à toiture', price: 32.99, unit: 'boîte', category: 'fastener' }
+};
+
+const JOB_FEES = {
+  conteneur: { label: 'Conteneur à rebuts', price: 500 },
+  essence: { label: 'Essence / déplacements', price: 100 },
+  transport: { label: 'Transport matériaux', price: 75 }
+};
+
+const LABOR = {
+  default_workers: 2,
+  default_hourly_rate: 50.00,
+  hours_per_day: 10,
+  employer_markup: 0.20
+};
+
+const PITCH_RATES = {
+  easy:    { id: 'easy',    label: 'Pente 4/12 — 6/12',            description: 'Pente facile',          tier1: 3.75, tier2: 4.00 },
+  medium:  { id: 'medium',  label: 'Pente 7/12 — 10/12 simple',    description: 'Pente moyenne',         tier1: 4.25, tier2: 4.50 },
+  complex: { id: 'complex', label: 'Pente 10/12 complexe — 12/12', description: 'Pente raide/complexe',  tier1: 4.75, tier2: 5.25 }
+};
+
+const ceil = Math.ceil;
+const round2 = (x) => Math.round(x * 100) / 100;
+
+function formatCAD(n) {
+  if (n == null || isNaN(n)) n = 0;
+  return Number(n).toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
+}
+
+function autoCalculateQuantities({ surface_sqft, eaves_length_ft = 0, ridge_ft = 0 }) {
+  const paquets = surface_sqft > 0 ? ceil((surface_sqft / SQFT_PER_PAQUET) * 1.10) : 0;
+  const cap_bardeau = ridge_ft > 0 ? ceil(ridge_ft / 25) : (surface_sqft > 0 ? 4 : 0);
+  const syntec = surface_sqft > 0 ? ceil(surface_sqft / 1000) : 0;
+  const glace_eau = surface_sqft > 0 ? Math.max(2, ceil(eaves_length_ft / 65)) : 0;
+  const clou = paquets > 0 ? Math.max(1, ceil(paquets / 48)) : 0;
+  return {
+    bardeau_standard: paquets,
+    bardeau_dynasty: paquets,
+    bardeau_target_50: paquets,
+    bardeau_target_100: paquets,
+    cap_bardeau,
+    syntec,
+    glace_eau,
+    clou,
+    maximum: surface_sqft > 0 ? 1 : 0,
+    event: surface_sqft > 0 ? 1 : 0,
+    pitch: surface_sqft > 0 ? 1 : 0
+  };
+}
+
+function calculateRoofingQuote(input) {
+  const {
+    shingle_type = 'bardeau_standard',
+    quantities = {},
+    excludes = {},
+    fees = { conteneur: 1, essence: 1, transport: 1 },
+    fee_overrides = {},
+    worker_rates,
+    workers = LABOR.default_workers,
+    hourly_rate = LABOR.default_hourly_rate,
+    days = 1,
+    hours_per_day = LABOR.hours_per_day,
+    pitch_category = 'easy',
+    pitch_tier = 1,
+    surface_sqft = 0,
+    override_rate = null,
+    override_subtotal_ht = null,
+    markup_pct = null,
+    cash_discount = 0
+  } = input;
+
+  // Normalize to per-worker rates array
+  const rates = Array.isArray(worker_rates) && worker_rates.length > 0
+    ? worker_rates.map(r => Number(r) || 0)
+    : Array.from({ length: Math.max(1, workers) }, () => Number(hourly_rate) || 0);
+  const worker_count = rates.length;
+
+  const material_lines = [];
+  let material_cost_ht = 0;
+
+  // Shingle line
+  const shingle = MATERIALS[shingle_type] || MATERIALS.bardeau_standard;
+  const shingle_qty = quantities[shingle_type] || 0;
+  if (shingle_qty > 0 && !excludes[shingle_type]) {
+    const t = round2(shingle_qty * shingle.price);
+    material_lines.push({ id: shingle.id, label: shingle.label, qty: shingle_qty, unit: shingle.unit, unit_price: shingle.price, total: t });
+    material_cost_ht += t;
+  }
+
+  const other_ids = ['cap_bardeau', 'pitch', 'syntec', 'glace_eau', 'maximum', 'event', 'clou'];
+  for (const id of other_ids) {
+    const mat = MATERIALS[id];
+    const qty = quantities[id] || 0;
+    if (qty > 0 && !excludes[id]) {
+      const t = round2(qty * mat.price);
+      material_lines.push({ id: mat.id, label: mat.label, qty, unit: mat.unit, unit_price: mat.price, total: t });
+      material_cost_ht += t;
+    }
+  }
+
+  const fee_lines = [];
+  let fee_cost_ht = 0;
+  for (const [key, info] of Object.entries(JOB_FEES)) {
+    const enabled = fees[key] && fees[key] > 0;
+    if (!enabled) continue;
+    const unit_price = fee_overrides[key] != null ? fee_overrides[key] : info.price;
+    const total = round2(unit_price);
+    fee_lines.push({ id: key, label: info.label, qty: 1, unit_price, total });
+    fee_cost_ht += total;
+  }
+
+  const markup_factor = 1 + (LABOR.employer_markup || 0);
+  const worker_breakdown = rates.map((rate, i) => {
+    const hours_total = hours_per_day * days;
+    const gross = rate * hours_total;
+    return {
+      index: i + 1,
+      hourly_rate: rate,
+      hours: hours_total,
+      gross_wage: round2(gross),
+      employer_cost: round2(gross * markup_factor)
+    };
+  });
+  const labor_cost = round2(worker_breakdown.reduce((s, w) => s + w.employer_cost, 0));
+  const labor_line = {
+    id: 'labor',
+    label: `Main d'œuvre (${worker_count} × ${days} j, +20 % charges)`,
+    qty: worker_count * days,
+    unit: 'jour-homme',
+    unit_price: round2(labor_cost / Math.max(1, worker_count * days)),
+    total: labor_cost,
+    workers: worker_breakdown,
+    markup_pct: Math.round((LABOR.employer_markup || 0) * 100),
+    hours_per_day
+  };
+
+  const total_cost_ht = round2(material_cost_ht + fee_cost_ht + labor_cost);
+  // Crédits intrants : TPS via CTI + TVQ via RTI (les deux récupérables)
+  const taxable_inputs = material_cost_ht + fee_cost_ht;
+  const input_tax_credit_gst = round2(taxable_inputs * TAX_GST);
+  const input_tax_credit_qst = round2(taxable_inputs * TAX_QST);
+  const input_tax_credit = round2(input_tax_credit_gst + input_tax_credit_qst);
+
+  let revenue_ht;
+  let rate_per_sqft = null;
+
+  if (override_subtotal_ht != null && override_subtotal_ht > 0) {
+    revenue_ht = round2(override_subtotal_ht - cash_discount);
+  } else if (markup_pct != null && markup_pct > 0) {
+    revenue_ht = round2(total_cost_ht * (1 + markup_pct / 100) - cash_discount);
+  } else if (override_rate != null && override_rate > 0) {
+    rate_per_sqft = override_rate;
+    revenue_ht = round2((rate_per_sqft * surface_sqft) - cash_discount);
+  } else {
+    const cfg = PITCH_RATES[pitch_category] || PITCH_RATES.easy;
+    rate_per_sqft = pitch_tier === 2 ? cfg.tier2 : cfg.tier1;
+    revenue_ht = round2((rate_per_sqft * surface_sqft) - cash_discount);
+  }
+  revenue_ht = Math.max(0, revenue_ht);
+
+  const tax_gst_sale = round2(revenue_ht * TAX_GST);
+  const tax_qst_sale = round2(revenue_ht * TAX_QST);
+  const tax_combined_sale = round2(revenue_ht * TAX_COMBINED);
+  const total_client_ttc = round2(revenue_ht + tax_combined_sale);
+  // TPS et TVQ nettes à remettre séparément (Revenu Canada vs Revenu Québec)
+  const tax_net_gst_payable = round2(tax_gst_sale - input_tax_credit_gst);
+  const tax_net_qst_payable = round2(tax_qst_sale - input_tax_credit_qst);
+  const tax_net_payable = round2(tax_net_gst_payable + tax_net_qst_payable);
+
+  const gross_profit_ht = round2(revenue_ht - total_cost_ht);
+  const gross_margin_pct = revenue_ht > 0 ? round2((gross_profit_ht / revenue_ht) * 100) : 0;
+  const net_profit = round2(gross_profit_ht - tax_net_payable);
+  const net_margin_pct = revenue_ht > 0 ? round2((net_profit / revenue_ht) * 100) : 0;
+
+  return {
+    material_lines, fee_lines, labor_line,
+    material_cost_ht: round2(material_cost_ht),
+    fee_cost_ht: round2(fee_cost_ht),
+    labor_cost, total_cost_ht,
+    input_tax_credit, input_tax_credit_gst, input_tax_credit_qst,
+    taxable_inputs: round2(taxable_inputs),
+    rate_per_sqft, surface_sqft, revenue_ht,
+    tax_gst_sale, tax_qst_sale, tax_combined_sale,
+    total_client_ttc,
+    tax_net_payable, tax_net_gst_payable, tax_net_qst_payable,
+    gross_profit_ht, gross_margin_pct,
+    net_profit, net_margin_pct,
+    workers: worker_count, worker_rates: rates, hours_per_day,
+    days, cash_discount, pitch_category, pitch_tier
+  };
+}
+
+// ============================================================================
+// WIZARD STATE + LOGIC
+// ============================================================================
+const state = {
+  step: 1,
+  client: { name: '', phone: '', email: '', address: '', city: '', postal: '', notes: '' },
+  measures: { surface: 0, eaves_length: 0, ridge: 0, pitch_category: null, complexity: null },
+  shingle_type: 'bardeau_standard',
+  quantities: { bardeau_standard: 0, cap_bardeau: 0, pitch: 0, syntec: 0, glace_eau: 0, maximum: 0, event: 0, clou: 0 },
+  excludes: {},
+  manual_overrides: {},
+  labor: { workers: 2, days: 1, worker_rates: [50, 50], hours_per_day: 10 },
+  fees: { conteneur: true, essence: true, transport: true },
+  fee_values: { essence: 100, transport: 75 },
+  pricing: { mode: 'auto', tier: 1, markup_pct: 40, forfait_override: null, cash_discount: 0 },
+  lastResult: null
+};
+
+// ---------- Navigation ----------
+function setStep(n) {
+  state.step = n;
+  document.querySelectorAll('.step-panel').forEach(p => {
+    p.classList.toggle('active', parseInt(p.dataset.step) === n);
+  });
+  document.querySelectorAll('.progress-step').forEach(s => {
+    const sn = parseInt(s.dataset.step);
+    s.classList.toggle('active', sn === n);
+    s.classList.toggle('done', sn < n);
+  });
+  document.getElementById('btn-back').style.visibility = n > 1 ? 'visible' : 'hidden';
+  document.getElementById('nav-current').textContent = n;
+  const btnNext = document.getElementById('btn-next');
+  btnNext.textContent = n === 6 ? 'Terminé' : 'Suivant →';
+  btnNext.style.display = n === 6 ? 'none' : 'inline-flex';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (n === 3) renderQtyTable();
+  if (n === 5) updatePricingUI();
+  if (n === 6) renderReview();
+}
+function nextStep() { if (state.step < 6) setStep(state.step + 1); }
+function prevStep() { if (state.step > 1) setStep(state.step - 1); }
+
+document.querySelectorAll('.progress-step').forEach(s => {
+  s.addEventListener('click', () => setStep(parseInt(s.dataset.step)));
+});
+
+// ---------- Pitch / complexity / shingle selectors ----------
+function selectPitch(key) {
+  state.measures.pitch_category = key;
+  document.querySelectorAll('[data-pitch]').forEach(el => {
+    el.classList.toggle('active', el.dataset.pitch === key);
+  });
+  updateState();
+}
+
+function selectComplexity(n) {
+  state.measures.complexity = n;
+  state.pricing.tier = n;
+  document.querySelectorAll('[data-complexity]').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.complexity) === n);
+  });
+  updateState();
+}
+
+function selectShingle(key) {
+  state.shingle_type = key;
+  document.querySelectorAll('[data-shingle]').forEach(el => {
+    el.classList.toggle('active', el.dataset.shingle === key);
+  });
+  updateState();
+  renderQtyTable();
+}
+
+function selectPricingMode(mode) {
+  state.pricing.mode = mode;
+  document.querySelectorAll('[data-mode]').forEach(el => {
+    el.classList.toggle('active', el.dataset.mode === mode);
+  });
+  document.getElementById('pricing-auto-opts').style.display = mode === 'auto' ? 'block' : 'none';
+  document.getElementById('pricing-markup-opts').style.display = mode === 'markup' ? 'block' : 'none';
+  document.getElementById('pricing-forfait-opts').style.display = mode === 'forfait' ? 'block' : 'none';
+  updateState();
+}
+
+function selectTier(n) {
+  state.pricing.tier = n;
+  document.querySelectorAll('[data-tier]').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.tier) === n);
+  });
+  updateState();
+}
+
+function toggleFee(key) {
+  state.fees[key] = !state.fees[key];
+  document.querySelectorAll(`[data-fee="${key}"]`).forEach(el => {
+    el.classList.toggle('active', state.fees[key]);
+  });
+  updateState();
+}
+
+// ---------- Quantity table ----------
+function renderQtyTable() {
+  const container = document.getElementById('qty-table');
+  if (!container) return;
+
+  const lines = [
+    { id: state.shingle_type, label: MATERIALS[state.shingle_type].label, hint: `${SQFT_PER_PAQUET} pi² par paquet`, unit: 'paquet', price: MATERIALS[state.shingle_type].price },
+    { id: 'cap_bardeau', label: 'Cap bardeau', hint: 'Pour les faîtes', unit: 'paquet', price: MATERIALS.cap_bardeau.price },
+    { id: 'syntec', label: 'Syntec (sous-couche)', hint: '1 rouleau ≈ 1 000 pi²', unit: 'rouleau', price: MATERIALS.syntec.price },
+    { id: 'glace_eau', label: 'Membrane glace et eau', hint: 'Bas de pente + noues', unit: 'rouleau', price: MATERIALS.glace_eau.price },
+    { id: 'maximum', label: 'Ventilateur Maximum', hint: 'Ventilation de faîte', unit: 'unité', price: MATERIALS.maximum.price },
+    { id: 'event', label: 'Évent de toit', hint: 'Ventilation standard', unit: 'unité', price: MATERIALS.event.price },
+    { id: 'pitch', label: 'Pitch / étanchéité', hint: 'Scellant', unit: 'unité', price: MATERIALS.pitch.price },
+    { id: 'clou', label: 'Clous à toiture', hint: '1 boîte / 33 paquets', unit: 'boîte', price: MATERIALS.clou.price }
+  ];
+
+  let html = `
+    <div class="qty-row header">
+      <div>Matériau</div>
+      <div style="text-align:center;">Quantité</div>
+      <div style="text-align:right;">Prix unit.</div>
+      <div style="text-align:right;">Total</div>
+      <div></div>
+    </div>`;
+
+  for (const l of lines) {
+    const qty = state.quantities[l.id] || 0;
+    const excluded = !!state.excludes[l.id];
+    const total = round2(qty * l.price);
+    html += `
+      <div class="qty-row ${excluded ? 'excluded' : ''}">
+        <div class="qty-name">
+          <span class="label">${l.label}</span>
+          <span class="hint">${l.hint}</span>
+        </div>
+        <div class="qty-stepper">
+          <button type="button" onclick="bumpQty('${l.id}', -1)">−</button>
+          <input type="number" value="${qty}" min="0" onchange="setQty('${l.id}', this.value)">
+          <button type="button" onclick="bumpQty('${l.id}', 1)">+</button>
+        </div>
+        <div class="qty-unit-price">${formatCAD(l.price)}</div>
+        <div class="qty-total">${formatCAD(total)}</div>
+        <button type="button" class="qty-exclude" onclick="toggleExclude('${l.id}')" title="${excluded ? 'Réinclure' : 'Exclure'}">${excluded ? '↺' : '✕'}</button>
+      </div>`;
+  }
+
+  // Summary
+  const matCost = state.lastResult ? state.lastResult.material_cost_ht : 0;
+  html += `
+    <div class="qty-summary">
+      <span class="label">Sous-total matériaux</span>
+      <span class="value">${formatCAD(matCost)}</span>
+    </div>`;
+
+  container.innerHTML = html;
+}
+
+function bumpQty(id, delta) {
+  const cur = state.quantities[id] || 0;
+  const next = Math.max(0, cur + delta);
+  state.quantities[id] = next;
+  state.manual_overrides[id] = true;
+  updateState();
+  renderQtyTable();
+}
+function setQty(id, val) {
+  const n = Math.max(0, parseInt(val) || 0);
+  state.quantities[id] = n;
+  state.manual_overrides[id] = true;
+  updateState();
+}
+function toggleExclude(id) {
+  state.excludes[id] = !state.excludes[id];
+  updateState();
+  renderQtyTable();
+}
+
+// ---------- Read inputs into state ----------
+function readInputs() {
+  state.client.name = document.getElementById('client-name').value;
+  state.client.phone = document.getElementById('client-phone').value;
+  state.client.email = document.getElementById('client-email').value;
+  state.client.address = document.getElementById('client-address').value;
+  state.client.city = document.getElementById('client-city').value;
+  state.client.postal = document.getElementById('client-postal').value;
+  state.client.notes = document.getElementById('client-notes').value;
+
+  state.measures.surface = parseFloat(document.getElementById('surface').value) || 0;
+  state.measures.eaves_length = parseFloat(document.getElementById('eaves-length').value) || 0;
+  state.measures.ridge = parseFloat(document.getElementById('ridge').value) || 0;
+
+  state.labor.workers = parseInt(document.getElementById('workers').value) || 2;
+  state.labor.days = parseFloat(document.getElementById('days').value) || 1;
+  // Read per-worker rates from the rendered inputs
+  const n = state.labor.workers;
+  if (state.labor.worker_rates.length !== n) {
+    // Pad or trim to match, defaulting new workers to 50 $/h
+    while (state.labor.worker_rates.length < n) state.labor.worker_rates.push(LABOR.default_hourly_rate);
+    state.labor.worker_rates.length = n;
+  }
+  for (let i = 0; i < n; i++) {
+    const el = document.getElementById(`worker-rate-${i}`);
+    if (el) state.labor.worker_rates[i] = parseFloat(el.value) || 0;
+  }
+
+  state.fee_values.essence = parseFloat(document.getElementById('essence').value) || 0;
+  state.fee_values.transport = parseFloat(document.getElementById('transport').value) || 0;
+
+  const markupEl = document.getElementById('markup-pct');
+  if (markupEl) state.pricing.markup_pct = parseFloat(markupEl.value) || 0;
+  const forfaitEl = document.getElementById('forfait-amount');
+  if (forfaitEl) state.pricing.forfait_override = parseFloat(forfaitEl.value) || null;
+  const discountEl = document.getElementById('cash-discount');
+  if (discountEl) state.pricing.cash_discount = parseFloat(discountEl.value) || 0;
+}
+
+// ---------- Main update loop ----------
+function updateState() {
+  readInputs();
+
+  // Auto-calc qty if user hasn't manually touched + we have a surface
+  if (state.measures.surface > 0) {
+    const auto = autoCalculateQuantities({
+      surface_sqft: state.measures.surface,
+      eaves_length_ft: state.measures.eaves_length,
+      ridge_ft: state.measures.ridge
+    });
+    for (const [k, v] of Object.entries(auto)) {
+      if (!state.manual_overrides[k]) {
+        state.quantities[k] = v;
+      }
+    }
+  }
+
+  // Run calculator
+  const fees = {
+    conteneur: state.fees.conteneur ? 1 : 0,
+    essence: state.fees.essence ? 1 : 0,
+    transport: state.fees.transport ? 1 : 0
+  };
+  const fee_overrides = {
+    essence: state.fee_values.essence,
+    transport: state.fee_values.transport
+  };
+
+  const input = {
+    shingle_type: state.shingle_type,
+    quantities: state.quantities,
+    excludes: state.excludes,
+    fees,
+    fee_overrides,
+    worker_rates: state.labor.worker_rates.slice(0, state.labor.workers),
+    days: state.labor.days,
+    hours_per_day: state.labor.hours_per_day || LABOR.hours_per_day,
+    pitch_category: state.measures.pitch_category || 'easy',
+    pitch_tier: state.pricing.tier,
+    surface_sqft: state.measures.surface,
+    cash_discount: state.pricing.cash_discount
+  };
+
+  if (state.pricing.mode === 'markup') {
+    input.markup_pct = state.pricing.markup_pct;
+  } else if (state.pricing.mode === 'forfait' && state.pricing.forfait_override) {
+    input.override_subtotal_ht = state.pricing.forfait_override;
+  }
+
+  const result = calculateRoofingQuote(input);
+  state.lastResult = result;
+
+  updateSidebar(result);
+  updateTopbarName();
+  if (state.step === 3) {
+    const s = document.querySelector('#qty-table .qty-summary .value');
+    if (s) s.textContent = formatCAD(result.material_cost_ht);
+  }
+  if (state.step === 4) {
+    renderWorkerRates();
+  }
+}
+
+function updateTopbarName() {
+  const n = state.client.name.trim();
+  document.getElementById('client-name-display').textContent = n || 'Nouveau client';
+}
+
+function updateSidebar(r) {
+  if (!r) return;
+  const ttc = r.total_client_ttc;
+  const [whole, cents] = formatCAD(ttc).replace(' $', '').split(',');
+  document.getElementById('sb-total').innerHTML = `${whole}<span class="cents">,${cents || '00'}</span> $`;
+  document.getElementById('sb-surface').textContent = `${r.surface_sqft} pi² · ${r.rate_per_sqft ? r.rate_per_sqft.toFixed(2) + ' $/pi²' : 'forfait'}`;
+
+  document.getElementById('sb-revenue').textContent = formatCAD(r.revenue_ht);
+  document.getElementById('sb-materials').textContent = formatCAD(r.material_cost_ht);
+  document.getElementById('sb-fees').textContent = formatCAD(r.fee_cost_ht);
+  document.getElementById('sb-labor').textContent = formatCAD(r.labor_cost);
+  document.getElementById('sb-cost').textContent = formatCAD(r.total_cost_ht);
+  document.getElementById('sb-gross-profit').textContent = formatCAD(r.gross_profit_ht);
+
+  document.getElementById('sb-net-profit').textContent = formatCAD(r.net_profit);
+  document.getElementById('sb-net-pct').textContent = `${r.net_margin_pct.toFixed(1)} % de marge nette`;
+
+  const box = document.getElementById('sb-margin-box');
+  box.classList.remove('medium', 'low');
+  if (r.net_margin_pct < 15) box.classList.add('low');
+  else if (r.net_margin_pct < 25) box.classList.add('medium');
+}
+
+function updatePricingUI() {
+  if (state.measures.pitch_category && PITCH_RATES[state.measures.pitch_category]) {
+    const cfg = PITCH_RATES[state.measures.pitch_category];
+    const t1 = document.getElementById('tier1-desc');
+    const t2 = document.getElementById('tier2-desc');
+    if (t1) t1.textContent = `${cfg.tier1.toFixed(2)} $/pi² — ${cfg.label}`;
+    if (t2) t2.textContent = `${cfg.tier2.toFixed(2)} $/pi² — ${cfg.label}`;
+  }
+  document.querySelectorAll('[data-tier]').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.tier) === state.pricing.tier);
+  });
+}
+
+function renderReview() {
+  const r = state.lastResult;
+  if (!r) return;
+
+  const [whole, cents] = formatCAD(r.total_client_ttc).replace(' $', '').split(',');
+  document.getElementById('review-total').innerHTML = `${whole}<span class="cents">,${cents || '00'} $</span>`;
+  document.getElementById('review-sub').textContent = `Toutes taxes incluses · ${r.surface_sqft} pi²`;
+
+  document.getElementById('review-client').innerHTML = `
+    <div class="review-row"><span class="lbl">Nom</span><span class="val">${state.client.name || '—'}</span></div>
+    <div class="review-row"><span class="lbl">Téléphone</span><span class="val">${state.client.phone || '—'}</span></div>
+    <div class="review-row"><span class="lbl">Courriel</span><span class="val">${state.client.email || '—'}</span></div>
+    <div class="review-row"><span class="lbl">Adresse</span><span class="val">${state.client.address || '—'}</span></div>
+    <div class="review-row"><span class="lbl">Ville</span><span class="val">${state.client.city || '—'}</span></div>
+  `;
+
+  const pitchLabel = state.measures.pitch_category ? PITCH_RATES[state.measures.pitch_category].label : '—';
+  const ratesStr = (state.labor.worker_rates || []).slice(0, state.labor.workers).map(r => `${r}$/h`).join(' · ');
+  document.getElementById('review-work').innerHTML = `
+    <div class="review-row"><span class="lbl">Surface</span><span class="val">${state.measures.surface} pi²</span></div>
+    <div class="review-row"><span class="lbl">Pente</span><span class="val">${pitchLabel}</span></div>
+    <div class="review-row"><span class="lbl">Bardeau</span><span class="val">${MATERIALS[state.shingle_type].label}</span></div>
+    <div class="review-row"><span class="lbl">Main d'œuvre</span><span class="val">${state.labor.workers} × ${state.labor.days} j · ${ratesStr} (+20 % charges)</span></div>
+    <div class="review-row"><span class="lbl">Tarif appliqué</span><span class="val">${r.rate_per_sqft ? r.rate_per_sqft.toFixed(2) + ' $/pi²' : 'Forfaitaire'}</span></div>
+  `;
+
+  // ─── Détail fiscal complet ────────────────────────────────────────────
+  // Coût TTC payé par l'entrepreneur (matériaux + frais sont taxables, labor non)
+  const materials_ttc = round2(r.material_cost_ht * (1 + TAX_COMBINED));
+  const fees_ttc = round2(r.fee_cost_ht * (1 + TAX_COMBINED));
+  const cost_ttc_paid = round2(materials_ttc + fees_ttc + r.labor_cost);
+
+  document.getElementById('review-fiscal').innerHTML = `
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">① Ce que l'entrepreneur paie (intrants)</div>
+    <div class="review-row"><span class="lbl">Matériaux HT</span><span class="val">${formatCAD(r.material_cost_ht)}</span></div>
+    <div class="review-row"><span class="lbl">Matériaux + taxes (TTC)</span><span class="val">${formatCAD(materials_ttc)}</span></div>
+    <div class="review-row"><span class="lbl">Frais chantier HT</span><span class="val">${formatCAD(r.fee_cost_ht)}</span></div>
+    <div class="review-row"><span class="lbl">Frais + taxes (TTC)</span><span class="val">${formatCAD(fees_ttc)}</span></div>
+    <div class="review-row"><span class="lbl">Main d'œuvre (sans taxes)</span><span class="val">${formatCAD(r.labor_cost)}</span></div>
+    <div class="review-row" style="border-top:1px solid var(--border);padding-top:6px;margin-top:4px;font-weight:700;"><span class="lbl">Total décaissé</span><span class="val">${formatCAD(cost_ttc_paid)}</span></div>
+
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin:18px 0 8px;">② Ce que le client paie</div>
+    <div class="review-row"><span class="lbl">Sous-total HT (revenu)</span><span class="val">${formatCAD(r.revenue_ht)}</span></div>
+    <div class="review-row"><span class="lbl">+ TPS facturée (5 %)</span><span class="val">${formatCAD(r.tax_gst_sale)}</span></div>
+    <div class="review-row"><span class="lbl">+ TVQ facturée (9,975 %)</span><span class="val">${formatCAD(r.tax_qst_sale)}</span></div>
+    <div class="review-row" style="border-top:1px solid var(--border);padding-top:6px;margin-top:4px;font-weight:700;"><span class="lbl">Total TTC client</span><span class="val">${formatCAD(r.total_client_ttc)}</span></div>
+
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin:18px 0 8px;">③ Crédits sur intrants (récupérés du gouvernement)</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;line-height:1.5;">L'entrepreneur récupère les taxes payées sur matériaux et frais (CTI fédéral + RTI provincial). La main d'œuvre n'est pas taxable donc rien à récupérer dessus.</div>
+    <div class="review-row"><span class="lbl">Base d'intrants taxables</span><span class="val">${formatCAD(r.taxable_inputs)}</span></div>
+    <div class="review-row"><span class="lbl">CTI TPS récupérée (5 %)</span><span class="val" style="color:var(--green);">+ ${formatCAD(r.input_tax_credit_gst)}</span></div>
+    <div class="review-row"><span class="lbl">RTI TVQ récupérée (9,975 %)</span><span class="val" style="color:var(--green);">+ ${formatCAD(r.input_tax_credit_qst)}</span></div>
+    <div class="review-row" style="border-top:1px solid var(--border);padding-top:6px;margin-top:4px;font-weight:700;"><span class="lbl">Total récupéré</span><span class="val" style="color:var(--green);">+ ${formatCAD(r.input_tax_credit)}</span></div>
+
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin:18px 0 8px;">④ Taxes nettes à remettre au gouvernement</div>
+    <div class="review-row"><span class="lbl">TPS facturée</span><span class="val">${formatCAD(r.tax_gst_sale)}</span></div>
+    <div class="review-row"><span class="lbl">− CTI TPS récupérée</span><span class="val">− ${formatCAD(r.input_tax_credit_gst)}</span></div>
+    <div class="review-row" style="font-weight:700;"><span class="lbl">→ TPS nette à Revenu Canada</span><span class="val">${formatCAD(r.tax_net_gst_payable)}</span></div>
+    <div style="height:6px;"></div>
+    <div class="review-row"><span class="lbl">TVQ facturée</span><span class="val">${formatCAD(r.tax_qst_sale)}</span></div>
+    <div class="review-row"><span class="lbl">− RTI TVQ récupérée</span><span class="val">− ${formatCAD(r.input_tax_credit_qst)}</span></div>
+    <div class="review-row" style="font-weight:700;"><span class="lbl">→ TVQ nette à Revenu Québec</span><span class="val">${formatCAD(r.tax_net_qst_payable)}</span></div>
+    <div style="height:6px;"></div>
+    <div class="review-row" style="border-top:2px solid var(--navy);padding-top:8px;margin-top:6px;font-weight:700;background:var(--sage-light);padding:8px 10px;border-radius:3px;"><span class="lbl">Total taxes nettes à l'État</span><span class="val">${formatCAD(r.tax_net_payable)}</span></div>
+  `;
+
+  document.getElementById('review-margin').innerHTML = `
+    <div class="review-row"><span class="lbl">Revenu HT (encaissé HT)</span><span class="val">${formatCAD(r.revenue_ht)}</span></div>
+    <div class="review-row"><span class="lbl">− Coût total décaissé</span><span class="val">− ${formatCAD(r.total_cost_ht)}</span></div>
+    <div class="review-row" style="font-weight:700;"><span class="lbl">= Profit brut HT</span><span class="val">${formatCAD(r.gross_profit_ht)} <span style="opacity:0.6;font-size:11px;">(${r.gross_margin_pct.toFixed(1)} %)</span></span></div>
+    <div class="review-row"><span class="lbl">− Taxes nettes à l'État</span><span class="val">− ${formatCAD(r.tax_net_payable)}</span></div>
+    <div class="review-row" style="border-top:2px solid var(--green);padding-top:10px;margin-top:8px;background:var(--green-light);padding:10px 12px;border-radius:4px;">
+      <span class="lbl" style="font-weight:700;color:var(--green);font-size:14px;">PROFIT NET (en poche)</span>
+      <span class="val" style="font-weight:700;color:var(--green);font-size:16px;font-family:monospace;">${formatCAD(r.net_profit)} <span style="font-size:11px;opacity:0.8;">(${r.net_margin_pct.toFixed(1)} %)</span></span>
+    </div>
+  `;
+}
+
+// ---------- Phase C: quote generation + send ----------
+state.quoteToken = null;
+state.quoteUrl = null;
+
+async function generateQuote() {
+  if (!state.client.name || !state.client.phone) {
+    alert('Nom et téléphone du client requis avant de générer le devis.');
+    setStep(1);
+    return;
+  }
+  if (!state.lastResult || !state.measures.surface) {
+    alert('Complète la mesure de surface avant de générer.');
+    setStep(2);
+    return;
+  }
+
+  const btn = document.getElementById('generate-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Génération…'; }
+
+  try {
+    const body = {
+      client: state.client,
+      measures: state.measures,
+      labor: state.labor,
+      fees: state.fees,
+      fee_values: state.fee_values,
+      pricing: state.pricing,
+      shingle_type: state.shingle_type,
+      quantities: state.quantities,
+      excludes: state.excludes,
+      result: state.lastResult
+    };
+    const res = await fetch('/api/roof-quote/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+
+    state.quoteToken = data.token;
+    state.quoteUrl = data.url;
+    renderQuotePanel();
+  } catch (err) {
+    alert('Erreur génération devis : ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✓ Générer lien client'; }
+  }
+}
+
+function renderQuotePanel() {
+  let panel = document.getElementById('quote-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'quote-panel';
+    panel.style.cssText = 'margin-top:20px;padding:22px 24px;background:var(--sage-light);border-left:4px solid var(--navy);border-radius:6px;';
+    const reviewStep = document.getElementById('step-6');
+    if (reviewStep) reviewStep.appendChild(panel);
+  }
+  const last4 = (state.client.phone || '').replace(/\D/g,'').slice(-4);
+  panel.innerHTML = `
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;opacity:0.7;margin-bottom:10px;">Devis généré</div>
+    <div style="font-size:13px;margin-bottom:14px;">Code d'accès client: <strong>${last4}</strong> (4 derniers chiffres de son tel)</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+      <input type="text" readonly value="${state.quoteUrl}" onclick="this.select()" style="flex:1;min-width:260px;padding:10px 12px;font-family:monospace;font-size:12px;border:1px solid var(--border);border-radius:4px;background:var(--pure);">
+      <button type="button" onclick="copyQuoteUrl()" style="padding:10px 16px;background:var(--navy);color:var(--pure);border:none;border-radius:4px;font-family:monospace;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">⎘ Copier</button>
+      <a href="${state.quoteUrl}" target="_blank" style="padding:10px 16px;background:var(--pure);color:var(--navy);text-decoration:none;border:1px solid var(--navy);border-radius:4px;font-family:monospace;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">↗ Ouvrir</a>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button type="button" onclick="sendQuoteSMS()" id="send-sms-btn" ${!state.client.phone ? 'disabled' : ''} style="flex:1;padding:12px 18px;background:var(--navy);color:var(--pure);border:none;border-radius:4px;font-family:monospace;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;${!state.client.phone?'opacity:0.4;cursor:not-allowed;':''}">📱 Envoyer par SMS</button>
+      <button type="button" onclick="sendQuoteEmail()" id="send-email-btn" ${!state.client.email ? 'disabled' : ''} style="flex:1;padding:12px 18px;background:var(--navy);color:var(--pure);border:none;border-radius:4px;font-family:monospace;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;${!state.client.email?'opacity:0.4;cursor:not-allowed;':''}">📧 Envoyer par courriel</button>
+    </div>
+    <div id="send-status" style="font-size:12px;margin-top:10px;color:var(--text-muted);"></div>
+  `;
+}
+
+function copyQuoteUrl() {
+  if (!state.quoteUrl) return;
+  navigator.clipboard.writeText(state.quoteUrl).then(
+    () => { const el = document.getElementById('send-status'); if (el) el.textContent = '✓ Lien copié dans le presse-papiers'; },
+    () => alert('Impossible de copier')
+  );
+}
+
+async function sendQuoteSMS() {
+  if (!state.quoteToken) return;
+  const btn = document.getElementById('send-sms-btn');
+  const status = document.getElementById('send-status');
+  if (btn) btn.disabled = true;
+  if (status) status.textContent = '📱 Envoi SMS…';
+  try {
+    const res = await fetch(`/api/roof-quote/${state.quoteToken}/send-sms`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erreur');
+    if (status) status.innerHTML = `<span style="color:var(--green);">✓ SMS envoyé à ${data.sent_to}</span>`;
+  } catch (err) {
+    if (status) status.innerHTML = `<span style="color:var(--red);">✗ ${err.message}</span>`;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function sendQuoteEmail() {
+  if (!state.quoteToken) return;
+  const btn = document.getElementById('send-email-btn');
+  const status = document.getElementById('send-status');
+  if (btn) btn.disabled = true;
+  if (status) status.textContent = '📧 Envoi courriel…';
+  try {
+    const res = await fetch(`/api/roof-quote/${state.quoteToken}/send-email`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erreur');
+    if (status) status.innerHTML = `<span style="color:var(--green);">✓ Courriel envoyé à ${data.sent_to}</span>`;
+  } catch (err) {
+    if (status) status.innerHTML = `<span style="color:var(--red);">✗ ${err.message}</span>`;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function showPreview() {
+  if (!state.quoteToken) {
+    alert('Génère d\'abord le devis (bouton ci-dessus) pour avoir un lien d\'aperçu.');
+    return;
+  }
+  window.open(state.quoteUrl, '_blank');
+}
+function resetWizard() {
+  if (!confirm('Recommencer à zéro ? Les infos actuelles seront perdues.')) return;
+  location.reload();
+}
+
+// ---------- Per-worker hourly rate inputs ----------
+function renderWorkerRates() {
+  const container = document.getElementById('worker-rates-list');
+  if (!container) return;
+  const n = state.labor.workers;
+  // Ensure rates array matches worker count
+  while (state.labor.worker_rates.length < n) state.labor.worker_rates.push(LABOR.default_hourly_rate);
+  state.labor.worker_rates.length = n;
+
+  const hours = state.labor.hours_per_day || LABOR.hours_per_day;
+  const days = state.labor.days || 1;
+  const markup = LABOR.employer_markup || 0.20;
+
+  let html = '';
+  for (let i = 0; i < n; i++) {
+    const rate = state.labor.worker_rates[i];
+    const gross = rate * hours * days;
+    const emp = gross * (1 + markup);
+    html += `
+      <div class="worker-rate-row" style="display:grid;grid-template-columns:100px 1fr 1fr 1fr;gap:10px;align-items:center;padding:10px 12px;background:var(--ice);border:1px solid var(--border);border-radius:5px;margin-bottom:8px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--navy);letter-spacing:0.05em;text-transform:uppercase;">Gars ${i + 1}</div>
+        <div class="input-suffix">
+          <input type="number" class="input" id="worker-rate-${i}" value="${rate}" min="0" step="0.5" oninput="updateState()" style="padding:8px 10px;font-size:13px;min-height:36px;">
+          <span class="suffix">$/h</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);text-align:right;font-family:monospace;">brut ${formatCAD(gross)}</div>
+        <div style="font-size:12px;color:var(--navy);text-align:right;font-family:monospace;font-weight:700;">+20 % = ${formatCAD(emp)}</div>
+      </div>
+    `;
+  }
+  const total = state.labor.worker_rates.reduce((s, r) => s + r, 0) * hours * days * (1 + markup);
+  html += `
+    <div style="margin-top:10px;padding:10px 14px;background:var(--sage-light);border-left:3px solid var(--navy);border-radius:3px;display:flex;justify-content:space-between;font-family:monospace;font-size:13px;">
+      <span style="opacity:0.7;">Sous-total main d'œuvre</span>
+      <span style="font-weight:700;">${formatCAD(total)}</span>
+    </div>
+  `;
+  container.innerHTML = html;
+}
+
+function onWorkerCountChange() {
+  state.labor.workers = parseInt(document.getElementById('workers').value) || 2;
+  renderWorkerRates();
+  updateState();
+}
+
+// ---------- Init ----------
+(function init() {
+  selectPricingMode('auto');
+  selectTier(1);
+  setStep(1);
+  renderWorkerRates();
+  updateState();
+})();
+</script>
+
+</body>
+</html>
