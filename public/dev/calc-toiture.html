@@ -904,23 +904,13 @@
         <div class="option-grid">
           <button type="button" class="option-card" data-shingle="bardeau_standard" onclick="selectShingle('bardeau_standard')">
             <div class="title">IKO Cambridge</div>
-            <div class="desc">Standard, garantie 25 ans</div>
+            <div class="desc">21 bardeaux/paquet · 32,8 pi²/paquet · garantie 25 ans</div>
             <div class="price">41,89 <span class="unit">$/paquet</span></div>
           </button>
           <button type="button" class="option-card" data-shingle="bardeau_dynasty" onclick="selectShingle('bardeau_dynasty')">
             <div class="title">IKO Dynasty</div>
-            <div class="desc">Performance, garantie étendue</div>
+            <div class="desc">21 bardeaux/paquet · 32,8 pi²/paquet · ArmourZone</div>
             <div class="price">44,59 <span class="unit">$/paquet</span></div>
-          </button>
-          <button type="button" class="option-card" data-shingle="bardeau_target_50" onclick="selectShingle('bardeau_target_50')">
-            <div class="title">Target 50 ans</div>
-            <div class="desc">Premium, garantie 50 ans</div>
-            <div class="price">163,75 <span class="unit">$/paquet</span></div>
-          </button>
-          <button type="button" class="option-card" data-shingle="bardeau_target_100" onclick="selectShingle('bardeau_target_100')">
-            <div class="title">Target 100 ans</div>
-            <div class="desc">Haut de gamme, garantie à vie</div>
-            <div class="price">100,76 <span class="unit">$/paquet</span></div>
           </button>
         </div>
       </div>
@@ -1064,6 +1054,15 @@
       </div>
 
       <div class="field" style="margin-top: 32px;">
+        <label class="field-label">Prix minimum soumission <span class="optional">Plancher pour les petits jobs · couvre overhead + marge</span></label>
+        <div class="input-suffix">
+          <input type="number" class="input" id="min-quote-price" value="4500" min="0" step="100" oninput="updateState()">
+          <span class="suffix">$</span>
+        </div>
+        <div class="field-hint">Si le calcul auto donne moins que ce montant, le prix est ajusté à ce plancher. Empêche les soumissions perdantes sur les petits projets.</div>
+      </div>
+
+      <div class="field" style="margin-top: 18px;">
         <label class="field-label">Escompte cash <span class="optional">Optionnel — montant retiré du total</span></label>
         <div class="input-suffix">
           <input type="number" class="input" id="cash-discount" value="0" min="0" step="50" oninput="updateState()">
@@ -1110,7 +1109,7 @@
 
       <div style="display: flex; gap: 14px; margin-top: 28px;">
         <button id="generate-btn" class="btn btn-success btn-big" style="flex: 1;" onclick="generateQuote()">
-          ✓ Générer lien client
+          ✓ Générer + Envoyer client
         </button>
         <button class="btn btn-ghost btn-big" onclick="showPreview()">
           Aperçu devis
@@ -1118,7 +1117,7 @@
       </div>
 
       <div class="field-hint" style="margin-top: 14px; text-align: center;">
-        Le devis sera stocké de manière sécurisée. Le client accède via un lien avec gate 4 chiffres (son téléphone).
+        Le devis est stocké de manière sécurisée puis envoyé automatiquement par SMS + courriel au client (gate 4 chiffres = derniers du tel).
       </div>
     </div>
 
@@ -1173,13 +1172,11 @@
 const TAX_GST = 0.05;
 const TAX_QST = 0.09975;
 const TAX_COMBINED = 0.14975;
-const SQFT_PER_PAQUET = 32;
+const SQFT_PER_PAQUET = 32.8; // IKO Cambridge / Dynasty manufacturer spec (3 paquets / 98,4 pi²)
 
 const MATERIALS = {
-  bardeau_standard: { id: 'bardeau_standard', label: 'Bardeau IKO Cambridge', price: 41.89, unit: 'paquet', sqft_per: 32, category: 'shingle' },
-  bardeau_dynasty:  { id: 'bardeau_dynasty',  label: 'Bardeau IKO Dynasty',   price: 44.59, unit: 'paquet', sqft_per: 32, category: 'shingle' },
-  bardeau_target_50: { id: 'bardeau_target_50', label: 'Bardeau Target 50 ans', price: 163.75, unit: 'paquet', sqft_per: 32, category: 'shingle_premium' },
-  bardeau_target_100: { id: 'bardeau_target_100', label: 'Bardeau Target 100 ans', price: 100.76, unit: 'paquet', sqft_per: 32, category: 'shingle_premium' },
+  bardeau_standard: { id: 'bardeau_standard', label: 'Bardeau IKO Cambridge', price: 41.89, unit: 'paquet', sqft_per: 32.8, category: 'shingle' },
+  bardeau_dynasty:  { id: 'bardeau_dynasty',  label: 'Bardeau IKO Dynasty',   price: 44.59, unit: 'paquet', sqft_per: 32.8, category: 'shingle' },
   cap_bardeau: { id: 'cap_bardeau', label: 'Cap bardeau (faîte)', price: 61.53, unit: 'paquet', category: 'ridge' },
   pitch: { id: 'pitch', label: 'Pitch / étanchéité', price: 59.06, unit: 'unité', category: 'sealing' },
   syntec: { id: 'syntec', label: 'Syntec — sous-couche', price: 64.71, unit: 'rouleau', sqft_per: 1000, category: 'underlayment' },
@@ -1225,8 +1222,6 @@ function autoCalculateQuantities({ surface_sqft, eaves_length_ft = 0, ridge_ft =
   return {
     bardeau_standard: paquets,
     bardeau_dynasty: paquets,
-    bardeau_target_50: paquets,
-    bardeau_target_100: paquets,
     cap_bardeau,
     syntec,
     glace_eau,
@@ -1255,7 +1250,8 @@ function calculateRoofingQuote(input) {
     override_rate = null,
     override_subtotal_ht = null,
     markup_pct = null,
-    cash_discount = 0
+    cash_discount = 0,
+    min_quote_price = 4500  // forfait floor: les petits jobs doivent toujours couvrir overhead + marge
   } = input;
 
   // Normalize to per-worker rates array
@@ -1332,6 +1328,7 @@ function calculateRoofingQuote(input) {
 
   let revenue_ht;
   let rate_per_sqft = null;
+  let min_quote_applied = false;
 
   if (override_subtotal_ht != null && override_subtotal_ht > 0) {
     revenue_ht = round2(override_subtotal_ht - cash_discount);
@@ -1346,6 +1343,14 @@ function calculateRoofingQuote(input) {
     revenue_ht = round2((rate_per_sqft * surface_sqft) - cash_discount);
   }
   revenue_ht = Math.max(0, revenue_ht);
+
+  // Plancher minimum forfait: les petits jobs doivent couvrir overhead + marge
+  if (min_quote_price > 0 && revenue_ht > 0 && revenue_ht < min_quote_price) {
+    revenue_ht = round2(min_quote_price - cash_discount);
+    min_quote_applied = true;
+    // Recalc effective rate per sqft
+    if (surface_sqft > 0) rate_per_sqft = round2(revenue_ht / surface_sqft);
+  }
 
   const tax_gst_sale = round2(revenue_ht * TAX_GST);
   const tax_qst_sale = round2(revenue_ht * TAX_QST);
@@ -1374,6 +1379,7 @@ function calculateRoofingQuote(input) {
     tax_net_payable, tax_net_gst_payable, tax_net_qst_payable,
     gross_profit_ht, gross_margin_pct,
     net_profit, net_margin_pct,
+    min_quote_price, min_quote_applied,
     workers: worker_count, worker_rates: rates, hours_per_day,
     days, cash_discount, pitch_category, pitch_tier
   };
@@ -1393,7 +1399,7 @@ const state = {
   labor: { workers: 2, days: 1, worker_rates: [50, 50], hours_per_day: 10 },
   fees: { conteneur: true, essence: true, transport: true },
   fee_values: { essence: 100, transport: 75 },
-  pricing: { mode: 'auto', tier: 1, markup_pct: 40, forfait_override: null, cash_discount: 0 },
+  pricing: { mode: 'auto', tier: 1, markup_pct: 40, forfait_override: null, cash_discount: 0, min_quote_price: 4500, auto_send: true },
   lastResult: null
 };
 
@@ -1492,7 +1498,7 @@ function renderQtyTable() {
     { id: 'maximum', label: 'Ventilateur Maximum', hint: 'Ventilation de faîte', unit: 'unité', price: MATERIALS.maximum.price },
     { id: 'event', label: 'Évent de toit', hint: 'Ventilation standard', unit: 'unité', price: MATERIALS.event.price },
     { id: 'pitch', label: 'Pitch / étanchéité', hint: 'Scellant', unit: 'unité', price: MATERIALS.pitch.price },
-    { id: 'clou', label: 'Clous à toiture', hint: '1 boîte / 33 paquets', unit: 'boîte', price: MATERIALS.clou.price }
+    { id: 'clou', label: 'Clous à toiture', hint: '1 boîte / 48 paquets', unit: 'boîte', price: MATERIALS.clou.price }
   ];
 
   let html = `
@@ -1593,6 +1599,8 @@ function readInputs() {
   if (forfaitEl) state.pricing.forfait_override = parseFloat(forfaitEl.value) || null;
   const discountEl = document.getElementById('cash-discount');
   if (discountEl) state.pricing.cash_discount = parseFloat(discountEl.value) || 0;
+  const minQuoteEl = document.getElementById('min-quote-price');
+  if (minQuoteEl) state.pricing.min_quote_price = parseFloat(minQuoteEl.value) || 0;
 }
 
 // ---------- Main update loop ----------
@@ -1636,7 +1644,8 @@ function updateState() {
     pitch_category: state.measures.pitch_category || 'easy',
     pitch_tier: state.pricing.tier,
     surface_sqft: state.measures.surface,
-    cash_discount: state.pricing.cash_discount
+    cash_discount: state.pricing.cash_discount,
+    min_quote_price: state.pricing.min_quote_price
   };
 
   if (state.pricing.mode === 'markup') {
@@ -1679,7 +1688,9 @@ function updateSidebar(r) {
   document.getElementById('sb-gross-profit').textContent = formatCAD(r.gross_profit_ht);
 
   document.getElementById('sb-net-profit').textContent = formatCAD(r.net_profit);
-  document.getElementById('sb-net-pct').textContent = `${r.net_margin_pct.toFixed(1)} % de marge nette`;
+  let pctText = `${r.net_margin_pct.toFixed(1)} % de marge nette`;
+  if (r.min_quote_applied) pctText += ' · plancher min appliqué';
+  document.getElementById('sb-net-pct').textContent = pctText;
 
   const box = document.getElementById('sb-margin-box');
   box.classList.remove('medium', 'low');
@@ -1727,7 +1738,7 @@ function renderReview() {
   `;
 
   // ─── Détail fiscal complet ────────────────────────────────────────────
-  // Coût TTC payé par l'entrepreneur (matériaux + frais sont taxables, labor non)
+  // Coût TTC payé par Jeremy (matériaux + frais sont taxables, labor non)
   const materials_ttc = round2(r.material_cost_ht * (1 + TAX_COMBINED));
   const fees_ttc = round2(r.fee_cost_ht * (1 + TAX_COMBINED));
   const cost_ttc_paid = round2(materials_ttc + fees_ttc + r.labor_cost);
@@ -1821,10 +1832,18 @@ async function generateQuote() {
     state.quoteToken = data.token;
     state.quoteUrl = data.url;
     renderQuotePanel();
+
+    // Auto-envoi SMS + Email si activé et si on a phone/email
+    if (state.pricing.auto_send !== false) {
+      const sendPromises = [];
+      if (state.client.phone) sendPromises.push(sendQuoteSMS());
+      if (state.client.email) sendPromises.push(sendQuoteEmail());
+      await Promise.all(sendPromises);
+    }
   } catch (err) {
     alert('Erreur génération devis : ' + err.message);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '✓ Générer lien client'; }
+    if (btn) { btn.disabled = false; btn.textContent = '✓ Générer + Envoyer client'; }
   }
 }
 
