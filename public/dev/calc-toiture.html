@@ -956,9 +956,21 @@
         <label class="field-label">Taux horaire par travailleur <span class="optional">charges employeur +20 % ajoutées automatiquement</span></label>
         <div id="worker-rates-list"></div>
         <div class="field-hint">
-          Chaque travailleur peut avoir un taux différent. Le coût employeur = taux × 10 h × jours × <strong>1,20</strong> (markup fixe couvrant RRQ, RQAP, AE, FSS, CNESST).
+          Chaque travailleur peut avoir un taux différent. Le coût employeur = taux × heures × jours × <strong>1,20</strong> (markup fixe couvrant RRQ, RQAP, AE, FSS, CNESST).
         </div>
       </div>
+
+      <div class="field" style="margin-top:14px;">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 14px;background:var(--sage-light);border-left:3px solid var(--navy);border-radius:4px;">
+          <input type="checkbox" id="auto-labor-toggle" checked onchange="toggleAutoLabor(this.checked)" style="width:18px;height:18px;accent-color:var(--navy);">
+          <div>
+            <div style="font-weight:700;font-size:13px;">Auto-calculer les heures selon la surface</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Productivité industrie : ~1 carré (100 pi²) par heure-homme. Les jours s'ajustent aussi si ça dépasse 10 h/jour.</div>
+          </div>
+        </label>
+      </div>
+
+      <div id="auto-labor-readout" style="display:none;margin-top:10px;padding:10px 14px;background:var(--ice);border:1px dashed var(--border);border-radius:4px;font-size:12px;color:var(--text-muted);"></div>
 
       <h3 style="margin-top: 32px; margin-bottom: 14px; font-size: 16px; color: var(--navy);">Frais de chantier</h3>
 
@@ -1002,15 +1014,19 @@
         <div class="option-grid">
           <button type="button" class="option-card active" data-mode="auto" onclick="selectPricingMode('auto')">
             <div class="title">Taux $/pi² auto</div>
-            <div class="desc">Prix calculé selon la pente et la complexité choisies. Recommandé.</div>
+            <div class="desc">Prix calculé selon pente + bucket de surface. Recommandé.</div>
+          </button>
+          <button type="button" class="option-card" data-mode="target_margin" onclick="selectPricingMode('target_margin')">
+            <div class="title">Marge cible garantie</div>
+            <div class="desc">Prix auto-ajusté pour atteindre une marge nette donnée. Safest.</div>
           </button>
           <button type="button" class="option-card" data-mode="markup" onclick="selectPricingMode('markup')">
-            <div class="title">Marge sur coûtant</div>
-            <div class="desc">Tu fixes une marge cible (%) et le prix s'ajuste.</div>
+            <div class="title">Markup sur coûtant</div>
+            <div class="desc">Tu fixes un % au-dessus du coût.</div>
           </button>
           <button type="button" class="option-card" data-mode="forfait" onclick="selectPricingMode('forfait')">
             <div class="title">Prix forfaitaire manuel</div>
-            <div class="desc">Tu entres directement le montant HT. Full override.</div>
+            <div class="desc">Tu entres directement le montant HT.</div>
           </button>
         </div>
       </div>
@@ -1028,6 +1044,26 @@
               <div class="desc" id="tier2-desc">4,00 $/pi²</div>
             </button>
           </div>
+        </div>
+        <div class="field" style="margin-top:18px;">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 14px;background:var(--sage-light);border-left:3px solid var(--navy);border-radius:4px;">
+            <input type="checkbox" id="surface-bucket-toggle" checked onchange="toggleSurfaceBucket(this.checked)" style="width:18px;height:18px;accent-color:var(--navy);">
+            <div>
+              <div style="font-weight:700;font-size:13px;">Taux gradué selon la taille du job</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">&lt;1000 pi² = ×1,53 · 1000-2000 = ×1,20 · &gt;2000 = ×1,00 (les petits jobs coûtent + par pi²)</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div id="pricing-target-margin-opts" style="display:none;">
+        <div class="field">
+          <label class="field-label">Marge brute cible</label>
+          <div class="input-suffix">
+            <input type="number" class="input input-big" id="target-margin-pct" value="35" min="10" max="70" step="1" oninput="updateState()">
+            <span class="suffix">%</span>
+          </div>
+          <div class="field-hint">Le prix est calculé automatiquement comme <code>coût total ÷ (1 − marge cible)</code>, garantissant la marge brute. Défaut 35 % brut ≈ 28 % net après taxes.</div>
         </div>
       </div>
 
@@ -1196,8 +1232,41 @@ const LABOR = {
   default_workers: 2,
   default_hourly_rate: 50.00,
   hours_per_day: 10,
-  employer_markup: 0.20
+  max_hours_per_day: 10,
+  employer_markup: 0.20,
+  sqft_per_worker_hour: 100,
+  labor_overhead_factor: 1.10
 };
+
+const SURFACE_RATE_BUCKETS = [
+  { max: 1000,  mult: 1.53, label: '<1000 pi² · petit job' },
+  { max: 2000,  mult: 1.20, label: '1000-2000 pi² · moyen' },
+  { max: Infinity, mult: 1.00, label: '>2000 pi² · standard' }
+];
+
+function getSurfaceMultiplier(surface_sqft) {
+  for (const b of SURFACE_RATE_BUCKETS) {
+    if (surface_sqft <= b.max) return { mult: b.mult, label: b.label };
+  }
+  return { mult: 1.00, label: 'standard' };
+}
+
+function suggestLaborFromSurface({ surface_sqft, workers = 2, preferred_days = 1 }) {
+  const total_hours = Math.max(0, (surface_sqft / LABOR.sqft_per_worker_hour) * LABOR.labor_overhead_factor);
+  let days = Math.max(0.5, preferred_days);
+  let hours_per_day = workers > 0 ? (total_hours / workers / days) : 0;
+  while (hours_per_day > LABOR.max_hours_per_day && days < 30) {
+    days += 1;
+    hours_per_day = total_hours / workers / days;
+  }
+  hours_per_day = Math.max(0.5, Math.round(hours_per_day * 2) / 2);
+  return {
+    total_hours: Math.round(total_hours * 100) / 100,
+    days,
+    hours_per_day,
+    total_worker_hours: Math.round(hours_per_day * workers * days * 100) / 100
+  };
+}
 
 const PITCH_RATES = {
   easy:    { id: 'easy',    label: 'Pente 4/12 — 6/12',            description: 'Pente facile',          tier1: 3.75, tier2: 4.00 },
@@ -1242,16 +1311,19 @@ function calculateRoofingQuote(input) {
     worker_rates,
     workers = LABOR.default_workers,
     hourly_rate = LABOR.default_hourly_rate,
-    days = 1,
-    hours_per_day = LABOR.hours_per_day,
+    days: raw_days = 1,
+    hours_per_day: raw_hours_per_day = null,
+    auto_labor = false,
     pitch_category = 'easy',
     pitch_tier = 1,
     surface_sqft = 0,
+    surface_bucket_mode = 'flat',
     override_rate = null,
     override_subtotal_ht = null,
     markup_pct = null,
     cash_discount = 0,
-    min_quote_price = 4500  // forfait floor: les petits jobs doivent toujours couvrir overhead + marge
+    min_quote_price = 4500,
+    target_margin_pct = null
   } = input;
 
   // Normalize to per-worker rates array
@@ -1259,6 +1331,19 @@ function calculateRoofingQuote(input) {
     ? worker_rates.map(r => Number(r) || 0)
     : Array.from({ length: Math.max(1, workers) }, () => Number(hourly_rate) || 0);
   const worker_count = rates.length;
+
+  // Auto-suggest labor from surface
+  let days = raw_days;
+  let hours_per_day = raw_hours_per_day;
+  let labor_auto_applied = false;
+  if (auto_labor && surface_sqft > 0 && (hours_per_day == null || hours_per_day <= 0)) {
+    const s = suggestLaborFromSurface({ surface_sqft, workers: worker_count, preferred_days: raw_days });
+    hours_per_day = s.hours_per_day;
+    days = s.days;
+    labor_auto_applied = true;
+  }
+  if (hours_per_day == null || hours_per_day <= 0) hours_per_day = LABOR.hours_per_day;
+  if (days == null || days <= 0) days = 1;
 
   const material_lines = [];
   let material_cost_ht = 0;
@@ -1329,8 +1414,16 @@ function calculateRoofingQuote(input) {
   let revenue_ht;
   let rate_per_sqft = null;
   let min_quote_applied = false;
+  let target_margin_applied = false;
+  let surface_multiplier = 1.0;
+  let surface_bucket_label = null;
 
-  if (override_subtotal_ht != null && override_subtotal_ht > 0) {
+  if (target_margin_pct != null && target_margin_pct > 0 && target_margin_pct < 100) {
+    const target = target_margin_pct / 100;
+    revenue_ht = round2((total_cost_ht / (1 - target)) - cash_discount);
+    target_margin_applied = true;
+    if (surface_sqft > 0) rate_per_sqft = round2(revenue_ht / surface_sqft);
+  } else if (override_subtotal_ht != null && override_subtotal_ht > 0) {
     revenue_ht = round2(override_subtotal_ht - cash_discount);
   } else if (markup_pct != null && markup_pct > 0) {
     revenue_ht = round2(total_cost_ht * (1 + markup_pct / 100) - cash_discount);
@@ -1339,16 +1432,21 @@ function calculateRoofingQuote(input) {
     revenue_ht = round2((rate_per_sqft * surface_sqft) - cash_discount);
   } else {
     const cfg = PITCH_RATES[pitch_category] || PITCH_RATES.easy;
-    rate_per_sqft = pitch_tier === 2 ? cfg.tier2 : cfg.tier1;
+    const base_rate = pitch_tier === 2 ? cfg.tier2 : cfg.tier1;
+    if (surface_bucket_mode === 'graduated' && surface_sqft > 0) {
+      const bucket = getSurfaceMultiplier(surface_sqft);
+      surface_multiplier = bucket.mult;
+      surface_bucket_label = bucket.label;
+    }
+    rate_per_sqft = round2(base_rate * surface_multiplier);
     revenue_ht = round2((rate_per_sqft * surface_sqft) - cash_discount);
   }
   revenue_ht = Math.max(0, revenue_ht);
 
-  // Plancher minimum forfait: les petits jobs doivent couvrir overhead + marge
-  if (min_quote_price > 0 && revenue_ht > 0 && revenue_ht < min_quote_price) {
+  // Plancher minimum forfait (sauf target_margin)
+  if (!target_margin_applied && min_quote_price > 0 && revenue_ht > 0 && revenue_ht < min_quote_price) {
     revenue_ht = round2(min_quote_price - cash_discount);
     min_quote_applied = true;
-    // Recalc effective rate per sqft
     if (surface_sqft > 0) rate_per_sqft = round2(revenue_ht / surface_sqft);
   }
 
@@ -1380,6 +1478,9 @@ function calculateRoofingQuote(input) {
     gross_profit_ht, gross_margin_pct,
     net_profit, net_margin_pct,
     min_quote_price, min_quote_applied,
+    target_margin_pct, target_margin_applied,
+    surface_multiplier, surface_bucket_label, surface_bucket_mode,
+    labor_auto_applied,
     workers: worker_count, worker_rates: rates, hours_per_day,
     days, cash_discount, pitch_category, pitch_tier
   };
@@ -1396,10 +1497,15 @@ const state = {
   quantities: { bardeau_standard: 0, cap_bardeau: 0, pitch: 0, syntec: 0, glace_eau: 0, maximum: 0, event: 0, clou: 0 },
   excludes: {},
   manual_overrides: {},
-  labor: { workers: 2, days: 1, worker_rates: [50, 50], hours_per_day: 10 },
+  labor: { workers: 2, days: 1, worker_rates: [50, 50], hours_per_day: 10, auto_labor: true },
   fees: { conteneur: true, essence: true, transport: true },
   fee_values: { essence: 100, transport: 75 },
-  pricing: { mode: 'auto', tier: 1, markup_pct: 40, forfait_override: null, cash_discount: 0, min_quote_price: 4500, auto_send: true },
+  pricing: {
+    mode: 'auto', tier: 1, markup_pct: 40, forfait_override: null,
+    cash_discount: 0, min_quote_price: 4500, auto_send: true,
+    surface_bucket_mode: 'graduated',  // default ON — les petits jobs facturés plus/pi²
+    target_margin_pct: 35              // utilisé seulement si mode='target_margin'
+  },
   lastResult: null
 };
 
@@ -1466,6 +1572,18 @@ function selectPricingMode(mode) {
   document.getElementById('pricing-auto-opts').style.display = mode === 'auto' ? 'block' : 'none';
   document.getElementById('pricing-markup-opts').style.display = mode === 'markup' ? 'block' : 'none';
   document.getElementById('pricing-forfait-opts').style.display = mode === 'forfait' ? 'block' : 'none';
+  const tmEl = document.getElementById('pricing-target-margin-opts');
+  if (tmEl) tmEl.style.display = mode === 'target_margin' ? 'block' : 'none';
+  updateState();
+}
+
+function toggleSurfaceBucket(checked) {
+  state.pricing.surface_bucket_mode = checked ? 'graduated' : 'flat';
+  updateState();
+}
+
+function toggleAutoLabor(checked) {
+  state.labor.auto_labor = checked;
   updateState();
 }
 
@@ -1601,6 +1719,8 @@ function readInputs() {
   if (discountEl) state.pricing.cash_discount = parseFloat(discountEl.value) || 0;
   const minQuoteEl = document.getElementById('min-quote-price');
   if (minQuoteEl) state.pricing.min_quote_price = parseFloat(minQuoteEl.value) || 0;
+  const tmEl = document.getElementById('target-margin-pct');
+  if (tmEl) state.pricing.target_margin_pct = parseFloat(tmEl.value) || 35;
 }
 
 // ---------- Main update loop ----------
@@ -1640,10 +1760,13 @@ function updateState() {
     fee_overrides,
     worker_rates: state.labor.worker_rates.slice(0, state.labor.workers),
     days: state.labor.days,
-    hours_per_day: state.labor.hours_per_day || LABOR.hours_per_day,
+    // Si auto_labor activé, on laisse la calc recalculer hours_per_day (passe null)
+    hours_per_day: state.labor.auto_labor ? null : (state.labor.hours_per_day || LABOR.hours_per_day),
+    auto_labor: !!state.labor.auto_labor,
     pitch_category: state.measures.pitch_category || 'easy',
     pitch_tier: state.pricing.tier,
     surface_sqft: state.measures.surface,
+    surface_bucket_mode: state.pricing.surface_bucket_mode || 'flat',
     cash_discount: state.pricing.cash_discount,
     min_quote_price: state.pricing.min_quote_price
   };
@@ -1652,6 +1775,8 @@ function updateState() {
     input.markup_pct = state.pricing.markup_pct;
   } else if (state.pricing.mode === 'forfait' && state.pricing.forfait_override) {
     input.override_subtotal_ht = state.pricing.forfait_override;
+  } else if (state.pricing.mode === 'target_margin') {
+    input.target_margin_pct = state.pricing.target_margin_pct;
   }
 
   const result = calculateRoofingQuote(input);
@@ -1664,6 +1789,17 @@ function updateState() {
     if (s) s.textContent = formatCAD(result.material_cost_ht);
   }
   if (state.step === 4) {
+    // Update auto-labor readout
+    if (state.labor.auto_labor && result.labor_auto_applied) {
+      const el = document.getElementById('auto-labor-readout');
+      if (el) {
+        el.style.display = 'block';
+        el.innerHTML = `<strong>Auto :</strong> ${result.labor_line.hours_per_day} h/jour × ${result.days} jour${result.days>1?'s':''} × ${state.labor.workers} travailleur${state.labor.workers>1?'s':''} = <strong>${(result.labor_line.hours_per_day * result.days * state.labor.workers).toFixed(1)} heures-homme</strong> · coût main d'œuvre <strong>${formatCAD(result.labor_cost)}</strong>`;
+      }
+    } else {
+      const el = document.getElementById('auto-labor-readout');
+      if (el) el.style.display = 'none';
+    }
     renderWorkerRates();
   }
 }
