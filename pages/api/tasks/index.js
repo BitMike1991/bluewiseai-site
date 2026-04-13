@@ -8,6 +8,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  // DELETE handler — /api/tasks?id=123
+  // (kept in index.js to avoid extra file for simple delete)
+
   const { supabase, customerId, user } = await getAuthContext(req, res);
 
   if (!user) {
@@ -46,10 +49,13 @@ export default async function handler(req, res) {
         due_at,
         status,
         priority,
+        board,
+        position,
         created_at,
         updated_at,
         completed_at,
         customer_id,
+        source,
         leads:lead_id (
           id,
           name,
@@ -108,10 +114,13 @@ export default async function handler(req, res) {
         description: row.description || null,
         status: row.status || null,
         priority: row.priority || "normal",
+        board: row.board || "backlog",
+        position: row.position || 0,
         dueAt,
         completedAt: row.completed_at || null,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+        source: row.source || null,
 
         // Lead-facing fields for deep-linking and display
         leadName: lead.name || null,
