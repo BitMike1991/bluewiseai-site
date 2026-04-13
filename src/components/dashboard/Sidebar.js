@@ -187,20 +187,12 @@ function TenantSwitcher({ borderColor, navText, branding, customerName }) {
       .catch(() => {});
   }, []);
 
-  const handleSwitch = async (id) => {
+  const handleSwitch = (id) => {
     if (id === activeTenant || switching) return;
     setSwitching(true);
-    try {
-      await fetch("/api/tenants", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tenantId: id }),
-      });
-      // Full page reload to get new branding + data
-      window.location.reload();
-    } catch {
-      setSwitching(false);
-    }
+    // Set cookie client-side (reliable) + reload
+    document.cookie = `__active_tenant=${id};path=/;max-age=${60 * 60 * 24 * 30};SameSite=Lax;Secure`;
+    window.location.href = "/platform/overview";
   };
 
   const activeName = tenants.find(t => t.id === activeTenant)?.displayName || customerName || "Tenant";
