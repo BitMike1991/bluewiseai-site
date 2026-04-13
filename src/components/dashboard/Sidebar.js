@@ -115,7 +115,7 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 min-h-0 px-3 py-4 space-y-0.5 overflow-y-auto">
           {visibleItems.map((item) => {
             const isActive =
               router.pathname === item.href ||
