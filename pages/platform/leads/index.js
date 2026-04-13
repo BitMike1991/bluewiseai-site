@@ -7,6 +7,8 @@ import { getBrandingStyles, getStatusBadgeStyle } from '../../../src/components/
 import { getAvatarColor, getInitial } from '../../../src/lib/dashboardUtils';
 import Select from '../../../src/components/ui/Select';
 import { SkeletonListRow } from '../../../src/components/ui/Skeleton';
+import EmptyState from '../../../src/components/ui/EmptyState';
+import { Users } from 'lucide-react';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All statuses' },
@@ -141,8 +143,7 @@ export default function LeadsPage() {
 
   const totalPages = Math.max(Math.ceil(total / pageSize), 1);
 
-  const handleStatusChange = (e) => {
-    const value = e.target.value;
+  const handleStatusChange = (value) => {
     setStatusFilter(value);
     loadLeads({ page: 1, statusFilter: value });
   };
@@ -187,60 +188,28 @@ export default function LeadsPage() {
       <div className="flex flex-col gap-3 mb-4">
         <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
           <div className="flex-1 relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-d-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8" strokeWidth="2"/><path strokeLinecap="round" strokeWidth="2" d="m21 21-4.35-4.35"/></svg>
             <input
               type="text"
               placeholder="Search by name, email, or phone..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full border rounded-xl px-3 py-2 text-sm placeholder:text-d-text0 focus:outline-none focus:ring-2 bg-d-surface border-d-border text-d-text"
-             
+              className="w-full border rounded-xl pl-9 pr-3 py-2 text-sm placeholder:text-d-muted focus:outline-none focus:ring-2 focus:ring-d-primary/50 bg-d-surface border-d-border text-d-text"
             />
           </div>
           <button
             type="submit"
-            className="px-4 py-2.5 md:py-2 rounded-xl text-xs font-medium transition min-h-[44px] md:min-h-0"
-           
+            className="px-4 py-2.5 md:py-2 rounded-xl text-xs font-medium transition min-h-[44px] md:min-h-0 bg-d-primary text-white hover:opacity-90"
           >
             Search
           </button>
         </form>
 
         <div className="flex flex-wrap gap-2">
-          <select
-            value={statusFilter}
-            onChange={handleStatusChange}
-            className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 bg-d-surface border-d-border text-d-text"
-
-          >
-            {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-
-          <select
-            value={sourceFilter}
-            onChange={(e) => { const v = e.target.value; setSourceFilter(v); loadLeads({ page: 1, sourceFilter: v }); }}
-            className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 bg-d-surface border-d-border text-d-text"
-
-          >
-            {SOURCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-
-          <select
-            value={dateFilter}
-            onChange={(e) => { const v = e.target.value; setDateFilter(v); loadLeads({ page: 1, dateFilter: v }); }}
-            className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 bg-d-surface border-d-border text-d-text"
-
-          >
-            {DATE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-
-          <select
-            value={sortBy}
-            onChange={(e) => { const v = e.target.value; setSortBy(v); loadLeads({ page: 1, sortBy: v }); }}
-            className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 bg-d-surface border-d-border text-d-text"
-
-          >
-            {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          <Select value={statusFilter} onChange={(v) => { setStatusFilter(v); loadLeads({ page: 1, statusFilter: v }); }} options={STATUS_OPTIONS} />
+          <Select value={sourceFilter} onChange={(v) => { setSourceFilter(v); loadLeads({ page: 1, sourceFilter: v }); }} options={SOURCE_OPTIONS} />
+          <Select value={dateFilter} onChange={(v) => { setDateFilter(v); loadLeads({ page: 1, dateFilter: v }); }} options={DATE_OPTIONS} />
+          <Select value={sortBy} onChange={(v) => { setSortBy(v); loadLeads({ page: 1, sortBy: v }); }} options={SORT_OPTIONS} />
         </div>
       </div>
 
@@ -255,15 +224,13 @@ export default function LeadsPage() {
         </div>
 
         {loading && (
-          <div className="px-4 py-6 text-sm">
-            Loading leads\u2026
+          <div className="px-3 py-2 space-y-1">
+            {Array.from({ length: 8 }, (_, i) => <SkeletonListRow key={i} />)}
           </div>
         )}
 
         {!loading && leads.length === 0 && (
-          <div className="px-4 py-6 text-sm">
-            No leads found. Once your automations capture calls or emails, they'll appear here.
-          </div>
+          <EmptyState icon={Users} title="No leads found" description="Try adjusting your filters or add a new lead" action={{ label: "Add Lead", onClick: () => router.push("/platform/leads?create=true") }} />
         )}
 
         <ul className="divide-y">

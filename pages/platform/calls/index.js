@@ -230,19 +230,13 @@ export default function CallsPage() {
               <tbody className="divide-y divide-d-border bg-d-surface/60">
                 {loading && calls.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={8}
-                      className="px-4 py-8 text-center text-d-muted sm:px-6"
-                    >
-                      Loading calls\u2026
+                    <td colSpan={8} className="px-4 py-2 sm:px-6">
+                      {Array.from({ length: 6 }, (_, i) => <SkeletonListRow key={i} />)}
                     </td>
                   </tr>
                 ) : calls.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={8}
-                      className="px-4 py-8 text-center text-d-text0 sm:px-6"
-                    >
+                    <td colSpan={8} className="px-4 py-8 text-center text-d-muted sm:px-6">
                       No calls found for this filter.
                     </td>
                   </tr>

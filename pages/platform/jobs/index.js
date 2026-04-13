@@ -7,6 +7,8 @@ import { getBrandingStyles, getStatusBadgeStyle } from '../../../src/components/
 import { getAvatarColor, getInitial } from '../../../src/lib/dashboardUtils';
 import Select from '../../../src/components/ui/Select';
 import { SkeletonListRow } from '../../../src/components/ui/Skeleton';
+import EmptyState from '../../../src/components/ui/EmptyState';
+import { Briefcase } from 'lucide-react';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All statuses' },
@@ -110,8 +112,7 @@ export default function JobsPage() {
 
   const totalPages = Math.max(Math.ceil(total / pageSize), 1);
 
-  const handleStatusChange = (e) => {
-    const value = e.target.value;
+  const handleStatusChange = (value) => {
     setStatusFilter(value);
     loadJobs({ page: 1, statusFilter: value });
   };
@@ -150,7 +151,7 @@ export default function JobsPage() {
           </p>
         </div>
         <div className="text-xs text-d-text0">
-          {total} job{total === 1 ? '' : 's'} {"\u00b7"}Page {page} of {totalPages}
+          {total} job{total === 1 ? '' : 's'} {"\u00b7"} Page {page} of {totalPages}
         </div>
       </div>
 
@@ -178,17 +179,7 @@ export default function JobsPage() {
         </form>
 
         <div className="w-full md:w-52">
-          <select
-            value={statusFilter}
-            onChange={handleStatusChange}
-            className="w-full bg-d-surface border border-d-border rounded-xl px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60"
-          >
-            {STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <Select value={statusFilter} onChange={handleStatusChange} options={STATUS_OPTIONS} />
         </div>
       </div>
 
@@ -205,15 +196,13 @@ export default function JobsPage() {
         </div>
 
         {loading && (
-          <div className="px-4 py-6 text-sm text-d-muted">
-            Loading jobs...
+          <div className="px-3 py-2 space-y-1">
+            {Array.from({ length: 8 }, (_, i) => <SkeletonListRow key={i} />)}
           </div>
         )}
 
         {!loading && jobs.length === 0 && (
-          <div className="px-4 py-6 text-sm text-d-muted">
-            No jobs found. Jobs created from the contract pipeline will appear here.
-          </div>
+          <EmptyState icon={Briefcase} title="No jobs yet" description="Jobs created from the contract pipeline will appear here" />
         )}
 
         <ul className="divide-y divide-d-border">
