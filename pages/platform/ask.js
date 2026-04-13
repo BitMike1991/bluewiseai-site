@@ -748,7 +748,7 @@ function ResultTaskConfirm({ result, isCreated }) {
             >
               #{result.items[0].leadId}
             </Link>
-            {" "}\u00b7 {truncateText(result.aiSummary || "", 380)}
+            {" \u00b7 "}{truncateText(result.aiSummary || "", 380)}
           </>
         ) : (
           truncateText(result.aiSummary || "", 520)

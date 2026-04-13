@@ -140,8 +140,7 @@ export default function TasksPage() {
           <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading tasks...
         </div>
       ) : (
-        // Fix 7: replace fixed minHeight with flex-1
-        <div className="flex gap-3 overflow-x-auto pb-4 flex-1">
+        <div className="flex flex-col md:flex-row gap-3 md:overflow-x-auto pb-4 flex-1">
           {BOARDS.map((board) => (
             <KanbanColumn
               key={board.id}
@@ -182,7 +181,7 @@ function KanbanColumn({ board, tasks, isDragOver, onDragOver, onDragLeave, onDro
 
   return (
     <div
-      className={`flex-shrink-0 w-64 sm:w-72 flex flex-col rounded-xl border transition-colors ${isDragOver ? "border-d-primary bg-d-primary/5" : "border-d-border/60 bg-d-bg"}`}
+      className={`w-full md:w-72 md:flex-shrink-0 flex flex-col rounded-xl border transition-colors ${isDragOver ? "border-d-primary bg-d-primary/5" : "border-d-border/60 bg-d-bg"}`}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}

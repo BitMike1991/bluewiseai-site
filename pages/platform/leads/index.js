@@ -339,8 +339,7 @@ export default function LeadsPage() {
         {!loading && leads.length > 0 && (
           <div className="flex items-center justify-between px-4 py-3 border-t text-xs">
             <div>
-              Showing {(page - 1) * pageSize + 1}\u2013
-              {Math.min(page * pageSize, total)} of {total}
+              Showing {(page - 1) * pageSize + 1}{"\u2013"}{Math.min(page * pageSize, total)} of {total}
             </div>
             <div className="space-x-2">
               <button
