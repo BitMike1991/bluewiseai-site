@@ -73,7 +73,7 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
       <aside
         className={`
           fixed md:static inset-y-0 left-0 z-50
-          w-64 flex flex-col
+          w-64 h-screen flex flex-col
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
@@ -209,7 +209,7 @@ function TenantSwitcher({ borderColor, navText, branding, customerName }) {
 
   // Multi-tenant user — show switcher
   return (
-    <div className="relative" style={{ borderTop: `1px solid ${borderColor}60` }}>
+    <div className="relative mt-auto" style={{ borderTop: `1px solid ${borderColor}60` }}>
       <button
         onClick={() => setOpen(!open)}
         className="w-full px-4 py-3 flex items-center justify-between gap-2 transition-colors hover:opacity-80"
