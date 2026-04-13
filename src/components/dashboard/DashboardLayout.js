@@ -10,12 +10,8 @@ import Sidebar from "./Sidebar";
 import TopNav from "./TopNav";
 import SuspendedScreen from "./SuspendedScreen";
 import { BrandingProvider, useBranding } from "./BrandingContext";
+import { hexToRgb } from "../../../src/lib/dashboardUtils";
 import { supabase } from "../../../lib/supabaseClient";
-
-function hexToRgb(hex) {
-  const h = (hex || '#6c63ff').replace('#', '');
-  return `${parseInt(h.slice(0,2),16)} ${parseInt(h.slice(2,4),16)} ${parseInt(h.slice(4,6),16)}`;
-}
 
 export default function DashboardLayout({ children }) {
   const router = useRouter();

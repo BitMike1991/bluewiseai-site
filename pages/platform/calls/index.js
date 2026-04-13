@@ -5,10 +5,8 @@ import Link from "next/link";
 import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
 import { useBranding } from "../../../src/components/dashboard/BrandingContext";
 import { getBrandingStyles } from "../../../src/components/dashboard/brandingUtils";
-
-function classNames(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
+import { classNames } from "../../../src/lib/dashboardUtils";
+import { SkeletonListRow } from "../../../src/components/ui/Skeleton";
 
 export default function CallsPage() {
   const { branding } = useBranding();

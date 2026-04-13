@@ -81,6 +81,11 @@ textarea:focus-visible,
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 @keyframes flashGlowSpecial {
   0%, 100% {
     transform: scale(1);

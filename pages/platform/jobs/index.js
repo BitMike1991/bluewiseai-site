@@ -4,6 +4,9 @@ import { useRouter } from 'next/router';
 import DashboardLayout from '../../../src/components/dashboard/DashboardLayout';
 import { useBranding } from '../../../src/components/dashboard/BrandingContext';
 import { getBrandingStyles, getStatusBadgeStyle } from '../../../src/components/dashboard/brandingUtils';
+import { getAvatarColor, getInitial } from '../../../src/lib/dashboardUtils';
+import Select from '../../../src/components/ui/Select';
+import { SkeletonListRow } from '../../../src/components/ui/Skeleton';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All statuses' },
@@ -27,31 +30,6 @@ const STATUS_COLORS = {
   completed: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/40',
   cancelled: 'bg-rose-500/10 text-rose-500 border-rose-500/40',
 };
-
-const AVATAR_COLORS = [
-  'bg-d-primary/20 text-blue-500',
-  'bg-emerald-500/20 text-emerald-500',
-  'bg-violet-500/20 text-violet-500',
-  'bg-amber-500/20 text-amber-500',
-  'bg-rose-500/20 text-rose-500',
-  'bg-cyan-500/20 text-cyan-500',
-  'bg-pink-500/20 text-pink-500',
-  'bg-indigo-500/20 text-indigo-500',
-];
-
-function getAvatarColor(name) {
-  let hash = 0;
-  const str = (name || '').toString();
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-}
-
-function getInitial(name) {
-  if (!name || name === 'null' || name === 'undefined') return '?';
-  return name.charAt(0).toUpperCase();
-}
 
 function statusBadge(status) {
   const base = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border';

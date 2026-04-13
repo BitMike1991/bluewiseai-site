@@ -10,15 +10,33 @@ const DEFAULT_BRANDING = {
   accent_color: "#00d4aa",
   sidebar_bg: null,
   favicon_url: null,
-  // Full palette
   dashboard_bg: "#0a0a12",
   surface_color: "#111119",
   border_color: "#1e1e2e",
   text_primary: "#f0f0f5",
   text_secondary: "#8888aa",
-  // Per-tenant navigation (null = show all)
   nav_items: null,
 };
+
+const CACHE_KEY = "bw-branding-cache";
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+function loadCached() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { branding, ts } = JSON.parse(raw);
+    if (Date.now() - ts > CACHE_TTL) return null;
+    return branding;
+  } catch { return null; }
+}
+
+function saveCache(branding) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ branding, ts: Date.now() }));
+  } catch {}
+}
 
 const BrandingContext = createContext({
   branding: DEFAULT_BRANDING,
@@ -26,7 +44,7 @@ const BrandingContext = createContext({
 });
 
 export function BrandingProvider({ children }) {
-  const [branding, setBranding] = useState(DEFAULT_BRANDING);
+  const [branding, setBranding] = useState(() => loadCached() || DEFAULT_BRANDING);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,10 +53,12 @@ export function BrandingProvider({ children }) {
         const res = await fetch("/api/settings/branding");
         if (res.ok) {
           const data = await res.json();
-          setBranding(data.branding || DEFAULT_BRANDING);
+          const fresh = data.branding || DEFAULT_BRANDING;
+          setBranding(fresh);
+          saveCache(fresh);
         }
-      } catch (e) {
-        // Fail gracefully — keep defaults
+      } catch {
+        // Fail gracefully — keep cached or defaults
       } finally {
         setLoading(false);
       }
@@ -55,4 +75,8 @@ export function BrandingProvider({ children }) {
 
 export function useBranding() {
   return useContext(BrandingContext);
+}
+
+export function clearBrandingCache() {
+  try { localStorage.removeItem(CACHE_KEY); } catch {}
 }

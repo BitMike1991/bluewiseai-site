@@ -6,6 +6,8 @@ import DashboardLayout from "../../src/components/dashboard/DashboardLayout";
 import StatCard from "../../src/components/dashboard/StatCard";
 import { useBranding } from "../../src/components/dashboard/BrandingContext";
 import { getBrandingStyles } from "../../src/components/dashboard/brandingUtils";
+import { getAvatarColor, getInitial, formatTimeAgo, getSourceLabel, formatCurrency as fmt } from "../../src/lib/dashboardUtils";
+import { SkeletonOverview } from "../../src/components/ui/Skeleton";
 import { supabase } from "../../lib/supabaseClient";
 import {
   DollarSign,
@@ -21,59 +23,15 @@ import {
   Send,
   AlertCircle,
   Zap,
+  Clock,
+  CheckSquare,
 } from "lucide-react";
-
-function formatTimeAgo(timestamp) {
-  if (!timestamp) return "";
-  const now = Date.now();
-  const then = new Date(timestamp).getTime();
-  if (Number.isNaN(then)) return "";
-  const diffMs = now - then;
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffH = Math.floor(diffMin / 60);
-  const diffD = Math.floor(diffH / 24);
-  if (diffSec < 60) return "Just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffH < 24) return `${diffH}h ago`;
-  return `${diffD}d ago`;
-}
 
 function getGreeting(name) {
   const h = new Date().getHours();
   const base = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
   if (name) return `${base}, ${name.split("@")[0]}!`;
   return `${base}!`;
-}
-
-function fmt(n) {
-  if (n == null) return "$0";
-  return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(n);
-}
-
-const AVATAR_COLORS = [
-  "bg-d-primary/20 text-blue-500",
-  "bg-emerald-500/20 text-emerald-500",
-  "bg-violet-500/20 text-violet-500",
-  "bg-amber-500/20 text-amber-500",
-  "bg-rose-500/20 text-rose-500",
-  "bg-cyan-500/20 text-cyan-500",
-  "bg-pink-500/20 text-pink-500",
-  "bg-indigo-500/20 text-indigo-500",
-];
-
-function getAvatarColor(name) {
-  let hash = 0;
-  const str = (name || "").toString();
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-}
-
-function getInitial(name) {
-  if (!name || name === "null" || name === "undefined") return "?";
-  return name.charAt(0).toUpperCase();
 }
 
 function getActivityDot(type) {
@@ -86,17 +44,11 @@ function getActivityDot(type) {
   return "bg-d-muted";
 }
 
-function getSourceLabel(source) {
-  if (!source) return null;
-  const map = { telnyx_sms: "SMS", telnyx_voice: "Voice", vapi: "Voice AI", web: "Web", manual: "Manual", referral: "Referral" };
-  return map[source] || source;
-}
-
 const QUICK_PROMPTS = [
-  { label: "Missed calls", q: "Show missed calls without follow-up" },
-  { label: "No reply 24h", q: "Leads with no reply in 24 hours" },
-  { label: "Tasks due", q: "Show open tasks due today" },
-  { label: "Hot leads", q: "Show hot leads to chase" },
+  { label: "Missed calls", q: "Show missed calls without follow-up", icon: PhoneMissed },
+  { label: "No reply 24h", q: "Leads with no reply in 24 hours", icon: Clock },
+  { label: "Tasks due", q: "Show open tasks due today", icon: CheckSquare },
+  { label: "Hot leads", q: "Show hot leads to chase", icon: Flame },
 ];
 
 export default function OverviewPage() {
@@ -158,12 +110,13 @@ export default function OverviewPage() {
 
   return (
     <DashboardLayout title="Overview">
+      {loading ? <SkeletonOverview /> : <>
       {/* Greeting */}
       <div className="mb-6">
         <h1 suppressHydrationWarning className="text-xl font-semibold">
           {mounted ? getGreeting(userName) : "Welcome!"}
         </h1>
-        <p className="mt-1 text-sm">{"Here's your business at a glance."}</p>
+        <p className="mt-1 text-sm text-d-muted">{"Here's your business at a glance."}</p>
       </div>
 
       {/* Hero Banner: Revenue | Expenses | Net Profit */}
@@ -179,10 +132,10 @@ export default function OverviewPage() {
                 <div>
                   <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-400/80">Total Revenue</p>
                   <p className="text-2xl font-bold text-emerald-400">
-                    {loading ? "\u2026" : fmt(kpis.totalRevenue)}
+                    {fmt(kpis.totalRevenue)}
                   </p>
                   <p className="text-[11px]">
-                    {loading ? "" : `MTD ${fmt(kpis.revenueMtd)} \u00b7 WTD ${fmt(kpis.revenueWtd)}`}
+                    {`MTD ${fmt(kpis.revenueMtd)} \u00b7 WTD ${fmt(kpis.revenueWtd)}`}
                   </p>
                 </div>
               </div>
@@ -196,10 +149,10 @@ export default function OverviewPage() {
                 <div>
                   <p className="text-[11px] font-medium uppercase tracking-wider text-rose-400/80">Total Expenses</p>
                   <p className="text-2xl font-bold text-rose-400">
-                    {loading ? "\u2026" : fmt(kpis.totalExpenses)}
+                    {fmt(kpis.totalExpenses)}
                   </p>
                   <p className="text-[11px]">
-                    {loading ? "" : `MTD ${fmt(kpis.expensesMtd)}`}
+                    {`MTD ${fmt(kpis.expensesMtd)}`}
                   </p>
                 </div>
               </div>
@@ -208,20 +161,20 @@ export default function OverviewPage() {
             <div className="px-5 py-5">
               <div className="flex items-center gap-3">
                 <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-                  !loading && (kpis.totalProfit || 0) >= 0
+                  (kpis.totalProfit || 0) >= 0
                     ? "bg-d-primary/20 shadow-[0_0_20px_rgb(var(--d-primary-rgb)/0.3)]"
                     : "bg-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.2)]"
                 }`}>
                   <TrendingUp className={`h-5 w-5 ${
-                    !loading && (kpis.totalProfit || 0) >= 0 ? "text-d-primary" : "text-rose-400"
+                    (kpis.totalProfit || 0) >= 0 ? "text-d-primary" : "text-rose-400"
                   }`} />
                 </div>
                 <div>
                   <p className="text-[11px] font-medium uppercase tracking-wider text-d-primary/80">Net Profit</p>
                   <p className={`text-2xl font-bold ${
-                    !loading && (kpis.totalProfit || 0) >= 0 ? "text-d-primary" : "text-rose-400"
+                    (kpis.totalProfit || 0) >= 0 ? "text-d-primary" : "text-rose-400"
                   }`}>
-                    {loading ? "\u2026" : fmt(kpis.totalProfit)}
+                    {fmt(kpis.totalProfit)}
                   </p>
                   <p className="text-[11px]">Revenue minus expenses</p>
                 </div>
@@ -233,18 +186,18 @@ export default function OverviewPage() {
 
       {/* Row 1: Leads & Jobs */}
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard icon={UserPlus} accent="border-l-blue-400" label="New Leads" subLabel="This week" value={loading ? "\u2026" : kpis.newLeadsThisWeek ?? "--"} />
-        <StatCard icon={Zap} accent="border-l-d-primary" label="Active Jobs" subLabel="In progress" value={loading ? "\u2026" : kpis.activeJobs ?? "--"} />
-        <StatCard icon={Flame} accent="border-l-orange-400" label="Hot Leads" subLabel="Score 40+" value={loading ? "\u2026" : kpis.hotLeadsCount ?? "--"} />
-        <StatCard icon={Users} accent="border-l-blue-400" label="Total Leads" subLabel="All time captured" value={loading ? "\u2026" : kpis.totalLeads ?? "--"} />
+        <StatCard icon={UserPlus} accent="border-l-blue-400" label="New Leads" subLabel="This week" value={kpis.newLeadsThisWeek ?? "--"} />
+        <StatCard icon={Zap} accent="border-l-d-primary" label="Active Jobs" subLabel="In progress" value={kpis.activeJobs ?? "--"} />
+        <StatCard icon={Flame} accent="border-l-orange-400" label="Hot Leads" subLabel="Score 40+" value={kpis.hotLeadsCount ?? "--"} />
+        <StatCard icon={Users} accent="border-l-blue-400" label="Total Leads" subLabel="All time captured" value={kpis.totalLeads ?? "--"} />
       </div>
 
       {/* Row 2: Money & AI */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard icon={AlertCircle} accent="border-l-amber-400" label="Outstanding" subLabel="Balance owed by clients" value={loading ? "\u2026" : fmt(kpis.outstandingBalance)} />
-        <StatCard icon={Briefcase} accent="border-l-violet-400" label="Pipeline" subLabel="Active quotes & contracts" value={loading ? "\u2026" : fmt(kpis.pipelineValue)} />
-        <StatCard icon={PhoneMissed} accent="border-l-amber-400" label="Missed Calls" subLabel="This week" value={loading ? "\u2026" : kpis.missedCallsThisWeek ?? "--"} />
-        <StatCard icon={Bot} accent="border-l-d-primary" label="AI Answered" subLabel="Voice calls" value={loading ? "\u2026" : kpis.voiceCallsThisWeek ?? "--"} />
+        <StatCard icon={AlertCircle} accent="border-l-amber-400" label="Outstanding" subLabel="Balance owed by clients" value={fmt(kpis.outstandingBalance)} />
+        <StatCard icon={Briefcase} accent="border-l-violet-400" label="Pipeline" subLabel="Active quotes & contracts" value={fmt(kpis.pipelineValue)} />
+        <StatCard icon={PhoneMissed} accent="border-l-amber-400" label="Missed Calls" subLabel="This week" value={kpis.missedCallsThisWeek ?? "--"} />
+        <StatCard icon={Bot} accent="border-l-d-primary" label="AI Answered" subLabel="Voice calls" value={kpis.voiceCallsThisWeek ?? "--"} />
       </div>
 
       {/* Ask Widget */}
@@ -274,13 +227,14 @@ export default function OverviewPage() {
                 key={p.label}
                 type="button"
                 onClick={() => handleQuickPrompt(p.q)}
-                className="rounded-lg border px-3 py-1.5 text-xs transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-d-border px-3 py-1.5 text-xs text-d-muted transition-colors hover:bg-d-primary/10 hover:text-d-text hover:border-d-primary/30"
               >
+                {p.icon && <p.icon className="h-3 w-3" />}
                 {p.label}
               </button>
             ))}
           </div>
-          <Link href="/platform/ask" className="shrink-0 ml-3 text-xs font-medium">
+          <Link href="/platform/ask" className="shrink-0 ml-3 text-xs font-medium text-d-primary hover:underline">
             Command Center &rarr;
           </Link>
         </div>
@@ -291,26 +245,24 @@ export default function OverviewPage() {
         {/* Activity Feed */}
         <div className="rounded-2xl border border-d-border bg-d-surface p-4">
           <h2 className="text-sm font-semibold">Recent Activity</h2>
-          {loading ? (
-            <p className="mt-3 text-xs">Loading&hellip;</p>
-          ) : activity.length === 0 ? (
-            <p className="mt-3 text-xs">No recent activity.</p>
+          {activity.length === 0 ? (
+            <p className="mt-3 text-xs text-d-muted">No recent activity.</p>
           ) : (
-            <ul className="mt-3 space-y-0">
+            <ul className="mt-3 space-y-1">
               {activity.slice(0, 8).map((item) => (
-                <li key={item.id} className="flex items-start gap-3 py-2">
+                <li key={item.id} className="flex items-start gap-3 py-2 px-2 -mx-2 rounded-lg hover:bg-d-border/20 transition-colors">
                   <div className="mt-1.5 flex flex-col items-center">
                     <span className={`block h-2.5 w-2.5 rounded-full ${getActivityDot(item.type)}`} />
                   </div>
                   <div className="min-w-0 flex-1">
                     {item.leadId ? (
-                      <Link href={`/platform/leads/${item.leadId}`} className="text-sm line-clamp-1">
+                      <Link href={`/platform/leads/${item.leadId}`} className="text-sm line-clamp-1 hover:text-d-primary transition-colors">
                         {item.label}
                       </Link>
                     ) : (
                       <p className="text-sm line-clamp-1">{item.label}</p>
                     )}
-                    <p suppressHydrationWarning className="text-[11px]">
+                    <p suppressHydrationWarning className="text-[11px] text-d-muted">
                       {mounted ? formatTimeAgo(item.timestamp) : ""}
                     </p>
                   </div>
@@ -331,9 +283,7 @@ export default function OverviewPage() {
               View all &rarr;
             </Link>
           </div>
-          {loading ? (
-            <p className="mt-3 text-xs">Loading&hellip;</p>
-          ) : recentLeads.length === 0 ? (
+          {recentLeads.length === 0 ? (
             <p className="mt-3 text-xs">No leads yet.</p>
           ) : (
             <ul className="mt-3 divide-y">
@@ -364,6 +314,7 @@ export default function OverviewPage() {
       {error && (
         <p className="mt-4 text-xs text-red-400">Error loading overview: {error}</p>
       )}
+      </>}
     </DashboardLayout>
   );
 }

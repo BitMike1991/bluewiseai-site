@@ -6,6 +6,8 @@ import { Inter, Space_Grotesk, DM_Sans } from "next/font/google";
 import '@/styles/globals.css';
 import Layout from '@/components/Layout';
 import { getLocale } from "@/lib/locale";
+import { ToastProvider } from "@/components/ui/ToastContext";
+import ToastContainer from "@/components/ui/Toast";
 
 const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID;
 
@@ -87,12 +89,15 @@ export default function App({ Component, pageProps }) {
           </noscript>
         </>
       )}
-      <div className={`${inter.variable} ${spaceGrotesk.variable} ${dmSans.variable} font-sans`}>
-        <Layout>
-          <Component {...pageProps} />
-          <Analytics />
-        </Layout>
-      </div>
+      <ToastProvider>
+        <div className={`${inter.variable} ${spaceGrotesk.variable} ${dmSans.variable} font-sans`}>
+          <Layout>
+            <Component {...pageProps} />
+            <Analytics />
+          </Layout>
+          <ToastContainer />
+        </div>
+      </ToastProvider>
     </>
   );
 }
