@@ -178,9 +178,9 @@ export default function CallsPage() {
                 onClick={handlePrevious}
                 disabled={page <= 1 || loading}
                 className={classNames(
-                  "rounded-lg border px-3 py-1 text-xs sm:text-sm",
+                  "rounded-lg border px-3 py-2 md:py-1 text-xs sm:text-sm min-h-[44px] md:min-h-0",
                   page <= 1 || loading
-                    ? "cursor-not-allowed border-d-border text-d-text0"
+                    ? "cursor-not-allowed border-d-border text-d-muted"
                     : "border-d-border text-d-text hover:border-d-primary hover:text-d-primary"
                 )}
               >
@@ -194,9 +194,9 @@ export default function CallsPage() {
                 onClick={handleNext}
                 disabled={!pagination?.hasMore || loading}
                 className={classNames(
-                  "rounded-lg border px-3 py-1 text-xs sm:text-sm",
+                  "rounded-lg border px-3 py-2 md:py-1 text-xs sm:text-sm min-h-[44px] md:min-h-0",
                   !pagination?.hasMore || loading
-                    ? "cursor-not-allowed border-d-border text-d-text0"
+                    ? "cursor-not-allowed border-d-border text-d-muted"
                     : "border-d-border text-d-text hover:border-d-primary hover:text-d-primary"
                 )}
               >
@@ -212,8 +212,8 @@ export default function CallsPage() {
             </div>
           )}
 
-          {/* Table */}
-          <div className="overflow-x-auto">
+          {/* Desktop table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y divide-d-border text-xs sm:text-sm">
               <thead className="bg-d-surface">
                 <tr>
@@ -246,6 +246,21 @@ export default function CallsPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile card list */}
+          <div className="md:hidden divide-y divide-d-border">
+            {loading && calls.length === 0 ? (
+              <div className="px-4 py-2">
+                {Array.from({ length: 6 }, (_, i) => <SkeletonListRow key={i} />)}
+              </div>
+            ) : calls.length === 0 ? (
+              <div className="px-4 py-8 text-center text-d-muted text-sm">
+                No calls found for this filter.
+              </div>
+            ) : (
+              calls.map((call) => <CallCard key={call.id} call={call} />)
+            )}
+          </div>
         </section>
       </main>
     </DashboardLayout>
@@ -260,6 +275,67 @@ function Th({ children }) {
     >
       {children}
     </th>
+  );
+}
+
+function CallCard({ call }) {
+  const { time, direction, outcome, fromNumber, toNumber, answeredByAi, durationSeconds, leadId } = call;
+
+  const dateLabel = time
+    ? new Date(time).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })
+    : "\u2014";
+
+  const outLabel = (() => {
+    const l = (outcome || "").toLowerCase();
+    if (l.includes("miss")) return { text: "Missed", cls: "bg-rose-500/20 text-rose-500" };
+    if (l.includes("answer") || l.includes("completed") || l.includes("success")) return { text: "Answered", cls: "bg-emerald-500/20 text-emerald-500" };
+    if (l.includes("voicemail")) return { text: "Voicemail", cls: "bg-amber-500/20 text-amber-200" };
+    return { text: outcome || "Unknown", cls: "bg-d-surface text-d-muted" };
+  })();
+
+  const dirLabel = (() => {
+    const l = (direction || "").toLowerCase();
+    if (l.includes("in")) return { text: "Inbound", cls: "bg-d-primary/20 text-d-primary" };
+    if (l.includes("out")) return { text: "Outbound", cls: "bg-fuchsia-500/20 text-fuchsia-200" };
+    return { text: direction || "\u2014", cls: "bg-d-surface text-d-muted" };
+  })();
+
+  const dur = (() => {
+    if (!durationSeconds || isNaN(durationSeconds)) return "\u2014";
+    const total = Math.max(0, Math.floor(durationSeconds));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return m === 0 ? `${s}s` : `${m}m ${s.toString().padStart(2, "0")}s`;
+  })();
+
+  return (
+    <div className="px-4 py-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] ${dirLabel.cls}`}>{dirLabel.text}</span>
+          <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] ${outLabel.cls}`}>{outLabel.text}</span>
+        </div>
+        <span className="text-[11px] text-d-muted">{dateLabel}</span>
+      </div>
+      <div className="flex items-center justify-between text-xs">
+        <div className="text-d-text">
+          {fromNumber || "\u2014"} {"\u2192"} {toNumber || "\u2014"}
+        </div>
+        <span className="text-d-muted">{dur}</span>
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {answeredByAi && (
+            <span className="inline-flex rounded-full bg-d-primary/20 px-2 py-0.5 text-[11px] text-d-primary">AI</span>
+          )}
+          {leadId && (
+            <Link href={`/platform/leads/${leadId}`} className="text-[11px] text-d-primary hover:underline min-h-[44px] flex items-center">
+              View lead
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 

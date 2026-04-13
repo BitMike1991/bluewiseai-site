@@ -344,8 +344,29 @@ export default function SettingsPage() {
         <div className="mb-4 rounded-xl border border-rose-500/60 bg-rose-950/40 px-4 py-3 text-xs text-rose-100">{error}</div>
       )}
 
+      {/* Mobile tab bar — OUTSIDE the flex container */}
+      <div className="md:hidden flex overflow-x-auto gap-1 -mx-4 px-4 pb-3 mb-3 border-b border-d-border scrollbar-none">
+        {TABS.map(tab => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.key;
+          const isDirty = dirty.has(tab.key);
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs whitespace-nowrap transition-colors shrink-0 min-h-[44px] ${
+                isActive ? 'bg-d-primary/15 text-d-primary font-medium' : 'text-d-muted'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" /> {tab.label}
+              {isDirty && <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="flex gap-6">
-        {/* Tab nav — desktop sidebar, mobile horizontal scroll */}
+        {/* Tab nav — desktop sidebar only */}
         <nav className="hidden md:flex flex-col w-48 shrink-0 space-y-1">
           {TABS.map(tab => {
             const Icon = tab.icon;
@@ -366,25 +387,6 @@ export default function SettingsPage() {
             );
           })}
         </nav>
-
-        {/* Mobile tab bar */}
-        <div className="md:hidden flex overflow-x-auto gap-1 -mx-4 px-4 pb-3 mb-3 border-b border-d-border shrink-0">
-          {TABS.map(tab => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs whitespace-nowrap transition-colors shrink-0 ${
-                  isActive ? 'bg-d-primary/15 text-d-primary font-medium' : 'text-d-muted'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" /> {tab.label}
-              </button>
-            );
-          })}
-        </div>
 
         {/* Content area */}
         <div className="flex-1 min-w-0">

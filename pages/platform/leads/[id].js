@@ -628,26 +628,24 @@ export default function LeadDetailPage() {
         </div>
       )}
       <div className="h-full w-full px-6 py-6 text-d-text">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-d-primary/15 border border-d-primary/40 shadow-[0_0_20px_rgb(var(--d-primary-rgb)/0.5)]">
-                <span className="text-sm font-semibold text-d-primary">
-                  {lead?.name?.[0]?.toUpperCase() || lead?.phone?.slice(-2) || lead?.email?.[0]?.toUpperCase() || "L"}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <h1 className="text-xl font-semibold text-d-text tracking-tight">
-                  {lead?.name || lead?.phone || lead?.email || "Lead"}
-                </h1>
-                <p className="text-xs text-d-muted">
-                  {lead?.source ? `Source: ${lead.source}` : "Captured by your automations"}
-                </p>
-              </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-d-primary/15 border border-d-primary/40 shadow-[0_0_20px_rgb(var(--d-primary-rgb)/0.5)]">
+              <span className="text-sm font-semibold text-d-primary">
+                {lead?.name?.[0]?.toUpperCase() || lead?.phone?.slice(-2) || lead?.email?.[0]?.toUpperCase() || "L"}
+              </span>
+            </div>
+            <div className="flex flex-col min-w-0">
+              <h1 className="text-lg sm:text-xl font-semibold text-d-text tracking-tight truncate">
+                {lead?.name || lead?.phone || lead?.email || "Lead"}
+              </h1>
+              <p className="text-xs text-d-muted truncate">
+                {lead?.source ? `Source: ${lead.source}` : "Captured by your automations"}
+              </p>
             </div>
           </div>
 
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center sm:flex-col sm:items-end gap-2 pl-13 sm:pl-0">
             {lead && (
               <StatusSelector
                 status={lead.status || "new"}
@@ -655,7 +653,7 @@ export default function LeadDetailPage() {
                 loading={statusLoading}
               />
             )}
-            <p className="text-xs text-d-muted">
+            <p className="text-xs text-d-muted hidden sm:block">
               Last contact: <span className="text-d-text">{formatDate(lead?.lastContactAt)}</span>
             </p>
           </div>
@@ -663,31 +661,28 @@ export default function LeadDetailPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-6">
           <div className="bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40">
-            <div className="flex items-center justify-between mb-4 gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
               <div className="min-w-0">
                 <h2 className="text-sm font-semibold text-d-text tracking-wide">Conversation timeline</h2>
-                <p className="text-xs text-d-muted">
+                <p className="text-xs text-d-muted hidden sm:block">
                   All activity related to this lead (messages, calls, cold outreach events).
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-d-muted">Filter</span>
-                  <select
-                    value={timelineFilter}
-                    onChange={(e) => setTimelineFilter(e.target.value)}
-                    className="rounded-xl border border-d-border bg-d-surface px-3 py-2 text-xs text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60"
-                  >
-                    <option value="all">All</option>
-                    <option value="sms">SMS only</option>
-                    <option value="email">Email only</option>
-                    <option value="calls">Calls only</option>
-                    <option value="missed_calls">Missed calls only</option>
-                  </select>
-                </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <select
+                  value={timelineFilter}
+                  onChange={(e) => setTimelineFilter(e.target.value)}
+                  className="rounded-xl border border-d-border bg-d-surface px-3 py-2 text-xs text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60 min-h-[44px] sm:min-h-0"
+                >
+                  <option value="all">All</option>
+                  <option value="sms">SMS only</option>
+                  <option value="email">Email only</option>
+                  <option value="calls">Calls only</option>
+                  <option value="missed_calls">Missed calls only</option>
+                </select>
 
-                <div className="hidden sm:flex items-center gap-3 text-xs text-d-muted">
+                <div className="flex items-center gap-3 text-xs text-d-muted">
                   <span>
                     In: <span className="text-d-text">{stats.inboundMessages}</span>
                   </span>

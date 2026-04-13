@@ -121,9 +121,9 @@ export default function CalendarPage() {
           <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading calendar...
         </div>
       ) : (
-        <div className="flex gap-4">
+        <div className="relative">
           {/* Calendar grid */}
-          <div className="flex-1">
+          <div>
             {/* Day headers */}
             <div className="grid grid-cols-7 mb-1">
               {DAYS.map(d => (
@@ -135,11 +135,13 @@ export default function CalendarPage() {
 
             {/* Day cells */}
             <div className="grid grid-cols-7 gap-px bg-d-border/30 rounded-xl overflow-hidden border border-d-border/60">
-              {calendarDays.map((cell, i) => (
+              {calendarDays.map((cell, i) => {
+                const eventCount = (cell.events?.length || 0) + (cell.tasks?.length || 0);
+                return (
                 <div
                   key={cell.date ? cell.date.toISOString() : 'pad-' + i}
                   onClick={() => cell.date && setSelectedDay(cell.date)}
-                  className={`min-h-[90px] sm:min-h-[110px] p-1.5 transition cursor-pointer ${
+                  className={`min-h-[56px] sm:min-h-[110px] p-1 sm:p-1.5 transition cursor-pointer ${
                     !cell.day ? "bg-d-bg/50" :
                     cell.date?.toDateString() === selectedDateStr ? "bg-d-primary/10 ring-1 ring-d-primary/40" :
                     cell.date?.toDateString() === today ? "bg-amber-500/5" :
@@ -148,14 +150,14 @@ export default function CalendarPage() {
                 >
                   {cell.day && (
                     <>
-                      <div className={`text-xs font-medium mb-1 ${
+                      <div className={`text-[11px] sm:text-xs font-medium mb-0.5 sm:mb-1 ${
                         cell.date?.toDateString() === today ? "text-amber-400" : "text-d-text"
                       }`}>
                         {cell.day}
                       </div>
 
-                      {/* Event dots */}
-                      <div className="space-y-0.5">
+                      {/* Desktop: event chips */}
+                      <div className="hidden sm:block space-y-0.5">
                         {(cell.events || []).slice(0, 3).map((e) => (
                           <div key={e.id} className="rounded bg-blue-500/20 px-1 py-0.5 text-[11px] text-blue-300 truncate">
                             {e.allDay ? "" : new Date(e.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + " "}{e.title}
@@ -168,79 +170,99 @@ export default function CalendarPage() {
                             {t.title}
                           </div>
                         ))}
-                        {((cell.events?.length || 0) + (cell.tasks?.length || 0)) > 5 && (
-                          <div className="text-[11px] text-d-muted">+{(cell.events.length + cell.tasks.length) - 5} more</div>
+                        {eventCount > 5 && (
+                          <div className="text-[11px] text-d-muted">+{eventCount - 5} more</div>
                         )}
                       </div>
+
+                      {/* Mobile: colored dots only */}
+                      {eventCount > 0 && (
+                        <div className="flex sm:hidden gap-0.5 flex-wrap mt-0.5">
+                          {(cell.events || []).slice(0, 3).map((e) => (
+                            <div key={e.id} className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                          ))}
+                          {(cell.tasks || []).slice(0, 2).map((t) => (
+                            <div key={t.id} className={`w-1.5 h-1.5 rounded-full ${t.isOverdue ? "bg-red-400" : "bg-emerald-400"}`} />
+                          ))}
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
-          {/* Day detail sidebar */}
+          {/* Day detail — desktop: sidebar, mobile: full-width overlay */}
           {selectedDay && selectedDayData && (
-            <div className="w-72 flex-shrink-0 rounded-xl border border-d-border/60 bg-d-bg overflow-hidden">
-              <div className="bg-d-surface px-4 py-3 border-b border-d-border/60">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-d-text">
-                    {selectedDay.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
-                  </h3>
-                  <button onClick={() => setSelectedDay(null)} className="text-d-muted hover:text-d-text p-1 rounded-lg hover:bg-d-border/30 transition-colors" aria-label="Close">
-                    <X className="w-4 h-4" />
-                  </button>
+            <>
+              {/* Mobile overlay backdrop */}
+              <div className="md:hidden fixed inset-0 bg-black/40 z-40" onClick={() => setSelectedDay(null)} />
+
+              <div className="fixed inset-x-0 bottom-0 z-50 md:z-auto md:absolute md:right-0 md:top-0 md:bottom-auto md:left-auto md:w-80 md:inset-x-auto rounded-t-2xl md:rounded-xl border border-d-border/60 bg-d-bg overflow-hidden shadow-2xl md:shadow-lg">
+                <div className="bg-d-surface px-4 py-3 border-b border-d-border/60">
+                  <div className="flex items-center justify-between">
+                    {/* Mobile drag handle */}
+                    <div className="md:hidden absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 rounded-full bg-d-border/60" />
+                    <h3 className="text-sm font-semibold text-d-text">
+                      {selectedDay.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+                    </h3>
+                    <button onClick={() => setSelectedDay(null)} className="text-d-muted hover:text-d-text p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-d-border/30 transition-colors" aria-label="Close">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div className="p-3 space-y-2 overflow-y-auto" style={{ maxHeight: "calc(100vh - 300px)" }}>
-                {(selectedDayData.events || []).length === 0 && (selectedDayData.tasks || []).length === 0 && (
-                  <p className="text-xs text-d-muted/50 text-center py-8">Nothing scheduled</p>
-                )}
+                <div className="p-3 space-y-2 overflow-y-auto max-h-[60vh] md:max-h-[calc(100vh-300px)]">
+                  {(selectedDayData.events || []).length === 0 && (selectedDayData.tasks || []).length === 0 && (
+                    <p className="text-xs text-d-muted/50 text-center py-8">Nothing scheduled</p>
+                  )}
 
-                {(selectedDayData.events || []).map(e => (
-                  <div key={e.id} className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-3">
-                    <div className="flex items-start justify-between">
-                      <p className="text-xs font-medium text-d-text">{e.title}</p>
-                      {e.htmlLink && (
-                        <a href={e.htmlLink} target="_blank" rel="noopener noreferrer" className="text-d-muted hover:text-blue-400">
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
+                  {(selectedDayData.events || []).map(e => (
+                    <div key={e.id} className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-3">
+                      <div className="flex items-start justify-between">
+                        <p className="text-xs font-medium text-d-text">{e.title}</p>
+                        {e.htmlLink && (
+                          <a href={e.htmlLink} target="_blank" rel="noopener noreferrer" className="text-d-muted hover:text-blue-400 p-1">
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                      </div>
+                      {!e.allDay && (
+                        <p className="mt-1 text-[11px] text-blue-300 flex items-center gap-1">
+                          <Clock className="w-2.5 h-2.5" />
+                          {new Date(e.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          {e.end && ` - ${new Date(e.end).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
+                        </p>
+                      )}
+                      {e.location && (
+                        <p className="mt-1 text-[10px] text-d-muted flex items-center gap-1">
+                          <MapPin className="w-2.5 h-2.5" />{e.location}
+                        </p>
                       )}
                     </div>
-                    {!e.allDay && (
-                      <p className="mt-1 text-[10px] text-blue-300 flex items-center gap-1">
-                        <Clock className="w-2.5 h-2.5" />
-                        {new Date(e.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        {e.end && ` - ${new Date(e.end).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
-                      </p>
-                    )}
-                    {e.location && (
-                      <p className="mt-1 text-[10px] text-d-muted flex items-center gap-1">
-                        <MapPin className="w-2.5 h-2.5" />{e.location}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                  ))}
 
-                {(selectedDayData.tasks || []).map(t => (
-                  <div key={t.id} className={`rounded-lg border p-3 ${
-                    t.isOverdue ? "border-red-500/30 bg-red-500/5" : "border-emerald-500/30 bg-emerald-500/5"
-                  }`}>
-                    <p className="text-xs font-medium text-d-text">{t.title}</p>
-                    {t.description && <p className="mt-1 text-[10px] text-d-muted">{t.description}</p>}
-                    <div className="mt-1 flex items-center gap-2">
-                      <span className={`text-[11px] rounded-full px-1.5 py-0.5 ${
-                        t.priority === "urgent" ? "bg-red-500/20 text-red-300" :
-                        t.priority === "high" ? "bg-amber-500/20 text-amber-300" :
-                        "bg-d-border/40 text-d-muted"
-                      }`}>{t.priority}</span>
-                      {t.leadName && <span className="text-[11px] text-d-muted">{t.leadName}</span>}
+                  {(selectedDayData.tasks || []).map(t => (
+                    <div key={t.id} className={`rounded-lg border p-3 ${
+                      t.isOverdue ? "border-red-500/30 bg-red-500/5" : "border-emerald-500/30 bg-emerald-500/5"
+                    }`}>
+                      <p className="text-xs font-medium text-d-text">{t.title}</p>
+                      {t.description && <p className="mt-1 text-[10px] text-d-muted">{t.description}</p>}
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className={`text-[11px] rounded-full px-1.5 py-0.5 ${
+                          t.priority === "urgent" ? "bg-red-500/20 text-red-300" :
+                          t.priority === "high" ? "bg-amber-500/20 text-amber-300" :
+                          "bg-d-border/40 text-d-muted"
+                        }`}>{t.priority}</span>
+                        {t.leadName && <span className="text-[11px] text-d-muted">{t.leadName}</span>}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       )}

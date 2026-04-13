@@ -233,7 +233,7 @@ export default function LeadsPage() {
           <EmptyState icon={Users} title="No leads found" description="Try adjusting your filters or add a new lead" action={{ label: "Add Lead", onClick: () => router.push("/platform/leads?create=true") }} />
         )}
 
-        <ul className="divide-y">
+        <ul className="divide-y divide-d-border">
           {leads.map((lead) => {
             // IDs coming from API
             const leadId = lead.lead_id ?? lead.id;
@@ -266,7 +266,7 @@ export default function LeadsPage() {
               <li
                 key={leadId}
                 onClick={() => handleRowClick(leadId)}
-                className="cursor-pointer transition-colors"
+                className="cursor-pointer hover:bg-d-surface/50 transition-colors"
               >
                 <div className="px-4 py-3 grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-center">
                   {/* Lead main info */}
@@ -283,8 +283,8 @@ export default function LeadsPage() {
                             </p>
                             <p className="text-xs truncate">
                               {lead.phone && <span>{lead.phone}</span>}
-                              {lead.phone && lead.email && <span> \u00b7 </span>}
-                              {lead.email && <span>{lead.email}</span>}
+                              {lead.phone && lead.email && <span>{" \u00b7 "}</span>}
+                              {lead.email && <span className="truncate">{lead.email}</span>}
                             </p>
                           </div>
                           {/* Mobile badge */}
