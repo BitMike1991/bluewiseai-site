@@ -112,15 +112,29 @@ export default async function handler(req, res) {
   }
 
   const systemPrompt = buildSystemPrompt(customerId, context);
-  const tools = createBrainTools(supabase, customerId);
 
-  const result = streamText({
-    model: openai("gpt-4o"),
-    system: systemPrompt,
-    messages,
-    tools,
-    maxSteps: 10,
-  });
+  let tools;
+  try {
+    tools = createBrainTools(supabase, customerId);
+  } catch (e) {
+    console.error("[/api/chat] Failed to create tools:", e.message);
+    return res.status(500).json({ error: "Failed to initialize AI tools." });
+  }
 
-  result.pipeDataStreamToResponse(res);
+  try {
+    const result = streamText({
+      model: openai("gpt-4o"),
+      system: systemPrompt,
+      messages,
+      tools,
+      maxSteps: 10,
+    });
+
+    result.pipeDataStreamToResponse(res);
+  } catch (e) {
+    console.error("[/api/chat] Stream error:", e.message);
+    if (!res.headersSent) {
+      return res.status(500).json({ error: "AI streaming failed. Please try again." });
+    }
+  }
 }

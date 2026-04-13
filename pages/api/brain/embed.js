@@ -5,12 +5,23 @@
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Lazy-init to prevent module-scope crash
+let _openai = null;
+function getOpenAI() {
+  if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return _openai;
+}
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+let _supabaseAdmin = null;
+function getSupabaseAdmin() {
+  if (!_supabaseAdmin) {
+    _supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+  }
+  return _supabaseAdmin;
+}
 
 const BATCH_SIZE = 20;
 
@@ -55,7 +66,7 @@ export default async function handler(req, res) {
       const texts = batch.map((item) => item.content);
 
       // Call OpenAI embeddings
-      const embeddingRes = await openai.embeddings.create({
+      const embeddingRes = await getOpenAI().embeddings.create({
         model: "text-embedding-3-small",
         input: texts,
       });
@@ -72,7 +83,7 @@ export default async function handler(req, res) {
       }));
 
       // Upsert into brain_embeddings (ON CONFLICT update)
-      const { error } = await supabaseAdmin
+      const { error } = await getSupabaseAdmin()
         .from("brain_embeddings")
         .upsert(rows, {
           onConflict: "customer_id,source_type,source_id",

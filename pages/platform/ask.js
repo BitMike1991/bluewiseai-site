@@ -115,12 +115,13 @@ function saveJson(key, value) {
 // -----------------------------
 // Approval Card
 // -----------------------------
-function ApprovalCard({ toolInvocation, addToolResult }) {
+function ApprovalCard({ toolInvocation, addToolApprovalResponse, addToolResult }) {
   const [editing, setEditing] = useState(false);
   const [editedArgs, setEditedArgs] = useState(null);
   const [decided, setDecided] = useState(null); // 'approved' | 'rejected'
 
   const { toolName, toolCallId, args } = toolInvocation;
+  const approvalId = toolInvocation.approval?.id || toolCallId;
 
   const friendlyName = {
     send_message: "Send Message",
@@ -159,18 +160,21 @@ function ApprovalCard({ toolInvocation, addToolResult }) {
 
   function handleApprove() {
     setDecided("approved");
-    addToolResult({
-      toolCallId,
-      result: editedArgs ? { ...args, ...editedArgs, _approved: true } : { _approved: true },
-    });
+    if (addToolApprovalResponse) {
+      addToolApprovalResponse({ id: approvalId, approved: true });
+    } else {
+      // Fallback for older SDK versions
+      addToolResult({ toolCallId, result: { _approved: true } });
+    }
   }
 
   function handleReject() {
     setDecided("rejected");
-    addToolResult({
-      toolCallId,
-      result: { _rejected: true, reason: "User rejected this action." },
-    });
+    if (addToolApprovalResponse) {
+      addToolApprovalResponse({ id: approvalId, approved: false, reason: "User rejected this action." });
+    } else {
+      addToolResult({ toolCallId, result: { _rejected: true, reason: "User rejected." } });
+    }
   }
 
   if (decided === "approved") {
@@ -579,7 +583,9 @@ export default function AskPage() {
     handleSubmit,
     isLoading,
     addToolResult,
+    addToolApprovalResponse,
     error: chatError,
+    reload,
   } = useChat({
     api: "/api/chat",
     body: {
@@ -588,6 +594,15 @@ export default function AskPage() {
         activeLeadId,
         activeLeadName,
       },
+    },
+    onError: (err) => {
+      console.error("[Brain] Chat error:", err.message);
+    },
+    sendAutomaticallyWhen: ({ parts }) => {
+      // Auto-send after all tool approvals have been responded to
+      return parts.some(
+        (p) => p.type === "tool-invocation" && p.state === "approval-responded"
+      );
     },
   });
 
@@ -828,33 +843,49 @@ export default function AskPage() {
               {msg.role === "assistant" && (
                 <div className="flex justify-start">
                   <div className="max-w-[90%] md:max-w-2xl space-y-3">
-                    {/* Text content */}
-                    {msg.parts?.filter((p) => p.type === "text" && p.text?.trim()).map((part, pi) => (
-                      <div
-                        key={pi}
-                        className="rounded-2xl border border-d-border bg-d-surface/60 px-4 py-3 text-sm text-d-text leading-relaxed whitespace-pre-wrap"
-                      >
-                        {part.text}
-                      </div>
-                    ))}
+                    {/* Text content — try parts first, fall back to content string */}
+                    {msg.parts
+                      ? msg.parts.filter((p) => p.type === "text" && p.text?.trim()).map((part, pi) => (
+                          <div
+                            key={pi}
+                            className="rounded-2xl border border-d-border bg-d-surface/60 px-4 py-3 text-sm text-d-text leading-relaxed whitespace-pre-wrap"
+                          >
+                            {part.text}
+                          </div>
+                        ))
+                      : typeof msg.content === "string" && msg.content.trim() ? (
+                          <div className="rounded-2xl border border-d-border bg-d-surface/60 px-4 py-3 text-sm text-d-text leading-relaxed whitespace-pre-wrap">
+                            {msg.content}
+                          </div>
+                        ) : null
+                    }
 
                     {/* Tool invocations */}
                     {msg.toolInvocations?.map((inv) => (
                       <div key={inv.toolCallId} className="space-y-2">
                         {/* Partial call / thinking */}
-                        {inv.state === "partial-call" && (
+                        {(inv.state === "partial-call" || inv.state === "call") && (
                           <div className="flex items-center gap-2 text-sm text-d-muted">
                             <Loader className="w-4 h-4 animate-spin" />
-                            <span>Calling {inv.toolName}...</span>
+                            <span>Running {inv.toolName}...</span>
                           </div>
                         )}
 
-                        {/* Call with needsApproval */}
-                        {inv.state === "call" && (
+                        {/* Approval requested (needsApproval tools) */}
+                        {inv.state === "approval-requested" && (
                           <ApprovalCard
                             toolInvocation={inv}
+                            addToolApprovalResponse={addToolApprovalResponse}
                             addToolResult={addToolResult}
                           />
+                        )}
+
+                        {/* Approval responded (waiting for execution) */}
+                        {inv.state === "approval-responded" && (
+                          <div className="flex items-center gap-2 text-sm text-d-muted">
+                            <Loader className="w-4 h-4 animate-spin" />
+                            <span>Executing {inv.toolName}...</span>
+                          </div>
                         )}
 
                         {/* Result */}
