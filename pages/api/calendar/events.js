@@ -28,7 +28,7 @@ export default async function handler(req, res) {
       .maybeSingle();
 
     if (oauthErr || !oauthRow) {
-      return res.status(200).json({ events: [], connected: false, error: "no_oauth", detail: oauthErr?.message || "no gmail oauth row for this customer" });
+      return res.status(200).json({ events: [], connected: false, error: "no_oauth", detail: oauthErr?.message || "no gmail oauth row for this customer", _debug: { customerId, cookie: req.cookies?.["__active_tenant"] || "NONE" } });
     }
 
     let accessToken;
