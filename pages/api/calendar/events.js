@@ -29,7 +29,7 @@ export default async function handler(req, res) {
       .maybeSingle();
 
     if (oauthErr || !oauthRow) {
-      return res.status(200).json({ events: [], connected: false, error: "no_oauth", detail: oauthErr?.message || "no gmail oauth row for this customer", _debug: { customerId, cookie: req.cookies?.["__active_tenant"] || "NONE" } });
+      return res.status(200).json({ events: [], connected: false });
     }
 
     let accessToken;
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
       const tokenData = await tokenRes.json();
       if (!tokenRes.ok) {
         console.error("[calendar/events] token refresh failed:", tokenData);
-        return res.status(200).json({ events: [], connected: false, error: "token_refresh_failed", detail: tokenData.error || tokenData.error_description || "unknown" });
+        return res.status(200).json({ events: [], connected: false });
       }
       accessToken = tokenData.access_token;
     }
