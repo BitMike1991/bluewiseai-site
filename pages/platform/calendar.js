@@ -1,7 +1,7 @@
 // pages/platform/calendar.js — Google Calendar + Tasks with due dates
 import { useEffect, useState, useMemo } from "react";
 import DashboardLayout from "../../src/components/dashboard/DashboardLayout";
-import { ChevronLeft, ChevronRight, Clock, MapPin, ExternalLink, CalendarDays, Loader2, AlertCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, MapPin, ExternalLink, CalendarDays, Loader2, AlertCircle, X } from "lucide-react";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -157,19 +157,19 @@ export default function CalendarPage() {
                       {/* Event dots */}
                       <div className="space-y-0.5">
                         {(cell.events || []).slice(0, 3).map((e) => (
-                          <div key={e.id} className="rounded bg-blue-500/20 px-1 py-0.5 text-[9px] text-blue-300 truncate">
+                          <div key={e.id} className="rounded bg-blue-500/20 px-1 py-0.5 text-[11px] text-blue-300 truncate">
                             {e.allDay ? "" : new Date(e.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + " "}{e.title}
                           </div>
                         ))}
                         {(cell.tasks || []).slice(0, 2).map((t) => (
-                          <div key={t.id} className={`rounded px-1 py-0.5 text-[9px] truncate ${
+                          <div key={t.id} className={`rounded px-1 py-0.5 text-[11px] truncate ${
                             t.isOverdue ? "bg-red-500/20 text-red-300" : "bg-emerald-500/20 text-emerald-300"
                           }`}>
                             {t.title}
                           </div>
                         ))}
                         {((cell.events?.length || 0) + (cell.tasks?.length || 0)) > 5 && (
-                          <div className="text-[9px] text-d-muted">+{(cell.events.length + cell.tasks.length) - 5} more</div>
+                          <div className="text-[11px] text-d-muted">+{(cell.events.length + cell.tasks.length) - 5} more</div>
                         )}
                       </div>
                     </>
@@ -187,8 +187,8 @@ export default function CalendarPage() {
                   <h3 className="text-sm font-semibold text-d-text">
                     {selectedDay.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
                   </h3>
-                  <button onClick={() => setSelectedDay(null)} className="text-d-muted hover:text-d-text">
-                    <ChevronRight className="w-4 h-4" />
+                  <button onClick={() => setSelectedDay(null)} className="text-d-muted hover:text-d-text p-1 rounded-lg hover:bg-d-border/30 transition-colors" aria-label="Close">
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -230,12 +230,12 @@ export default function CalendarPage() {
                     <p className="text-xs font-medium text-d-text">{t.title}</p>
                     {t.description && <p className="mt-1 text-[10px] text-d-muted">{t.description}</p>}
                     <div className="mt-1 flex items-center gap-2">
-                      <span className={`text-[9px] rounded-full px-1.5 py-0.5 ${
+                      <span className={`text-[11px] rounded-full px-1.5 py-0.5 ${
                         t.priority === "urgent" ? "bg-red-500/20 text-red-300" :
                         t.priority === "high" ? "bg-amber-500/20 text-amber-300" :
                         "bg-d-border/40 text-d-muted"
                       }`}>{t.priority}</span>
-                      {t.leadName && <span className="text-[9px] text-d-muted">{t.leadName}</span>}
+                      {t.leadName && <span className="text-[11px] text-d-muted">{t.leadName}</span>}
                     </div>
                   </div>
                 ))}
