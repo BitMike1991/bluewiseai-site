@@ -26,7 +26,16 @@ export default async function handler(req, res) {
       primaryColor: c.branding?.primary_color || "#6c63ff",
     }));
 
-    return res.status(200).json({ tenants, activeTenant: customerId, canSwitch: true });
+    return res.status(200).json({
+      tenants,
+      activeTenant: customerId,
+      canSwitch: true,
+      _debug: {
+        cookie: req.cookies?.["__active_tenant"] || "NONE",
+        allIds: allCustomerIds,
+        resolvedId: customerId
+      }
+    });
   }
 
   if (req.method === "POST") {
