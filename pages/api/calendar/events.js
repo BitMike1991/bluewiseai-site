@@ -1,6 +1,6 @@
 // pages/api/calendar/events.js — Fetch Google Calendar events
 import { getAuthContext } from "../../../lib/supabaseServer";
-import { decrypt } from "../../../lib/tokenEncryption";
+import { decryptToken as decrypt } from "../../../lib/tokenEncryption";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
