@@ -1,6 +1,7 @@
 // src/components/dashboard/Sidebar.js
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useState, useEffect } from "react";
 import { useBranding } from "./BrandingContext";
 import {
   LayoutDashboard,
@@ -16,6 +17,7 @@ import {
   Settings,
   BarChart2,
   X,
+  ChevronsUpDown,
 } from "lucide-react";
 
 const ALL_NAV_ITEMS = [
@@ -145,21 +147,118 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
           })}
         </nav>
 
-        {/* Customer footer */}
-        {customerName && (
-          <div className="px-4 py-3" style={{ borderTop: `1px solid ${borderColor}60` }}>
-            <div className="flex items-center gap-2.5">
-              <div
-                className="h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-semibold"
-                style={{ backgroundColor: `${branding.primary_color}20`, color: branding.primary_color }}
-              >
-                {customerName.charAt(0).toUpperCase()}
-              </div>
-              <div className="text-xs truncate" style={{ color: navText }}>{customerName}</div>
-            </div>
-          </div>
-        )}
+        {/* Tenant switcher + Customer footer */}
+        <TenantSwitcher borderColor={borderColor} navText={navText} branding={branding} customerName={customerName} />
       </aside>
     </>
+  );
+}
+
+function TenantSwitcher({ borderColor, navText, branding, customerName }) {
+  const [tenants, setTenants] = useState([]);
+  const [activeTenant, setActiveTenant] = useState(null);
+  const [canSwitch, setCanSwitch] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [switching, setSwitching] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/tenants")
+      .then(r => r.json())
+      .then(data => {
+        setTenants(data.tenants || []);
+        setActiveTenant(data.activeTenant);
+        setCanSwitch(data.canSwitch || false);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSwitch = async (id) => {
+    if (id === activeTenant || switching) return;
+    setSwitching(true);
+    try {
+      await fetch("/api/tenants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tenantId: id }),
+      });
+      // Full page reload to get new branding + data
+      window.location.reload();
+    } catch {
+      setSwitching(false);
+    }
+  };
+
+  const activeName = tenants.find(t => t.id === activeTenant)?.displayName || customerName || "Tenant";
+
+  // Regular user (1 tenant) — show simple footer
+  if (!canSwitch) {
+    return customerName ? (
+      <div className="px-4 py-3" style={{ borderTop: `1px solid ${borderColor}60` }}>
+        <div className="flex items-center gap-2.5">
+          <div
+            className="h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-semibold"
+            style={{ backgroundColor: `${branding.primary_color || '#6c63ff'}20`, color: branding.primary_color || '#6c63ff' }}
+          >
+            {customerName.charAt(0).toUpperCase()}
+          </div>
+          <div className="text-xs truncate" style={{ color: navText }}>{customerName}</div>
+        </div>
+      </div>
+    ) : null;
+  }
+
+  // Multi-tenant user — show switcher
+  return (
+    <div className="relative" style={{ borderTop: `1px solid ${borderColor}60` }}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full px-4 py-3 flex items-center justify-between gap-2 transition-colors hover:opacity-80"
+        disabled={switching}
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div
+            className="h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0"
+            style={{ backgroundColor: `${branding.primary_color || '#6c63ff'}20`, color: branding.primary_color || '#6c63ff' }}
+          >
+            {activeName.charAt(0).toUpperCase()}
+          </div>
+          <div className="text-xs font-medium truncate" style={{ color: navText }}>
+            {switching ? "Switching..." : activeName}
+          </div>
+        </div>
+        <ChevronsUpDown className="w-3.5 h-3.5 flex-shrink-0" style={{ color: navText }} />
+      </button>
+
+      {open && (
+        <div className="absolute bottom-full left-2 right-2 mb-1 rounded-lg border shadow-xl overflow-hidden z-50"
+          style={{ backgroundColor: branding.surface_color || '#111119', borderColor: borderColor }}
+        >
+          {tenants.map(t => (
+            <button
+              key={t.id}
+              onClick={() => { setOpen(false); handleSwitch(t.id); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors"
+              style={{
+                backgroundColor: t.id === activeTenant ? `${t.primaryColor}15` : 'transparent',
+                color: t.id === activeTenant ? '#ffffff' : navText,
+              }}
+            >
+              <div
+                className="h-6 w-6 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0"
+                style={{ backgroundColor: `${t.primaryColor}25`, color: t.primaryColor }}
+              >
+                {t.logoText}
+              </div>
+              <span className="text-xs truncate">{t.displayName}</span>
+              {t.id === activeTenant && (
+                <span className="ml-auto text-[9px] rounded-full px-1.5 py-0.5" style={{ backgroundColor: `${t.primaryColor}20`, color: t.primaryColor }}>
+                  active
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
