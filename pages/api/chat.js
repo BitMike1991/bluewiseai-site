@@ -130,7 +130,7 @@ export default async function handler(req, res) {
       maxSteps: 10,
     });
 
-    result.pipeDataStreamToResponse(res);
+    result.pipeUIMessageStreamToResponse(res);
   } catch (e) {
     console.error("[/api/chat] Stream error:", e.message);
     if (!res.headersSent) {
