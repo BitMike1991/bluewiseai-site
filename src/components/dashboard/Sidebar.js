@@ -114,6 +114,9 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
           </div>
         </div>
 
+        {/* Tenant switcher — right below header, always visible */}
+        <TenantSwitcher borderColor={borderColor} navText={navText} branding={branding} customerName={customerName} />
+
         {/* Navigation */}
         <nav className="flex-1 min-h-0 px-3 py-4 space-y-0.5 overflow-y-auto">
           {visibleItems.map((item) => {
@@ -147,8 +150,20 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
           })}
         </nav>
 
-        {/* Tenant switcher + Customer footer */}
-        <TenantSwitcher borderColor={borderColor} navText={navText} branding={branding} customerName={customerName} />
+        {/* Customer name footer (non-switching users only) */}
+        {customerName && (
+          <div className="flex-shrink-0 px-4 py-3" style={{ borderTop: `1px solid ${borderColor}60` }}>
+            <div className="flex items-center gap-2.5">
+              <div
+                className="h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-semibold"
+                style={{ backgroundColor: `${branding.primary_color || '#6c63ff'}20`, color: branding.primary_color || '#6c63ff' }}
+              >
+                {customerName.charAt(0).toUpperCase()}
+              </div>
+              <div className="text-xs truncate" style={{ color: navText }}>{customerName}</div>
+            </div>
+          </div>
+        )}
       </aside>
     </>
   );
@@ -190,26 +205,12 @@ function TenantSwitcher({ borderColor, navText, branding, customerName }) {
 
   const activeName = tenants.find(t => t.id === activeTenant)?.displayName || customerName || "Tenant";
 
-  // Regular user (1 tenant) — show simple footer
-  if (!canSwitch) {
-    return customerName ? (
-      <div className="px-4 py-3" style={{ borderTop: `1px solid ${borderColor}60` }}>
-        <div className="flex items-center gap-2.5">
-          <div
-            className="h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-semibold"
-            style={{ backgroundColor: `${branding.primary_color || '#6c63ff'}20`, color: branding.primary_color || '#6c63ff' }}
-          >
-            {customerName.charAt(0).toUpperCase()}
-          </div>
-          <div className="text-xs truncate" style={{ color: navText }}>{customerName}</div>
-        </div>
-      </div>
-    ) : null;
-  }
+  // Regular user (1 tenant) — no switcher, footer handled separately
+  if (!canSwitch) return null;
 
   // Multi-tenant user — show switcher
   return (
-    <div className="relative mt-auto" style={{ borderTop: `1px solid ${borderColor}60` }}>
+    <div className="relative flex-shrink-0" style={{ borderBottom: `1px solid ${borderColor}60` }}>
       <button
         onClick={() => setOpen(!open)}
         className="w-full px-4 py-3 flex items-center justify-between gap-2 transition-colors hover:opacity-80"
@@ -230,7 +231,7 @@ function TenantSwitcher({ borderColor, navText, branding, customerName }) {
       </button>
 
       {open && (
-        <div className="absolute bottom-full left-2 right-2 mb-1 rounded-lg border shadow-xl overflow-hidden z-50"
+        <div className="absolute top-full left-2 right-2 mt-1 rounded-lg border shadow-xl overflow-hidden z-50"
           style={{ backgroundColor: branding.surface_color || '#111119', borderColor: borderColor }}
         >
           {tenants.map(t => (
