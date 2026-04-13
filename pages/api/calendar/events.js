@@ -1,5 +1,5 @@
 // pages/api/calendar/events.js — Fetch Google Calendar events
-import { getAuthContext } from "../../../lib/supabaseServer";
+import { getAuthContext, getSupabaseServerClient } from "../../../lib/supabaseServer";
 import { decryptToken as decrypt } from "../../../lib/tokenEncryption";
 
 export default async function handler(req, res) {
@@ -18,8 +18,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get OAuth token from customer_email_oauth
-    const { data: oauthRow, error: oauthErr } = await supabase
+    // Get OAuth token — service role required (RLS blocks session client)
+    const sbAdmin = getSupabaseServerClient();
+    const { data: oauthRow, error: oauthErr } = await sbAdmin
       .from("customer_email_oauth")
       .select("access_token, refresh_token, token_expiry")
       .eq("customer_id", customerId)
