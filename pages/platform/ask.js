@@ -1,10 +1,13 @@
-// pages/platform/ask.js
-import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+// pages/platform/ask.js — BlueWise Brain v2 Command Center
+import { useRouter } from "next/router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useChat } from "@ai-sdk/react";
+import { Send, Loader, Check, X, Edit2, Mic, Clock, Star, Sparkles } from "lucide-react";
 import DashboardLayout from "../../src/components/dashboard/DashboardLayout";
+import ContextPanel from "../../src/components/brain/ContextPanel";
 
 // -----------------------------
-// Small UI utilities
+// Small UI utilities (kept from v1)
 // -----------------------------
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -68,7 +71,6 @@ function badgeTone(kind) {
   return "border-d-border bg-d-surface/60 text-d-text";
 }
 
-// Color avatar (deterministic by name)
 const AVATAR_COLORS = [
   "bg-sky-500", "bg-emerald-500", "bg-violet-500", "bg-amber-500",
   "bg-rose-500", "bg-teal-500", "bg-indigo-500", "bg-pink-500",
@@ -88,9 +90,8 @@ function avatarInitials(name) {
 }
 
 // -----------------------------
-// Storage helpers (history + saved prompts)
+// Storage helpers (saved prompts)
 // -----------------------------
-const LS_HISTORY = "bluewise.ask.history.v1";
 const LS_SAVED = "bluewise.ask.saved.v1";
 
 function loadJson(key, fallback) {
@@ -98,8 +99,7 @@ function loadJson(key, fallback) {
   try {
     const raw = window.localStorage.getItem(key);
     if (!raw) return fallback;
-    const parsed = JSON.parse(raw);
-    return parsed ?? fallback;
+    return JSON.parse(raw) ?? fallback;
   } catch {
     return fallback;
   }
@@ -109,168 +109,342 @@ function saveJson(key, value) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // ignore
+  } catch {}
+}
+
+// -----------------------------
+// Approval Card
+// -----------------------------
+function ApprovalCard({ toolInvocation, addToolResult }) {
+  const [editing, setEditing] = useState(false);
+  const [editedArgs, setEditedArgs] = useState(null);
+  const [decided, setDecided] = useState(null); // 'approved' | 'rejected'
+
+  const { toolName, toolCallId, args } = toolInvocation;
+
+  const friendlyName = {
+    send_message: "Send Message",
+    create_task: "Create Task",
+    update_task: "Update Task",
+    create_lead: "Create Lead",
+    update_lead: "Update Lead",
+    create_job: "Create Job",
+    update_job: "Update Job",
+    create_appointment: "Create Appointment",
+    reschedule_appointment: "Reschedule",
+  }[toolName] || toolName;
+
+  // Format args for display
+  function formatArgs(a) {
+    if (!a) return "";
+    const display = { ...a };
+    // Mask sensitive fields
+    if (display.to && display.to.includes("@")) {
+      const [user, domain] = display.to.split("@");
+      display.to = `${user.slice(0, 2)}***@${domain}`;
+    }
+    if (display.to && /^\+?\d/.test(display.to)) {
+      display.to = display.to.slice(0, 4) + "***" + display.to.slice(-2);
+    }
+    return Object.entries(display)
+      .filter(([, v]) => v != null && v !== "")
+      .map(([k, v]) => {
+        const val = typeof v === "string" && v.length > 120
+          ? v.slice(0, 120) + "\u2026"
+          : v;
+        return `${k}: ${typeof val === "string" ? val : JSON.stringify(val)}`;
+      })
+      .join("\n");
   }
-}
 
-// -----------------------------
-// Sub-components
-// -----------------------------
+  function handleApprove() {
+    setDecided("approved");
+    addToolResult({
+      toolCallId,
+      result: editedArgs ? { ...args, ...editedArgs, _approved: true } : { _approved: true },
+    });
+  }
 
-function LoadingSkeleton() {
-  return (
-    <div className="space-y-4 animate-pulse">
-      <div className="rounded-2xl border border-d-border bg-d-surface/40 p-6">
-        <div className="h-5 w-48 rounded-lg bg-d-border/60" />
-        <div className="mt-4 space-y-3">
-          <div className="h-4 w-full rounded-lg bg-d-border/40" />
-          <div className="h-4 w-5/6 rounded-lg bg-d-border/40" />
-          <div className="h-4 w-3/4 rounded-lg bg-d-border/40" />
-        </div>
-        <div className="mt-6 flex gap-3">
-          <div className="h-10 w-28 rounded-xl bg-d-border/40" />
-          <div className="h-10 w-28 rounded-xl bg-d-border/40" />
-        </div>
+  function handleReject() {
+    setDecided("rejected");
+    addToolResult({
+      toolCallId,
+      result: { _rejected: true, reason: "User rejected this action." },
+    });
+  }
+
+  if (decided === "approved") {
+    return (
+      <div className="border-l-4 border-emerald-500 bg-emerald-500/5 rounded-r-xl px-4 py-3 text-sm text-emerald-600">
+        <Check className="w-4 h-4 inline-block mr-2 -mt-0.5" />
+        {friendlyName} approved
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-function StatusPill({ label, tone }) {
+  if (decided === "rejected") {
+    return (
+      <div className="border-l-4 border-rose-500 bg-rose-500/5 rounded-r-xl px-4 py-3 text-sm text-rose-500">
+        <X className="w-4 h-4 inline-block mr-2 -mt-0.5" />
+        {friendlyName} rejected
+      </div>
+    );
+  }
+
   return (
-    <span
-      className={cx(
-        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
-        badgeTone(tone || label)
+    <div className="border-l-4 border-amber-500 bg-amber-500/5 rounded-r-xl px-4 py-3 space-y-3">
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-semibold text-d-text">{friendlyName}</span>
+        <span className="text-xs text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full">
+          Needs approval
+        </span>
+      </div>
+
+      {editing ? (
+        <textarea
+          className="w-full rounded-lg border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text font-mono"
+          rows={6}
+          defaultValue={JSON.stringify(editedArgs || args, null, 2)}
+          onChange={(e) => {
+            try {
+              setEditedArgs(JSON.parse(e.target.value));
+            } catch {}
+          }}
+        />
+      ) : (
+        <pre className="text-xs text-d-muted whitespace-pre-wrap bg-d-surface/60 rounded-lg px-3 py-2 border border-d-border overflow-x-auto">
+          {formatArgs(args)}
+        </pre>
       )}
-    >
-      {label}
-    </span>
-  );
-}
 
-function MetricPill({ label, value, color }) {
-  const colorMap = {
-    rose: "bg-rose-500/15 border-rose-500/30 text-rose-500",
-    amber: "bg-amber-500/15 border-amber-500/30 text-amber-500",
-    emerald: "bg-emerald-500/15 border-emerald-500/30 text-emerald-500",
-    violet: "bg-violet-500/15 border-violet-500/30 text-violet-500",
-    sky: "bg-d-primary/15 border-d-primary/30 text-d-primary",
-    slate: "bg-d-surface/60 border-d-border text-d-text",
-  };
-  return (
-    <div className={cx("rounded-xl border px-4 py-2.5 text-center", colorMap[color] || colorMap.slate)}>
-      <p className="text-lg font-bold">{value}</p>
-      <p className="text-xs uppercase tracking-wide text-d-muted mt-0.5">{label}</p>
-    </div>
-  );
-}
-
-function SectionLabel({ children }) {
-  return <p className="text-xs uppercase tracking-wide font-semibold text-d-muted">{children}</p>;
-}
-
-function DetailSection({ title, items }) {
-  const [open, setOpen] = useState(false);
-  if (!items || items.length === 0) return null;
-  return (
-    <div className="rounded-xl border border-d-border bg-d-surface/60 overflow-hidden">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-d-surface/40 transition-colors"
-      >
-        <span className="text-sm font-semibold text-d-text">{title}</span>
-        <svg
-          className={cx("w-4 h-4 text-d-muted transition-transform", open && "rotate-180")}
-          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+      <div className="flex gap-2">
+        <button
+          onClick={handleApprove}
+          className="min-h-[44px] md:min-h-0 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      {open && (
-        <div className="px-4 pb-3 border-t border-d-border">
-          <ul className="mt-2 space-y-1.5">
-            {items.slice(0, 8).map((s, i) => (
-              <li key={i} className="flex gap-2 text-sm text-d-muted">
-                <span className="text-d-muted shrink-0">&#8226;</span>
-                <span>{safeText(s)}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+          <Check className="w-4 h-4 inline-block mr-1 -mt-0.5" />
+          Approve
+        </button>
+        <button
+          onClick={() => setEditing(!editing)}
+          className="min-h-[44px] md:min-h-0 rounded-lg border border-d-border px-4 py-2 text-sm font-semibold text-d-text hover:bg-d-surface transition-colors"
+        >
+          <Edit2 className="w-4 h-4 inline-block mr-1 -mt-0.5" />
+          {editing ? "Preview" : "Edit"}
+        </button>
+        <button
+          onClick={handleReject}
+          className="min-h-[44px] md:min-h-0 rounded-lg border border-rose-500/40 px-4 py-2 text-sm font-semibold text-rose-500 hover:bg-rose-500/10 transition-colors"
+        >
+          <X className="w-4 h-4 inline-block mr-1 -mt-0.5" />
+          Reject
+        </button>
+      </div>
     </div>
   );
 }
 
-function HistoryPanel({ open, onClose, history, onReuse, onView, onClear }) {
-  if (!open) return null;
-  return (
-    <>
-      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 w-full max-w-md bg-d-bg border-l border-d-border z-50 flex flex-col shadow-2xl">
-        <div className="flex items-center justify-between p-4 border-b border-d-border">
-          <div>
-            <p className="text-base font-semibold text-d-text">History</p>
-            <p className="text-xs text-d-muted mt-0.5">Last 40 queries, stored locally</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {history.length > 0 && (
-              <button
-                onClick={onClear}
-                className="rounded-lg border border-d-border px-3 py-1.5 text-xs font-semibold text-d-muted hover:border-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10"
-              >
-                Clear
-              </button>
-            )}
-            <button
-              onClick={onClose}
-              className="rounded-lg border border-d-border p-1.5 text-d-muted hover:text-d-text hover:border-d-border"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
+// -----------------------------
+// Tool Result Card
+// -----------------------------
+function ToolResultCard({ toolName, result }) {
+  if (!result) return null;
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {history.length === 0 ? (
-            <p className="text-sm text-d-muted text-center mt-8">No history yet.</p>
-          ) : (
-            history.map((h) => (
-              <div key={h.id} className="rounded-xl border border-d-border bg-d-surface/60 p-3">
-                <p className="text-sm font-semibold text-d-text leading-snug">{h.q}</p>
-                <p className="mt-1 text-xs text-d-muted">
-                  {formatTimeAgo(h.at)}
-                  {h.resultType ? ` \u00b7 ${h.resultType}` : ""}
-                </p>
-                {h.snapshot ? <p className="mt-2 text-sm text-d-muted line-clamp-2">{h.snapshot}</p> : null}
-                <div className="mt-2 flex gap-2">
-                  <button
-                    onClick={() => onReuse(h.q)}
-                    className="rounded-lg border border-d-border bg-d-surface/60 px-2.5 py-1 text-xs font-semibold text-d-text hover:border-d-primary/60 hover:text-d-primary"
-                  >
-                    Reuse
-                  </button>
-                  <button
-                    onClick={() => onView(h.raw)}
-                    className="rounded-lg border border-d-primary/60 px-2.5 py-1 text-xs font-semibold text-d-primary hover:border-d-primary hover:bg-d-primary/10"
-                  >
-                    View
-                  </button>
+  // Handle approval results
+  if (result._approved) {
+    return (
+      <div className="text-sm text-emerald-600">
+        <Check className="w-4 h-4 inline-block mr-1 -mt-0.5" />
+        Action approved and executed.
+      </div>
+    );
+  }
+  if (result._rejected) {
+    return (
+      <div className="text-sm text-rose-500">
+        <X className="w-4 h-4 inline-block mr-1 -mt-0.5" />
+        Action rejected.
+      </div>
+    );
+  }
+
+  // Lead list
+  if (toolName === "list_leads" || toolName === "find_lead") {
+    const items = result.items || [];
+    if (items.length === 0) {
+      return <p className="text-sm text-d-muted">No leads found.</p>;
+    }
+    return (
+      <div className="space-y-2">
+        <p className="text-xs text-d-muted font-semibold uppercase tracking-wide">
+          {items.length} lead{items.length !== 1 ? "s" : ""}
+        </p>
+        <div className="space-y-2 max-h-80 overflow-y-auto">
+          {items.slice(0, 20).map((item, i) => {
+            const name = item.name || item.email || item.phone || "Lead";
+            return (
+              <div
+                key={item.leadId || i}
+                className="flex items-center gap-3 rounded-xl border border-d-border bg-d-surface/60 p-3"
+              >
+                <div className={cx("w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0", avatarColor(name))}>
+                  {avatarInitials(name)}
                 </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-d-text truncate">{name}</p>
+                  <p className="text-xs text-d-muted">
+                    {item.status || "new"}
+                    {item.lastContactAt ? ` ${"\u00b7"} ${formatTimeAgo(item.lastContactAt)}` : ""}
+                    {item.source ? ` ${"\u00b7"} ${item.source}` : ""}
+                  </p>
+                </div>
+                {item.missedCallCount > 0 && (
+                  <span className="text-xs bg-rose-500/10 text-rose-500 px-2 py-0.5 rounded-full">
+                    {item.missedCallCount} missed
+                  </span>
+                )}
               </div>
-            ))
-          )}
+            );
+          })}
         </div>
       </div>
-    </>
+    );
+  }
+
+  // Conversation summary
+  if (toolName === "summarize_conversation") {
+    const item = result.items?.[0];
+    if (!item) return <p className="text-sm text-d-muted">No summary available.</p>;
+    return (
+      <div className="space-y-3 rounded-xl border border-d-border bg-d-surface/60 p-4">
+        <div className="flex items-center gap-2">
+          <span className={cx("inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold", badgeTone(item.sentiment))}>
+            {item.sentiment || "neutral"}
+          </span>
+          <span className={cx("inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold", badgeTone(item.urgency))}>
+            {item.urgency || "low"} urgency
+          </span>
+          <span className="text-xs text-d-muted">{item.messageCount || 0} messages</span>
+        </div>
+        <p className="text-sm text-d-text leading-relaxed">{item.summary}</p>
+        {item.keyDetails?.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-d-muted uppercase tracking-wide mb-1">Key Details</p>
+            <ul className="space-y-1">
+              {item.keyDetails.map((d, i) => (
+                <li key={i} className="text-sm text-d-muted flex gap-2">
+                  <span className="shrink-0">{"\u2022"}</span>
+                  <span>{safeText(d)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {item.nextSteps?.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-d-muted uppercase tracking-wide mb-1">Next Steps</p>
+            <ul className="space-y-1">
+              {item.nextSteps.map((s, i) => (
+                <li key={i} className="text-sm text-d-text flex gap-2">
+                  <span className="shrink-0">{"\u2192"}</span>
+                  <span>{safeText(s)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Draft reply
+  if (toolName === "draft_reply") {
+    const item = result.items?.[0];
+    if (!item) return null;
+    const variants = Array.isArray(item.variants) ? item.variants : [];
+    return (
+      <div className="space-y-3 rounded-xl border border-d-border bg-d-surface/60 p-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-semibold bg-d-primary/10 text-d-primary px-2.5 py-1 rounded-full border border-d-primary/30">
+            {(item.channel || "email").toUpperCase()}
+          </span>
+          <span className="text-xs text-d-muted">
+            To: {item.suggestedSendTo || "unknown"}
+          </span>
+        </div>
+        {variants.map((v) => (
+          <div key={v.id} className="rounded-lg border border-d-border bg-d-bg p-3 space-y-2">
+            <p className="text-xs font-semibold text-d-muted">Variant {v.id}</p>
+            {v.subject && (
+              <p className="text-sm font-semibold text-d-text">Subject: {v.subject}</p>
+            )}
+            <p className="text-sm text-d-text whitespace-pre-wrap">{v.body}</p>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Task list / created / updated
+  if (toolName === "get_tasks" || toolName === "create_task" || toolName === "update_task") {
+    const items = result.items || [];
+    if (items.length === 0) return <p className="text-sm text-d-muted">No tasks found.</p>;
+    return (
+      <div className="space-y-2">
+        {result.aiSummary && (
+          <p className="text-sm text-d-muted">{result.aiSummary}</p>
+        )}
+        {items.map((t, i) => (
+          <div key={t.id || i} className="flex items-center gap-3 rounded-xl border border-d-border bg-d-surface/60 p-3">
+            <div className={cx(
+              "w-2.5 h-2.5 rounded-full shrink-0",
+              t.status === "completed" ? "bg-emerald-500" :
+              t.status === "cancelled" ? "bg-rose-500" : "bg-amber-500"
+            )} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-d-text truncate">{t.title || t.taskType || "Task"}</p>
+              <p className="text-xs text-d-muted">
+                {t.status}
+                {t.dueAt ? ` ${"\u00b7"} due ${formatWhen(t.dueAt)}` : ""}
+                {t.leadId ? ` ${"\u00b7"} lead #${t.leadId}` : ""}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Send result
+  if (toolName === "send_message") {
+    const item = result.items?.[0];
+    if (!item) return null;
+    const ok = item.status === "sent";
+    return (
+      <div className={cx("rounded-xl border p-3", ok ? "border-emerald-500/40 bg-emerald-500/5" : "border-rose-500/40 bg-rose-500/5")}>
+        <p className={cx("text-sm font-semibold", ok ? "text-emerald-600" : "text-rose-500")}>
+          {ok ? <Check className="w-4 h-4 inline-block mr-1 -mt-0.5" /> : <X className="w-4 h-4 inline-block mr-1 -mt-0.5" />}
+          {result.aiSummary || (ok ? "Message sent" : "Failed to send")}
+        </p>
+      </div>
+    );
+  }
+
+  // Default: formatted JSON fallback
+  return (
+    <div className="rounded-xl border border-d-border bg-d-surface/60 p-3">
+      {result.aiSummary && <p className="text-sm text-d-muted mb-2">{result.aiSummary}</p>}
+      <pre className="text-xs text-d-muted whitespace-pre-wrap overflow-x-auto max-h-60">
+        {JSON.stringify(result, null, 2)}
+      </pre>
+    </div>
   );
 }
 
-function SavedDropdown({ saved, onApply, onRemove, onSave, question }) {
+// -----------------------------
+// Saved Prompts Dropdown
+// -----------------------------
+function SavedDropdown({ saved, onApply, onRemove, onSave, hasInput }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -287,16 +461,14 @@ function SavedDropdown({ saved, onApply, onRemove, onSave, question }) {
       <button
         onClick={() => setOpen(!open)}
         className={cx(
-          "rounded-xl border px-3 py-2 text-sm font-semibold transition-colors",
+          "rounded-xl border px-3 py-2 text-sm font-semibold transition-colors min-h-[44px] md:min-h-0",
           open
             ? "border-d-primary/60 bg-d-primary/10 text-d-primary"
             : "border-d-border bg-d-surface text-d-muted hover:border-d-primary/40 hover:text-d-primary"
         )}
         title="Saved prompts"
       >
-        <svg className="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-        </svg>
+        <Star className="w-4 h-4 inline-block mr-1 -mt-0.5" />
         Saved
       </button>
 
@@ -304,7 +476,7 @@ function SavedDropdown({ saved, onApply, onRemove, onSave, question }) {
         <div className="absolute right-0 top-full mt-2 w-72 rounded-xl border border-d-border bg-d-bg shadow-xl z-30">
           <div className="p-3 border-b border-d-border flex items-center justify-between">
             <span className="text-xs font-semibold text-d-muted">Saved prompts</span>
-            {question?.trim() && (
+            {hasInput && (
               <button
                 onClick={() => { onSave(); setOpen(false); }}
                 className="text-xs font-semibold text-d-primary hover:text-d-primary"
@@ -320,19 +492,15 @@ function SavedDropdown({ saved, onApply, onRemove, onSave, question }) {
               saved.map((s) => (
                 <div
                   key={s.id}
-                  className="flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 hover:bg-d-surface/60 group"
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-d-surface/60 group cursor-pointer"
+                  onClick={() => { onApply(s.q); setOpen(false); }}
                 >
+                  <span className="flex-1 text-sm text-d-text truncate">{s.label}</span>
                   <button
-                    onClick={() => { onApply(s.q); setOpen(false); }}
-                    className="min-w-0 text-left flex-1"
+                    onClick={(e) => { e.stopPropagation(); onRemove(s.id); }}
+                    className="opacity-0 group-hover:opacity-100 text-d-muted hover:text-rose-500 transition-opacity"
                   >
-                    <p className="text-sm font-medium text-d-text truncate">{s.label}</p>
-                  </button>
-                  <button
-                    onClick={() => onRemove(s.id)}
-                    className="shrink-0 text-xs text-d-muted hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    Remove
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ))
@@ -345,458 +513,25 @@ function SavedDropdown({ saved, onApply, onRemove, onSave, question }) {
 }
 
 // -----------------------------
-// Result renderers
-// -----------------------------
-
-function ResultEcho() {
-  return (
-    <div className="rounded-2xl border border-d-border bg-d-surface p-6 text-center">
-      <div className="mx-auto w-12 h-12 rounded-full bg-d-surface/80 flex items-center justify-center mb-4">
-        <svg className="w-6 h-6 text-d-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-        </svg>
-      </div>
-      <p className="text-base font-semibold text-d-text">Couldn&apos;t match a tool</p>
-      <p className="mt-2 text-sm text-d-muted max-w-sm mx-auto">
-        Try a more specific query like &quot;Show open tasks&quot;, &quot;Summarize Marc&apos;s conversation&quot;, or &quot;Leads no reply 24h&quot;.
-      </p>
-    </div>
-  );
-}
-
-function ResultLeadList({ result, leadRows, onSummarize, onDraft }) {
-  return (
-    <div className="rounded-2xl border border-d-border bg-d-surface p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <p className="text-lg font-semibold text-d-text">{result.title || "Lead list"}</p>
-          <p className="text-sm text-d-muted mt-0.5">
-            {leadRows.length} match{leadRows.length === 1 ? "" : "es"}
-          </p>
-        </div>
-      </div>
-
-      {leadRows.length === 0 ? (
-        <p className="text-sm text-d-muted">No matching leads.</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {leadRows.map((r) => (
-            <div key={r.key} className="rounded-xl border border-d-border bg-d-bg/50 p-4 flex gap-3">
-              <div className={cx("w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-bold text-white", avatarColor(r.name))}>
-                {avatarInitials(r.name)}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-semibold text-d-text truncate">{r.name}</p>
-                  <StatusPill label={r.status} tone="low" />
-                </div>
-                <p className="text-xs text-d-muted mt-0.5 truncate">
-                  {r.phone || ""}{r.phone && r.email ? " \u00b7 " : ""}{r.email || ""}
-                </p>
-                {r.lastContactAt && (
-                  <p className="text-xs text-d-muted mt-1">Last contact: {formatTimeAgo(r.lastContactAt)}</p>
-                )}
-                {r.missedCallCount > 0 && (
-                  <p className="text-xs text-rose-500 mt-0.5">{r.missedCallCount} missed call{r.missedCallCount > 1 ? "s" : ""}</p>
-                )}
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {r.leadId && (
-                    <Link
-                      href={`/platform/leads/${r.leadId}`}
-                      className="rounded-lg border border-d-border px-2.5 py-1 text-xs font-semibold text-d-text hover:border-d-primary/60 hover:text-d-primary hover:bg-d-primary/10"
-                    >
-                      Open
-                    </Link>
-                  )}
-                  {r.leadId && (
-                    <button
-                      onClick={() => onSummarize(r.leadId)}
-                      className="rounded-lg border border-d-primary/50 px-2.5 py-1 text-xs font-semibold text-d-primary hover:border-d-primary hover:bg-d-primary/10"
-                    >
-                      Summarize
-                    </button>
-                  )}
-                  {r.leadId && (
-                    <button
-                      onClick={() => onDraft(r.leadId)}
-                      className="rounded-lg border border-d-primary/50 px-2.5 py-1 text-xs font-semibold text-d-primary hover:border-d-primary hover:bg-d-primary/10"
-                    >
-                      Draft
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ResultSummary({ result, convoItem, onCreateTask, onDraft }) {
-  const sentimentColor = {
-    positive: "emerald", negative: "rose", mixed: "violet", neutral: "slate",
-  };
-  const urgencyColor = {
-    high: "rose", medium: "amber", low: "slate",
-  };
-
-  return (
-    <div className="rounded-2xl border border-d-border bg-d-surface p-5">
-      <p className="text-lg font-semibold text-d-text">{result.title || "Conversation summary"}</p>
-
-      {/* Metric pills */}
-      <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {convoItem?.sentiment && (
-          <MetricPill label="Sentiment" value={convoItem.sentiment} color={sentimentColor[convoItem.sentiment] || "slate"} />
-        )}
-        {convoItem?.urgency && (
-          <MetricPill label="Urgency" value={convoItem.urgency} color={urgencyColor[convoItem.urgency] || "slate"} />
-        )}
-        {convoItem?.messageCount != null && (
-          <MetricPill label="Messages" value={convoItem.messageCount} color="sky" />
-        )}
-        {convoItem?.daysBack != null && (
-          <MetricPill label="Days back" value={`${convoItem.daysBack}d`} color="slate" />
-        )}
-      </div>
-
-      {/* Summary text */}
-      {convoItem?.summary && (
-        <p className="mt-5 text-base text-d-text leading-relaxed">{safeText(convoItem.summary)}</p>
-      )}
-
-      {convoItem?.leadIntent && (
-        <p className="mt-3 text-sm text-d-muted">
-          <span className="font-semibold text-d-muted">Lead intent:</span> {safeText(convoItem.leadIntent)}
-        </p>
-      )}
-
-      {/* Action buttons */}
-      <div className="mt-5 flex flex-wrap gap-2">
-        {convoItem?.leadId && (
-          <Link
-            href={`/platform/leads/${convoItem.leadId}`}
-            className="rounded-xl border border-d-primary/60 px-4 py-2 text-sm font-semibold text-d-primary hover:border-d-primary hover:bg-d-primary/10"
-          >
-            Open lead
-          </Link>
-        )}
-        {convoItem?.leadId && (
-          <button
-            onClick={() => onCreateTask(convoItem.leadId, convoItem.recommendedFollowUpType || "call")}
-            className="rounded-xl border border-d-border px-4 py-2 text-sm font-semibold text-d-text hover:border-d-primary/60 hover:text-d-primary hover:bg-d-primary/10"
-          >
-            Create follow-up
-          </button>
-        )}
-        {convoItem?.leadId && (
-          <button
-            onClick={() => onDraft(convoItem.leadId)}
-            className="rounded-xl border border-d-primary/60 px-4 py-2 text-sm font-semibold text-d-primary hover:border-d-primary hover:bg-d-primary/10"
-          >
-            Draft reply
-          </button>
-        )}
-      </div>
-
-      {/* Collapsible details */}
-      <div className="mt-5 space-y-2">
-        <DetailSection title="Key details" items={convoItem?.keyDetails} />
-        <DetailSection title="Objections" items={convoItem?.objections} />
-        <DetailSection title="Next steps" items={convoItem?.nextSteps} />
-        <DetailSection title="Open questions" items={convoItem?.openQuestions} />
-      </div>
-    </div>
-  );
-}
-
-function ResultDraft({
-  result, draftItem, computedDraftChannel, computedSendTo,
-  draftSubject, setDraftSubject, draftBody, setDraftBody,
-  draftChannelOverride, setDraftChannelOverride,
-  draftVariantId, applyVariant,
-  sending, sendDraftNow, sendError, sendResult,
-}) {
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const variants = Array.isArray(draftItem?.variants) ? draftItem.variants : [];
-
-  return (
-    <div className="rounded-2xl border border-d-border bg-d-surface p-5">
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div>
-          <p className="text-lg font-semibold text-d-text">{result.title || "Draft reply"}</p>
-          <p className="text-sm text-d-muted mt-0.5">
-            Lead #{draftItem?.leadId}
-            {draftItem?.leadName ? ` \u00b7 ${draftItem.leadName}` : ""}
-          </p>
-        </div>
-        {draftItem?.leadId && (
-          <Link
-            href={`/platform/leads/${draftItem.leadId}`}
-            className="shrink-0 rounded-xl border border-d-primary/60 px-3 py-2 text-sm font-semibold text-d-primary hover:border-d-primary hover:bg-d-primary/10"
-          >
-            Open lead
-          </Link>
-        )}
-      </div>
-
-      {/* To + Channel */}
-      <div className="rounded-xl border border-d-border bg-d-surface/60 px-4 py-3 flex items-center justify-between gap-3">
-        <p className="text-sm text-d-muted">
-          To: <span className="font-semibold text-d-text">{computedSendTo || "\u2014"}</span>
-        </p>
-        <span className={cx(
-          "rounded-full border px-2.5 py-1 text-xs font-semibold",
-          computedDraftChannel === "sms"
-            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-500"
-            : "border-d-primary/40 bg-d-primary/10 text-d-primary"
-        )}>
-          {computedDraftChannel === "sms" ? "SMS" : "Email"}
-        </span>
-      </div>
-
-      {/* Subject (email only) */}
-      {computedDraftChannel === "email" && (
-        <div className="mt-3">
-          <SectionLabel>Subject</SectionLabel>
-          <input
-            value={draftSubject}
-            onChange={(e) => setDraftSubject(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-d-border bg-d-surface px-4 py-2.5 text-sm text-d-text placeholder:text-d-muted focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60"
-            placeholder="Email subject"
-          />
-        </div>
-      )}
-
-      {/* Body */}
-      <div className="mt-3">
-        <SectionLabel>Message</SectionLabel>
-        <textarea
-          value={draftBody}
-          onChange={(e) => setDraftBody(e.target.value)}
-          rows={computedDraftChannel === "sms" ? 4 : 6}
-          className="mt-1.5 w-full rounded-xl border border-d-border bg-d-surface px-4 py-2.5 text-sm text-d-text placeholder:text-d-muted focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60"
-          placeholder={computedDraftChannel === "sms" ? "SMS message..." : "Email body..."}
-        />
-        {computedDraftChannel === "sms" && (
-          <p className="mt-1 text-xs text-d-muted">{draftBody?.length || 0} characters</p>
-        )}
-      </div>
-
-      {/* Advanced toggle */}
-      <button
-        onClick={() => setShowAdvanced(!showAdvanced)}
-        className="mt-3 text-xs font-semibold text-d-muted hover:text-d-text"
-      >
-        {showAdvanced ? "Hide advanced" : "Advanced options"}
-      </button>
-
-      {showAdvanced && (
-        <div className="mt-2 flex flex-wrap items-center gap-3 rounded-xl border border-d-border bg-d-surface/60 p-3">
-          <div>
-            <label className="text-xs text-d-muted block mb-1">Channel</label>
-            <select
-              value={draftChannelOverride}
-              onChange={(e) => setDraftChannelOverride(e.target.value)}
-              className="rounded-lg border border-d-border bg-d-surface px-2.5 py-1.5 text-xs text-d-text"
-            >
-              <option value="auto">Auto</option>
-              <option value="email">Email</option>
-              <option value="sms">SMS</option>
-            </select>
-          </div>
-          {variants.length > 1 && (
-            <div>
-              <label className="text-xs text-d-muted block mb-1">Variant</label>
-              <select
-                value={draftVariantId}
-                onChange={(e) => applyVariant(e.target.value)}
-                className="rounded-lg border border-d-border bg-d-surface px-2.5 py-1.5 text-xs text-d-text"
-              >
-                {variants.map((v) => (
-                  <option key={v.id} value={v.id}>Variant {v.id}</option>
-                ))}
-              </select>
-            </div>
-          )}
-          <div className="flex-1" />
-          {draftItem?.matchReason && <StatusPill label={`matched: ${draftItem.matchReason}`} tone="low" />}
-          {draftItem?.tone && <StatusPill label={`tone: ${draftItem.tone}`} tone="low" />}
-          {draftItem?.language && <StatusPill label={`lang: ${draftItem.language}`} tone="low" />}
-        </div>
-      )}
-
-      {/* Send button */}
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <div className="text-xs text-d-muted">
-          {draftItem?.scheduledForLocal ? `Follow-up time: ${draftItem.scheduledForLocal}` : ""}
-        </div>
-        <button
-          onClick={sendDraftNow}
-          disabled={sending}
-          className="rounded-xl bg-d-primary px-5 py-2.5 text-sm font-semibold text-white shadow shadow-d-primary/40 transition hover:bg-d-primary/80 disabled:cursor-not-allowed disabled:bg-d-border disabled:text-d-muted"
-        >
-          {sending ? "Sending\u2026" : `Send ${computedDraftChannel === "sms" ? "SMS" : "Email"}`}
-        </button>
-      </div>
-
-      {/* Send feedback */}
-      {sendError && <p className="mt-3 text-sm text-rose-500">{sendError}</p>}
-
-      {sendResult?.success && (
-        <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
-          <p className="text-sm font-semibold text-emerald-500">Sent successfully</p>
-          <p className="mt-1 text-xs text-d-muted">
-            Provider: {sendResult.provider || "\u2014"} \u00b7 ID: {sendResult.message_id || "\u2014"}
-          </p>
-        </div>
-      )}
-
-      {sendResult && sendResult.success === false && (
-        <div className="mt-3 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4">
-          <p className="text-sm font-semibold text-rose-500">Send failed</p>
-          <p className="mt-1 text-xs text-d-muted">{safeText(sendResult.error || "Unknown error")}</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ResultTaskList({ result, tasks }) {
-  return (
-    <div className="rounded-2xl border border-d-border bg-d-surface p-5">
-      <div className="mb-4">
-        <p className="text-lg font-semibold text-d-text">{result.title || "Follow-up tasks"}</p>
-        <p className="text-sm text-d-muted mt-0.5">
-          {tasks.length} task{tasks.length === 1 ? "" : "s"}
-        </p>
-      </div>
-
-      {tasks.length === 0 ? (
-        <p className="text-sm text-d-muted">No matching tasks.</p>
-      ) : (
-        <div className="space-y-3">
-          {tasks.map((t) => (
-            <div key={t.id} className="rounded-xl border border-d-border bg-d-bg/50 p-4 flex items-start gap-4">
-              <div className={cx(
-                "w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold",
-                t.status === "completed"
-                  ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30"
-                  : "bg-d-primary/15 text-d-primary border border-d-primary/30"
-              )}>
-                {t.status === "completed" ? (
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-semibold text-d-text">
-                    {t.followupType.charAt(0).toUpperCase() + t.followupType.slice(1)} follow-up
-                  </p>
-                  <StatusPill label={t.status} tone={t.status === "completed" ? "positive" : "low"} />
-                </div>
-                <p className="text-sm text-d-muted mt-0.5">
-                  {t.scheduledFor ? formatWhen(t.scheduledFor) : "No date"}
-                  {t.createdAt ? ` \u00b7 Created ${formatTimeAgo(t.createdAt)}` : ""}
-                </p>
-                {t.note && <p className="mt-2 text-sm text-d-muted">{safeText(t.note)}</p>}
-              </div>
-              {t.leadId && (
-                <Link
-                  href={`/platform/leads/${t.leadId}`}
-                  className="shrink-0 rounded-lg border border-d-primary/50 px-2.5 py-1 text-xs font-semibold text-d-primary hover:border-d-primary hover:bg-d-primary/10"
-                >
-                  Lead #{t.leadId}
-                </Link>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ResultTaskConfirm({ result, isCreated }) {
-  return (
-    <div className="rounded-2xl border border-emerald-500/30 bg-d-surface p-5">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
-          <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-        <p className="text-lg font-semibold text-d-text">
-          {result.title || (isCreated ? "Follow-up created" : "Follow-up updated")}
-        </p>
-      </div>
-      <p className="text-sm text-d-text leading-relaxed">
-        {result.items?.[0]?.leadId ? (
-          <>
-            Lead{" "}
-            <Link
-              href={`/platform/leads/${result.items[0].leadId}`}
-              className="text-d-primary hover:text-d-primary/80 hover:underline underline-offset-4"
-            >
-              #{result.items[0].leadId}
-            </Link>
-            {" \u00b7 "}{truncateText(result.aiSummary || "", 380)}
-          </>
-        ) : (
-          truncateText(result.aiSummary || "", 520)
-        )}
-      </p>
-    </div>
-  );
-}
-
-function ResultOther({ result }) {
-  return (
-    <div className="rounded-2xl border border-d-border bg-d-surface p-5">
-      <p className="text-lg font-semibold text-d-text">{result.title || "Result"}</p>
-      <p className="mt-3 text-sm text-d-text whitespace-pre-line leading-relaxed">
-        {truncateText(result.aiSummary || "", 900)}
-      </p>
-    </div>
-  );
-}
-
-// -----------------------------
-// Main page
+// Main Page Component
 // -----------------------------
 export default function AskPage() {
-  const [question, setQuestion] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sending, setSending] = useState(false);
-
-  const [error, setError] = useState(null);
-  const [sendError, setSendError] = useState(null);
-  const [sendResult, setSendResult] = useState(null);
-
-  const [result, setResult] = useState(null);
-
-  const [historyOpen, setHistoryOpen] = useState(false);
-  const [history, setHistory] = useState([]);
-  const [saved, setSaved] = useState([]);
-
+  const router = useRouter();
+  const scrollRef = useRef(null);
   const inputRef = useRef(null);
+  const userScrolledUp = useRef(false);
 
-  // Draft UI state
-  const [draftVariantId, setDraftVariantId] = useState("v1");
-  const [draftSubject, setDraftSubject] = useState("");
-  const [draftBody, setDraftBody] = useState("");
-  const [draftChannelOverride, setDraftChannelOverride] = useState("auto");
+  const [saved, setSaved] = useState([]);
+  const [activeLeadId, setActiveLeadId] = useState(null);
+  const [activeLeadName, setActiveLeadName] = useState(null);
+  const [contextLead, setContextLead] = useState(null);
+  const [contextCollapsed, setContextCollapsed] = useState(false);
+  const [brief, setBrief] = useState(null);
+  const [briefDismissed, setBriefDismissed] = useState(false);
+  const [briefLoading, setBriefLoading] = useState(false);
 
+  // Load saved prompts
   useEffect(() => {
-    setHistory(loadJson(LS_HISTORY, []));
     setSaved(
       loadJson(LS_SAVED, [
         { id: "s1", label: "Summarize a lead", q: "Summarize Marc's conversation" },
@@ -809,114 +544,96 @@ export default function AskPage() {
   }, []);
 
   useEffect(() => {
-    saveJson(LS_HISTORY, history);
-  }, [history]);
-
-  useEffect(() => {
     saveJson(LS_SAVED, saved);
   }, [saved]);
 
-  const resultType = result?.resultType || null;
-  const intent = result?.intent || null;
-
-  const isEcho = result && intent === "echo";
-  const isLeadList = result && resultType === "lead_list" && intent !== "echo";
-  const isConversationSummary = result && resultType === "conversation_summary" && intent !== "echo";
-  const isTaskList = result && resultType === "task_list" && intent !== "echo";
-  const isTaskCreated = result && resultType === "task_created" && intent !== "echo";
-  const isTaskUpdated = result && resultType === "task_updated" && intent !== "echo";
-  const isDraftReply = result && resultType === "draft_reply" && intent !== "echo";
-
-  const isActionOther =
-    result &&
-    intent !== "echo" &&
-    resultType &&
-    !isLeadList &&
-    !isConversationSummary &&
-    !isTaskList &&
-    !isTaskCreated &&
-    !isTaskUpdated &&
-    !isDraftReply;
-
-  const convoItem = isConversationSummary ? result.items?.[0] : null;
-  const draftItem = isDraftReply ? result.items?.[0] : null;
-
-  // Reset Send UI status whenever we get a new result
+  // Fetch morning brief (once per day)
   useEffect(() => {
-    setSendResult(null);
-    setSendError(null);
-  }, [result?.intent, result?.resultType]);
+    const today = new Date().toISOString().slice(0, 10);
+    const dismissKey = `bluewise.brief.dismissed.${today}`;
+    if (typeof window !== "undefined" && window.localStorage.getItem(dismissKey)) {
+      setBriefDismissed(true);
+      return;
+    }
+    setBriefLoading(true);
+    fetch("/api/brain/brief")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data) setBrief(data); })
+      .catch(() => {})
+      .finally(() => setBriefLoading(false));
+  }, []);
 
-  // When a draft arrives, prime editable fields from the selected variant
-  useEffect(() => {
-    if (!isDraftReply || !draftItem) return;
-
-    const variants = Array.isArray(draftItem.variants) ? draftItem.variants : [];
-    const v1 = variants.find((x) => x?.id === "v1") || variants[0] || null;
-
-    setDraftVariantId(v1?.id || "v1");
-    setDraftSubject((v1?.subject || draftItem.subject || "").toString());
-    setDraftBody((v1?.body || draftItem.body || "").toString());
-    setDraftChannelOverride("auto");
-  }, [isDraftReply, draftItem?.leadId]);
-
-  // --- smart "ask" -----------------------------------
-  async function runAsk(q) {
-    const cleaned = (q || "").trim();
-    if (!cleaned) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: cleaned }),
-      });
-
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error || json.details || `Ask failed with ${res.status}`);
-
-      setResult(json);
-
-      const entry = {
-        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-        at: new Date().toISOString(),
-        q: cleaned,
-        intent: json.intent || null,
-        resultType: json.resultType || null,
-        title: json.title || null,
-        aiSummary: json.aiSummary || null,
-        snapshot:
-          json.resultType === "conversation_summary"
-            ? truncateText(json.items?.[0]?.summary || json.aiSummary || "", 220)
-            : truncateText(json.aiSummary || "", 220),
-        raw: json,
-      };
-
-      setHistory((prev) => [entry, ...prev].slice(0, 40));
-    } catch (err) {
-      console.error("[/platform/ask] error:", err);
-      setError(err.message || "Failed to answer question.");
-      setResult(null);
-    } finally {
-      setLoading(false);
+  function dismissBrief() {
+    setBriefDismissed(true);
+    const today = new Date().toISOString().slice(0, 10);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(`bluewise.brief.dismissed.${today}`, "1");
     }
   }
 
-  function handleSubmit(e) {
-    e.preventDefault();
-    runAsk(question);
+  // AI SDK useChat hook
+  const {
+    messages,
+    input,
+    setInput,
+    handleSubmit,
+    isLoading,
+    addToolResult,
+    error: chatError,
+  } = useChat({
+    api: "/api/chat",
+    body: {
+      context: {
+        activePage: "command-center",
+        activeLeadId,
+        activeLeadName,
+      },
+    },
+  });
+
+  // Handle ?q= URL param (quick-ask from overview)
+  useEffect(() => {
+    const q = router.query.q;
+    if (q && typeof q === "string" && q.trim()) {
+      setInput(q.trim());
+      setTimeout(() => {
+        const form = document.getElementById("brain-chat-form");
+        if (form) form.requestSubmit();
+      }, 150);
+      // Clear the query param so it doesn't re-trigger
+      router.replace("/platform/ask", undefined, { shallow: true });
+    }
+  }, [router.query.q]);
+
+  // Auto-scroll to bottom on new content
+  useEffect(() => {
+    if (!scrollRef.current || userScrolledUp.current) return;
+    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, isLoading]);
+
+  // Track user scroll position
+  const handleScroll = useCallback(() => {
+    if (!scrollRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    userScrolledUp.current = scrollHeight - scrollTop - clientHeight > 100;
+  }, []);
+
+  // Handle Enter/Shift+Enter
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      const form = document.getElementById("brain-chat-form");
+      if (form) form.requestSubmit();
+    }
   }
 
   function applyPrompt(q) {
-    setQuestion(q);
+    setInput(q);
     setTimeout(() => inputRef.current?.focus?.(), 50);
   }
 
   function saveCurrentPrompt() {
-    const q = (question || "").trim();
+    const q = (input || "").trim();
     if (!q) return;
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const label = q.length > 40 ? q.slice(0, 40) + "\u2026" : q;
@@ -927,317 +644,303 @@ export default function AskPage() {
     setSaved((prev) => prev.filter((s) => s.id !== id));
   }
 
-  function clearHistory() {
-    setHistory([]);
-    saveJson(LS_HISTORY, []);
-  }
-
-  // --- "power actions" built on your existing /api/ask tools -----------
-  function quickSummarizeLead(leadId) {
-    runAsk(`Summarize the conversation for lead #${leadId}`);
-  }
-
-  function quickCreateTask(leadId, followupType) {
-    runAsk(
-      `Create a ${followupType} follow-up for lead #${leadId} tomorrow at 9:00. Note: Auto-created from Command Center.`
-    );
-  }
-
-  function quickDraftReply(leadId) {
-    applyPrompt(`Draft a reply for lead #${leadId} to confirm next steps`);
-  }
-
-  // --- Draft actions ---------------------------------
-  function applyVariant(variantId) {
-    if (!draftItem) return;
-    const variants = Array.isArray(draftItem.variants) ? draftItem.variants : [];
-    const v = variants.find((x) => x?.id === variantId) || variants[0] || null;
-
-    setDraftVariantId(variantId);
-    setDraftSubject((v?.subject || draftItem.subject || "").toString());
-    setDraftBody((v?.body || draftItem.body || "").toString());
-  }
-
-  const computedDraftChannel = useMemo(() => {
-    if (!draftItem) return null;
-    const ch = (draftItem.channel || "").toLowerCase();
-    if (draftChannelOverride === "email" || draftChannelOverride === "sms") return draftChannelOverride;
-    if (ch === "email" || ch === "sms") return ch;
-    return "email";
-  }, [draftItem, draftChannelOverride]);
-
-  const computedSendTo = useMemo(() => {
-    if (!draftItem) return null;
-    const direct = draftItem.suggestedSendTo || draftItem.suggestedSuggestedSendTo || null;
-    if (direct) return direct;
-
-    const meta = draftItem.meta?.to || {};
-    if (computedDraftChannel === "sms") return meta.phone || null;
-    return meta.email || null;
-  }, [draftItem, computedDraftChannel]);
-
-  async function sendDraftNow() {
-    if (!draftItem?.leadId) {
-      setSendError("Draft is missing leadId. Please re-run the draft.");
-      return;
+  // Extract active lead from tool results + populate context panel
+  useEffect(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (msg.role !== "assistant" || !msg.toolInvocations) continue;
+      for (const inv of msg.toolInvocations) {
+        if (inv.state === "result" && inv.result?.items?.[0]) {
+          const item = inv.result.items[0];
+          const leadId = item.leadId;
+          const name = item.name || item.leadName;
+          if (leadId) {
+            setActiveLeadId(leadId);
+            if (name) setActiveLeadName(name);
+            setContextLead({
+              leadId,
+              name: name || null,
+              email: item.email || null,
+              phone: item.phone || null,
+              status: item.status || null,
+              source: item.source || null,
+              lastContactAt: item.lastContactAt || null,
+              missedCallCount: item.missedCallCount || 0,
+              messageCount: item.messageCount || null,
+              createdAt: item.createdAt || null,
+            });
+            return;
+          }
+        }
+      }
     }
-    if (!computedDraftChannel) {
-      setSendError("Draft channel is missing.");
-      return;
+  }, [messages]);
+
+  function handleContextAction(action, lead) {
+    if (action === "sms") {
+      setInput(`Draft an SMS reply for lead #${lead.leadId}`);
+    } else if (action === "email") {
+      setInput(`Draft an email reply for lead #${lead.leadId}`);
+    } else if (action === "task") {
+      setInput(`Create a follow-up task for lead #${lead.leadId} tomorrow at 9:00`);
     }
-    if (!computedSendTo) {
-      setSendError("No recipient address found (lead has no email/phone for this channel).");
-      return;
-    }
-
-    const body = (draftBody || "").trim();
-    const subject = (draftSubject || "").trim();
-
-    if (!body) {
-      setSendError("Message body is empty.");
-      return;
-    }
-    if (computedDraftChannel === "email" && !subject) {
-      setSendError("Email subject is required.");
-      return;
-    }
-
-    setSending(true);
-    setSendError(null);
-    setSendResult(null);
-
-    try {
-      const res = await fetch("/api/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lead_id: Number(draftItem.leadId),
-          channel: computedDraftChannel,
-          to: computedSendTo,
-          subject: computedDraftChannel === "email" ? subject : undefined,
-          body,
-          meta: {
-            source: "command_center",
-            draft_variant_id: draftVariantId,
-            intent: "draft_reply",
-          },
-        }),
-      });
-
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error || json.details || `Send failed with ${res.status}`);
-
-      setSendResult(json);
-    } catch (err) {
-      console.error("[/platform/ask] send error:", err);
-      setSendError(err.message || "Failed to send.");
-    } finally {
-      setSending(false);
-    }
+    setTimeout(() => inputRef.current?.focus?.(), 50);
   }
-
-  // Render helpers
-  const leadRows = useMemo(() => {
-    if (!isLeadList) return [];
-    return (result.items || []).map((item) => {
-      const leadId = item.leadId || item.lead_id || item.id || null;
-      const inboxLeadId = item.inboxLeadId || null;
-      const name = item.name || item.email || item.phone || `Lead ${leadId || ""}`;
-      const phone = item.phone || null;
-      const email = item.email || null;
-      const source = item.source || "unknown";
-      const status = item.status || "new";
-      const lastContactAt = item.lastContactAt || item.last_contact_at || null;
-      const lastMissedCallAt = item.lastMissedCallAt || item.last_missed_call_at || null;
-      const missedCallCount = item.missedCallCount || item.missed_call_count || 0;
-
-      return {
-        key: `${inboxLeadId || "x"}-${leadId || name}`,
-        leadId,
-        name,
-        phone,
-        email,
-        source,
-        status,
-        lastContactAt,
-        lastMissedCallAt,
-        missedCallCount,
-        raw: item,
-      };
-    });
-  }, [isLeadList, result]);
-
-  const tasks = useMemo(() => {
-    if (!isTaskList) return [];
-    return (result.items || []).map((t) => ({
-      id: t.id,
-      leadId: t.leadId || t.lead_id,
-      followupType: t.followupType || t.followup_type || "general",
-      scheduledFor: t.scheduledFor || t.scheduled_for || null,
-      status: t.status || "open",
-      note: t.note || null,
-      createdAt: t.createdAt || t.created_at || null,
-      raw: t,
-    }));
-  }, [isTaskList, result]);
 
   // Example chips
   const examples = [
-    { label: "Summarize a lead", q: "Summarize Marc's conversation" },
+    { label: "Show my leads", q: "Show my leads" },
     { label: "No reply 24h", q: "Which leads haven't replied in 24h?" },
-    { label: "Missed calls", q: "Show missed calls without follow-up." },
     { label: "Tasks due today", q: "Show tasks due today." },
-    { label: "Draft reply", q: "Draft an email reply to confirm the follow-up for lead #1" },
-    { label: "Open tasks", q: "Show open tasks" },
+    { label: "Draft a reply", q: "Draft a reply for my most recent lead" },
+    { label: "Pipeline overview", q: "Show me my pipeline" },
+    { label: "Missed calls", q: "Show missed calls without follow-up." },
   ];
 
   return (
     <DashboardLayout title="Command Center">
-      <div className="max-w-3xl mx-auto space-y-6">
-
+      <div className="flex h-[calc(100vh-64px)]">
+        {/* Main chat area */}
+        <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-4 px-4 md:px-6 pt-4 pb-3 shrink-0">
           <div>
-            <h1 className="text-lg font-semibold text-d-text">Command Center</h1>
-            <p className="text-sm text-d-muted mt-0.5">Ask anything about your leads and tasks</p>
+            <h1 className="text-lg font-semibold text-d-text flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-d-primary" />
+              Command Center
+            </h1>
+            <p className="text-sm text-d-muted mt-0.5">Your AI copilot for leads, tasks, and conversations</p>
           </div>
-          <div className="flex items-center gap-2">
-            <SavedDropdown
-              saved={saved}
-              onApply={applyPrompt}
-              onRemove={removeSaved}
-              onSave={saveCurrentPrompt}
-              question={question}
-            />
-            <button
-              onClick={() => setHistoryOpen(true)}
-              className="rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm font-semibold text-d-muted hover:border-d-primary/40 hover:text-d-primary"
-            >
-              <svg className="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              History
-            </button>
-          </div>
+          <SavedDropdown
+            saved={saved}
+            onApply={applyPrompt}
+            onRemove={removeSaved}
+            onSave={saveCurrentPrompt}
+            hasInput={!!input?.trim()}
+          />
         </div>
 
-        {/* Query composer */}
-        <div className="rounded-2xl border border-d-primary/40 bg-d-surface p-5 shadow-[0_0_24px_rgb(var(--d-primary-rgb)/0.15)]">
-          <form onSubmit={handleSubmit} className="flex gap-3">
-            <input
-              ref={inputRef}
-              type="text"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Ask a question..."
-              className="flex-1 rounded-xl border border-d-border bg-d-surface px-4 py-3 text-sm text-d-text placeholder:text-d-muted focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60"
-            />
+        {/* Messages area */}
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto px-4 md:px-6 pb-4 space-y-4"
+        >
+          {/* Morning brief */}
+          {messages.length === 0 && !briefDismissed && (brief || briefLoading) && (
+            <div className="rounded-2xl border border-d-border bg-d-surface/60 p-5 space-y-3">
+              {briefLoading ? (
+                <div className="animate-pulse space-y-3">
+                  <div className="h-5 w-48 rounded-lg bg-d-border/60" />
+                  <div className="h-4 w-full rounded-lg bg-d-border/40" />
+                  <div className="h-4 w-3/4 rounded-lg bg-d-border/40" />
+                </div>
+              ) : brief ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-d-text">
+                      <Sparkles className="w-4 h-4 inline-block mr-1.5 -mt-0.5 text-d-primary" />
+                      {brief.greeting || "Good morning"}{"."}
+                    </p>
+                    <button onClick={dismissBrief} className="text-d-muted hover:text-d-text">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {brief.bullets?.length > 0 && (
+                    <ul className="space-y-1.5">
+                      {brief.bullets.map((b, i) => (
+                        <li key={i} className="flex gap-2 text-sm text-d-muted">
+                          <span className="text-d-primary shrink-0">{"\u2192"}</span>
+                          <span>{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {brief.stats && (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {brief.stats.openLeadCount > 0 && (
+                        <span className="text-xs bg-d-primary/10 text-d-primary px-2 py-1 rounded-full border border-d-primary/20">
+                          {brief.stats.openLeadCount} open leads
+                        </span>
+                      )}
+                      {brief.stats.overdueTaskCount > 0 && (
+                        <span className="text-xs bg-rose-500/10 text-rose-500 px-2 py-1 rounded-full border border-rose-500/20">
+                          {brief.stats.overdueTaskCount} overdue tasks
+                        </span>
+                      )}
+                      {brief.stats.todayJobCount > 0 && (
+                        <span className="text-xs bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-full border border-emerald-500/20">
+                          {brief.stats.todayJobCount} jobs today
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : null}
+            </div>
+          )}
+
+          {/* Empty state */}
+          {messages.length === 0 && !isLoading && (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <div className="w-16 h-16 rounded-2xl bg-d-primary/10 flex items-center justify-center mb-4">
+                <Sparkles className="w-8 h-8 text-d-primary" />
+              </div>
+              <p className="text-lg font-semibold text-d-text">Ready to assist</p>
+              <p className="text-sm text-d-muted mt-1 max-w-md">
+                Ask a question about your leads, tasks, or conversations. Or pick a suggestion below.
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-2">
+                {examples.map((ex) => (
+                  <button
+                    key={ex.label}
+                    onClick={() => {
+                      setInput(ex.q);
+                      setTimeout(() => {
+                        const form = document.getElementById("brain-chat-form");
+                        if (form) form.requestSubmit();
+                      }, 50);
+                    }}
+                    className="rounded-full border border-d-border bg-d-surface px-3 py-1.5 text-sm text-d-muted hover:border-d-primary/40 hover:text-d-primary transition-colors min-h-[44px] md:min-h-0"
+                  >
+                    {ex.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Messages */}
+          {messages.map((msg) => (
+            <div key={msg.id}>
+              {/* User message */}
+              {msg.role === "user" && (
+                <div className="flex justify-end">
+                  <div className="max-w-[80%] md:max-w-lg rounded-2xl bg-d-primary px-4 py-3 text-sm text-white">
+                    {typeof msg.content === "string"
+                      ? msg.content
+                      : msg.parts?.filter((p) => p.type === "text").map((p) => p.text).join("") || ""}
+                  </div>
+                </div>
+              )}
+
+              {/* Assistant message */}
+              {msg.role === "assistant" && (
+                <div className="flex justify-start">
+                  <div className="max-w-[90%] md:max-w-2xl space-y-3">
+                    {/* Text content */}
+                    {msg.parts?.filter((p) => p.type === "text" && p.text?.trim()).map((part, pi) => (
+                      <div
+                        key={pi}
+                        className="rounded-2xl border border-d-border bg-d-surface/60 px-4 py-3 text-sm text-d-text leading-relaxed whitespace-pre-wrap"
+                      >
+                        {part.text}
+                      </div>
+                    ))}
+
+                    {/* Tool invocations */}
+                    {msg.toolInvocations?.map((inv) => (
+                      <div key={inv.toolCallId} className="space-y-2">
+                        {/* Partial call / thinking */}
+                        {inv.state === "partial-call" && (
+                          <div className="flex items-center gap-2 text-sm text-d-muted">
+                            <Loader className="w-4 h-4 animate-spin" />
+                            <span>Calling {inv.toolName}...</span>
+                          </div>
+                        )}
+
+                        {/* Call with needsApproval */}
+                        {inv.state === "call" && (
+                          <ApprovalCard
+                            toolInvocation={inv}
+                            addToolResult={addToolResult}
+                          />
+                        )}
+
+                        {/* Result */}
+                        {inv.state === "result" && (
+                          <ToolResultCard
+                            toolName={inv.toolName}
+                            result={inv.result}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Loading indicator */}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="flex items-center gap-2 rounded-2xl border border-d-border bg-d-surface/60 px-4 py-3">
+                <Loader className="w-4 h-4 text-d-primary animate-spin" />
+                <span className="text-sm text-d-muted">Thinking...</span>
+                <span className="w-1.5 h-5 bg-d-primary/60 animate-pulse rounded-sm" />
+              </div>
+            </div>
+          )}
+
+          {/* Error */}
+          {chatError && (
+            <div className="rounded-xl border border-rose-500/40 bg-rose-500/5 px-4 py-3">
+              <p className="text-sm text-rose-500">{chatError.message || "Something went wrong."}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Input bar */}
+        <div className="shrink-0 border-t border-d-border bg-d-bg px-4 md:px-6 py-3">
+          <form
+            id="brain-chat-form"
+            onSubmit={handleSubmit}
+            className="max-w-3xl mx-auto flex items-end gap-3"
+          >
+            <div className="flex-1 relative">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask BlueWise Brain..."
+                rows={1}
+                className="w-full resize-none rounded-xl border border-d-border bg-d-surface px-4 py-3 pr-10 text-sm text-d-text placeholder:text-d-muted focus:outline-none focus:ring-2 focus:ring-d-primary/50 focus:border-d-primary/60 max-h-32"
+                style={{ minHeight: "44px" }}
+              />
+              <div className="absolute right-3 bottom-3">
+                <Mic className="w-4 h-4 text-d-muted/40" />
+              </div>
+            </div>
             <button
               type="submit"
-              disabled={loading}
-              className="rounded-xl bg-d-primary px-5 py-3 text-sm font-semibold text-white shadow shadow-d-primary/40 transition hover:bg-d-primary/80 disabled:cursor-not-allowed disabled:bg-d-border disabled:text-d-muted"
+              disabled={isLoading || !input?.trim()}
+              className="min-h-[44px] rounded-xl bg-d-primary px-4 py-3 text-white shadow shadow-d-primary/40 transition hover:bg-d-primary/80 disabled:cursor-not-allowed disabled:bg-d-border disabled:text-d-muted disabled:shadow-none"
             >
-              {loading ? "Thinking\u2026" : "Ask"}
+              {isLoading ? (
+                <Loader className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
             </button>
           </form>
-
-          {error && <p className="mt-3 text-sm text-rose-500">{error}</p>}
-
-          {/* Example chips */}
-          <div className="mt-4 flex flex-wrap gap-2">
-            {examples.map((ex) => (
-              <button
-                key={ex.label}
-                onClick={() => applyPrompt(ex.q)}
-                className="rounded-full border border-d-border bg-d-surface px-3 py-1.5 text-sm text-d-muted hover:border-d-primary/40 hover:text-d-primary transition-colors"
-              >
-                {ex.label}
-              </button>
-            ))}
-          </div>
+          {activeLeadId && (
+            <p className="text-xs text-d-muted text-center mt-2">
+              Active lead: {activeLeadName || `#${activeLeadId}`}
+            </p>
+          )}
+        </div>
         </div>
 
-        {/* AI Summary (system note) */}
-        {result?.aiSummary && !isConversationSummary && !isDraftReply && (
-          <div className="rounded-xl border border-d-border bg-d-surface/60 px-4 py-3">
-            <p className="text-sm text-d-muted whitespace-pre-line">{truncateText(result.aiSummary, 520)}</p>
-          </div>
-        )}
-
-        {/* Results area */}
-        {loading && <LoadingSkeleton />}
-
-        {!result && !loading && (
-          <div className="rounded-2xl border border-d-border bg-d-surface p-8 text-center">
-            <div className="mx-auto w-14 h-14 rounded-full bg-d-surface/80 flex items-center justify-center mb-4">
-              <svg className="w-7 h-7 text-d-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-              </svg>
-            </div>
-            <p className="text-base font-semibold text-d-text">Ready to assist</p>
-            <p className="text-sm text-d-muted mt-1">Ask a question or pick an example above to get started.</p>
-          </div>
-        )}
-
-        {isEcho && <ResultEcho />}
-
-        {isDraftReply && (
-          <ResultDraft
-            result={result}
-            draftItem={draftItem}
-            computedDraftChannel={computedDraftChannel}
-            computedSendTo={computedSendTo}
-            draftSubject={draftSubject}
-            setDraftSubject={setDraftSubject}
-            draftBody={draftBody}
-            setDraftBody={setDraftBody}
-            draftChannelOverride={draftChannelOverride}
-            setDraftChannelOverride={setDraftChannelOverride}
-            draftVariantId={draftVariantId}
-            applyVariant={applyVariant}
-            sending={sending}
-            sendDraftNow={sendDraftNow}
-            sendError={sendError}
-            sendResult={sendResult}
-          />
-        )}
-
-        {isConversationSummary && (
-          <ResultSummary
-            result={result}
-            convoItem={convoItem}
-            onCreateTask={quickCreateTask}
-            onDraft={quickDraftReply}
-          />
-        )}
-
-        {isLeadList && (
-          <ResultLeadList
-            result={result}
-            leadRows={leadRows}
-            onSummarize={quickSummarizeLead}
-            onDraft={quickDraftReply}
-          />
-        )}
-
-        {isTaskList && <ResultTaskList result={result} tasks={tasks} />}
-
-        {(isTaskCreated || isTaskUpdated) && (
-          <ResultTaskConfirm result={result} isCreated={isTaskCreated} />
-        )}
-
-        {isActionOther && <ResultOther result={result} />}
+        {/* Context Panel (desktop only) */}
+        <ContextPanel
+          lead={contextLead}
+          collapsed={contextCollapsed}
+          onToggle={() => setContextCollapsed(!contextCollapsed)}
+          onAction={handleContextAction}
+        />
       </div>
-
-      {/* History slide-over */}
-      <HistoryPanel
-        open={historyOpen}
-        onClose={() => setHistoryOpen(false)}
-        history={history}
-        onReuse={(q) => { applyPrompt(q); setHistoryOpen(false); }}
-        onView={(raw) => { setResult(raw); setHistoryOpen(false); }}
-        onClear={clearHistory}
-      />
     </DashboardLayout>
   );
 }

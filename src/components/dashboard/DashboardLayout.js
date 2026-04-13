@@ -12,6 +12,7 @@ import SuspendedScreen from "./SuspendedScreen";
 import { BrandingProvider, useBranding } from "./BrandingContext";
 import { hexToRgb } from "../../../src/lib/dashboardUtils";
 import { supabase } from "../../../lib/supabaseClient";
+import BrainPalette from "./BrainPalette";
 
 export default function DashboardLayout({ children }) {
   const router = useRouter();
@@ -131,6 +132,7 @@ function DashboardShell({ sidebarOpen, closeSidebar, toggleSidebar, handleLogout
         />
         <main className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6">{children}</main>
       </div>
+      <BrainPalette />
     </div>
   );
 }
