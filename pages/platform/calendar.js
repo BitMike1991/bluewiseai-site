@@ -1,7 +1,7 @@
 // pages/platform/calendar.js — Google Calendar + Tasks with due dates
 import { useEffect, useState, useMemo } from "react";
 import DashboardLayout from "../../src/components/dashboard/DashboardLayout";
-import { ChevronLeft, ChevronRight, Clock, MapPin, ExternalLink, CalendarDays, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, MapPin, ExternalLink, CalendarDays, Loader2, AlertCircle } from "lucide-react";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -11,9 +11,9 @@ export default function CalendarPage() {
   const [events, setEvents] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [connected, setConnected] = useState(true);
-  const [view, setView] = useState("month"); // month | week
+  const [connected, setConnected] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
+  const [error, setError] = useState(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -21,25 +21,31 @@ export default function CalendarPage() {
   useEffect(() => {
     async function fetchAll() {
       setLoading(true);
+      setError(null);
       const start = new Date(year, month, 1);
       const end = new Date(year, month + 1, 0, 23, 59, 59);
 
-      // Fetch calendar events + tasks in parallel
-      const [calRes, taskRes] = await Promise.all([
-        fetch(`/api/calendar/events?start=${start.toISOString()}&end=${end.toISOString()}`).then(r => r.json()).catch(() => ({ events: [], connected: false })),
-        fetch("/api/tasks?pageSize=100").then(r => r.json()).catch(() => ({ data: [] })),
-      ]);
+      try {
+        // Fetch calendar events + tasks in parallel
+        const [calRes, taskRes] = await Promise.all([
+          fetch(`/api/calendar/events?start=${start.toISOString()}&end=${end.toISOString()}`).then(r => r.json()).catch(() => ({ events: [], connected: false })),
+          fetch("/api/tasks?pageSize=100").then(r => r.json()).catch(() => ({ data: [] })),
+        ]);
 
-      setEvents(calRes.events || []);
-      setConnected(calRes.connected !== false);
-      setTasks((taskRes.data || []).filter(t => t.dueAt));
-      setLoading(false);
+        setEvents(calRes.events || []);
+        setConnected(calRes.connected !== false);
+        setTasks((taskRes.data || []).filter(t => t.dueAt));
+      } catch (err) {
+        setError(err.message || "Failed to load calendar data");
+      } finally {
+        setLoading(false);
+      }
     }
     fetchAll();
   }, [year, month]);
 
-  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+  const prevMonth = () => { setCurrentDate(new Date(year, month - 1, 1)); setSelectedDay(null); };
+  const nextMonth = () => { setCurrentDate(new Date(year, month + 1, 1)); setSelectedDay(null); };
   const goToday = () => setCurrentDate(new Date());
 
   // Build calendar grid
@@ -96,13 +102,19 @@ export default function CalendarPage() {
               Today
             </button>
           </div>
-          {!connected && (
+          {connected === false && (
             <a href="/platform/settings" className="text-[11px] text-amber-400 hover:underline">
               Connect Google Calendar in Settings
             </a>
           )}
         </div>
       </header>
+
+      {error && (
+        <div className="mb-3 flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-2.5 text-xs text-red-400">
+          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> {error}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-20 text-d-muted">
@@ -125,7 +137,7 @@ export default function CalendarPage() {
             <div className="grid grid-cols-7 gap-px bg-d-border/30 rounded-xl overflow-hidden border border-d-border/60">
               {calendarDays.map((cell, i) => (
                 <div
-                  key={i}
+                  key={cell.date ? cell.date.toISOString() : 'pad-' + i}
                   onClick={() => cell.date && setSelectedDay(cell.date)}
                   className={`min-h-[90px] sm:min-h-[110px] p-1.5 transition cursor-pointer ${
                     !cell.day ? "bg-d-bg/50" :

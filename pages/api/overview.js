@@ -30,22 +30,23 @@ export default async function handler(req, res) {
 
     // ── ALL QUERIES IN PARALLEL ──
     const [
-      { data: newLeadsRows },
-      { data: openTasksRows },
-      { data: missedRows },
-      { data: voiceRows },
-      { data: aiRows },
-      { data: hotRows },
-      { data: allPayments },
-      { data: allExpenses },
-      { data: signedJobs },
-      { data: pipelineQuotes },
-      { data: pipelineJobs },
-      { data: allLeadRows },
-      { data: activeJobRows },
-      { data: recentLeadRows },
-      { data: eventRows },
-      { data: messageRows },
+      { data: newLeadsRows, error: newLeadsErr },
+      { data: openTasksRows, error: openTasksErr },
+      { data: missedRows, error: missedErr },
+      { data: voiceRows, error: voiceErr },
+      { data: aiRows, error: aiErr },
+      { data: hotRows, error: hotErr },
+      { data: allPayments, error: paymentsErr },
+      { data: allExpenses, error: expensesErr },
+      { data: signedJobs, error: signedJobsErr },
+      { data: pipelineQuotes, error: pipelineQuotesErr },
+      { data: pipelineJobs, error: pipelineJobsErr },
+      { count: totalLeadsCount, error: totalLeadsErr },
+      { count: wonLeadsCount, error: wonLeadsErr },
+      { data: activeJobRows, error: activeJobsErr },
+      { data: recentLeadRows, error: recentLeadsErr },
+      { data: eventRows, error: eventsErr },
+      { data: messageRows, error: messagesErr },
     ] = await Promise.all([
       // 1) New leads this week
       supabase.from("leads").select("id").eq("customer_id", customerId).gte("created_at", sinceIso),
@@ -69,8 +70,10 @@ export default async function handler(req, res) {
       supabase.from("quotes").select("total_ttc").eq("customer_id", customerId).not("status", "eq", "cancelled").gte("created_at", since30d),
       // 8) Pipeline jobs
       supabase.from("jobs").select("quote_amount").eq("customer_id", customerId).not("status", "in", "(cancelled,lost)").gte("created_at", since30d),
-      // 8b) All leads
-      supabase.from("leads").select("id, status").eq("customer_id", customerId),
+      // 8b) Total leads count (count-only, no row fetch)
+      supabase.from("leads").select("id", { count: "exact", head: true }).eq("customer_id", customerId),
+      // 8b2) Won leads count
+      supabase.from("leads").select("id", { count: "exact", head: true }).eq("customer_id", customerId).eq("status", "won"),
       // 8c) Active jobs
       supabase.from("jobs").select("id").eq("customer_id", customerId).in("status", ["in_progress", "signed", "scheduled"]),
       // 9) Recent leads
@@ -80,6 +83,24 @@ export default async function handler(req, res) {
       // 11) Messages
       supabase.from("messages").select("id, lead_id, direction, channel, message_type, subject, body, created_at").eq("customer_id", customerId).order("created_at", { ascending: false }).limit(50),
     ]);
+
+    // ── Error checking — collect warnings, continue with null-safe defaults ──
+    const queryWarnings = [];
+    const queryErrors = [
+      [newLeadsErr, "newLeads"], [openTasksErr, "openTasks"], [missedErr, "missed"],
+      [voiceErr, "voice"], [aiErr, "aiReplies"], [hotErr, "hotLeads"],
+      [paymentsErr, "payments"], [expensesErr, "expenses"], [signedJobsErr, "signedJobs"],
+      [pipelineQuotesErr, "pipelineQuotes"], [pipelineJobsErr, "pipelineJobs"],
+      [totalLeadsErr, "totalLeads"], [wonLeadsErr, "wonLeads"],
+      [activeJobsErr, "activeJobs"], [recentLeadsErr, "recentLeads"],
+      [eventsErr, "events"], [messagesErr, "messages"],
+    ];
+    for (const [err, name] of queryErrors) {
+      if (err) {
+        console.error(`[api/overview] Query error (${name}):`, err.message);
+        queryWarnings.push(name);
+      }
+    }
 
     const newLeadsThisWeek = newLeadsRows?.length || 0;
 
@@ -115,8 +136,8 @@ export default async function handler(req, res) {
       (pipelineQuotes || []).reduce((s, q) => s + Number(q.total_ttc || 0), 0) +
       (pipelineJobs || []).reduce((s, j) => s + Number(j.quote_amount || 0) * 1.14975, 0);
 
-    const totalLeads = allLeadRows?.length || 0;
-    const wonLeads = (allLeadRows || []).filter((l) => l.status === "won").length;
+    const totalLeads = totalLeadsCount ?? 0;
+    const wonLeads = wonLeadsCount ?? 0;
     const conversionRate = totalLeads > 0 ? Math.round((wonLeads / totalLeads) * 100) : 0;
     const activeJobs = activeJobRows?.length || 0;
 
@@ -205,7 +226,7 @@ export default async function handler(req, res) {
     const activity = combinedActivity.slice(0, 30);
 
     res.setHeader("Cache-Control", "private, max-age=30, stale-while-revalidate=60");
-    return res.status(200).json({
+    const responsePayload = {
       kpis: {
         // Financial — multiple time ranges
         totalRevenue,
@@ -237,7 +258,9 @@ export default async function handler(req, res) {
       },
       recentLeads,
       activity,
-    });
+      ...(queryWarnings.length > 0 ? { warnings: queryWarnings } : {}),
+    };
+    return res.status(200).json(responsePayload);
   } catch (err) {
     console.error("[api/overview] Error:", err);
     return res.status(500).json({ error: "Internal server error" });

@@ -16,7 +16,6 @@ export default async function handler(req, res) {
   }
 
   const { supabase, customerId, user, error: authError } = await getAuthContext(req, res);
-  console.log("[analytics] auth:", { userId: user?.id, customerId, authError: authError?.message });
   if (!user) return res.status(401).json({ error: "Not authenticated", debug: authError?.message });
   if (!customerId) return res.status(403).json({ error: "No customer mapping", debug: { userId: user.id } });
 
@@ -35,11 +34,61 @@ export default async function handler(req, res) {
 
     const twelveWeeksAgo = new Date(now.getTime() - 12 * 7 * 86400000).toISOString();
 
-    // ── 1. Leads (time-series + source breakdown) ──
+    // ── Parallel batch 1: all range-filtered queries (independent of each other) ──
     let leadsQ = supabase.from("leads").select("id, source, created_at").eq("customer_id", customerId);
     if (sinceIso) leadsQ = leadsQ.gte("created_at", sinceIso);
-    const { data: leadsRows, error: leadsErr } = await leadsQ;
+    if (range === "all") leadsQ = leadsQ.limit(10000);
+
+    let quotesQ = supabase.from("quotes").select("id").eq("customer_id", customerId).not("status", "eq", "draft");
+    if (sinceIso) quotesQ = quotesQ.gte("created_at", sinceIso);
+
+    let contractsQ = supabase.from("contracts").select("id")
+      .eq("customer_id", customerId).not("signed_at", "is", null);
+    if (sinceIso) contractsQ = contractsQ.gte("signed_at", sinceIso);
+
+    let paymentsQ = supabase.from("payments").select("id").eq("customer_id", customerId).eq("status", "succeeded");
+    if (sinceIso) paymentsQ = paymentsQ.gte("created_at", sinceIso);
+
+    // ── Parallel batch 2: all 12-week queries (independent of each other) ──
+    const revenueQ = supabase.from("payments").select("amount, created_at")
+      .eq("customer_id", customerId).eq("status", "succeeded")
+      .gte("created_at", twelveWeeksAgo);
+
+    const voiceQ = supabase.from("messages").select("created_at, message_type")
+      .eq("customer_id", customerId).eq("channel", "call")
+      .gte("created_at", twelveWeeksAgo);
+
+    const missedQ = supabase.from("leads").select("last_missed_call_at")
+      .eq("customer_id", customerId)
+      .not("last_missed_call_at", "is", null)
+      .gte("last_missed_call_at", twelveWeeksAgo);
+
+    const msgQ = supabase.from("messages").select("created_at, channel")
+      .eq("customer_id", customerId)
+      .gte("created_at", twelveWeeksAgo);
+
+    // Fire all 8 independent queries in parallel
+    const [
+      { data: leadsRows, error: leadsErr },
+      { data: quotesRows, error: quotesErr },
+      { data: contractRows, error: contractErr },
+      { data: paymentsRows, error: paymentsErr },
+      { data: revenueRows, error: revenueErr },
+      { data: voiceRows, error: voiceErr },
+      { data: missedRows, error: missedErr },
+      { data: msgRows, error: msgErr },
+    ] = await Promise.all([leadsQ, quotesQ, contractsQ, paymentsQ, revenueQ, voiceQ, missedQ, msgQ]);
+
     if (leadsErr) throw leadsErr;
+    if (quotesErr) throw quotesErr;
+    if (contractErr) throw contractErr;
+    if (paymentsErr) throw paymentsErr;
+    if (revenueErr) throw revenueErr;
+    if (voiceErr) throw voiceErr;
+    if (missedErr) throw missedErr;
+    if (msgErr) throw msgErr;
+
+    // ── 1. Leads (time-series + source breakdown) ──
 
     // 1a) Leads per day — zero-filled
     const dailyMap = {};
@@ -74,25 +123,8 @@ export default async function handler(req, res) {
 
     // ── 2. Conversion funnel ──
     const totalLeadsCount = (leadsRows || []).length;
-
-    let quotesQ = supabase.from("quotes").select("id").eq("customer_id", customerId).not("status", "eq", "draft");
-    if (sinceIso) quotesQ = quotesQ.gte("created_at", sinceIso);
-    const { data: quotesRows, error: quotesErr } = await quotesQ;
-    if (quotesErr) throw quotesErr;
     const quotesSentCount = quotesRows?.length || 0;
-
-    // contracts has customer_id
-    let contractsQ = supabase.from("contracts").select("id")
-      .eq("customer_id", customerId).not("signed_at", "is", null);
-    if (sinceIso) contractsQ = contractsQ.gte("signed_at", sinceIso);
-    const { data: contractRows, error: contractErr } = await contractsQ;
-    if (contractErr) throw contractErr;
     const contractsSigned = contractRows?.length || 0;
-
-    let paymentsQ = supabase.from("payments").select("id").eq("customer_id", customerId).eq("status", "succeeded");
-    if (sinceIso) paymentsQ = paymentsQ.gte("created_at", sinceIso);
-    const { data: paymentsRows, error: paymentsErr } = await paymentsQ;
-    if (paymentsErr) throw paymentsErr;
 
     const conversionFunnel = [
       { stage: "Leads", count: totalLeadsCount },
@@ -102,12 +134,6 @@ export default async function handler(req, res) {
     ];
 
     // ── 3. Revenue per week (12 weeks) ──
-    const { data: revenueRows, error: revenueErr } = await supabase
-      .from("payments").select("amount, created_at")
-      .eq("customer_id", customerId).eq("status", "succeeded")
-      .gte("created_at", twelveWeeksAgo);
-    if (revenueErr) throw revenueErr;
-
     const weekRevMap = {};
     for (const p of revenueRows || []) {
       const wk = getWeekKey(p.created_at);
@@ -123,19 +149,6 @@ export default async function handler(req, res) {
     }
 
     // ── 4. AI Performance (12 weeks) ──
-    const { data: voiceRows, error: voiceErr } = await supabase
-      .from("messages").select("created_at, message_type")
-      .eq("customer_id", customerId).eq("channel", "call")
-      .gte("created_at", twelveWeeksAgo);
-    if (voiceErr) throw voiceErr;
-
-    const { data: missedRows, error: missedErr } = await supabase
-      .from("leads").select("last_missed_call_at")
-      .eq("customer_id", customerId)
-      .not("last_missed_call_at", "is", null)
-      .gte("last_missed_call_at", twelveWeeksAgo);
-    if (missedErr) throw missedErr;
-
     const aiAnsweredMap = {};
     const aiMissedMap = {};
     for (const r of voiceRows || []) {
@@ -156,11 +169,6 @@ export default async function handler(req, res) {
     }));
 
     // ── 5. Message volume by channel (12 weeks) ──
-    const { data: msgRows, error: msgErr } = await supabase
-      .from("messages").select("created_at, channel")
-      .eq("customer_id", customerId)
-      .gte("created_at", twelveWeeksAgo);
-    if (msgErr) throw msgErr;
 
     const msgSmsMap = {};
     const msgCallMap = {};
@@ -260,7 +268,6 @@ export default async function handler(req, res) {
       messageVolume,
       adsInsights,
     };
-    console.log("[analytics] success:", { customerId, leads: leadsPerDay.length, sources: leadsBySource.length, funnel: conversionFunnel.length, hasAds: !!adsInsights });
     return res.status(200).json(result);
   } catch (err) {
     console.error("[api/analytics] Error:", err);

@@ -34,11 +34,10 @@ export default function AnalyticsPage() {
   const mutedHex = branding?.text_secondary || "#8888aa";
   const colors = getPieColors(primary);
 
-  // Load recharts after data arrives (no point loading charts with no data)
+  // Load recharts immediately on mount — don't wait for data (parallel loading)
   useEffect(() => {
-    if (!data) return;
-    import("recharts").then((mod) => setRc(mod)).catch((err) => console.error("recharts load failed:", err));
-  }, [data]);
+    import("recharts").then((mod) => setRc(mod)).catch(console.error);
+  }, []);
 
   // Fetch data when range changes
   useEffect(() => {

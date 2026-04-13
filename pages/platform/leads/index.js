@@ -1,5 +1,5 @@
 // pages/platform/leads/index.js
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '../../../src/components/dashboard/DashboardLayout';
 import { useBranding } from '../../../src/components/dashboard/BrandingContext';
@@ -100,8 +100,11 @@ export default function LeadsPage() {
   const pageSize = 20;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const abortRef = useRef(null);
 
   async function loadLeads(params = {}) {
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
     try {
       setLoading(true);
       setError(null);
@@ -136,7 +139,7 @@ export default function LeadsPage() {
         query.set('search', searchValue.trim());
       }
 
-      const res = await fetch(`/api/leads?${query.toString()}`);
+      const res = await fetch(`/api/leads?${query.toString()}`, { signal: abortRef.current.signal });
       if (!res.ok) {
         throw new Error(`Failed to load leads: ${res.status}`);
       }
@@ -145,6 +148,7 @@ export default function LeadsPage() {
       setTotal(json.total || 0);
       setPage(json.page || 1);
     } catch (err) {
+      if (err.name === 'AbortError') return;
       console.error(err);
       setError(err.message);
     } finally {
@@ -210,7 +214,7 @@ export default function LeadsPage() {
               placeholder="Search by name, email, or phone..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full border rounded-xl px-3 py-2 text-sm placeholder:text-d-text0 focus:outline-none focus:ring-2"
+              className="w-full border rounded-xl px-3 py-2 text-sm placeholder:text-d-text0 focus:outline-none focus:ring-2 bg-d-surface border-d-border text-d-text"
              
             />
           </div>
@@ -227,8 +231,8 @@ export default function LeadsPage() {
           <select
             value={statusFilter}
             onChange={handleStatusChange}
-            className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2"
-           
+            className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 bg-d-surface border-d-border text-d-text"
+
           >
             {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -236,8 +240,8 @@ export default function LeadsPage() {
           <select
             value={sourceFilter}
             onChange={(e) => { const v = e.target.value; setSourceFilter(v); loadLeads({ page: 1, sourceFilter: v }); }}
-            className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2"
-           
+            className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 bg-d-surface border-d-border text-d-text"
+
           >
             {SOURCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -245,8 +249,8 @@ export default function LeadsPage() {
           <select
             value={dateFilter}
             onChange={(e) => { const v = e.target.value; setDateFilter(v); loadLeads({ page: 1, dateFilter: v }); }}
-            className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2"
-           
+            className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 bg-d-surface border-d-border text-d-text"
+
           >
             {DATE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -254,8 +258,8 @@ export default function LeadsPage() {
           <select
             value={sortBy}
             onChange={(e) => { const v = e.target.value; setSortBy(v); loadLeads({ page: 1, sortBy: v }); }}
-            className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2"
-           
+            className="border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 bg-d-surface border-d-border text-d-text"
+
           >
             {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -374,8 +378,8 @@ export default function LeadsPage() {
 
                   {/* Summary */}
                   <div className="md:col-span-2 text-xs text-right md:text-right">
-                    {lead.summary ? (
-                      <span className="line-clamp-1">{lead.summary}</span>
+                    {(lead.summary || lead.notes) ? (
+                      <span className="line-clamp-1">{lead.summary || lead.notes}</span>
                     ) : (
                       <span style={{ color: styles.text.secondary, opacity: 0.5 }}>No summary</span>
                     )}

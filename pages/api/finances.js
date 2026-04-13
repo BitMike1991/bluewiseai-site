@@ -19,24 +19,40 @@ export default async function handler(req, res) {
       return d.toISOString();
     })();
 
-    // ALL payments (succeeded) — single query, filter in JS for time ranges
-    const { data: allPayments } = await supabase
-      .from("payments")
-      .select("amount, created_at, job_id, payment_type")
-      .eq("customer_id", customerId)
-      .eq("status", "succeeded");
+    // Group 1 (parallel): payments, expenses, signedJobs, financialLogs — all independent
+    const [
+      { data: allPayments },
+      { data: allExpenses },
+      { data: signedJobs },
+      { data: financialLogs },
+      { data: pendingRows },
+    ] = await Promise.all([
+      supabase.from("payments")
+        .select("amount, created_at, job_id, payment_type")
+        .eq("customer_id", customerId)
+        .eq("status", "succeeded"),
+      supabase.from("expenses")
+        .select("total, category, vendor, paid_at, receipt_url, description, job_id")
+        .eq("customer_id", customerId),
+      supabase.from("jobs")
+        .select("id, quote_amount")
+        .eq("customer_id", customerId)
+        .in("status", ["signed", "contract_signed", "scheduled", "in_progress", "completed"]),
+      supabase.from("financial_logs")
+        .select("log_type, amount, submitted_by, from_person, to_person, settled_at, settlement_id")
+        .eq("customer_id", customerId),
+      supabase.from("payments")
+        .select("id, amount, created_at, job_id, payment_type")
+        .eq("customer_id", customerId)
+        .eq("status", "pending")
+        .order("created_at", { ascending: true }),
+    ]);
 
     const totalRevenue = (allPayments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
     const monthPayments = (allPayments || []).filter(p => p.created_at >= monthStart);
     const revenueMtd = monthPayments.reduce((s, p) => s + Number(p.amount || 0), 0);
     const weekPayments = (allPayments || []).filter(p => p.created_at >= weekStart);
     const revenueWtd = weekPayments.reduce((s, p) => s + Number(p.amount || 0), 0);
-
-    // ALL expenses — single query, filter in JS
-    const { data: allExpenses } = await supabase
-      .from("expenses")
-      .select("total, category, vendor, paid_at, receipt_url, description, job_id")
-      .eq("customer_id", customerId);
 
     const totalExpenses = (allExpenses || []).reduce((s, e) => s + Number(e.total || 0), 0);
     const monthExpenses = (allExpenses || []).filter(e => e.paid_at >= monthStart);
@@ -95,11 +111,6 @@ export default async function handler(req, res) {
     }
 
     // Outstanding = all signed contracts TTC minus all payments = what clients owe
-    const { data: signedJobs } = await supabase
-      .from("jobs")
-      .select("id, quote_amount")
-      .eq("customer_id", customerId)
-      .in("status", ["signed", "contract_signed", "scheduled", "in_progress", "completed"]);
 
     const totalSignedTtc = (signedJobs || []).reduce((s, j) => s + Number(j.quote_amount || 0) * 1.14975, 0);
     const outstandingBalance = Math.max(0, totalSignedTtc - totalRevenue);
@@ -108,12 +119,6 @@ export default async function handler(req, res) {
     const collectionRate = totalSignedTtc > 0 ? Math.round((totalRevenue / totalSignedTtc) * 100) : 0;
 
     // Pending payments
-    const { data: pendingRows } = await supabase
-      .from("payments")
-      .select("id, amount, created_at, job_id, payment_type")
-      .eq("customer_id", customerId)
-      .eq("status", "pending")
-      .order("created_at", { ascending: true });
 
     let pendingPayments = [];
     if (pendingRows && pendingRows.length > 0) {
@@ -138,10 +143,6 @@ export default async function handler(req, res) {
     }
 
     // By person breakdown (from financial_logs)
-    const { data: financialLogs } = await supabase
-      .from("financial_logs")
-      .select("log_type, amount, submitted_by, from_person, to_person, settled_at, settlement_id")
-      .eq("customer_id", customerId);
 
     const byPerson = {};
     const ensurePerson = (name) => {

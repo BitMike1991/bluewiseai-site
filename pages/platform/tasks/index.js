@@ -35,6 +35,7 @@ export default function TasksPage() {
 
   useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
+  // Fix 6: use returned task instead of refetch
   const createTask = async (data) => {
     setError(null);
     try {
@@ -45,7 +46,8 @@ export default function TasksPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to create");
-      await fetchTasks();
+      const newTask = { ...json.task, leadName: null, leadEmail: null, leadPhone: null, leadSource: null, isOverdue: false };
+      setTasks(prev => [newTask, ...prev]);
       setShowCreate(null);
     } catch (err) {
       setError(err.message);
@@ -96,6 +98,11 @@ export default function TasksPage() {
     setDragTask(null);
     setDragOverBoard(null);
   };
+  // Fix 2: clear drag state on dragEnd
+  const handleDragEnd = () => {
+    setDragTask(null);
+    setDragOverBoard(null);
+  };
 
   const groupedTasks = BOARDS.reduce((acc, b) => {
     acc[b.id] = tasks.filter((t) => (t.board || "backlog") === b.id);
@@ -133,7 +140,8 @@ export default function TasksPage() {
           <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading tasks...
         </div>
       ) : (
-        <div className="flex gap-3 overflow-x-auto pb-4" style={{ minHeight: "calc(100vh - 200px)" }}>
+        // Fix 7: replace fixed minHeight with flex-1
+        <div className="flex gap-3 overflow-x-auto pb-4 flex-1">
           {BOARDS.map((board) => (
             <KanbanColumn
               key={board.id}
@@ -144,6 +152,7 @@ export default function TasksPage() {
               onDragLeave={handleDragLeave}
               onDrop={() => handleDrop(board.id)}
               onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
               onUpdate={updateTask}
               onDelete={deleteTask}
               showCreate={showCreate === board.id}
@@ -161,8 +170,16 @@ export default function TasksPage() {
   );
 }
 
-function KanbanColumn({ board, tasks, isDragOver, onDragOver, onDragLeave, onDrop, onDragStart, onUpdate, onDelete, showCreate, onShowCreate, onCancelCreate, onCreate, editingTask, onEdit, onCancelEdit }) {
+function KanbanColumn({ board, tasks, isDragOver, onDragOver, onDragLeave, onDrop, onDragStart, onDragEnd, onUpdate, onDelete, showCreate, onShowCreate, onCancelCreate, onCreate, editingTask, onEdit, onCancelEdit }) {
   const Icon = board.icon;
+
+  // Fix 3: board-specific empty state text
+  const emptyText = board.id === "fire"
+    ? "What kills the business if you skip it?"
+    : board.id === "done"
+    ? "No completed tasks yet"
+    : "Drop tasks here";
+
   return (
     <div
       className={`flex-shrink-0 w-64 sm:w-72 flex flex-col rounded-xl border transition-colors ${isDragOver ? "border-d-primary bg-d-primary/5" : "border-d-border/60 bg-d-bg"}`}
@@ -186,8 +203,8 @@ function KanbanColumn({ board, tasks, isDragOver, onDragOver, onDragLeave, onDro
         </button>
       </div>
 
-      {/* Cards */}
-      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-2" style={{ maxHeight: "calc(100vh - 280px)" }}>
+      {/* Cards — Fix 7: replace fixed maxHeight with flex-1 overflow-y-auto */}
+      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-2">
         {showCreate && (
           <CreateTaskCard
             onCancel={onCancelCreate}
@@ -210,6 +227,7 @@ function KanbanColumn({ board, tasks, isDragOver, onDragOver, onDragLeave, onDro
               key={task.id}
               task={task}
               onDragStart={() => onDragStart(task)}
+              onDragEnd={onDragEnd}
               onEdit={() => onEdit(task.id)}
               onComplete={() => onUpdate(task.id, { board: "done" })}
             />
@@ -218,7 +236,7 @@ function KanbanColumn({ board, tasks, isDragOver, onDragOver, onDragLeave, onDro
 
         {tasks.length === 0 && !showCreate && (
           <div className="py-8 text-center text-[11px] text-d-muted/50">
-            {board.id === "fire" ? "What kills the business if you skip it?" : "Drop tasks here"}
+            {emptyText}
           </div>
         )}
       </div>
@@ -226,7 +244,7 @@ function KanbanColumn({ board, tasks, isDragOver, onDragOver, onDragLeave, onDro
   );
 }
 
-function TaskCard({ task, onDragStart, onEdit, onComplete }) {
+function TaskCard({ task, onDragStart, onDragEnd, onEdit, onComplete }) {
   const priorityColors = {
     urgent: "border-l-red-500",
     high: "border-l-amber-500",
@@ -241,6 +259,7 @@ function TaskCard({ task, onDragStart, onEdit, onComplete }) {
     <div
       draggable
       onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
       onClick={onEdit}
       className={`group cursor-pointer rounded-lg border border-d-border/60 bg-d-surface p-3 transition hover:border-d-primary/40 hover:shadow-md border-l-2 ${priorityColors[task.priority] || priorityColors.normal}`}
     >
@@ -289,11 +308,13 @@ function CreateTaskCard({ onCancel, onCreate, boardId }) {
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState("normal");
   const [description, setDescription] = useState("");
+  // Fix 1: due_at state
+  const [dueAt, setDueAt] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onCreate({ title: title.trim(), priority, description: description.trim() || null });
+    onCreate({ title: title.trim(), priority, description: description.trim() || null, due_at: dueAt || null });
   };
 
   return (
@@ -311,6 +332,13 @@ function CreateTaskCard({ onCancel, onCreate, boardId }) {
         placeholder="Description (optional)"
         rows={2}
         className="w-full bg-transparent text-[11px] text-d-muted placeholder:text-d-muted/30 outline-none resize-none"
+      />
+      {/* Fix 1: due_at date picker */}
+      <input
+        type="datetime-local"
+        value={dueAt}
+        onChange={(e) => setDueAt(e.target.value)}
+        className="w-full bg-d-bg border border-d-border text-d-text rounded text-[10px] px-1.5 py-1 outline-none"
       />
       <div className="flex items-center gap-2">
         <select
@@ -334,11 +362,13 @@ function EditTaskCard({ task, onSave, onCancel, onDelete }) {
   const [title, setTitle] = useState(task.title || "");
   const [description, setDescription] = useState(task.description || "");
   const [priority, setPriority] = useState(task.priority || "normal");
+  // Fix 1: init due_at from task
+  const [dueAt, setDueAt] = useState(task.dueAt ? task.dueAt.slice(0, 16) : "");
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onSave({ title: title.trim(), description: description.trim() || null, priority });
+    onSave({ title: title.trim(), description: description.trim() || null, priority, due_at: dueAt || null });
   };
 
   return (
@@ -356,6 +386,17 @@ function EditTaskCard({ task, onSave, onCancel, onDelete }) {
         rows={2}
         className="w-full bg-transparent text-[11px] text-d-muted placeholder:text-d-muted/30 outline-none resize-none"
       />
+      {/* Fix 1: due_at date picker */}
+      <input
+        type="datetime-local"
+        value={dueAt}
+        onChange={(e) => setDueAt(e.target.value)}
+        className="w-full bg-d-bg border border-d-border text-d-text rounded text-[10px] px-1.5 py-1 outline-none"
+      />
+      {/* Fix 4: show linked lead as read-only */}
+      {task.leadName && (
+        <div className="text-[10px] text-d-muted">Linked: {task.leadName}</div>
+      )}
       <div className="flex items-center gap-2">
         <select
           value={priority}

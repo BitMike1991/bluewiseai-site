@@ -162,6 +162,7 @@ export default async function handler(req, res) {
             last_contact_at: lastContactAt,
             last_contact_ms: lastContactMs,
             missed_call_count: missed,
+            summary: row.summary || null,
           });
         } else {
           const totalMissed = (existing.missed_call_count || 0) + missed;
@@ -172,6 +173,7 @@ export default async function handler(req, res) {
                   last_contact_at: lastContactAt,
                   last_contact_ms: lastContactMs,
                   missed_call_count: totalMissed,
+                  summary: row.summary || existing.summary || null,
                 }
               : {
                   ...existing,
@@ -255,6 +257,9 @@ export default async function handler(req, res) {
         first_seen_at: leadFirstSeenAt,
         last_message_at: leadLastMessageAt,
         next_followup_at: lead.next_followup_at,
+
+        notes: lead.notes || null,
+        summary: inboxInfo?.summary || lead.notes || null,
       };
     });
 

@@ -44,6 +44,13 @@ export default function DashboardLayout({ children }) {
   useEffect(() => {
     async function checkSubscription() {
       try {
+        // Skip API call if middleware already validated via cookie
+        const subCookie = document.cookie.split(';').find(c => c.trim().startsWith('__sub_status='));
+        if (subCookie) {
+          // Cookie exists — middleware already validated subscription
+          return;
+        }
+        // No cookie — fetch subscription status
         const res = await fetch("/api/subscription/status");
         if (res.ok) {
           const data = await res.json();

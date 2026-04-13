@@ -49,10 +49,13 @@ export default async function handler(req, res) {
     updates.status = "completed";
     updates.completed_at = new Date().toISOString();
   }
-  // Moving out of done = mark pending
+  // Fix 5: Only reset completed status when actually moving OUT of done
   if (updates.board && updates.board !== "done") {
-    updates.status = "pending";
-    updates.completed_at = null;
+    const { data: current } = await supabase.from("tasks").select("board").eq("id", taskId).eq("customer_id", customerId).single();
+    if (current && current.board === "done") {
+      updates.status = "pending";
+      updates.completed_at = null;
+    }
   }
 
   // Enforce max 3 in fire column
