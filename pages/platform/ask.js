@@ -581,26 +581,35 @@ export default function AskPage() {
   // AI SDK 6 useChat hook
   const {
     messages,
-    sendMessage,
+    sendMessage: rawSendMessage,
     status,
     addToolResult,
     addToolApprovalResponse,
     error: chatError,
   } = useChat({
     api: "/api/chat",
-    body: {
-      context: {
-        activePage: "command-center",
-        activeLeadId,
-        activeLeadName,
-      },
-    },
+    experimental_throttle: 50,
     onError: (err) => {
       console.error("[Brain] Chat error:", err.message);
     },
   });
 
   const isLoading = status === "streaming" || status === "submitted";
+
+  // Wrap sendMessage to pass fresh context body each time (avoids stale body)
+  const sendMessage = useCallback((msg, opts) => {
+    return rawSendMessage(msg, {
+      ...opts,
+      body: {
+        ...(opts?.body || {}),
+        context: {
+          activePage: "command-center",
+          activeLeadId,
+          activeLeadName,
+        },
+      },
+    });
+  }, [rawSendMessage, activeLeadId, activeLeadName]);
 
   // Handle ?q= URL param (quick-ask from overview)
   useEffect(() => {
