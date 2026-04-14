@@ -908,9 +908,9 @@ export default function AskPage() {
   function handleContextAction(action, data) {
     if (action === "send_variant") {
       const { channel, to, body, subject } = data;
-      const subjectPart = subject ? ` with subject "${subject}"` : "";
+      const subjectPart = subject ? `, subject: "${subject}"` : "";
       sendMessage({
-        text: `Send this ${channel} to ${to}${subjectPart}: "${body}"`,
+        text: `[APPROVED] Execute send_message NOW. Do NOT re-draft, do NOT summarize, do NOT call any other tool. Just send it immediately.\nchannel: ${channel}\nto: ${to}${subjectPart}\nbody: "${body}"`,
       });
       return;
     }
