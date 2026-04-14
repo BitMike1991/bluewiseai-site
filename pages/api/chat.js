@@ -6,30 +6,9 @@ import { openai } from "@ai-sdk/openai";
 import { getAuthContext } from "../../lib/supabaseServer";
 import { createBrainTools } from "../../lib/brain/tools";
 
-// Disable Next.js body parser — AI SDK needs raw stream
 export const config = {
-  api: {
-    bodyParser: false,
-    responseLimit: false,
-  },
   maxDuration: 60,
 };
-
-// Parse JSON body manually
-async function parseBody(req) {
-  return new Promise((resolve, reject) => {
-    let body = "";
-    req.on("data", (chunk) => (body += chunk));
-    req.on("end", () => {
-      try {
-        resolve(JSON.parse(body));
-      } catch {
-        reject(new Error("Invalid JSON"));
-      }
-    });
-    req.on("error", reject);
-  });
-}
 
 function buildSystemPrompt(customerId, context) {
   const now = new Date().toISOString();
@@ -67,13 +46,11 @@ TONE: Professional but warm. Like a sharp assistant who knows the business. Use 
 }
 
 export default async function handler(req, res) {
-  // POST only
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Auth
   const { supabase, customerId, user } = await getAuthContext(req, res);
 
   if (!user) {
@@ -83,32 +60,17 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: "No customer mapping for this user" });
   }
 
-  // Rate limit: 20 req/min per user
   const { checkRateLimit } = await import("../../lib/security");
   if (checkRateLimit(req, res, `chat:${user.id}`, 20)) return;
 
-  // CSRF protection
   const { checkCsrf } = await import("../../lib/csrf");
   if (checkCsrf(req, res)) return;
 
-  // Parse body
-  let body;
-  try {
-    body = await parseBody(req);
-  } catch {
-    return res.status(400).json({ error: "Invalid request body" });
-  }
-
+  const body = req.body || {};
   const { messages, context } = body;
 
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: "messages array is required" });
-  }
-
-  // Input length cap — check last user message
-  const lastMsg = messages[messages.length - 1];
-  if (lastMsg?.content && typeof lastMsg.content === "string" && lastMsg.content.length > 5000) {
-    return res.status(400).json({ error: "Message exceeds maximum length of 5000 characters" });
   }
 
   if (!process.env.OPENAI_API_KEY) {
@@ -136,9 +98,26 @@ export default async function handler(req, res) {
       maxSteps: 10,
     });
 
-    result.pipeUIMessageStreamToResponse(res, {
-      originalMessages: messages,
-    });
+    // Convert to Web Response and pipe to Node.js res
+    const webResponse = result.toUIMessageStreamResponse();
+
+    // Set headers from Web Response
+    res.writeHead(webResponse.status, Object.fromEntries(webResponse.headers.entries()));
+
+    // Pipe the ReadableStream to res
+    const reader = webResponse.body.getReader();
+    const pump = async () => {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          res.end();
+          return;
+        }
+        res.write(value);
+      }
+    };
+
+    await pump();
   } catch (e) {
     console.error("[/api/chat] Stream error:", e.message);
     if (!res.headersSent) {
