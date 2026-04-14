@@ -12,6 +12,7 @@ import ToastContainer from "@/components/ui/Toast";
 import CookieConsent, { hasConsented } from "@/components/CookieConsent";
 
 const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID;
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 const inter = Inter({
   subsets: ["latin"],
@@ -47,10 +48,12 @@ export default function App({ Component, pageProps }) {
   const locale = getLocale(pathname);
   const isMarketing = FB_PIXEL_ID && !pathname.startsWith("/platform");
   const [pixelAllowed, setPixelAllowed] = useState(false);
+  const [analyticsAllowed, setAnalyticsAllowed] = useState(false);
 
   useEffect(() => {
     setPixelAllowed(hasConsented('marketing'));
-    const handler = () => setPixelAllowed(hasConsented('marketing'));
+    setAnalyticsAllowed(hasConsented('analytics'));
+    const handler = () => { setPixelAllowed(hasConsented('marketing')); setAnalyticsAllowed(hasConsented('analytics')); };
     window.addEventListener('cookie-consent-changed', handler);
     return () => window.removeEventListener('cookie-consent-changed', handler);
   }, []);
@@ -97,6 +100,14 @@ export default function App({ Component, pageProps }) {
               alt=""
             />
           </noscript>
+        </>
+      )}
+      {GA_ID && analyticsAllowed && (
+        <>
+          <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
+          <Script id="gtag-init" strategy="afterInteractive"
+            dangerouslySetInnerHTML={{ __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}',{send_page_view:true});` }}
+          />
         </>
       )}
       <ToastProvider>
