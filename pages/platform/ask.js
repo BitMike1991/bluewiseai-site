@@ -216,7 +216,7 @@ function ApprovalCard({ toolInvocation }) {
 // -----------------------------
 // Interactive Lead Card (expandable + quick actions)
 // -----------------------------
-function LeadCard({ item, onAction, onNavigate }) {
+function LeadCard({ item, onAction, onNavigate, onExpand }) {
   const [expanded, setExpanded] = useState(false);
   const name = item.name || item.email || item.phone || "Lead";
   const statusColors = {
@@ -237,7 +237,11 @@ function LeadCard({ item, onAction, onNavigate }) {
       {/* Main row — always visible */}
       <button
         type="button"
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => {
+          const willExpand = !expanded;
+          setExpanded(willExpand);
+          if (willExpand && onExpand) onExpand(item);
+        }}
         className="w-full flex items-center gap-3 p-3 text-left min-h-[56px]"
       >
         <div className={cx("w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0", avatarColor(name))}>
@@ -296,8 +300,16 @@ function LeadCard({ item, onAction, onNavigate }) {
             )}
           </div>
 
-          {/* Quick actions */}
+          {/* Quick actions — row 1: context */}
           <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => onAction?.("summarize", item)}
+              className="flex items-center gap-1.5 rounded-lg border border-violet-500/30 bg-violet-500/5 px-3 py-1.5 text-xs font-semibold text-violet-500 hover:bg-violet-500/10 transition-colors min-h-[36px]"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Summary
+            </button>
             {item.phone && (
               <button
                 type="button"
@@ -383,6 +395,7 @@ function ToolResultCard({ toolName, result, onLeadAction, onLeadNavigate }) {
               item={item}
               onAction={onLeadAction}
               onNavigate={onLeadNavigate}
+              onExpand={(lead) => onLeadAction?.("summarize", lead)}
             />
           ))}
         </div>
@@ -920,10 +933,12 @@ export default function AskPage() {
       inputRef.current?.focus?.();
       return;
     }
+    const leadName = data.name || `#${data.leadId}`;
     const prompts = {
-      sms: `Draft an SMS reply for lead #${data.leadId}`,
-      email: `Draft an email reply for lead #${data.leadId}`,
-      task: `Create a follow-up task for lead #${data.leadId} tomorrow at 9:00`,
+      sms: `Summarize the conversation with lead #${data.leadId} (${leadName}), then draft a personalized SMS follow-up based on the summary.`,
+      email: `Summarize the conversation with lead #${data.leadId} (${leadName}), then draft a personalized email follow-up based on the summary.`,
+      task: `Create a follow-up task for lead #${data.leadId} (${leadName}) tomorrow at 9:00`,
+      summarize: `Summarize the conversation with lead #${data.leadId} (${leadName}).`,
     };
     const text = prompts[action];
     if (text) sendMessage({ text });
