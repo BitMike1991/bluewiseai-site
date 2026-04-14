@@ -436,28 +436,63 @@ function ToolResultCard({ toolName, result, onLeadAction, onLeadNavigate }) {
     );
   }
 
-  // Draft reply
+  // Draft reply — with Send / Edit buttons per variant
   if (toolName === "draft_reply") {
     const item = result.items?.[0];
     if (!item) return null;
     const variants = Array.isArray(item.variants) ? item.variants : [];
+    const channel = (item.channel || "sms").toLowerCase();
+    const to = item.suggestedSendTo || "";
+
     return (
       <div className="space-y-3 rounded-xl border border-d-border bg-d-surface/60 p-4">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-semibold bg-d-primary/10 text-d-primary px-2.5 py-1 rounded-full border border-d-primary/30">
-            {(item.channel || "email").toUpperCase()}
+            {channel.toUpperCase()}
           </span>
           <span className="text-xs text-d-muted">
-            To: {item.suggestedSendTo || "unknown"}
+            To: {to || "unknown"}
           </span>
         </div>
         {variants.map((v) => (
-          <div key={v.id} className="rounded-lg border border-d-border bg-d-bg p-3 space-y-2">
-            <p className="text-xs font-semibold text-d-muted">Variant {v.id}</p>
+          <div key={v.id} className="rounded-lg border border-d-border bg-d-bg p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-d-muted">Variant {v.id}</p>
+            </div>
             {v.subject && (
               <p className="text-sm font-semibold text-d-text">Subject: {v.subject}</p>
             )}
             <p className="text-sm text-d-text whitespace-pre-wrap">{v.body}</p>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => onLeadAction?.("send_variant", {
+                  channel,
+                  to,
+                  body: v.body,
+                  subject: v.subject || null,
+                  variantId: v.id,
+                })}
+                className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors min-h-[36px]"
+              >
+                <Send className="w-3.5 h-3.5" />
+                Send this
+              </button>
+              <button
+                type="button"
+                onClick={() => onLeadAction?.("edit_variant", {
+                  channel,
+                  to,
+                  body: v.body,
+                  subject: v.subject || null,
+                  variantId: v.id,
+                })}
+                className="flex items-center gap-1.5 rounded-lg border border-d-border px-3 py-2 text-xs font-semibold text-d-muted hover:border-d-primary/40 hover:text-d-primary transition-colors min-h-[36px]"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+                Edit
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -870,11 +905,25 @@ export default function AskPage() {
     }
   }, [messages]);
 
-  function handleContextAction(action, lead) {
+  function handleContextAction(action, data) {
+    if (action === "send_variant") {
+      const { channel, to, body, subject } = data;
+      const subjectPart = subject ? ` with subject "${subject}"` : "";
+      sendMessage({
+        text: `Send this ${channel} to ${to}${subjectPart}: "${body}"`,
+      });
+      return;
+    }
+    if (action === "edit_variant") {
+      const { body } = data;
+      setInput(`Edit this draft: "${body.length > 200 ? body.slice(0, 200) + "..." : body}"`);
+      inputRef.current?.focus?.();
+      return;
+    }
     const prompts = {
-      sms: `Draft an SMS reply for lead #${lead.leadId}`,
-      email: `Draft an email reply for lead #${lead.leadId}`,
-      task: `Create a follow-up task for lead #${lead.leadId} tomorrow at 9:00`,
+      sms: `Draft an SMS reply for lead #${data.leadId}`,
+      email: `Draft an email reply for lead #${data.leadId}`,
+      task: `Create a follow-up task for lead #${data.leadId} tomorrow at 9:00`,
     };
     const text = prompts[action];
     if (text) sendMessage({ text });
