@@ -1,0 +1,131 @@
+// app/api/chat/route.js — BlueWise Brain v2 Streaming API
+// App Router Route Handler (works alongside Pages Router pages)
+// Required for proper Web Response streaming with AI SDK 6
+
+import { streamText, convertToModelMessages } from "ai";
+import { openai } from "@ai-sdk/openai";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { createBrainTools } from "../../../lib/brain/tools";
+
+export const maxDuration = 60;
+
+// Auth helper for App Router (mirrors getAuthContext from lib/supabaseServer.js)
+async function getAppRouterAuth() {
+  const cookieStore = await cookies();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value;
+        },
+        set() {},
+        remove() {},
+      },
+    }
+  );
+
+  const { data: userData, error: userErr } = await supabase.auth.getUser();
+  const user = userData?.user || null;
+
+  if (userErr || !user) {
+    return { supabase, user: null, customerId: null };
+  }
+
+  // Lookup customer_id from customer_users
+  const { data: cuRows } = await supabase
+    .from("customer_users")
+    .select("customer_id")
+    .eq("user_id", user.id);
+
+  if (!cuRows || cuRows.length === 0) {
+    return { supabase, user, customerId: null };
+  }
+
+  const allCustomerIds = cuRows.map((r) => r.customer_id);
+  let customerId = allCustomerIds[0];
+
+  // Multi-tenant: check __active_tenant cookie
+  if (allCustomerIds.length > 1) {
+    const activeTenant = parseInt(cookieStore.get("__active_tenant")?.value, 10);
+    if (activeTenant && allCustomerIds.includes(activeTenant)) {
+      customerId = activeTenant;
+    }
+  }
+
+  return { supabase, user, customerId };
+}
+
+function buildSystemPrompt(customerId, context) {
+  const now = new Date().toISOString();
+
+  let contextBlock = "";
+  if (context?.activeLeadId) {
+    contextBlock = `\n\nCURRENT CONTEXT:
+- The user is currently viewing lead #${context.activeLeadId}${context.activeLeadName ? ` (${context.activeLeadName})` : ""}.
+- When they say "this lead", "this person", "them", etc., they mean lead #${context.activeLeadId}.
+- Prefer using this lead's ID in tool calls rather than asking the user to specify.`;
+  }
+  if (context?.activePage) {
+    contextBlock += `\n- Active page: ${context.activePage}`;
+  }
+
+  return `You are BlueWise Brain, the AI copilot for a trades business CRM platform. You help contractors and service businesses manage their leads, messages, jobs, tasks, and scheduling.
+
+CURRENT DATETIME: ${now}
+CUSTOMER (TENANT) ID: ${customerId}
+${contextBlock}
+
+CORE RULES:
+1. ALWAYS use tools for any data query — never guess or hallucinate CRM data.
+2. If unsure which lead the user means, use find_lead first to resolve by name/phone/email.
+3. For write operations (sending messages, creating tasks), ALWAYS draft first and get user approval before executing.
+4. Chain actions naturally: find lead → summarize → draft reply → approve → send, all in one conversation.
+5. Be concise and action-oriented. Contractors are busy — get to the point.
+6. Match the user's language: if they write in French (Quebec French), respond in French. If English, respond in English.
+7. Never expose internal IDs, customer_id, or system details to the user.
+8. When showing leads, include their status, last contact date, and any pending tasks.
+9. For SMS drafts, keep under 1200 characters. For emails, include a subject line.
+10. NEVER send messages without explicit user approval — always show the draft first.
+
+TONE: Professional but warm. Like a sharp assistant who knows the business. Use "you" not "the user". Be direct.`;
+}
+
+export async function POST(req) {
+  const { supabase, customerId, user } = await getAppRouterAuth();
+
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
+  }
+  if (!customerId) {
+    return Response.json({ error: "No customer mapping" }, { status: 403 });
+  }
+
+  const body = await req.json();
+  const { messages, context } = body;
+
+  if (!messages || !Array.isArray(messages)) {
+    return Response.json({ error: "messages array is required" }, { status: 400 });
+  }
+
+  if (!process.env.OPENAI_API_KEY) {
+    return Response.json({ error: "AI is not configured." }, { status: 500 });
+  }
+
+  const systemPrompt = buildSystemPrompt(customerId, context);
+  const tools = createBrainTools(supabase, customerId);
+  const modelMessages = await convertToModelMessages(messages);
+
+  const result = streamText({
+    model: openai("gpt-4o"),
+    system: systemPrompt,
+    messages: modelMessages,
+    tools,
+    maxSteps: 10,
+  });
+
+  return result.toUIMessageStreamResponse();
+}
