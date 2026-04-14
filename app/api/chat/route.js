@@ -127,5 +127,56 @@ export async function POST(req) {
     maxSteps: 10,
   });
 
-  return result.toUIMessageStreamResponse();
+  // Manual SSE stream — bypass SDK's toUIMessageStreamResponse to avoid
+  // protocol mismatch issues with our manual frontend parser
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      function send(obj) {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+      }
+
+      try {
+        for await (const part of result.fullStream) {
+          switch (part.type) {
+            case "text-delta":
+              send({ type: "text-delta", delta: part.text || part.textDelta || "" });
+              break;
+            case "tool-call":
+              send({
+                type: "tool-call",
+                toolCallId: part.toolCallId,
+                toolName: part.toolName,
+                args: part.input,
+              });
+              break;
+            case "tool-result":
+              send({
+                type: "tool-result",
+                toolCallId: part.toolCallId,
+                result: part.output,
+              });
+              break;
+            case "error":
+              send({ type: "error", error: String(part.error) });
+              break;
+            // Ignore other event types (start-step, finish-step, etc.)
+          }
+        }
+      } catch (err) {
+        send({ type: "error", error: err.message || "Stream error" });
+      } finally {
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
 }

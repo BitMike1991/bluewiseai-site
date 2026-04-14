@@ -622,54 +622,32 @@ export default function AskPage() {
             const event = JSON.parse(jsonStr);
             const type = event.type;
 
-            // AI SDK 6 UIMessageStream protocol:
-            // text-delta has "delta", tool events use "tool-input-*" / "tool-output-*"
             if (type === "text-delta") {
-              assistantMsg.content += event.delta || event.textDelta || event.text || "";
-              // Update parts
+              assistantMsg.content += event.delta || "";
               const lastPart = assistantMsg.parts[assistantMsg.parts.length - 1];
               if (lastPart?.type === "text") {
                 lastPart.text = assistantMsg.content;
               } else {
                 assistantMsg.parts.push({ type: "text", text: assistantMsg.content });
               }
-            } else if (type === "text-start") {
-              // New text block starting
-              assistantMsg.content = "";
-              assistantMsg.parts.push({ type: "text", text: "" });
-            } else if (type === "tool-input-start") {
-              // Tool call beginning (SDK 6: tool-input-start)
-              const inv = {
+            } else if (type === "tool-call") {
+              assistantMsg.toolInvocations.push({
                 toolCallId: event.toolCallId,
                 toolName: event.toolName,
-                args: {},
+                args: event.args || {},
                 state: "call",
-              };
-              assistantMsg.toolInvocations.push(inv);
-            } else if (type === "tool-input-available") {
-              // Tool call complete with parsed input (SDK 6: tool-input-available)
-              const existing = assistantMsg.toolInvocations.find(
-                (t) => t.toolCallId === event.toolCallId
-              );
-              if (existing) {
-                existing.args = event.input || {};
-              } else {
-                assistantMsg.toolInvocations.push({
-                  toolCallId: event.toolCallId,
-                  toolName: event.toolName,
-                  args: event.input || {},
-                  state: "call",
-                });
-              }
-            } else if (type === "tool-output-available") {
-              // Tool result (SDK 6: tool-output-available with "output")
+              });
+            } else if (type === "tool-result") {
               const idx = assistantMsg.toolInvocations.findIndex(
                 (t) => t.toolCallId === event.toolCallId
               );
               if (idx >= 0) {
                 assistantMsg.toolInvocations[idx].state = "result";
-                assistantMsg.toolInvocations[idx].result = event.output;
+                assistantMsg.toolInvocations[idx].result = event.result;
               }
+            } else if (type === "error") {
+              console.error("[Brain] Stream error:", event.error);
+              setChatError({ message: event.error || "AI error" });
             }
 
             // Update messages state with latest assistant message
