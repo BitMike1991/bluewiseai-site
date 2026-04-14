@@ -1,7 +1,7 @@
 // pages/platform/ask.js — BlueWise Brain v2 Command Center
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Send, Loader, Check, X, Edit2, Mic, Clock, Star, Sparkles } from "lucide-react";
+import { Send, Loader, Check, X, Edit2, Mic, Clock, Star, Sparkles, MessageSquare, Mail, ListTodo, Phone, ChevronRight, ExternalLink, ChevronDown } from "lucide-react";
 import DashboardLayout from "../../src/components/dashboard/DashboardLayout";
 import ContextPanel from "../../src/components/brain/ContextPanel";
 
@@ -214,9 +214,137 @@ function ApprovalCard({ toolInvocation }) {
 }
 
 // -----------------------------
+// Interactive Lead Card (expandable + quick actions)
+// -----------------------------
+function LeadCard({ item, onAction, onNavigate }) {
+  const [expanded, setExpanded] = useState(false);
+  const name = item.name || item.email || item.phone || "Lead";
+  const statusColors = {
+    new: "bg-sky-500/10 text-sky-500 border-sky-500/30",
+    contacted: "bg-amber-500/10 text-amber-500 border-amber-500/30",
+    qualified: "bg-emerald-500/10 text-emerald-500 border-emerald-500/30",
+    won: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30",
+    lost: "bg-rose-500/10 text-rose-500 border-rose-500/30",
+    closed: "bg-d-border/60 text-d-muted border-d-border",
+    dead: "bg-d-border/60 text-d-muted border-d-border",
+  };
+
+  return (
+    <div className={cx(
+      "rounded-xl border transition-all duration-200",
+      expanded ? "border-d-primary/40 bg-d-surface/80 shadow-sm" : "border-d-border bg-d-surface/60 hover:border-d-primary/30"
+    )}>
+      {/* Main row — always visible */}
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center gap-3 p-3 text-left min-h-[56px]"
+      >
+        <div className={cx("w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0", avatarColor(name))}>
+          {avatarInitials(name)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-d-text truncate">{name}</p>
+          <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+            <span className={cx("text-[10px] font-semibold px-1.5 py-0.5 rounded border", statusColors[item.status] || statusColors.new)}>
+              {item.status || "new"}
+            </span>
+            {item.lastContactAt && (
+              <span className="text-[10px] text-d-muted">{formatTimeAgo(item.lastContactAt)}</span>
+            )}
+            {item.source && (
+              <span className="text-[10px] text-d-muted">{item.source}</span>
+            )}
+          </div>
+        </div>
+        {item.missedCallCount > 0 && (
+          <span className="text-[10px] font-semibold bg-rose-500/10 text-rose-500 px-2 py-0.5 rounded-full border border-rose-500/20 shrink-0">
+            {item.missedCallCount} missed
+          </span>
+        )}
+        <ChevronDown className={cx("w-4 h-4 text-d-muted shrink-0 transition-transform duration-200", expanded && "rotate-180")} />
+      </button>
+
+      {/* Expanded details + actions */}
+      {expanded && (
+        <div className="px-3 pb-3 space-y-3 border-t border-d-border/50 pt-3">
+          {/* Contact details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {item.phone && (
+              <div className="flex items-center gap-2 text-sm text-d-muted">
+                <Phone className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{item.phone}</span>
+              </div>
+            )}
+            {item.email && (
+              <div className="flex items-center gap-2 text-sm text-d-muted">
+                <Mail className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{item.email}</span>
+              </div>
+            )}
+            {item.createdAt && (
+              <div className="flex items-center gap-2 text-sm text-d-muted">
+                <Clock className="w-3.5 h-3.5 shrink-0" />
+                <span>Added {formatTimeAgo(item.createdAt)}</span>
+              </div>
+            )}
+            {item.language && (
+              <div className="flex items-center gap-2 text-sm text-d-muted">
+                <span className="w-3.5 h-3.5 shrink-0 text-center text-[10px] font-bold">{item.language.toUpperCase()}</span>
+                <span>{item.language === "fr" ? "French" : item.language === "en" ? "English" : item.language}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Quick actions */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {item.phone && (
+              <button
+                type="button"
+                onClick={() => onAction?.("sms", item)}
+                className="flex items-center gap-1.5 rounded-lg border border-d-border bg-d-bg px-3 py-1.5 text-xs font-semibold text-d-text hover:border-d-primary/40 hover:text-d-primary transition-colors min-h-[36px]"
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                SMS
+              </button>
+            )}
+            {item.email && (
+              <button
+                type="button"
+                onClick={() => onAction?.("email", item)}
+                className="flex items-center gap-1.5 rounded-lg border border-d-border bg-d-bg px-3 py-1.5 text-xs font-semibold text-d-text hover:border-d-primary/40 hover:text-d-primary transition-colors min-h-[36px]"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                Email
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => onAction?.("task", item)}
+              className="flex items-center gap-1.5 rounded-lg border border-d-border bg-d-bg px-3 py-1.5 text-xs font-semibold text-d-text hover:border-d-primary/40 hover:text-d-primary transition-colors min-h-[36px]"
+            >
+              <ListTodo className="w-3.5 h-3.5" />
+              Task
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate?.(item.leadId)}
+              className="flex items-center gap-1.5 rounded-lg border border-d-primary/40 bg-d-primary/5 px-3 py-1.5 text-xs font-semibold text-d-primary hover:bg-d-primary/10 transition-colors min-h-[36px] ml-auto"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Open
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// -----------------------------
 // Tool Result Card
 // -----------------------------
-function ToolResultCard({ toolName, result }) {
+function ToolResultCard({ toolName, result, onLeadAction, onLeadNavigate }) {
   if (!result) return null;
 
   // Handle approval results
@@ -237,7 +365,7 @@ function ToolResultCard({ toolName, result }) {
     );
   }
 
-  // Lead list
+  // Lead list — interactive cards
   if (toolName === "list_leads" || toolName === "find_lead") {
     const items = result.items || [];
     if (items.length === 0) {
@@ -248,33 +376,15 @@ function ToolResultCard({ toolName, result }) {
         <p className="text-xs text-d-muted font-semibold uppercase tracking-wide">
           {items.length} lead{items.length !== 1 ? "s" : ""}
         </p>
-        <div className="space-y-2 max-h-80 overflow-y-auto">
-          {items.slice(0, 20).map((item, i) => {
-            const name = item.name || item.email || item.phone || "Lead";
-            return (
-              <div
-                key={item.leadId || i}
-                className="flex items-center gap-3 rounded-xl border border-d-border bg-d-surface/60 p-3"
-              >
-                <div className={cx("w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0", avatarColor(name))}>
-                  {avatarInitials(name)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-d-text truncate">{name}</p>
-                  <p className="text-xs text-d-muted">
-                    {item.status || "new"}
-                    {item.lastContactAt ? ` ${"\u00b7"} ${formatTimeAgo(item.lastContactAt)}` : ""}
-                    {item.source ? ` ${"\u00b7"} ${item.source}` : ""}
-                  </p>
-                </div>
-                {item.missedCallCount > 0 && (
-                  <span className="text-xs bg-rose-500/10 text-rose-500 px-2 py-0.5 rounded-full">
-                    {item.missedCallCount} missed
-                  </span>
-                )}
-              </div>
-            );
-          })}
+        <div className="space-y-2 max-h-[420px] overflow-y-auto">
+          {items.slice(0, 20).map((item, i) => (
+            <LeadCard
+              key={item.leadId || i}
+              item={item}
+              onAction={onLeadAction}
+              onNavigate={onLeadNavigate}
+            />
+          ))}
         </div>
       </div>
     );
@@ -945,6 +1055,8 @@ export default function AskPage() {
                           <ToolResultCard
                             toolName={inv.toolName}
                             result={inv.result}
+                            onLeadAction={(action, lead) => handleContextAction(action, lead)}
+                            onLeadNavigate={(leadId) => router.push(`/platform/leads/${leadId}`)}
                           />
                         )}
                       </div>
