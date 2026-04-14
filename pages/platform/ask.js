@@ -1,7 +1,6 @@
 // pages/platform/ask.js — BlueWise Brain v2 Command Center
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useChat } from "@ai-sdk/react";
 import { Send, Loader, Check, X, Edit2, Mic, Clock, Star, Sparkles } from "lucide-react";
 import DashboardLayout from "../../src/components/dashboard/DashboardLayout";
 import ContextPanel from "../../src/components/brain/ContextPanel";
@@ -115,13 +114,10 @@ function saveJson(key, value) {
 // -----------------------------
 // Approval Card
 // -----------------------------
-function ApprovalCard({ toolInvocation, addToolApprovalResponse, addToolResult }) {
-  const [editing, setEditing] = useState(false);
-  const [editedArgs, setEditedArgs] = useState(null);
-  const [decided, setDecided] = useState(null); // 'approved' | 'rejected'
+function ApprovalCard({ toolInvocation }) {
+  const [decided, setDecided] = useState(null);
 
   const { toolName, toolCallId, args } = toolInvocation;
-  const approvalId = toolInvocation.approval?.id || toolCallId;
 
   const friendlyName = {
     send_message: "Send Message",
@@ -160,21 +156,10 @@ function ApprovalCard({ toolInvocation, addToolApprovalResponse, addToolResult }
 
   function handleApprove() {
     setDecided("approved");
-    if (addToolApprovalResponse) {
-      addToolApprovalResponse({ id: approvalId, approved: true });
-    } else {
-      // Fallback for older SDK versions
-      addToolResult({ toolCallId, result: { _approved: true } });
-    }
   }
 
   function handleReject() {
     setDecided("rejected");
-    if (addToolApprovalResponse) {
-      addToolApprovalResponse({ id: approvalId, approved: false, reason: "User rejected this action." });
-    } else {
-      addToolResult({ toolCallId, result: { _rejected: true, reason: "User rejected." } });
-    }
   }
 
   if (decided === "approved") {
@@ -204,22 +189,9 @@ function ApprovalCard({ toolInvocation, addToolApprovalResponse, addToolResult }
         </span>
       </div>
 
-      {editing ? (
-        <textarea
-          className="w-full rounded-lg border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text font-mono"
-          rows={6}
-          defaultValue={JSON.stringify(editedArgs || args, null, 2)}
-          onChange={(e) => {
-            try {
-              setEditedArgs(JSON.parse(e.target.value));
-            } catch {}
-          }}
-        />
-      ) : (
-        <pre className="text-xs text-d-muted whitespace-pre-wrap bg-d-surface/60 rounded-lg px-3 py-2 border border-d-border overflow-x-auto">
-          {formatArgs(args)}
-        </pre>
-      )}
+      <pre className="text-xs text-d-muted whitespace-pre-wrap bg-d-surface/60 rounded-lg px-3 py-2 border border-d-border overflow-x-auto">
+        {formatArgs(args)}
+      </pre>
 
       <div className="flex gap-2">
         <button
@@ -228,13 +200,6 @@ function ApprovalCard({ toolInvocation, addToolApprovalResponse, addToolResult }
         >
           <Check className="w-4 h-4 inline-block mr-1 -mt-0.5" />
           Approve
-        </button>
-        <button
-          onClick={() => setEditing(!editing)}
-          className="min-h-[44px] md:min-h-0 rounded-lg border border-d-border px-4 py-2 text-sm font-semibold text-d-text hover:bg-d-surface transition-colors"
-        >
-          <Edit2 className="w-4 h-4 inline-block mr-1 -mt-0.5" />
-          {editing ? "Preview" : "Edit"}
         </button>
         <button
           onClick={handleReject}
@@ -575,41 +540,140 @@ export default function AskPage() {
     }
   }
 
-  // Input state (managed by us, not useChat in SDK 6)
+  // Chat state — managed manually (bypasses useChat hook bug)
   const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [chatError, setChatError] = useState(null);
+  const abortRef = useRef(null);
 
-  // AI SDK 6 useChat hook
-  const {
-    messages,
-    sendMessage: rawSendMessage,
-    status,
-    addToolResult,
-    addToolApprovalResponse,
-    error: chatError,
-  } = useChat({
-    api: "/api/chat",
-    experimental_throttle: 50,
-    onError: (err) => {
-      console.error("[Brain] Chat error:", err.message);
-    },
-  });
+  // Send message via fetch + SSE streaming
+  async function sendMessage({ text }) {
+    if (!text?.trim() || isLoading) return;
 
-  const isLoading = status === "streaming" || status === "submitted";
+    const userMsg = {
+      id: `u-${Date.now()}`,
+      role: "user",
+      content: text.trim(),
+      parts: [{ type: "text", text: text.trim() }],
+    };
 
-  // Wrap sendMessage to pass fresh context body each time (avoids stale body)
-  const sendMessage = useCallback((msg, opts) => {
-    return rawSendMessage(msg, {
-      ...opts,
-      body: {
-        ...(opts?.body || {}),
-        context: {
-          activePage: "command-center",
-          activeLeadId,
-          activeLeadName,
-        },
-      },
-    });
-  }, [rawSendMessage, activeLeadId, activeLeadName]);
+    // Build message history for the API (UIMessage format)
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
+    setIsLoading(true);
+    setChatError(null);
+
+    try {
+      abortRef.current = new AbortController();
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: updatedMessages.map((m) => ({
+            id: m.id,
+            role: m.role,
+            parts: m.parts || [{ type: "text", text: m.content || "" }],
+          })),
+          context: {
+            activePage: "command-center",
+            activeLeadId,
+            activeLeadName,
+          },
+        }),
+        signal: abortRef.current.signal,
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Request failed: ${res.status}`);
+      }
+
+      // Parse SSE stream
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let assistantMsg = {
+        id: `a-${Date.now()}`,
+        role: "assistant",
+        content: "",
+        parts: [],
+        toolInvocations: [],
+      };
+
+      // Add empty assistant message immediately
+      setMessages((prev) => [...prev, { ...assistantMsg }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.slice(6).trim();
+          if (!jsonStr) continue;
+
+          try {
+            const event = JSON.parse(jsonStr);
+            const type = event.type;
+
+            if (type === "text" || type === "text-delta") {
+              assistantMsg.content += event.text || event.textDelta || "";
+              // Update parts
+              const lastPart = assistantMsg.parts[assistantMsg.parts.length - 1];
+              if (lastPart?.type === "text") {
+                lastPart.text = assistantMsg.content;
+              } else {
+                assistantMsg.parts.push({ type: "text", text: assistantMsg.content });
+              }
+            } else if (type === "text-start") {
+              // New text block starting
+              assistantMsg.content = "";
+              assistantMsg.parts.push({ type: "text", text: "" });
+            } else if (type === "tool-call" || type === "tool-call-start") {
+              const inv = {
+                toolCallId: event.toolCallId || event.id,
+                toolName: event.toolName,
+                args: event.args || {},
+                state: "call",
+              };
+              assistantMsg.toolInvocations.push(inv);
+            } else if (type === "tool-result") {
+              const idx = assistantMsg.toolInvocations.findIndex(
+                (t) => t.toolCallId === (event.toolCallId || event.id)
+              );
+              if (idx >= 0) {
+                assistantMsg.toolInvocations[idx].state = "result";
+                assistantMsg.toolInvocations[idx].result = event.result;
+              }
+            }
+
+            // Update messages state with latest assistant message
+            setMessages((prev) => {
+              const copy = [...prev];
+              copy[copy.length - 1] = { ...assistantMsg, parts: [...assistantMsg.parts], toolInvocations: [...assistantMsg.toolInvocations] };
+              return copy;
+            });
+          } catch {
+            // Skip unparseable lines
+          }
+        }
+      }
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        console.error("[Brain] Chat error:", err.message);
+        setChatError(err);
+      }
+    } finally {
+      setIsLoading(false);
+      abortRef.current = null;
+    }
+  }
 
   // Handle ?q= URL param (quick-ask from overview)
   useEffect(() => {
@@ -876,19 +940,7 @@ export default function AskPage() {
 
                         {/* Approval requested (needsApproval tools) */}
                         {inv.state === "approval-requested" && (
-                          <ApprovalCard
-                            toolInvocation={inv}
-                            addToolApprovalResponse={addToolApprovalResponse}
-                            addToolResult={addToolResult}
-                          />
-                        )}
-
-                        {/* Approval responded (waiting for execution) */}
-                        {inv.state === "approval-responded" && (
-                          <div className="flex items-center gap-2 text-sm text-d-muted">
-                            <Loader className="w-4 h-4 animate-spin" />
-                            <span>Executing {inv.toolName}...</span>
-                          </div>
+                          <ApprovalCard toolInvocation={inv} />
                         )}
 
                         {/* Result */}
