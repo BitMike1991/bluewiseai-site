@@ -5,7 +5,7 @@ import { useBranding } from "../../src/components/dashboard/BrandingContext";
 import {
   BarChart2, TrendingUp, TrendingDown, Users, Phone, MessageSquare,
   DollarSign, Zap, Clock, ArrowUpRight, ArrowDownRight, Minus,
-  Download, Calendar, Globe, Facebook, ExternalLink, Activity,
+  Download, Calendar, Globe, Facebook, ExternalLink, Activity, Instagram, Eye,
 } from "lucide-react";
 
 const RANGES = [
@@ -532,6 +532,93 @@ export default function AnalyticsPage() {
             </div>
           </>
         ) : null}
+
+        {/* Row 6b: Instagram Insights (if available) */}
+        {data.socialInsights?.instagram ? (() => {
+          const ig = data.socialInsights.instagram;
+          return (
+            <>
+              {/* IG KPI cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                {[
+                  { label: "IG Followers", value: ig.followers?.toLocaleString() || "0" },
+                  { label: "IG Reach", value: ig.totalReach?.toLocaleString() || "0" },
+                  { label: "IG Engaged", value: ig.totalEngaged?.toLocaleString() || "0" },
+                  { label: "IG Profile Views", value: ig.totalProfileViews?.toLocaleString() || "0" },
+                  { label: "IG Posts", value: ig.mediaCount?.toLocaleString() || "0" },
+                ].map((m) => (
+                  <div key={m.label} className="rounded-xl border border-d-border bg-d-surface p-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Instagram className="w-3.5 h-3.5" style={{ color: "#E4405F" }} />
+                      <span className="text-[11px] text-d-muted">{m.label}</span>
+                    </div>
+                    <div className="text-lg font-semibold text-d-text">{m.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* IG Charts: Reach + Engaged + Profile Views */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="rounded-2xl border border-d-border bg-d-surface p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Instagram className="w-4 h-4" style={{ color: "#E4405F" }} />
+                    <h3 className="text-sm font-medium text-d-muted">
+                      Instagram Reach {ig.username ? `— @${ig.username}` : ""}
+                    </h3>
+                  </div>
+                  {ig.reach?.length > 0 ? (
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={ig.reach.map((d, i) => ({
+                          ...d,
+                          engaged: ig.engagedAccounts?.[i]?.value || 0,
+                        }))}>
+                          <defs>
+                            <linearGradient id="gradIgReach" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#E4405F" stopOpacity={0.3} />
+                              <stop offset="95%" stopColor="#E4405F" stopOpacity={0.02} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke={borderHex} vertical={false} />
+                          <XAxis dataKey="date" tickFormatter={(v) => v?.slice(5)} tick={tickProps} {...axisProps} />
+                          <YAxis tick={tickProps} {...axisProps} allowDecimals={false} />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Legend wrapperStyle={{ fontSize: 11, color: mutedHex }} />
+                          <Area type="monotone" dataKey="value" name="Reach" stroke="#E4405F" fill="url(#gradIgReach)" strokeWidth={1.5} />
+                          <Area type="monotone" dataKey="engaged" name="Engaged" stroke="#833AB4" fill="none" strokeWidth={1.5} strokeDasharray="4 2" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <EmptyState icon={Instagram} message="No Instagram data for this period" />
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-d-border bg-d-surface p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Eye className="w-4 h-4" style={{ color: "#E4405F" }} />
+                    <h3 className="text-sm font-medium text-d-muted">Instagram Profile Views</h3>
+                  </div>
+                  {ig.profileViews?.length > 0 ? (
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={ig.profileViews} barSize={8}>
+                          <CartesianGrid strokeDasharray="3 3" stroke={borderHex} vertical={false} />
+                          <XAxis dataKey="date" tickFormatter={(v) => v?.slice(5)} tick={tickProps} {...axisProps} />
+                          <YAxis tick={tickProps} {...axisProps} allowDecimals={false} />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Bar dataKey="value" name="Profile Views" fill="#E4405F" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <EmptyState icon={Eye} message="No profile view data for this period" />
+                  )}
+                </div>
+              </div>
+            </>
+          );
+        })() : null}
 
         {/* Row 7: Meta Pixel Website Events (if available) */}
         {data.pixelInsights?.events?.length > 0 ? (

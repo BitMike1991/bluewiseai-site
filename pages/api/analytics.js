@@ -466,6 +466,66 @@ export default async function handler(req, res) {
 
         const sumValues = (arr) => arr.reduce((s, v) => s + (v.value || 0), 0);
 
+        // ── Instagram Insights (via linked IG Business Account) ──
+        let instagram = null;
+        try {
+          const igLinkResp = await fetch(`${fbBase}?fields=instagram_business_account&access_token=${fbPageToken}`);
+          const igLinkJson = await igLinkResp.json();
+          const igId = igLinkJson.instagram_business_account?.id;
+
+          if (igId) {
+            const igBase = `https://graph.facebook.com/v21.0/${igId}`;
+            const igMetrics = ["reach", "accounts_engaged", "profile_views"];
+
+            const fetchIgMetric = async (name) => {
+              try {
+                const r = await fetch(`${igBase}/insights?metric=${name}&metric_type=time_series&period=day&since=${fbSince}&until=${fbUntil}&access_token=${fbPageToken}`);
+                const j = await r.json();
+                if (j.data?.[0]?.values) {
+                  return { name, values: j.data[0].values.map(v => ({ date: v.end_time?.slice(0, 10), value: v.value || 0 })) };
+                }
+                return { name, values: [] };
+              } catch { return { name, values: [] }; }
+            };
+
+            // Also get totals for KPI cards
+            const fetchIgTotal = async (name) => {
+              try {
+                const r = await fetch(`${igBase}/insights?metric=${name}&metric_type=total_value&period=day&since=${fbSince}&until=${fbUntil}&access_token=${fbPageToken}`);
+                const j = await r.json();
+                return j.data?.[0]?.total_value?.value || 0;
+              } catch { return 0; }
+            };
+
+            const [igReach, igEngaged, igProfile, igProfileResp, totalReach, totalEngaged, totalProfileViews] = await Promise.all([
+              fetchIgMetric("reach"),
+              fetchIgMetric("accounts_engaged"),
+              fetchIgMetric("profile_views"),
+              fetch(`${igBase}?fields=username,followers_count,media_count,name,profile_picture_url&access_token=${fbPageToken}`),
+              fetchIgTotal("reach"),
+              fetchIgTotal("accounts_engaged"),
+              fetchIgTotal("profile_views"),
+            ]);
+            const igProfileJson = await igProfileResp.json();
+
+            instagram = {
+              username: igProfileJson.username || null,
+              name: igProfileJson.name || null,
+              followers: igProfileJson.followers_count || 0,
+              mediaCount: igProfileJson.media_count || 0,
+              profilePic: igProfileJson.profile_picture_url || null,
+              reach: igReach.values,
+              engagedAccounts: igEngaged.values,
+              profileViews: igProfile.values,
+              totalReach,
+              totalEngaged,
+              totalProfileViews,
+            };
+          }
+        } catch (igErr) {
+          console.error("[api/analytics] Instagram insights fetch error:", igErr.message);
+        }
+
         socialInsights = {
           pageName: fansJson.name || null,
           followers: fansJson.followers_count || fansJson.fan_count || null,
@@ -479,6 +539,7 @@ export default async function handler(req, res) {
           totalReach: sumValues(m2.values),
           totalEngaged: sumValues(m3.values),
           totalEngagements: sumValues(m4.values),
+          instagram,
         };
       } catch (socialErr) {
         console.error("[api/analytics] Social insights fetch error:", socialErr.message);
