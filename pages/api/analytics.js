@@ -420,8 +420,7 @@ export default async function handler(req, res) {
 
             let leads = 0, conversions = 0, pageViews = 0, linkClicks = 0;
             for (const a of day.actions || []) {
-              if (a.action_type === "lead" || a.action_type === "onsite_conversion.lead_grouped") leads += parseInt(a.value || 0);
-              if (a.action_type === "offsite_conversion.fb_pixel_lead") leads += parseInt(a.value || 0);
+              if (a.action_type === "lead") leads += parseInt(a.value || 0);
               if (a.action_type === "landing_page_view") pageViews += parseInt(a.value || 0);
               if (a.action_type === "link_click") linkClicks += parseInt(a.value || 0);
               conversions += parseInt(a.value || 0);
@@ -445,8 +444,7 @@ export default async function handler(req, res) {
           const campaigns = (campaignJson.data || []).map(c => {
             let campLeads = 0;
             for (const a of c.actions || []) {
-              if (["lead", "onsite_conversion.lead_grouped", "offsite_conversion.fb_pixel_lead"].includes(a.action_type))
-                campLeads += parseInt(a.value || 0);
+              if (a.action_type === "lead") campLeads += parseInt(a.value || 0);
             }
             return {
               name: c.campaign_name,
@@ -463,8 +461,7 @@ export default async function handler(req, res) {
           const demographics = (demoJson.data || []).map(d => {
             let dLeads = 0;
             for (const a of d.actions || []) {
-              if (["lead", "onsite_conversion.lead_grouped", "offsite_conversion.fb_pixel_lead"].includes(a.action_type))
-                dLeads += parseInt(a.value || 0);
+              if (a.action_type === "lead") dLeads += parseInt(a.value || 0);
             }
             return {
               age: d.age,
