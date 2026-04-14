@@ -8,7 +8,11 @@ import { createBrainTools } from "../../lib/brain/tools";
 
 // Disable Next.js body parser — AI SDK needs raw stream
 export const config = {
-  api: { bodyParser: false },
+  api: {
+    bodyParser: false,
+    responseLimit: false,
+  },
+  maxDuration: 60,
 };
 
 // Parse JSON body manually
@@ -132,7 +136,9 @@ export default async function handler(req, res) {
       maxSteps: 10,
     });
 
-    result.pipeUIMessageStreamToResponse(res);
+    result.pipeUIMessageStreamToResponse(res, {
+      originalMessages: messages,
+    });
   } catch (e) {
     console.error("[/api/chat] Stream error:", e.message);
     if (!res.headersSent) {
