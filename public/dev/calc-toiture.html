@@ -381,13 +381,16 @@
       gap: 0;
       border: 1px solid var(--border);
       border-radius: 4px;
-      overflow: hidden;
+      overflow: visible;
       height: 42px;
+      min-width: 130px;
       background: var(--pure);
     }
     .qty-stepper button {
       width: 40px;
+      min-width: 40px;
       height: 40px;
+      flex-shrink: 0;
       background: var(--sage-light);
       border: none;
       font-size: 18px;
@@ -741,7 +744,10 @@
   </div>
   <div class="topbar-title">Nouveau devis — <span id="client-name-display">Nouveau client</span></div>
   <div class="topbar-actions">
+    <span id="save-status" style="font-size:11px;color:#9ca3af;margin-right:8px;"></span>
+    <button class="topbar-btn" onclick="showDrafts()">📂 Brouillons</button>
     <button class="topbar-btn" onclick="resetWizard()">↺ Recommencer</button>
+    <button class="topbar-btn" onclick="window.print()">🖨 Imprimer</button>
   </div>
 </div>
 
@@ -904,12 +910,12 @@
         <div class="option-grid">
           <button type="button" class="option-card" data-shingle="bardeau_standard" onclick="selectShingle('bardeau_standard')">
             <div class="title">IKO Cambridge</div>
-            <div class="desc">21 bardeaux/paquet · 32,8 pi²/paquet · garantie 25 ans</div>
+            <div class="desc">21 bardeaux/paquet · 32 pi²/paquet · garantie 25 ans</div>
             <div class="price">41,89 <span class="unit">$/paquet</span></div>
           </button>
           <button type="button" class="option-card" data-shingle="bardeau_dynasty" onclick="selectShingle('bardeau_dynasty')">
             <div class="title">IKO Dynasty</div>
-            <div class="desc">21 bardeaux/paquet · 32,8 pi²/paquet · ArmourZone</div>
+            <div class="desc">21 bardeaux/paquet · 32 pi²/paquet · ArmourZone</div>
             <div class="price">44,59 <span class="unit">$/paquet</span></div>
           </button>
         </div>
@@ -1208,11 +1214,11 @@
 const TAX_GST = 0.05;
 const TAX_QST = 0.09975;
 const TAX_COMBINED = 0.14975;
-const SQFT_PER_PAQUET = 32.8; // IKO Cambridge / Dynasty manufacturer spec (3 paquets / 98,4 pi²)
+const SQFT_PER_PAQUET = 32; // 1 paquet = 32 pi²
 
 const MATERIALS = {
-  bardeau_standard: { id: 'bardeau_standard', label: 'Bardeau IKO Cambridge', price: 41.89, unit: 'paquet', sqft_per: 32.8, category: 'shingle' },
-  bardeau_dynasty:  { id: 'bardeau_dynasty',  label: 'Bardeau IKO Dynasty',   price: 44.59, unit: 'paquet', sqft_per: 32.8, category: 'shingle' },
+  bardeau_standard: { id: 'bardeau_standard', label: 'Bardeau IKO Cambridge', price: 41.89, unit: 'paquet', sqft_per: 32, category: 'shingle' },
+  bardeau_dynasty:  { id: 'bardeau_dynasty',  label: 'Bardeau IKO Dynasty',   price: 44.59, unit: 'paquet', sqft_per: 32, category: 'shingle' },
   cap_bardeau: { id: 'cap_bardeau', label: 'Cap bardeau (faîte)', price: 61.53, unit: 'paquet', category: 'ridge' },
   pitch: { id: 'pitch', label: 'Pitch / étanchéité', price: 59.06, unit: 'unité', category: 'sealing' },
   syntec: { id: 'syntec', label: 'Syntec — sous-couche', price: 64.71, unit: 'rouleau', sqft_per: 1000, category: 'underlayment' },
@@ -1484,6 +1490,214 @@ function calculateRoofingQuote(input) {
     workers: worker_count, worker_rates: rates, hours_per_day,
     days, cash_discount, pitch_category, pitch_tier
   };
+}
+
+// ============================================================================
+// PERSISTENCE (Supabase + localStorage)
+// ============================================================================
+
+const SUPABASE_URL = 'https://xwhqkgsurssixjadzklb.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3aHFrZ3N1cnNzaXhqYWR6a2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4NDMxOTYsImV4cCI6MjA3OTQxOTE5Nn0.CvqKDVMHF7N5Jj842mXJOQl6Ad1DXefQGwZM-iYwkis';
+const LS_KEY = 'bw_toiture_draft';
+let _draftId = null;
+let _saveTimer = null;
+let _savePaused = false;
+
+function setSaveStatus(msg, color) {
+  const el = document.getElementById('save-status');
+  if (el) { el.textContent = msg; el.style.color = color || '#9ca3af'; }
+}
+
+function getSavePayload() {
+  return {
+    step: state.step,
+    client: state.client,
+    measures: state.measures,
+    shingle_type: state.shingle_type,
+    quantities: state.quantities,
+    excludes: state.excludes,
+    manual_overrides: state.manual_overrides,
+    labor: state.labor,
+    fees: state.fees,
+    fee_values: state.fee_values,
+    pricing: state.pricing
+  };
+}
+
+function saveToLocal() {
+  try {
+    const payload = getSavePayload();
+    payload._draftId = _draftId;
+    localStorage.setItem(LS_KEY, JSON.stringify(payload));
+  } catch(e) {}
+}
+
+async function saveToSupabase() {
+  const payload = getSavePayload();
+  const body = {
+    customer_id: 1,
+    client_name: payload.client.name || null,
+    client_phone: payload.client.phone || null,
+    surface_sqft: payload.measures.surface || null,
+    state_json: payload,
+    updated_at: new Date().toISOString()
+  };
+
+  try {
+    setSaveStatus('Sauvegarde...', '#eab308');
+    let res;
+    if (_draftId) {
+      res = await fetch(`${SUPABASE_URL}/rest/v1/toiture_drafts?id=eq.${_draftId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Prefer': 'return=representation' },
+        body: JSON.stringify(body)
+      });
+    } else {
+      res = await fetch(`${SUPABASE_URL}/rest/v1/toiture_drafts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Prefer': 'return=representation' },
+        body: JSON.stringify(body)
+      });
+    }
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data[0] && data[0].id) {
+        _draftId = data[0].id;
+        saveToLocal();
+        const url = new URL(window.location);
+        url.searchParams.set('draft', _draftId);
+        window.history.replaceState({}, '', url);
+      }
+      setSaveStatus('✓ Sauvegardé', '#16a34a');
+    } else {
+      setSaveStatus('⚠ Erreur sauvegarde', '#dc2626');
+    }
+  } catch(e) {
+    setSaveStatus('⚠ Hors-ligne (local OK)', '#eab308');
+  }
+}
+
+function triggerSave() {
+  if (_savePaused) return;
+  saveToLocal();
+  clearTimeout(_saveTimer);
+  if (!state.client.name && !state.client.phone && state.measures.surface === 0) return;
+  _saveTimer = setTimeout(saveToSupabase, 1500);
+}
+
+async function loadDraft(draftId) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/toiture_drafts?id=eq.${draftId}&select=*`, {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data[0]) {
+        _draftId = data[0].id;
+        return data[0].state_json;
+      }
+    }
+  } catch(e) {}
+  return null;
+}
+
+function loadFromLocal() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return null;
+}
+
+function restoreState(saved) {
+  if (!saved) return false;
+  _savePaused = true;
+
+  if (saved.client) Object.assign(state.client, saved.client);
+  if (saved.measures) Object.assign(state.measures, saved.measures);
+  if (saved.shingle_type) state.shingle_type = saved.shingle_type;
+  if (saved.quantities) Object.assign(state.quantities, saved.quantities);
+  if (saved.excludes) state.excludes = saved.excludes;
+  if (saved.manual_overrides) state.manual_overrides = saved.manual_overrides;
+  if (saved.labor) Object.assign(state.labor, saved.labor);
+  if (saved.fees) Object.assign(state.fees, saved.fees);
+  if (saved.fee_values) Object.assign(state.fee_values, saved.fee_values);
+  if (saved.pricing) Object.assign(state.pricing, saved.pricing);
+
+  const fieldMap = {
+    'client-name': state.client.name, 'client-phone': state.client.phone,
+    'client-email': state.client.email, 'client-address': state.client.address,
+    'client-city': state.client.city, 'client-postal': state.client.postal,
+    'client-notes': state.client.notes, 'surface': state.measures.surface || '',
+    'eaves-length': state.measures.eaves_length || '', 'ridge': state.measures.ridge || '',
+    'workers': state.labor.workers, 'days': state.labor.days,
+    'essence': state.fee_values.essence, 'transport': state.fee_values.transport
+  };
+  Object.entries(fieldMap).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el && val !== undefined && val !== null) el.value = val;
+  });
+
+  if (state.measures.pitch_category) {
+    document.querySelectorAll('[data-pitch]').forEach(el => {
+      el.classList.toggle('active', el.dataset.pitch === state.measures.pitch_category);
+    });
+  }
+  if (state.measures.complexity) {
+    document.querySelectorAll('[data-complexity]').forEach(el => {
+      el.classList.toggle('active', parseInt(el.dataset.complexity) === state.measures.complexity);
+    });
+  }
+  document.querySelectorAll('[data-shingle]').forEach(el => {
+    el.classList.toggle('active', el.dataset.shingle === state.shingle_type);
+  });
+  ['conteneur','essence','transport'].forEach(f => {
+    const el = document.getElementById('fee-' + f);
+    if (el) el.checked = !!state.fees[f];
+  });
+
+  const nameDisplay = document.getElementById('client-name-display');
+  if (nameDisplay && state.client.name) nameDisplay.textContent = state.client.name;
+
+  renderWorkerRates();
+  updateState();
+  if (saved.step) setStep(saved.step);
+
+  _savePaused = false;
+  return true;
+}
+
+async function showDrafts() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/toiture_drafts?customer_id=eq.1&order=updated_at.desc&limit=20&select=id,client_name,client_phone,surface_sqft,updated_at`, {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+    });
+    if (!res.ok) { alert('Erreur chargement brouillons'); return; }
+    const drafts = await res.json();
+    if (drafts.length === 0) { alert('Aucun brouillon sauvegardé'); return; }
+
+    const list = drafts.map((d, i) => {
+      const date = new Date(d.updated_at).toLocaleString('fr-CA');
+      const name = d.client_name || '(sans nom)';
+      const surface = d.surface_sqft ? `${d.surface_sqft} pi²` : '';
+      return `${i+1}. ${name} ${surface} — ${date}`;
+    }).join('\n');
+
+    const choice = prompt(`Brouillons sauvegardés:\n\n${list}\n\nEntre le numéro pour charger (ou annuler):`);
+    if (!choice) return;
+    const idx = parseInt(choice) - 1;
+    if (idx < 0 || idx >= drafts.length) { alert('Numéro invalide'); return; }
+
+    const saved = await loadDraft(drafts[idx].id);
+    if (saved) {
+      restoreState(saved);
+      setSaveStatus('✓ Brouillon chargé', '#16a34a');
+    } else {
+      alert('Erreur chargement du brouillon');
+    }
+  } catch(e) {
+    alert('Erreur: ' + e.message);
+  }
 }
 
 // ============================================================================
@@ -1799,6 +2013,7 @@ function updateState() {
     // On met juste à jour les valeurs affichées (labels brut/employeur/subtotal).
     updateWorkerRatesValues();
   }
+  triggerSave();
 }
 
 function updateTopbarName() {
@@ -2058,7 +2273,13 @@ function showPreview() {
   window.open(state.quoteUrl, '_blank');
 }
 function resetWizard() {
-  if (!confirm('Recommencer à zéro ? Les infos actuelles seront perdues.')) return;
+  if (!confirm('Recommencer à zéro ? (Le brouillon actuel reste accessible via Brouillons)')) return;
+  _draftId = null;
+  localStorage.removeItem(LS_KEY);
+  clearTimeout(_saveTimer);
+  const url = new URL(window.location);
+  url.searchParams.delete('draft');
+  window.history.replaceState({}, '', url);
   location.reload();
 }
 
@@ -2135,12 +2356,38 @@ function onWorkerCountChange() {
 }
 
 // ---------- Init ----------
-(function init() {
+(async function init() {
+  _savePaused = true;
   selectPricingMode('auto');
   selectTier(1);
   setStep(1);
   renderWorkerRates();
   updateState();
+  _savePaused = false;
+
+  const params = new URLSearchParams(window.location.search);
+  const draftParam = params.get('draft');
+  let restored = false;
+
+  if (draftParam) {
+    setSaveStatus('Chargement...', '#eab308');
+    const saved = await loadDraft(draftParam);
+    if (saved) {
+      restored = restoreState(saved);
+      if (restored) setSaveStatus('✓ Brouillon chargé', '#16a34a');
+    }
+  }
+
+  if (!restored) {
+    const local = loadFromLocal();
+    if (local && (local.client?.name || local.client?.phone || (local.measures?.surface > 0))) {
+      if (local._draftId) _draftId = local._draftId;
+      restored = restoreState(local);
+      if (restored) setSaveStatus('✓ Restauré (local)', '#16a34a');
+    }
+  }
+
+  window.addEventListener('beforeunload', () => saveToLocal());
 })();
 </script>
 
