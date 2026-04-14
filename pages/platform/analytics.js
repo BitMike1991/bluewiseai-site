@@ -2,7 +2,11 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "../../src/components/dashboard/DashboardLayout";
 import { useBranding } from "../../src/components/dashboard/BrandingContext";
-import { BarChart2, TrendingUp, Users, Phone, MessageSquare, DollarSign } from "lucide-react";
+import {
+  BarChart2, TrendingUp, TrendingDown, Users, Phone, MessageSquare,
+  DollarSign, Zap, Clock, ArrowUpRight, ArrowDownRight, Minus,
+  Download, Calendar, Globe, Facebook, ExternalLink,
+} from "lucide-react";
 
 const RANGES = [
   { value: "7d", label: "7 days" },
@@ -16,8 +20,58 @@ function fmt(n) {
   return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(n);
 }
 
+function fmtCompact(n) {
+  if (n == null) return "$0";
+  if (n >= 1000) return `$${(n / 1000).toFixed(1)}k`;
+  return `$${Math.round(n)}`;
+}
+
 function getPieColors(primary) {
   return [primary || "#6c63ff", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
+}
+
+// ── KPI Card ──
+function KpiCard({ icon: Icon, label, value, suffix, previous, changePercent, color, branding }) {
+  const primary = branding?.primary_color || "#6c63ff";
+  const isUp = changePercent > 0;
+  const isDown = changePercent < 0;
+  const Arrow = isUp ? ArrowUpRight : isDown ? ArrowDownRight : Minus;
+  const changeColor = isUp ? "#10b981" : isDown ? "#ef4444" : "#888";
+
+  // Speed-to-lead: lower is better
+  const invertedLabel = label === "Speed to Lead";
+  const effectiveChangeColor = invertedLabel ? (isDown ? "#10b981" : isUp ? "#ef4444" : "#888") : changeColor;
+
+  return (
+    <div className="rounded-2xl border border-d-border bg-d-surface p-4 flex flex-col gap-1">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="p-1.5 rounded-lg" style={{ backgroundColor: `${color || primary}15` }}>
+          <Icon className="w-4 h-4" style={{ color: color || primary }} />
+        </div>
+        <span className="text-xs text-d-muted font-medium">{label}</span>
+      </div>
+      <div className="text-2xl font-bold text-d-text">
+        {value}{suffix && <span className="text-sm font-normal text-d-muted ml-1">{suffix}</span>}
+      </div>
+      {changePercent != null && (
+        <div className="flex items-center gap-1 mt-0.5">
+          <Arrow className="w-3.5 h-3.5" style={{ color: effectiveChangeColor }} />
+          <span className="text-xs font-medium" style={{ color: effectiveChangeColor }}>
+            {Math.abs(changePercent)}%
+          </span>
+          <span className="text-xs text-d-muted">vs prev period</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Speed-to-lead color ──
+function speedColor(minutes) {
+  if (minutes == null) return "#888";
+  if (minutes < 5) return "#10b981";
+  if (minutes <= 15) return "#f59e0b";
+  return "#ef4444";
 }
 
 export default function AnalyticsPage() {
@@ -26,7 +80,7 @@ export default function AnalyticsPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [rc, setRc] = useState(null); // recharts module
+  const [rc, setRc] = useState(null);
 
   const primary = branding?.primary_color || "#6c63ff";
   const accent = branding?.accent_color || "#00d4aa";
@@ -34,12 +88,10 @@ export default function AnalyticsPage() {
   const mutedHex = branding?.text_secondary || "#8888aa";
   const colors = getPieColors(primary);
 
-  // Load recharts immediately on mount — don't wait for data (parallel loading)
   useEffect(() => {
     import("recharts").then((mod) => setRc(mod)).catch(console.error);
   }, []);
 
-  // Fetch data when range changes
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -60,8 +112,42 @@ export default function AnalyticsPage() {
 
   const tickProps = { fill: mutedHex, fontSize: 11 };
   const axisProps = { axisLine: false, tickLine: false };
-
   const chartsReady = rc && data && !loading;
+
+  // ── CSV Export ──
+  function exportCSV() {
+    if (!data) return;
+    const sections = [];
+
+    if (data.leadsPerDay?.length) {
+      sections.push("Leads Over Time\nDate,Count");
+      data.leadsPerDay.forEach(r => sections.push(`${r.date},${r.count}`));
+    }
+    if (data.leadsBySource?.length) {
+      sections.push("\nLead Sources\nSource,Count");
+      data.leadsBySource.forEach(r => sections.push(`"${r.source}",${r.count}`));
+    }
+    if (data.conversionFunnel?.length) {
+      sections.push("\nConversion Funnel\nStage,Count,Value");
+      data.conversionFunnel.forEach(r => sections.push(`"${r.stage}",${r.count},${r.value ?? ""}`));
+    }
+    if (data.revenuePerWeek?.length) {
+      sections.push("\nRevenue\nPeriod,Revenue");
+      data.revenuePerWeek.forEach(r => sections.push(`${r.week},${r.revenue}`));
+    }
+    if (data.messageVolume?.length) {
+      sections.push("\nMessage Volume\nPeriod,SMS,Voice,Email");
+      data.messageVolume.forEach(r => sections.push(`${r.week},${r.sms},${r.call},${r.email}`));
+    }
+
+    const blob = new Blob([sections.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `analytics-${range}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   function CustomTooltip({ active, payload, label }) {
     if (!active || !payload?.length) return null;
@@ -70,17 +156,45 @@ export default function AnalyticsPage() {
         <p className="text-d-text font-medium mb-1">{label}</p>
         {payload.map((p, i) => (
           <p key={i} style={{ color: p.color }}>
-            {p.name}: {typeof p.value === "number" && p.name === "Revenue" ? fmt(p.value) : p.value}
+            {p.name}: {typeof p.value === "number" && (p.name === "Revenue" || p.name === "Spend ($)") ? fmt(p.value) : p.value}
           </p>
         ))}
       </div>
     );
   }
 
-  function Spinner() {
+  function Skeleton({ h = "h-64" }) {
     return (
-      <div className="h-64 flex items-center justify-center">
-        <div className="animate-spin h-6 w-6 border-2 border-d-primary border-t-transparent rounded-full" />
+      <div className={`${h} rounded-2xl border border-d-border bg-d-surface animate-pulse`}>
+        <div className="h-full flex items-center justify-center">
+          <div className="w-24 h-3 rounded bg-d-border" />
+        </div>
+      </div>
+    );
+  }
+
+  function EmptyState({ icon: Icon, message }) {
+    return (
+      <div className="h-64 flex flex-col items-center justify-center gap-3 text-d-muted">
+        <Icon className="w-8 h-8 opacity-30" />
+        <p className="text-sm">{message}</p>
+      </div>
+    );
+  }
+
+  function renderKpis() {
+    if (!data?.kpis) return null;
+    const k = data.kpis;
+    const spd = data.speedToLead;
+
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <KpiCard icon={Users} label="Leads" value={k.totalLeads.current} changePercent={k.totalLeads.changePercent} color="#6c63ff" branding={branding} />
+        <KpiCard icon={BarChart2} label="Quotes" value={k.totalQuotes.current} changePercent={k.totalQuotes.changePercent} color="#8b5cf6" branding={branding} />
+        <KpiCard icon={TrendingUp} label="Contracts" value={k.totalContracts.current} changePercent={k.totalContracts.changePercent} color="#10b981" branding={branding} />
+        <KpiCard icon={DollarSign} label="Revenue" value={fmt(k.totalRevenue.current)} changePercent={k.totalRevenue.changePercent} color="#10b981" branding={branding} />
+        <KpiCard icon={Clock} label="Speed to Lead" value={spd?.avgMinutes ?? "—"} suffix={spd ? "min" : ""} changePercent={k.avgSpeedToLead.changePercent} color={speedColor(spd?.avgMinutes)} branding={branding} />
+        <KpiCard icon={Zap} label="AI Answer Rate" value={k.aiAnswerRate.current != null ? `${k.aiAnswerRate.current}%` : "—"} changePercent={k.aiAnswerRate.changePercent} color="#06b6d4" branding={branding} />
       </div>
     );
   }
@@ -88,6 +202,8 @@ export default function AnalyticsPage() {
   function renderCharts() {
     if (!rc || !data) return null;
     const { ResponsiveContainer, BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, CartesianGrid, Legend } = rc;
+
+    const xTickKey = data.leadsPerDay?.[0]?.label ? "label" : "date";
 
     return (
       <>
@@ -98,13 +214,13 @@ export default function AnalyticsPage() {
             <h3 className="text-sm font-medium text-d-muted">Leads Over Time</h3>
           </div>
           {!(data.leadsPerDay?.length) ? (
-            <div className="h-64 flex items-center justify-center text-sm text-d-muted">No leads in this period</div>
+            <EmptyState icon={Users} message="No leads in this period — your first lead will appear here" />
           ) : (
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.leadsPerDay} barSize={range === "90d" || range === "all" ? 4 : 12}>
                   <CartesianGrid strokeDasharray="3 3" stroke={borderHex} vertical={false} />
-                  <XAxis dataKey="date" tickFormatter={(v) => v.slice(5)} tick={tickProps} {...axisProps}
+                  <XAxis dataKey={xTickKey} tick={tickProps} {...axisProps}
                     interval={range === "7d" ? 0 : "preserveStartEnd"} />
                   <YAxis tick={tickProps} {...axisProps} allowDecimals={false} />
                   <Tooltip content={<CustomTooltip />} />
@@ -123,7 +239,7 @@ export default function AnalyticsPage() {
               <h3 className="text-sm font-medium text-d-muted">Lead Sources</h3>
             </div>
             {!(data.leadsBySource?.length) ? (
-              <div className="h-64 flex items-center justify-center text-sm text-d-muted">No leads in this period</div>
+              <EmptyState icon={BarChart2} message="No leads in this period" />
             ) : (
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
@@ -153,8 +269,21 @@ export default function AnalyticsPage() {
                 <BarChart data={data.conversionFunnel || []} layout="vertical" margin={{ left: 80, right: 16 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={borderHex} horizontal={false} />
                   <XAxis type="number" tick={tickProps} {...axisProps} allowDecimals={false} />
-                  <YAxis type="category" dataKey="stage" tick={{ ...tickProps, textAnchor: "end" }} width={80} {...axisProps} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <YAxis type="category" dataKey={(entry) => {
+                    const val = entry.value != null ? ` (${fmtCompact(entry.value)})` : "";
+                    return `${entry.stage}${val}`;
+                  }} tick={{ ...tickProps, textAnchor: "end", fontSize: 10 }} width={110} {...axisProps} />
+                  <Tooltip content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const d = payload[0].payload;
+                    return (
+                      <div className="rounded-lg border border-d-border bg-d-surface px-3 py-2 text-xs shadow-lg">
+                        <p className="text-d-text font-medium">{d.stage}</p>
+                        <p style={{ color: primary }}>Count: {d.count}</p>
+                        {d.value != null && <p style={{ color: "#10b981" }}>Value: {fmt(d.value)}</p>}
+                      </div>
+                    );
+                  }} />
                   <Bar dataKey="count" name="Count" radius={[0, 4, 4, 0]}>
                     {(data.conversionFunnel || []).map((_, i) => (
                       <Cell key={i} fill={colors[i % colors.length]} />
@@ -169,62 +298,73 @@ export default function AnalyticsPage() {
         {/* Row 3: Revenue Trend */}
         <div className="rounded-2xl border border-d-border bg-d-surface p-4">
           <div className="flex items-center gap-2 mb-3">
-            <TrendingUp className="w-4 h-4 text-d-primary" />
-            <h3 className="text-sm font-medium text-d-muted">Revenue Trend (12 Weeks)</h3>
+            <DollarSign className="w-4 h-4 text-d-primary" />
+            <h3 className="text-sm font-medium text-d-muted">Revenue Trend</h3>
           </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data.revenuePerWeek || []}>
-                <CartesianGrid strokeDasharray="3 3" stroke={borderHex} vertical={false} />
-                <XAxis dataKey="week" tick={tickProps} {...axisProps} />
-                <YAxis tick={tickProps} {...axisProps} tickFormatter={(v) => v >= 1000 ? `$${(v / 1000).toFixed(1)}k` : `$${v}`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Line type="monotone" dataKey="revenue" name="Revenue" stroke={primary} strokeWidth={2}
-                  dot={{ fill: primary, r: 3 }} activeDot={{ r: 5 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          {!(data.revenuePerWeek?.length) ? (
+            <EmptyState icon={DollarSign} message="No revenue data yet" />
+          ) : (
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data.revenuePerWeek}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={borderHex} vertical={false} />
+                  <XAxis dataKey="week" tick={tickProps} {...axisProps} />
+                  <YAxis tick={tickProps} {...axisProps} tickFormatter={(v) => v >= 1000 ? `$${(v / 1000).toFixed(1)}k` : `$${v}`} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Line type="monotone" dataKey="revenue" name="Revenue" stroke={primary} strokeWidth={2}
+                    dot={{ fill: primary, r: 3 }} activeDot={{ r: 5 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
 
-        {/* Row 4: Paid Ads (if available) */}
-        {data.adsInsights && (
-          <>
-            <div className="rounded-2xl border border-d-border bg-d-surface p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <DollarSign className="w-4 h-4 text-d-primary" />
-                <h3 className="text-sm font-medium text-d-muted">Paid Ads Performance</h3>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
-                {[
-                  { label: "Spend", value: `$${data.adsInsights.totalSpend}` },
-                  { label: "Impressions", value: data.adsInsights.totalImpressions.toLocaleString() },
-                  { label: "Clicks", value: data.adsInsights.totalClicks.toLocaleString() },
-                  { label: "Leads (Ads)", value: data.adsInsights.totalLeads },
-                  { label: "CPL", value: data.adsInsights.cpl != null ? `$${data.adsInsights.cpl}` : "—" },
-                  { label: "CTR", value: `${data.adsInsights.ctr}%` },
-                ].map((m) => (
-                  <div key={m.label} className="rounded-xl border border-d-border bg-d-bg p-3 text-center">
-                    <div className="text-lg font-semibold text-d-text">{m.value}</div>
-                    <div className="text-[11px] text-d-muted mt-0.5">{m.label}</div>
-                  </div>
-                ))}
-              </div>
-              {data.adsInsights.dailySpend?.length > 0 && (
-                <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data.adsInsights.dailySpend} barSize={range === "90d" || range === "all" ? 3 : 10}>
-                      <CartesianGrid strokeDasharray="3 3" stroke={borderHex} vertical={false} />
-                      <XAxis dataKey="date" tickFormatter={(v) => v.slice(5)} tick={tickProps} {...axisProps}
-                        interval={range === "7d" ? 0 : "preserveStartEnd"} />
-                      <YAxis tick={tickProps} {...axisProps} tickFormatter={(v) => `$${v}`} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="spend" name="Spend ($)" fill={primary} radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
+        {/* Row 4: Paid Ads (if available) OR connect prompt */}
+        {data.adsInsights ? (
+          <div className="rounded-2xl border border-d-border bg-d-surface p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <DollarSign className="w-4 h-4 text-d-primary" />
+              <h3 className="text-sm font-medium text-d-muted">Paid Ads Performance</h3>
             </div>
-          </>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 mb-4">
+              {[
+                { label: "Spend", value: `$${data.adsInsights.totalSpend}` },
+                { label: "Impressions", value: data.adsInsights.totalImpressions.toLocaleString() },
+                { label: "Clicks", value: data.adsInsights.totalClicks.toLocaleString() },
+                { label: "Leads (Ads)", value: data.adsInsights.totalLeads },
+                { label: "CPL", value: data.adsInsights.cpl != null ? `$${data.adsInsights.cpl}` : "—" },
+                { label: "CPC", value: data.adsInsights.cpc != null ? `$${data.adsInsights.cpc}` : "—" },
+                { label: "CTR", value: `${data.adsInsights.ctr}%` },
+              ].map((m) => (
+                <div key={m.label} className="rounded-xl border border-d-border bg-d-bg p-3 text-center">
+                  <div className="text-lg font-semibold text-d-text">{m.value}</div>
+                  <div className="text-[11px] text-d-muted mt-0.5">{m.label}</div>
+                </div>
+              ))}
+            </div>
+            {data.adsInsights.dailySpend?.length > 0 && (
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data.adsInsights.dailySpend} barSize={range === "90d" || range === "all" ? 3 : 10}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={borderHex} vertical={false} />
+                    <XAxis dataKey="date" tickFormatter={(v) => v.slice(5)} tick={tickProps} {...axisProps}
+                      interval={range === "7d" ? 0 : "preserveStartEnd"} />
+                    <YAxis tick={tickProps} {...axisProps} tickFormatter={(v) => `$${v}`} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="spend" name="Spend ($)" fill={primary} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-d-border bg-d-surface/50 p-6 text-center">
+            <DollarSign className="w-8 h-8 mx-auto mb-3 text-d-muted opacity-30" />
+            <p className="text-sm font-medium text-d-text mb-1">Connect your Meta ad account</p>
+            <p className="text-xs text-d-muted max-w-md mx-auto">
+              Link your Facebook/Instagram ad account to see campaign performance, spend, CPL, and ROI — all inside your dashboard.
+            </p>
+          </div>
         )}
 
         {/* Row 5: AI Performance + Message Volume */}
@@ -284,6 +424,89 @@ export default function AnalyticsPage() {
             </div>
           </div>
         </div>
+
+        {/* Row 6: Social Media Insights (if available) */}
+        {data.socialInsights ? (
+          <div className="rounded-2xl border border-d-border bg-d-surface p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Facebook className="w-4 h-4 text-d-primary" />
+                <h3 className="text-sm font-medium text-d-muted">
+                  Social Media {data.socialInsights.pageName ? `— ${data.socialInsights.pageName}` : ""}
+                </h3>
+              </div>
+              {data.socialInsights.followers != null && (
+                <div className="text-xs text-d-muted">
+                  <span className="font-semibold text-d-text">{data.socialInsights.followers.toLocaleString()}</span> followers
+                </div>
+              )}
+            </div>
+            {data.socialInsights.impressions?.length > 0 ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={data.socialInsights.impressions}>
+                    <defs>
+                      <linearGradient id="gradImpressions" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={primary} stopOpacity={0.3} />
+                        <stop offset="95%" stopColor={primary} stopOpacity={0.02} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={borderHex} vertical={false} />
+                    <XAxis dataKey="date" tickFormatter={(v) => v?.slice(5)} tick={tickProps} {...axisProps} />
+                    <YAxis tick={tickProps} {...axisProps} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area type="monotone" dataKey="value" name="Page Impressions" stroke={primary} fill="url(#gradImpressions)" strokeWidth={1.5} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <EmptyState icon={Facebook} message="No social media data for this period" />
+            )}
+          </div>
+        ) : null}
+
+        {/* Row 7: Website Traffic (if available) */}
+        {data.webTraffic ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="rounded-2xl border border-d-border bg-d-surface p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Globe className="w-4 h-4 text-d-primary" />
+                <h3 className="text-sm font-medium text-d-muted">Top Pages</h3>
+              </div>
+              {data.webTraffic.topPages?.length > 0 ? (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {data.webTraffic.topPages.slice(0, 10).map((p, i) => (
+                    <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-d-bg/50 text-xs">
+                      <span className="text-d-text truncate max-w-[70%]">{p.key || p.path || "/"}</span>
+                      <span className="text-d-muted font-medium">{(p.total || p.count || 0).toLocaleString()} views</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState icon={Globe} message="No page view data yet" />
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-d-border bg-d-surface p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <ExternalLink className="w-4 h-4 text-d-primary" />
+                <h3 className="text-sm font-medium text-d-muted">Top Referrers</h3>
+              </div>
+              {data.webTraffic.topReferrers?.length > 0 ? (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {data.webTraffic.topReferrers.slice(0, 10).map((r, i) => (
+                    <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-d-bg/50 text-xs">
+                      <span className="text-d-text truncate max-w-[70%]">{r.key || r.referrer || "(direct)"}</span>
+                      <span className="text-d-muted font-medium">{(r.total || r.count || 0).toLocaleString()} visits</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState icon={ExternalLink} message="No referrer data yet" />
+              )}
+            </div>
+          </div>
+        ) : null}
       </>
     );
   }
@@ -292,25 +515,35 @@ export default function AnalyticsPage() {
     <DashboardLayout title="Analytics">
       <div className="space-y-6">
 
-        {/* Header + Range Selector */}
+        {/* Header + Range Selector + Export */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold text-d-text">Analytics</h1>
             <p className="text-sm mt-0.5 text-d-muted">Leads, revenue, and AI performance trends</p>
           </div>
-          <div className="flex items-center gap-1 rounded-xl border border-d-border bg-d-surface p-1">
-            {RANGES.map((r) => (
-              <button
-                key={r.value}
-                onClick={() => setRange(r.value)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                  range === r.value ? "text-white" : "text-d-muted hover:text-d-text"
-                }`}
-                style={range === r.value ? { backgroundColor: primary } : undefined}
-              >
-                {r.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 rounded-xl border border-d-border bg-d-surface p-1">
+              {RANGES.map((r) => (
+                <button
+                  key={r.value}
+                  onClick={() => setRange(r.value)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                    range === r.value ? "text-white" : "text-d-muted hover:text-d-text"
+                  }`}
+                  style={range === r.value ? { backgroundColor: primary } : undefined}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={exportCSV}
+              className="hidden sm:flex items-center gap-1.5 rounded-xl border border-d-border bg-d-surface px-3 py-2 text-xs text-d-muted hover:text-d-text transition-colors"
+              title="Export as CSV"
+            >
+              <Download className="w-3.5 h-3.5" />
+              CSV
+            </button>
           </div>
         </div>
 
@@ -320,7 +553,22 @@ export default function AnalyticsPage() {
           </div>
         )}
 
-        {(loading || !rc) ? <Spinner /> : chartsReady ? renderCharts() : (
+        {(loading || !rc) ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {[...Array(6)].map((_, i) => <Skeleton key={i} h="h-24" />)}
+            </div>
+            <Skeleton />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <Skeleton /><Skeleton />
+            </div>
+          </div>
+        ) : chartsReady ? (
+          <>
+            {renderKpis()}
+            {renderCharts()}
+          </>
+        ) : (
           <div className="text-center text-d-muted py-12">No data available</div>
         )}
 

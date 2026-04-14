@@ -19,6 +19,53 @@ export default function Document() {
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:image" content="https://bluewiseai.com/bluewise-logo.png" />
 
+        {/* JSON-LD Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "SoftwareApplication",
+                  "@id": "https://bluewiseai.com/#software",
+                  "name": "BlueWise AI",
+                  "description": "AI-powered CRM and automation platform for trades and home service businesses. Voice agents, SMS automation, lead management, invoicing, and analytics.",
+                  "url": "https://bluewiseai.com",
+                  "applicationCategory": "BusinessApplication",
+                  "operatingSystem": "Web",
+                  "offers": {
+                    "@type": "AggregateOffer",
+                    "priceCurrency": "CAD",
+                    "lowPrice": "297",
+                    "highPrice": "997"
+                  }
+                },
+                {
+                  "@type": "Organization",
+                  "@id": "https://bluewiseai.com/#org",
+                  "name": "BlueWise AI",
+                  "url": "https://bluewiseai.com",
+                  "logo": "https://bluewiseai.com/bluewise-logo.png",
+                  "email": "admin@bluewiseai.com",
+                  "description": "AI-powered business automation for trades and home services.",
+                  "areaServed": {
+                    "@type": "Country",
+                    "name": "Canada"
+                  },
+                  "knowsAbout": [
+                    "AI Voice Agents",
+                    "CRM for Trades",
+                    "SMS Automation",
+                    "Lead Management",
+                    "Business Analytics"
+                  ]
+                }
+              ]
+            }),
+          }}
+        />
+
         {/* Base reset */}
         <style>{`
           html, body, #__next {
