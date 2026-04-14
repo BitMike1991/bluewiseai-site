@@ -520,7 +520,7 @@ export default async function handler(req, res) {
     };
     return res.status(200).json(result);
   } catch (err) {
-    console.error("[api/analytics] Error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    console.error("[api/analytics] Error:", err?.message, err?.stack);
+    return res.status(500).json({ error: "Internal server error", debug: err?.message });
   }
 }
