@@ -703,16 +703,19 @@ export default function AskPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [chatError, setChatError] = useState(null);
   const abortRef = useRef(null);
+  const hiddenMsgIds = useRef(new Set());
 
   // Send message via fetch + SSE streaming
   async function sendMessage({ text, hidden }) {
     if (!text?.trim() || isLoading) return;
 
+    const msgId = `u-${Date.now()}`;
+    if (hidden) hiddenMsgIds.current.add(msgId);
+
     const userMsg = {
-      id: `u-${Date.now()}`,
+      id: msgId,
       role: "user",
       content: text.trim(),
-      _hidden: !!hidden,
       parts: [{ type: "text", text: text.trim() }],
     };
 
@@ -1068,7 +1071,7 @@ export default function AskPage() {
           {messages.map((msg) => (
             <div key={msg.id}>
               {/* User message (skip hidden action prompts) */}
-              {msg.role === "user" && !msg._hidden && (
+              {msg.role === "user" && !hiddenMsgIds.current.has(msg.id) && (
                 <div className="flex justify-end">
                   <div className="max-w-[80%] md:max-w-lg rounded-2xl bg-d-primary px-4 py-3 text-sm text-white">
                     {typeof msg.content === "string"
