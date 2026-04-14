@@ -1,7 +1,7 @@
 // pages/api/chat.js — BlueWise Brain v2 Streaming API
 // Vercel AI SDK 6 streamText with Pages Router pattern
 
-import { streamText } from "ai";
+import { streamText, convertToModelMessages } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { getAuthContext } from "../../lib/supabaseServer";
 import { createBrainTools } from "../../lib/brain/tools";
@@ -122,10 +122,12 @@ export default async function handler(req, res) {
   }
 
   try {
+    const modelMessages = convertToModelMessages(messages);
+
     const result = streamText({
       model: openai("gpt-4o"),
       system: systemPrompt,
-      messages,
+      messages: modelMessages,
       tools,
       maxSteps: 10,
     });
