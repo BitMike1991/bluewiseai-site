@@ -122,7 +122,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const modelMessages = convertToModelMessages(messages);
+    const modelMessages = await convertToModelMessages(messages);
 
     const result = streamText({
       model: openai("gpt-4o"),
