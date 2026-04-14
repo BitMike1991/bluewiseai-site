@@ -101,10 +101,10 @@ export default async function handler(req, res) {
     if (sinceIso) leadsQ = leadsQ.gte("created_at", sinceIso);
     if (range === "all") leadsQ = leadsQ.limit(10000);
 
-    let quotesQ = supabase.from("quotes").select("id, total_amount").eq("customer_id", customerId).not("status", "eq", "draft");
+    let quotesQ = supabase.from("quotes").select("id, total_ttc").eq("customer_id", customerId).not("status", "eq", "draft");
     if (sinceIso) quotesQ = quotesQ.gte("created_at", sinceIso);
 
-    let contractsQ = supabase.from("contracts").select("id, total_amount")
+    let contractsQ = supabase.from("contracts").select("id, job_id, signed_at")
       .eq("customer_id", customerId).not("signed_at", "is", null);
     if (sinceIso) contractsQ = contractsQ.gte("signed_at", sinceIso);
 
@@ -222,9 +222,22 @@ export default async function handler(req, res) {
     // ── 2. Conversion funnel (with dollar values) ──
     const totalLeadsCount = (leadsRows || []).length;
     const quotesSentCount = quotesRows?.length || 0;
-    const quotesValue = (quotesRows || []).reduce((s, q) => s + Number(q.total_amount || 0), 0);
+    const quotesValue = (quotesRows || []).reduce((s, q) => s + Number(q.total_ttc || 0), 0);
     const contractsSigned = contractRows?.length || 0;
-    const contractsValue = (contractRows || []).reduce((s, c) => s + Number(c.total_amount || 0), 0);
+    // Contracts don't have amount — estimate from linked quotes via job_id
+    const contractJobIds = (contractRows || []).map(c => c.job_id).filter(Boolean);
+    let contractsValue = 0;
+    if (contractJobIds.length > 0) {
+      const { data: contractQuotes } = await supabase.from("quotes")
+        .select("total_ttc, job_id").in("job_id", contractJobIds)
+        .eq("customer_id", customerId).not("status", "eq", "draft");
+      // Take latest quote per job
+      const jobQuoteMap = {};
+      for (const q of contractQuotes || []) {
+        jobQuoteMap[q.job_id] = Number(q.total_ttc || 0);
+      }
+      contractsValue = Object.values(jobQuoteMap).reduce((s, v) => s + v, 0);
+    }
     const paymentsCount = paymentsRows?.length || 0;
     const totalRevenue = (paymentsRows || []).reduce((s, p) => s + Number(p.amount || 0), 0);
 
