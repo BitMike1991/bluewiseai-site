@@ -362,7 +362,7 @@ export default async function handler(req, res) {
 
     // ── Customer row (for ads + social) ──
     const { data: custRow } = await supabase
-      .from("customers").select("fb_ad_account_id, fb_campaign_ids, fb_page_id, fb_page_access_token, domain")
+      .from("customers").select("fb_ad_account_id, fb_campaign_ids, fb_page_id, fb_page_access_token, fb_pixel_id, domain")
       .eq("id", customerId).single();
 
     // ── 8. Facebook Ads insights (optional) ──
@@ -435,7 +435,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // ── 9. Facebook/Instagram Organic Insights (optional) ──
+    // ── 9. Facebook/Instagram Organic Insights (individual metric endpoints) ──
     let socialInsights = null;
     const fbPageToken = custRow?.fb_page_access_token || null;
     const fbPageId = custRow?.fb_page_id || null;
@@ -443,65 +443,80 @@ export default async function handler(req, res) {
       try {
         const fbSince = sinceIso ? Math.floor(new Date(sinceIso).getTime() / 1000) : Math.floor((now.getTime() - 90 * 86400000) / 1000);
         const fbUntil = Math.floor(now.getTime() / 1000);
+        const fbBase = `https://graph.facebook.com/v21.0/${fbPageId}`;
 
-        const [pageInsightsResp, pageFansResp] = await Promise.all([
-          fetch(`https://graph.facebook.com/v21.0/${fbPageId}/insights?metric=page_impressions,page_engaged_users,page_post_engagements&period=day&since=${fbSince}&until=${fbUntil}&access_token=${fbPageToken}`),
-          fetch(`https://graph.facebook.com/v21.0/${fbPageId}?fields=followers_count,fan_count,name&access_token=${fbPageToken}`),
+        const metricNames = ["page_views_total", "page_impressions", "page_impressions_unique", "page_engaged_users", "page_post_engagements"];
+
+        const fetchMetric = async (name) => {
+          try {
+            const r = await fetch(`${fbBase}/insights/${name}/day?since=${fbSince}&until=${fbUntil}&access_token=${fbPageToken}`);
+            const j = await r.json();
+            if (j.data?.[0]?.values) {
+              return { name, values: j.data[0].values.map(v => ({ date: v.end_time?.slice(0, 10), value: v.value || 0 })) };
+            }
+            return { name, values: [] };
+          } catch { return { name, values: [] }; }
+        };
+
+        const [m0, m1, m2, m3, m4, fansResp] = await Promise.all([
+          ...metricNames.map(fetchMetric),
+          fetch(`${fbBase}?fields=followers_count,fan_count,name&access_token=${fbPageToken}`),
         ]);
+        const fansJson = await fansResp.json();
 
-        const [insightsJson, fansJson] = await Promise.all([pageInsightsResp.json(), pageFansResp.json()]);
-
-        const metrics = {};
-        if (insightsJson.data) {
-          for (const metric of insightsJson.data) {
-            const values = (metric.values || []).map(v => ({
-              date: v.end_time?.slice(0, 10),
-              value: v.value || 0,
-            }));
-            metrics[metric.name] = values;
-          }
-        }
+        const sumValues = (arr) => arr.reduce((s, v) => s + (v.value || 0), 0);
 
         socialInsights = {
           pageName: fansJson.name || null,
           followers: fansJson.followers_count || fansJson.fan_count || null,
-          impressions: metrics.page_impressions || [],
-          engagedUsers: metrics.page_engaged_users || [],
-          postEngagements: metrics.page_post_engagements || [],
+          pageViews: m0.values,
+          impressions: m1.values,
+          uniqueReach: m2.values,
+          engagedUsers: m3.values,
+          postEngagements: m4.values,
+          totalPageViews: sumValues(m0.values),
+          totalImpressions: sumValues(m1.values),
+          totalReach: sumValues(m2.values),
+          totalEngaged: sumValues(m3.values),
+          totalEngagements: sumValues(m4.values),
         };
       } catch (socialErr) {
         console.error("[api/analytics] Social insights fetch error:", socialErr.message);
       }
     }
 
-    // ── 10. Vercel Web Analytics (optional) ──
-    let webTraffic = null;
-    const vercelToken = process.env.VERCEL_ANALYTICS_TOKEN;
-    const vercelProjectId = process.env.VERCEL_PROJECT_ID;
-    // Per-customer: check customers.domain to get their Vercel project
-    // For now, show platform-level analytics if token is set
-    if (vercelToken && vercelProjectId) {
+    // ── 10. Meta Pixel Website Events (optional) ──
+    let pixelInsights = null;
+    const fbPixelId = custRow?.fb_pixel_id;
+    if (metaToken && fbPixelId) {
       try {
-        const vSince = sinceIso ? new Date(sinceIso).getTime() : now.getTime() - 30 * 86400000;
-        const vUntil = now.getTime();
+        const pixelSince = sinceIso ? Math.floor(new Date(sinceIso).getTime() / 1000) : Math.floor((now.getTime() - 30 * 86400000) / 1000);
+        const pixelUntil = Math.floor(now.getTime() / 1000);
 
-        const [pvResp, refResp] = await Promise.all([
-          fetch(`https://vercel.com/api/web/insights/stats/path?projectId=${vercelProjectId}&from=${vSince}&to=${vUntil}&limit=10`, {
-            headers: { Authorization: `Bearer ${vercelToken}` },
-          }),
-          fetch(`https://vercel.com/api/web/insights/stats/referrer?projectId=${vercelProjectId}&from=${vSince}&to=${vUntil}&limit=10`, {
-            headers: { Authorization: `Bearer ${vercelToken}` },
-          }),
-        ]);
+        const statsResp = await fetch(
+          `https://graph.facebook.com/v21.0/${fbPixelId}/stats?aggregation=event&start_time=${pixelSince}&end_time=${pixelUntil}&access_token=${metaToken}`
+        );
+        const statsJson = await statsResp.json();
 
-        const [pvJson, refJson] = await Promise.all([pvResp.json(), refResp.json()]);
+        if (statsJson.data) {
+          // Aggregate events across all time buckets
+          const eventMap = {};
+          for (const bucket of statsJson.data) {
+            for (const evt of bucket.data || []) {
+              eventMap[evt.value] = (eventMap[evt.value] || 0) + parseInt(evt.count || 0);
+            }
+          }
+          const events = Object.entries(eventMap)
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count);
 
-        webTraffic = {
-          topPages: pvJson.data || [],
-          topReferrers: refJson.data || [],
-        };
-      } catch (webErr) {
-        console.error("[api/analytics] Vercel Analytics fetch error:", webErr.message);
+          pixelInsights = {
+            events,
+            totalEvents: events.reduce((s, e) => s + e.count, 0),
+          };
+        }
+      } catch (pixelErr) {
+        console.error("[api/analytics] Pixel stats fetch error:", pixelErr.message);
       }
     }
 
@@ -516,7 +531,7 @@ export default async function handler(req, res) {
       speedToLead,
       adsInsights,
       socialInsights,
-      webTraffic,
+      pixelInsights,
     };
     return res.status(200).json(result);
   } catch (err) {

@@ -5,7 +5,7 @@ import { useBranding } from "../../src/components/dashboard/BrandingContext";
 import {
   BarChart2, TrendingUp, TrendingDown, Users, Phone, MessageSquare,
   DollarSign, Zap, Clock, ArrowUpRight, ArrowDownRight, Minus,
-  Download, Calendar, Globe, Facebook, ExternalLink,
+  Download, Calendar, Globe, Facebook, ExternalLink, Activity,
 } from "lucide-react";
 
 const RANGES = [
@@ -138,6 +138,19 @@ export default function AnalyticsPage() {
     if (data.messageVolume?.length) {
       sections.push("\nMessage Volume\nPeriod,SMS,Voice,Email");
       data.messageVolume.forEach(r => sections.push(`${r.week},${r.sms},${r.call},${r.email}`));
+    }
+    if (data.socialInsights?.impressions?.length) {
+      sections.push("\nSocial Media - Impressions\nDate,Impressions,Unique Reach,Page Views,Engaged Users");
+      data.socialInsights.impressions.forEach((d, i) => {
+        const reach = data.socialInsights.uniqueReach?.[i]?.value || 0;
+        const pv = data.socialInsights.pageViews?.[i]?.value || 0;
+        const eng = data.socialInsights.engagedUsers?.[i]?.value || 0;
+        sections.push(`${d.date},${d.value},${reach},${pv},${eng}`);
+      });
+    }
+    if (data.pixelInsights?.events?.length) {
+      sections.push("\nMeta Pixel Events\nEvent,Count");
+      data.pixelInsights.events.forEach(e => sections.push(`"${e.name}",${e.count}`));
     }
 
     const blob = new Blob([sections.join("\n")], { type: "text/csv" });
@@ -427,86 +440,137 @@ export default function AnalyticsPage() {
 
         {/* Row 6: Social Media Insights (if available) */}
         {data.socialInsights ? (
+          <>
+            {/* Social KPI mini-cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {[
+                { label: "Impressions", value: data.socialInsights.totalImpressions?.toLocaleString() || "0" },
+                { label: "Unique Reach", value: data.socialInsights.totalReach?.toLocaleString() || "0" },
+                { label: "Page Views", value: data.socialInsights.totalPageViews?.toLocaleString() || "0" },
+                { label: "Engaged Users", value: data.socialInsights.totalEngaged?.toLocaleString() || "0" },
+                { label: "Followers", value: data.socialInsights.followers?.toLocaleString() || "0" },
+              ].map((m) => (
+                <div key={m.label} className="rounded-xl border border-d-border bg-d-surface p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Facebook className="w-3.5 h-3.5" style={{ color: "#1877F2" }} />
+                    <span className="text-[11px] text-d-muted">{m.label}</span>
+                  </div>
+                  <div className="text-lg font-semibold text-d-text">{m.value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Social charts: Impressions+Reach (left) + Page Views+Engagement (right) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="rounded-2xl border border-d-border bg-d-surface p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Facebook className="w-4 h-4" style={{ color: "#1877F2" }} />
+                    <h3 className="text-sm font-medium text-d-muted">
+                      Impressions & Reach {data.socialInsights.pageName ? `— ${data.socialInsights.pageName}` : ""}
+                    </h3>
+                  </div>
+                </div>
+                {data.socialInsights.impressions?.length > 0 ? (
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={data.socialInsights.impressions.map((d, i) => ({
+                        ...d,
+                        reach: data.socialInsights.uniqueReach?.[i]?.value || 0,
+                      }))}>
+                        <defs>
+                          <linearGradient id="gradImpressions" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={primary} stopOpacity={0.3} />
+                            <stop offset="95%" stopColor={primary} stopOpacity={0.02} />
+                          </linearGradient>
+                          <linearGradient id="gradReach" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={accent} stopOpacity={0.3} />
+                            <stop offset="95%" stopColor={accent} stopOpacity={0.02} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke={borderHex} vertical={false} />
+                        <XAxis dataKey="date" tickFormatter={(v) => v?.slice(5)} tick={tickProps} {...axisProps} />
+                        <YAxis tick={tickProps} {...axisProps} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend wrapperStyle={{ fontSize: 11, color: mutedHex }} />
+                        <Area type="monotone" dataKey="value" name="Impressions" stroke={primary} fill="url(#gradImpressions)" strokeWidth={1.5} />
+                        <Area type="monotone" dataKey="reach" name="Unique Reach" stroke={accent} fill="url(#gradReach)" strokeWidth={1.5} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <EmptyState icon={Facebook} message="No social media data for this period" />
+                )}
+              </div>
+
+              <div className="rounded-2xl border border-d-border bg-d-surface p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Globe className="w-4 h-4" style={{ color: "#1877F2" }} />
+                  <h3 className="text-sm font-medium text-d-muted">Page Views & Engagement</h3>
+                </div>
+                {data.socialInsights.pageViews?.length > 0 ? (
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={data.socialInsights.pageViews.map((d, i) => ({
+                        ...d,
+                        engaged: data.socialInsights.engagedUsers?.[i]?.value || 0,
+                      }))} barSize={8}>
+                        <CartesianGrid strokeDasharray="3 3" stroke={borderHex} vertical={false} />
+                        <XAxis dataKey="date" tickFormatter={(v) => v?.slice(5)} tick={tickProps} {...axisProps} />
+                        <YAxis tick={tickProps} {...axisProps} allowDecimals={false} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend wrapperStyle={{ fontSize: 11, color: mutedHex }} />
+                        <Bar dataKey="value" name="Page Views" fill={primary} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="engaged" name="Engaged Users" fill={accent} radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <EmptyState icon={Globe} message="No page view data for this period" />
+                )}
+              </div>
+            </div>
+          </>
+        ) : null}
+
+        {/* Row 7: Meta Pixel Website Events (if available) */}
+        {data.pixelInsights?.events?.length > 0 ? (
           <div className="rounded-2xl border border-d-border bg-d-surface p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Facebook className="w-4 h-4 text-d-primary" />
-                <h3 className="text-sm font-medium text-d-muted">
-                  Social Media {data.socialInsights.pageName ? `— ${data.socialInsights.pageName}` : ""}
-                </h3>
+                <Activity className="w-4 h-4 text-d-primary" />
+                <h3 className="text-sm font-medium text-d-muted">Website Events (Meta Pixel)</h3>
               </div>
-              {data.socialInsights.followers != null && (
-                <div className="text-xs text-d-muted">
-                  <span className="font-semibold text-d-text">{data.socialInsights.followers.toLocaleString()}</span> followers
-                </div>
-              )}
+              <div className="text-xs text-d-muted">
+                <span className="font-semibold text-d-text">{data.pixelInsights.totalEvents.toLocaleString()}</span> total events
+              </div>
             </div>
-            {data.socialInsights.impressions?.length > 0 ? (
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={data.socialInsights.impressions}>
-                    <defs>
-                      <linearGradient id="gradImpressions" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={primary} stopOpacity={0.3} />
-                        <stop offset="95%" stopColor={primary} stopOpacity={0.02} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke={borderHex} vertical={false} />
-                    <XAxis dataKey="date" tickFormatter={(v) => v?.slice(5)} tick={tickProps} {...axisProps} />
-                    <YAxis tick={tickProps} {...axisProps} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area type="monotone" dataKey="value" name="Page Impressions" stroke={primary} fill="url(#gradImpressions)" strokeWidth={1.5} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <EmptyState icon={Facebook} message="No social media data for this period" />
-            )}
-          </div>
-        ) : null}
-
-        {/* Row 7: Website Traffic (if available) */}
-        {data.webTraffic ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="rounded-2xl border border-d-border bg-d-surface p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Globe className="w-4 h-4 text-d-primary" />
-                <h3 className="text-sm font-medium text-d-muted">Top Pages</h3>
-              </div>
-              {data.webTraffic.topPages?.length > 0 ? (
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {data.webTraffic.topPages.slice(0, 10).map((p, i) => (
-                    <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-d-bg/50 text-xs">
-                      <span className="text-d-text truncate max-w-[70%]">{p.key || p.path || "/"}</span>
-                      <span className="text-d-muted font-medium">{(p.total || p.count || 0).toLocaleString()} views</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <EmptyState icon={Globe} message="No page view data yet" />
-              )}
-            </div>
-
-            <div className="rounded-2xl border border-d-border bg-d-surface p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <ExternalLink className="w-4 h-4 text-d-primary" />
-                <h3 className="text-sm font-medium text-d-muted">Top Referrers</h3>
-              </div>
-              {data.webTraffic.topReferrers?.length > 0 ? (
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {data.webTraffic.topReferrers.slice(0, 10).map((r, i) => (
-                    <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-d-bg/50 text-xs">
-                      <span className="text-d-text truncate max-w-[70%]">{r.key || r.referrer || "(direct)"}</span>
-                      <span className="text-d-muted font-medium">{(r.total || r.count || 0).toLocaleString()} visits</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <EmptyState icon={ExternalLink} message="No referrer data yet" />
-              )}
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.pixelInsights.events.slice(0, 8)} layout="vertical" margin={{ left: 100, right: 16 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={borderHex} horizontal={false} />
+                  <XAxis type="number" tick={tickProps} {...axisProps} />
+                  <YAxis type="category" dataKey="name" tick={{ ...tickProps, textAnchor: "end", fontSize: 11 }} width={100} {...axisProps} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="count" name="Events" fill={primary} radius={[0, 4, 4, 0]}>
+                    {data.pixelInsights.events.slice(0, 8).map((_, i) => (
+                      <Cell key={i} fill={colors[i % colors.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
         ) : null}
+
+        {/* Row 8: Website Traffic — Coming Soon */}
+        <div className="rounded-2xl border border-dashed border-d-border bg-d-surface/50 p-6 text-center">
+          <Globe className="w-8 h-8 mx-auto mb-3 text-d-muted opacity-30" />
+          <p className="text-sm font-medium text-d-text mb-1">Website Traffic Analytics</p>
+          <p className="text-xs text-d-muted max-w-md mx-auto">
+            Coming soon — Google Analytics integration will show visitors, pageviews, top pages, and referral sources directly in your dashboard.
+          </p>
+        </div>
       </>
     );
   }
