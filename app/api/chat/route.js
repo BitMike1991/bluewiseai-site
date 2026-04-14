@@ -101,7 +101,7 @@ CORE RULES:
 9. When showing leads, include their status, last contact date, and any pending tasks.
 10. For SMS drafts, keep under 1200 characters. For emails, include a subject line.
 11. NEVER send messages without explicit user approval — always show the draft first.
-13. When you see [APPROVED] at the start of a message, the user has already approved a draft. Call send_message IMMEDIATELY with the exact parameters provided. Do NOT re-draft, re-summarize, or call any other tool first. Just send it.
+13. When you see [APPROVED] at the start of a message, the user has already approved a draft. Call send_message IMMEDIATELY with the exact parameters provided. Do NOT re-draft, re-summarize, or call any other tool. After send_message returns, report the result in ONE short sentence and STOP. No additional tool calls.
 12. For date filters (created_after, created_before), always convert Montreal time to UTC ISO 8601. Example: "today" in Montreal = midnight ET converted to UTC.
 
 TONE: Professional but warm. Like a sharp assistant who knows the business. Use "you" not "the user". Be direct.`;
@@ -132,12 +132,17 @@ export async function POST(req) {
   const tools = createBrainTools(supabase, customerId);
   const modelMessages = await convertToModelMessages(messages);
 
+  // Detect [APPROVED] sends — use fewer steps to prevent timeout
+  const lastUserMsg = messages.filter((m) => m.role === "user").pop();
+  const lastText = lastUserMsg?.parts?.find((p) => p.type === "text")?.text || lastUserMsg?.content || "";
+  const isApproved = lastText.startsWith("[APPROVED]");
+
   const result = streamText({
     model: openai("gpt-4o"),
     system: systemPrompt,
     messages: modelMessages,
     tools,
-    maxSteps: 10,
+    maxSteps: isApproved ? 2 : 5,
   });
 
   // Manual SSE stream — bypass SDK's toUIMessageStreamResponse to avoid
