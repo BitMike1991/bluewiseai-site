@@ -332,44 +332,119 @@ export default function AnalyticsPage() {
           )}
         </div>
 
-        {/* Row 4: Paid Ads (if available) OR connect prompt */}
+        {/* Row 4: Paid Ads — Full Campaign Analysis */}
         {data.adsInsights ? (
-          <div className="rounded-2xl border border-d-border bg-d-surface p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <DollarSign className="w-4 h-4 text-d-primary" />
-              <h3 className="text-sm font-medium text-d-muted">Paid Ads Performance</h3>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 mb-4">
-              {[
-                { label: "Spend", value: `$${data.adsInsights.totalSpend}` },
-                { label: "Impressions", value: data.adsInsights.totalImpressions.toLocaleString() },
-                { label: "Clicks", value: data.adsInsights.totalClicks.toLocaleString() },
-                { label: "Leads (Ads)", value: data.adsInsights.totalLeads },
-                { label: "CPL", value: data.adsInsights.cpl != null ? `$${data.adsInsights.cpl}` : "—" },
-                { label: "CPC", value: data.adsInsights.cpc != null ? `$${data.adsInsights.cpc}` : "—" },
-                { label: "CTR", value: `${data.adsInsights.ctr}%` },
-              ].map((m) => (
-                <div key={m.label} className="rounded-xl border border-d-border bg-d-bg p-3 text-center">
-                  <div className="text-lg font-semibold text-d-text">{m.value}</div>
-                  <div className="text-[11px] text-d-muted mt-0.5">{m.label}</div>
-                </div>
-              ))}
-            </div>
-            {data.adsInsights.dailySpend?.length > 0 && (
-              <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data.adsInsights.dailySpend} barSize={range === "90d" || range === "all" ? 3 : 10}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={borderHex} vertical={false} />
-                    <XAxis dataKey="date" tickFormatter={(v) => v.slice(5)} tick={tickProps} {...axisProps}
-                      interval={range === "7d" ? 0 : "preserveStartEnd"} />
-                    <YAxis tick={tickProps} {...axisProps} tickFormatter={(v) => `$${v}`} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="spend" name="Spend ($)" fill={primary} radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+          <>
+            {/* Ads KPI tiles */}
+            <div className="rounded-2xl border border-d-border bg-d-surface p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <DollarSign className="w-4 h-4 text-d-primary" />
+                <h3 className="text-sm font-medium text-d-muted">Paid Ads Performance</h3>
               </div>
-            )}
-          </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 mb-4">
+                {[
+                  { label: "Total Spend", value: fmt(data.adsInsights.totalSpend) },
+                  { label: "Reach", value: (data.adsInsights.totalReach || 0).toLocaleString() },
+                  { label: "Impressions", value: data.adsInsights.totalImpressions.toLocaleString() },
+                  { label: "Clicks", value: data.adsInsights.totalClicks.toLocaleString() },
+                  { label: "Leads", value: data.adsInsights.totalLeads },
+                  { label: "CPL", value: data.adsInsights.cpl != null ? `$${data.adsInsights.cpl}` : "—" },
+                  { label: "CPC", value: data.adsInsights.cpc != null ? `$${data.adsInsights.cpc}` : "—" },
+                  { label: "CPM", value: data.adsInsights.cpm != null ? `$${data.adsInsights.cpm}` : "—" },
+                  { label: "CTR", value: `${data.adsInsights.ctr}%` },
+                  { label: "Frequency", value: data.adsInsights.frequency ?? "—" },
+                ].map((m) => (
+                  <div key={m.label} className="rounded-xl border border-d-border bg-d-bg p-3 text-center">
+                    <div className="text-lg font-semibold text-d-text">{m.value}</div>
+                    <div className="text-[11px] text-d-muted mt-0.5">{m.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Daily trend: Spend + Clicks + Leads */}
+              {data.adsInsights.dailyData?.length > 0 && (
+                <div className="h-56">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={data.adsInsights.dailyData} barSize={range === "90d" || range === "all" ? 3 : 8}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={borderHex} vertical={false} />
+                      <XAxis dataKey="date" tickFormatter={(v) => v.slice(5)} tick={tickProps} {...axisProps}
+                        interval={range === "7d" ? 0 : "preserveStartEnd"} />
+                      <YAxis yAxisId="left" tick={tickProps} {...axisProps} tickFormatter={(v) => `$${v}`} />
+                      <YAxis yAxisId="right" orientation="right" tick={tickProps} {...axisProps} allowDecimals={false} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: 11, color: mutedHex }} />
+                      <Bar yAxisId="left" dataKey="spend" name="Spend ($)" fill={primary} radius={[4, 4, 0, 0]} />
+                      <Bar yAxisId="right" dataKey="clicks" name="Clicks" fill={accent} radius={[4, 4, 0, 0]} />
+                      <Bar yAxisId="right" dataKey="leads" name="Leads" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+
+            {/* Per-campaign breakdown + Demographics */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Campaign breakdown table */}
+              {data.adsInsights.campaigns?.length > 0 && (
+                <div className="rounded-2xl border border-d-border bg-d-surface p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <BarChart2 className="w-4 h-4 text-d-primary" />
+                    <h3 className="text-sm font-medium text-d-muted">Per Campaign</h3>
+                  </div>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {data.adsInsights.campaigns.map((c, i) => (
+                      <div key={i} className="flex items-center justify-between py-2 px-3 rounded-lg bg-d-bg/50 text-xs">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-d-text font-medium truncate">{c.name}</div>
+                          <div className="text-d-muted mt-0.5">
+                            {c.reach?.toLocaleString()} reach · {c.clicks} clicks · {c.leads} leads
+                          </div>
+                        </div>
+                        <div className="text-right ml-3 shrink-0">
+                          <div className="text-d-text font-semibold">{fmt(c.spend)}</div>
+                          <div className="text-d-muted">{c.impressions.toLocaleString()} impr</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Age/Gender demographics */}
+              {data.adsInsights.demographics?.length > 0 && (
+                <div className="rounded-2xl border border-d-border bg-d-surface p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Users className="w-4 h-4 text-d-primary" />
+                    <h3 className="text-sm font-medium text-d-muted">Audience Demographics</h3>
+                  </div>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={data.adsInsights.demographics.slice(0, 12)} layout="vertical" margin={{ left: 70, right: 16 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke={borderHex} horizontal={false} />
+                        <XAxis type="number" tick={tickProps} {...axisProps} />
+                        <YAxis type="category" dataKey={(d) => `${d.gender === "male" ? "M" : d.gender === "female" ? "F" : "?"} ${d.age}`}
+                          tick={{ ...tickProps, fontSize: 10 }} width={70} {...axisProps} />
+                        <Tooltip content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const d = payload[0].payload;
+                          return (
+                            <div className="rounded-lg border border-d-border bg-d-surface px-3 py-2 text-xs shadow-lg">
+                              <p className="text-d-text font-medium">{d.gender} {d.age}</p>
+                              <p style={{ color: primary }}>Impressions: {d.impressions.toLocaleString()}</p>
+                              <p style={{ color: accent }}>Clicks: {d.clicks}</p>
+                              <p style={{ color: "#10b981" }}>Leads: {d.leads}</p>
+                              <p className="text-d-muted">Spend: {fmt(d.spend)}</p>
+                            </div>
+                          );
+                        }} />
+                        <Bar dataKey="impressions" name="Impressions" fill={primary} radius={[0, 4, 4, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
         ) : (
           <div className="rounded-2xl border border-dashed border-d-border bg-d-surface/50 p-6 text-center">
             <DollarSign className="w-8 h-8 mx-auto mb-3 text-d-muted opacity-30" />

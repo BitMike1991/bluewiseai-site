@@ -365,7 +365,7 @@ export default async function handler(req, res) {
       .from("customers").select("fb_ad_account_id, fb_campaign_ids, fb_page_id, fb_page_access_token, fb_pixel_id, domain")
       .eq("id", customerId).single();
 
-    // ── 8. Facebook Ads insights (optional) ──
+    // ── 8. Facebook Ads insights (full campaign analysis) ──
     let adsInsights = null;
     const metaToken = process.env.META_SYSTEM_TOKEN;
     if (metaToken) {
@@ -375,60 +375,118 @@ export default async function handler(req, res) {
         try {
           const adsSince = sinceIso ? sinceIso.slice(0, 10) : "2020-01-01";
           const adsUntil = now.toISOString().slice(0, 10);
-          const insightsParams = new URLSearchParams({
-            fields: "spend,impressions,clicks,cpc,cpm,actions,cost_per_action_type",
-            time_range: JSON.stringify({ since: adsSince, until: adsUntil }),
-            time_increment: "1",
-            limit: "100",
-            filtering: JSON.stringify([{ field: "campaign.id", operator: "IN", value: campaignIds }]),
-            access_token: metaToken,
-          });
-          const adsResp = await fetch(`https://graph.facebook.com/v21.0/${adAccountId}/insights?${insightsParams}`);
-          const adsJson = await adsResp.json();
+          const timeRange = JSON.stringify({ since: adsSince, until: adsUntil });
+          const campaignFilter = JSON.stringify([{ field: "campaign.id", operator: "IN", value: campaignIds }]);
 
-          if (adsJson.data && adsJson.data.length > 0) {
-            let totalSpend = 0, totalImpressions = 0, totalClicks = 0, totalLeads = 0;
-            const dailySpend = [];
+          // Parallel: daily breakdown + per-campaign breakdown + age/gender breakdown
+          const [dailyResp, campaignResp, demoResp] = await Promise.all([
+            // Daily time series
+            fetch(`https://graph.facebook.com/v21.0/${adAccountId}/insights?` + new URLSearchParams({
+              fields: "spend,impressions,clicks,reach,frequency,cpc,cpm,actions,cost_per_action_type",
+              time_range: timeRange, time_increment: "1", limit: "100",
+              filtering: campaignFilter, access_token: metaToken,
+            })),
+            // Per-campaign totals
+            fetch(`https://graph.facebook.com/v21.0/${adAccountId}/insights?` + new URLSearchParams({
+              fields: "campaign_name,campaign_id,spend,impressions,clicks,reach,actions,cost_per_action_type",
+              time_range: timeRange, level: "campaign", limit: "20",
+              filtering: campaignFilter, access_token: metaToken,
+            })),
+            // Age + gender breakdown
+            fetch(`https://graph.facebook.com/v21.0/${adAccountId}/insights?` + new URLSearchParams({
+              fields: "spend,impressions,clicks,actions",
+              time_range: timeRange, breakdowns: "age,gender", limit: "50",
+              filtering: campaignFilter, access_token: metaToken,
+            })),
+          ]);
 
-            for (const day of adsJson.data) {
-              const spend = parseFloat(day.spend || 0);
-              const impressions = parseInt(day.impressions || 0);
-              const clicks = parseInt(day.clicks || 0);
-              totalSpend += spend;
-              totalImpressions += impressions;
-              totalClicks += clicks;
+          const [dailyJson, campaignJson, demoJson] = await Promise.all([
+            dailyResp.json(), campaignResp.json(), demoResp.json(),
+          ]);
 
-              let leads = 0;
-              if (day.actions) {
-                const leadAction = day.actions.find(a => a.action_type === "lead" || a.action_type === "onsite_conversion.lead_grouped");
-                if (leadAction) leads = parseInt(leadAction.value || 0);
-              }
-              totalLeads += leads;
+          // Process daily data
+          let totalSpend = 0, totalImpressions = 0, totalClicks = 0, totalLeads = 0, totalReach = 0;
+          const dailyData = [];
 
-              dailySpend.push({
-                date: day.date_start,
-                spend: Math.round(spend * 100) / 100,
-                impressions,
-                clicks,
-                leads,
-              });
+          for (const day of dailyJson.data || []) {
+            const spend = parseFloat(day.spend || 0);
+            const impressions = parseInt(day.impressions || 0);
+            const clicks = parseInt(day.clicks || 0);
+            const reach = parseInt(day.reach || 0);
+            totalSpend += spend;
+            totalImpressions += impressions;
+            totalClicks += clicks;
+            totalReach += reach;
+
+            let leads = 0, conversions = 0, pageViews = 0, linkClicks = 0;
+            for (const a of day.actions || []) {
+              if (a.action_type === "lead" || a.action_type === "onsite_conversion.lead_grouped") leads += parseInt(a.value || 0);
+              if (a.action_type === "offsite_conversion.fb_pixel_lead") leads += parseInt(a.value || 0);
+              if (a.action_type === "landing_page_view") pageViews += parseInt(a.value || 0);
+              if (a.action_type === "link_click") linkClicks += parseInt(a.value || 0);
+              conversions += parseInt(a.value || 0);
             }
+            totalLeads += leads;
 
-            const cpl = totalLeads > 0 ? Math.round(totalSpend / totalLeads * 100) / 100 : null;
-            const ctr = totalImpressions > 0 ? Math.round(totalClicks / totalImpressions * 10000) / 100 : 0;
-            const cpc = totalClicks > 0 ? Math.round(totalSpend / totalClicks * 100) / 100 : null;
-
-            adsInsights = {
-              totalSpend: Math.round(totalSpend * 100) / 100,
-              totalImpressions,
-              totalClicks,
-              totalLeads,
-              cpl,
-              ctr,
-              cpc,
-              dailySpend,
-            };
+            dailyData.push({
+              date: day.date_start,
+              spend: Math.round(spend * 100) / 100,
+              impressions, clicks, reach, leads, pageViews, linkClicks,
+            });
           }
+
+          const cpl = totalLeads > 0 ? Math.round(totalSpend / totalLeads * 100) / 100 : null;
+          const ctr = totalImpressions > 0 ? Math.round(totalClicks / totalImpressions * 10000) / 100 : 0;
+          const cpc = totalClicks > 0 ? Math.round(totalSpend / totalClicks * 100) / 100 : null;
+          const cpm = totalImpressions > 0 ? Math.round(totalSpend / totalImpressions * 100000) / 100 : null;
+          const frequency = totalReach > 0 ? Math.round(totalImpressions / totalReach * 10) / 10 : null;
+
+          // Per-campaign breakdown
+          const campaigns = (campaignJson.data || []).map(c => {
+            let campLeads = 0;
+            for (const a of c.actions || []) {
+              if (["lead", "onsite_conversion.lead_grouped", "offsite_conversion.fb_pixel_lead"].includes(a.action_type))
+                campLeads += parseInt(a.value || 0);
+            }
+            return {
+              name: c.campaign_name,
+              id: c.campaign_id,
+              spend: Math.round(parseFloat(c.spend || 0) * 100) / 100,
+              impressions: parseInt(c.impressions || 0),
+              clicks: parseInt(c.clicks || 0),
+              reach: parseInt(c.reach || 0),
+              leads: campLeads,
+            };
+          }).sort((a, b) => b.spend - a.spend);
+
+          // Demographics breakdown
+          const demographics = (demoJson.data || []).map(d => {
+            let dLeads = 0;
+            for (const a of d.actions || []) {
+              if (["lead", "onsite_conversion.lead_grouped", "offsite_conversion.fb_pixel_lead"].includes(a.action_type))
+                dLeads += parseInt(a.value || 0);
+            }
+            return {
+              age: d.age,
+              gender: d.gender,
+              spend: Math.round(parseFloat(d.spend || 0) * 100) / 100,
+              impressions: parseInt(d.impressions || 0),
+              clicks: parseInt(d.clicks || 0),
+              leads: dLeads,
+            };
+          }).sort((a, b) => b.impressions - a.impressions);
+
+          adsInsights = {
+            totalSpend: Math.round(totalSpend * 100) / 100,
+            totalImpressions,
+            totalClicks,
+            totalLeads,
+            totalReach,
+            cpl, ctr, cpc, cpm, frequency,
+            dailyData,
+            campaigns,
+            demographics,
+          };
         } catch (adsErr) {
           console.error("[api/analytics] Facebook Ads fetch error:", adsErr.message);
         }
