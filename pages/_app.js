@@ -2,12 +2,14 @@ import { Analytics } from "@vercel/analytics/react";
 import Head from "next/head";
 import Script from "next/script";
 import { useRouter } from "next/router";
+import { useState, useEffect } from "react";
 import { Inter, Space_Grotesk, DM_Sans } from "next/font/google";
 import '@/styles/globals.css';
 import Layout from '@/components/Layout';
 import { getLocale } from "@/lib/locale";
 import { ToastProvider } from "@/components/ui/ToastContext";
 import ToastContainer from "@/components/ui/Toast";
+import CookieConsent, { hasConsented } from "@/components/CookieConsent";
 
 const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID;
 
@@ -44,6 +46,14 @@ export default function App({ Component, pageProps }) {
   const { pathname } = useRouter();
   const locale = getLocale(pathname);
   const isMarketing = FB_PIXEL_ID && !pathname.startsWith("/platform");
+  const [pixelAllowed, setPixelAllowed] = useState(false);
+
+  useEffect(() => {
+    setPixelAllowed(hasConsented('marketing'));
+    const handler = () => setPixelAllowed(hasConsented('marketing'));
+    window.addEventListener('cookie-consent-changed', handler);
+    return () => window.removeEventListener('cookie-consent-changed', handler);
+  }, []);
 
   return (
     <>
@@ -61,7 +71,7 @@ export default function App({ Component, pageProps }) {
         <meta name="twitter:description" content={OG_DESC[locale]} />
         <meta name="twitter:image" content="https://bluewiseai.com/bluewise-logo.png" />
       </Head>
-      {isMarketing && (
+      {isMarketing && pixelAllowed && (
         <>
           <Script
             id="fb-pixel"
@@ -98,6 +108,7 @@ export default function App({ Component, pageProps }) {
           <ToastContainer />
         </div>
       </ToastProvider>
+      <CookieConsent privacyUrl="/privacy" />
     </>
   );
 }
