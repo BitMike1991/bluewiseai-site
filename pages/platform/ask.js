@@ -705,13 +705,14 @@ export default function AskPage() {
   const abortRef = useRef(null);
 
   // Send message via fetch + SSE streaming
-  async function sendMessage({ text }) {
+  async function sendMessage({ text, hidden }) {
     if (!text?.trim() || isLoading) return;
 
     const userMsg = {
       id: `u-${Date.now()}`,
       role: "user",
       content: text.trim(),
+      _hidden: !!hidden,
       parts: [{ type: "text", text: text.trim() }],
     };
 
@@ -923,6 +924,7 @@ export default function AskPage() {
       const subjectPart = subject ? `, subject: "${subject}"` : "";
       sendMessage({
         text: `[APPROVED] Execute send_message NOW. Do NOT re-draft, do NOT summarize, do NOT call any other tool. Just send it immediately.\nchannel: ${channel}\nto: ${to}${subjectPart}\nbody: "${body}"`,
+        hidden: true,
       });
       return;
     }
@@ -940,7 +942,7 @@ export default function AskPage() {
       summarize: `Summarize the conversation with lead #${data.leadId} (${leadName}).`,
     };
     const text = prompts[action];
-    if (text) sendMessage({ text });
+    if (text) sendMessage({ text, hidden: true });
   }
 
   // Example chips
@@ -1065,8 +1067,8 @@ export default function AskPage() {
           {/* Messages */}
           {messages.map((msg) => (
             <div key={msg.id}>
-              {/* User message */}
-              {msg.role === "user" && (
+              {/* User message (skip hidden action prompts) */}
+              {msg.role === "user" && !msg._hidden && (
                 <div className="flex justify-end">
                   <div className="max-w-[80%] md:max-w-lg rounded-2xl bg-d-primary px-4 py-3 text-sm text-white">
                     {typeof msg.content === "string"
