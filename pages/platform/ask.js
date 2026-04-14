@@ -395,7 +395,6 @@ function ToolResultCard({ toolName, result, onLeadAction, onLeadNavigate }) {
               item={item}
               onAction={onLeadAction}
               onNavigate={onLeadNavigate}
-              onExpand={(lead) => onLeadAction?.("summarize", lead)}
             />
           ))}
         </div>
@@ -935,8 +934,8 @@ export default function AskPage() {
     }
     const leadName = data.name || `#${data.leadId}`;
     const prompts = {
-      sms: `Summarize the conversation with lead #${data.leadId} (${leadName}), then draft a personalized SMS follow-up based on the summary.`,
-      email: `Summarize the conversation with lead #${data.leadId} (${leadName}), then draft a personalized email follow-up based on the summary.`,
+      sms: `Draft an SMS for lead #${data.leadId} (${leadName}). Use draft_reply tool with channel="sms" and lead_id=${data.leadId}. Make it personalized based on their conversation history.`,
+      email: `Draft an email for lead #${data.leadId} (${leadName}). Use draft_reply tool with channel="email" and lead_id=${data.leadId}. Make it personalized based on their conversation history.`,
       task: `Create a follow-up task for lead #${data.leadId} (${leadName}) tomorrow at 9:00`,
       summarize: `Summarize the conversation with lead #${data.leadId} (${leadName}).`,
     };
