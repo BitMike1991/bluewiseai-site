@@ -575,17 +575,17 @@ export default function AskPage() {
     }
   }
 
-  // AI SDK useChat hook
+  // Input state (managed by us, not useChat in SDK 6)
+  const [input, setInput] = useState("");
+
+  // AI SDK 6 useChat hook
   const {
     messages,
-    input,
-    setInput,
-    handleSubmit,
-    isLoading,
+    sendMessage,
+    status,
     addToolResult,
     addToolApprovalResponse,
     error: chatError,
-    reload,
   } = useChat({
     api: "/api/chat",
     body: {
@@ -598,24 +598,15 @@ export default function AskPage() {
     onError: (err) => {
       console.error("[Brain] Chat error:", err.message);
     },
-    sendAutomaticallyWhen: ({ parts }) => {
-      // Auto-send after all tool approvals have been responded to
-      return parts.some(
-        (p) => p.type === "tool-invocation" && p.state === "approval-responded"
-      );
-    },
   });
+
+  const isLoading = status === "streaming" || status === "submitted";
 
   // Handle ?q= URL param (quick-ask from overview)
   useEffect(() => {
     const q = router.query.q;
     if (q && typeof q === "string" && q.trim()) {
-      setInput(q.trim());
-      setTimeout(() => {
-        const form = document.getElementById("brain-chat-form");
-        if (form) form.requestSubmit();
-      }, 150);
-      // Clear the query param so it doesn't re-trigger
+      sendMessage({ text: q.trim() });
       router.replace("/platform/ask", undefined, { shallow: true });
     }
   }, [router.query.q]);
@@ -633,12 +624,20 @@ export default function AskPage() {
     userScrolledUp.current = scrollHeight - scrollTop - clientHeight > 100;
   }, []);
 
+  // Submit message
+  function submitMessage(e) {
+    if (e) e.preventDefault();
+    const text = (input || "").trim();
+    if (!text || isLoading) return;
+    sendMessage({ text });
+    setInput("");
+  }
+
   // Handle Enter/Shift+Enter
   function handleKeyDown(e) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      const form = document.getElementById("brain-chat-form");
-      if (form) form.requestSubmit();
+      submitMessage();
     }
   }
 
@@ -692,14 +691,13 @@ export default function AskPage() {
   }, [messages]);
 
   function handleContextAction(action, lead) {
-    if (action === "sms") {
-      setInput(`Draft an SMS reply for lead #${lead.leadId}`);
-    } else if (action === "email") {
-      setInput(`Draft an email reply for lead #${lead.leadId}`);
-    } else if (action === "task") {
-      setInput(`Create a follow-up task for lead #${lead.leadId} tomorrow at 9:00`);
-    }
-    setTimeout(() => inputRef.current?.focus?.(), 50);
+    const prompts = {
+      sms: `Draft an SMS reply for lead #${lead.leadId}`,
+      email: `Draft an email reply for lead #${lead.leadId}`,
+      task: `Create a follow-up task for lead #${lead.leadId} tomorrow at 9:00`,
+    };
+    const text = prompts[action];
+    if (text) sendMessage({ text });
   }
 
   // Example chips
@@ -810,11 +808,7 @@ export default function AskPage() {
                   <button
                     key={ex.label}
                     onClick={() => {
-                      setInput(ex.q);
-                      setTimeout(() => {
-                        const form = document.getElementById("brain-chat-form");
-                        if (form) form.requestSubmit();
-                      }, 50);
+                      sendMessage({ text: ex.q });
                     }}
                     className="rounded-full border border-d-border bg-d-surface px-3 py-1.5 text-sm text-d-muted hover:border-d-primary/40 hover:text-d-primary transition-colors min-h-[44px] md:min-h-0"
                   >
@@ -926,7 +920,7 @@ export default function AskPage() {
         <div className="shrink-0 border-t border-d-border bg-d-bg px-4 md:px-6 py-3">
           <form
             id="brain-chat-form"
-            onSubmit={handleSubmit}
+            onSubmit={submitMessage}
             className="max-w-3xl mx-auto flex items-end gap-3"
           >
             <div className="flex-1 relative">
