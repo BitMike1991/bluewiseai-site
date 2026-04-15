@@ -7,6 +7,7 @@ import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
 import { useBranding } from "../../../src/components/dashboard/BrandingContext";
 import { getBrandingStyles, getStatusBadgeStyle } from "../../../src/components/dashboard/brandingUtils";
 import { useToast } from "../../../src/components/ui/ToastContext";
+import { Pencil, Trash2, X, Check } from "lucide-react";
 
 function formatDate(dateString) {
   if (!dateString) return "\u2014";
@@ -343,6 +344,153 @@ function NotesSection({ notes, onSave }) {
           {notes || "No notes yet."}
         </p>
       )}
+    </div>
+  );
+}
+
+const EDITABLE_FIELDS = [
+  { key: "name", label: "Name", type: "text" },
+  { key: "phone", label: "Phone", type: "tel" },
+  { key: "email", label: "Email", type: "email" },
+  { key: "city", label: "City", type: "text" },
+  { key: "source", label: "Source", type: "select", options: ["manual", "missed_call", "cold_outreach", "email", "sms", "form", "referral", "meta_ads", "website"] },
+  { key: "language", label: "Language", type: "select", options: ["", "fr", "en"] },
+];
+
+function LeadDetailsCard({ lead, leadId, onUpdated, onDeleted }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const toast = useToast();
+
+  useEffect(() => {
+    if (lead) {
+      setDraft({
+        name: lead.name || "",
+        phone: lead.phone || "",
+        email: lead.email || "",
+        city: lead.city || "",
+        source: lead.source || "",
+        language: lead.language || "",
+      });
+    }
+  }, [lead]);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/leads/${leadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(draft),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to update");
+      onUpdated(draft);
+      setEditing(false);
+      toast.success("Lead updated");
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/leads/${leadId}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to delete");
+      toast.success("Lead deleted");
+      onDeleted();
+    } catch (err) {
+      toast.error(err.message);
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  }
+
+  const set = (field) => (e) => setDraft((d) => ({ ...d, [field]: e.target.value }));
+  const inputCls = "w-full rounded-lg border border-d-border bg-d-bg px-2 py-1 text-sm text-d-text focus:outline-none focus:ring-1 focus:ring-d-primary/50";
+
+  return (
+    <div className="bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-semibold text-d-text tracking-wide">Lead details</h2>
+        <div className="flex items-center gap-2">
+          {editing ? (
+            <>
+              <button onClick={() => setEditing(false)} disabled={saving} className="p-1.5 rounded-lg text-d-muted hover:text-d-text hover:bg-d-surface transition" title="Cancel">
+                <X className="h-3.5 w-3.5" />
+              </button>
+              <button onClick={handleSave} disabled={saving} className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-500/10 transition" title="Save">
+                <Check className="h-3.5 w-3.5" />
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => setEditing(true)} className="p-1.5 rounded-lg text-d-muted hover:text-d-primary hover:bg-d-primary/10 transition" title="Edit lead">
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+              <button onClick={() => setConfirmDelete(true)} className="p-1.5 rounded-lg text-d-muted hover:text-rose-500 hover:bg-rose-500/10 transition" title="Delete lead">
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {confirmDelete && (
+        <div className="mb-3 p-3 rounded-xl border border-rose-500/40 bg-rose-500/10">
+          <p className="text-xs text-rose-400 mb-2">Delete this lead permanently? This cannot be undone.</p>
+          <div className="flex gap-2">
+            <button onClick={handleDelete} disabled={deleting} className="px-3 py-1.5 rounded-lg bg-rose-500 text-white text-xs font-semibold hover:bg-rose-600 disabled:opacity-50">
+              {deleting ? "Deleting..." : "Yes, delete"}
+            </button>
+            <button onClick={() => setConfirmDelete(false)} className="px-3 py-1.5 rounded-lg border border-d-border text-xs text-d-muted hover:text-d-text">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      <dl className="grid grid-cols-1 gap-y-2 text-sm text-d-text">
+        {EDITABLE_FIELDS.map(({ key, label, type, options }) => (
+          <div key={key} className="flex justify-between items-center gap-4">
+            <dt className="text-d-muted text-xs uppercase tracking-wide">{label}</dt>
+            <dd className="font-medium text-right">
+              {editing ? (
+                type === "select" ? (
+                  <select value={draft[key] || ""} onChange={set(key)} className={inputCls + " text-right"}>
+                    {key === "language" ? (
+                      <><option value="">—</option><option value="fr">Français</option><option value="en">English</option></>
+                    ) : (
+                      options.map((o) => <option key={o} value={o}>{o.replace(/_/g, " ")}</option>)
+                    )}
+                  </select>
+                ) : (
+                  <input type={type} value={draft[key] || ""} onChange={set(key)} className={inputCls + " text-right"} />
+                )
+              ) : (
+                lead?.[key] || "\u2014"
+              )}
+            </dd>
+          </div>
+        ))}
+        <div className="flex justify-between gap-4">
+          <dt className="text-d-muted text-xs uppercase tracking-wide">First seen</dt>
+          <dd>{formatDate(lead?.firstSeenAt || lead?.createdAt)}</dd>
+        </div>
+        <div className="flex justify-between gap-4">
+          <dt className="text-d-muted text-xs uppercase tracking-wide">Last contact</dt>
+          <dd>{formatDate(lead?.lastContactAt)}</dd>
+        </div>
+        <div className="flex justify-between gap-4">
+          <dt className="text-d-muted text-xs uppercase tracking-wide">Missed calls</dt>
+          <dd className="font-medium">{lead?.missed_call_count ?? 0}</dd>
+        </div>
+      </dl>
     </div>
   );
 }
@@ -814,41 +962,9 @@ export default function LeadDetailPage() {
               </div>
             )}
 
-            <div className="bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40">
-              <h2 className="text-sm font-semibold text-d-text mb-3 tracking-wide">Lead details</h2>
-              <dl className="grid grid-cols-1 gap-y-2 text-sm text-d-text">
-                <div className="flex justify-between gap-4">
-                  <dt className="text-d-muted text-xs uppercase tracking-wide">Phone</dt>
-                  <dd className="font-medium">{lead?.phone || "\u2014"}</dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-d-muted text-xs uppercase tracking-wide">Email</dt>
-                  <dd className="font-medium">{lead?.email || "\u2014"}</dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-d-muted text-xs uppercase tracking-wide">First seen</dt>
-                  <dd>{formatDate(lead?.firstSeenAt || lead?.createdAt)}</dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-d-muted text-xs uppercase tracking-wide">Last contact</dt>
-                  <dd>{formatDate(lead?.lastContactAt)}</dd>
-                </div>
-                {lead?.city && (
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-d-muted text-xs uppercase tracking-wide">City</dt>
-                    <dd className="font-medium">{lead.city}</dd>
-                  </div>
-                )}
-                <div className="flex justify-between gap-4">
-                  <dt className="text-d-muted text-xs uppercase tracking-wide">Source</dt>
-                  <dd className="capitalize">{lead?.source || "\u2014"}</dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-d-muted text-xs uppercase tracking-wide">Missed calls</dt>
-                  <dd className="font-medium">{lead?.missed_call_count ?? 0}</dd>
-                </div>
-              </dl>
-            </div>
+            <LeadDetailsCard lead={lead} leadId={id} onUpdated={(updated) => {
+              setData((prev) => prev ? { ...prev, lead: { ...prev.lead, ...updated } } : prev);
+            }} onDeleted={() => router.push("/platform/leads")} />
 
             {/* Notes */}
             <NotesSection

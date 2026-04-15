@@ -8,7 +8,102 @@ import { getAvatarColor, getInitial } from '../../../src/lib/dashboardUtils';
 import Select from '../../../src/components/ui/Select';
 import { SkeletonListRow } from '../../../src/components/ui/Skeleton';
 import EmptyState from '../../../src/components/ui/EmptyState';
-import { Users } from 'lucide-react';
+import { Users, Plus, X } from 'lucide-react';
+
+const SOURCE_LIST = ['manual', 'missed_call', 'cold_outreach', 'email', 'sms', 'form', 'referral', 'meta_ads', 'website'];
+
+function AddLeadModal({ open, onClose, onCreated }) {
+  const [form, setForm] = useState({ name: '', phone: '', email: '', city: '', source: 'manual', language: '', notes: '' });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  if (!open) return null;
+
+  const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.name && !form.phone && !form.email) {
+      setError('At least one of name, phone, or email is required');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to create lead');
+      onCreated(json.lead);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="absolute inset-0 flex items-center justify-center p-4">
+        <div className="w-full max-w-lg rounded-2xl border border-d-border bg-d-bg shadow-2xl shadow-black/60">
+          <div className="flex items-center justify-between border-b border-d-border px-5 py-4">
+            <h2 className="text-sm font-semibold text-d-text">Add Lead</h2>
+            <button onClick={onClose} className="text-d-muted hover:text-d-text"><X className="h-4 w-4" /></button>
+          </div>
+          <form onSubmit={handleSubmit} className="px-5 py-4 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-d-muted mb-1">Name</label>
+                <input value={form.name} onChange={set('name')} placeholder="John Doe" className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text placeholder:text-d-muted focus:outline-none focus:ring-2 focus:ring-d-primary/50" />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-d-muted mb-1">Phone</label>
+                <input value={form.phone} onChange={set('phone')} placeholder="+15145551234" className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text placeholder:text-d-muted focus:outline-none focus:ring-2 focus:ring-d-primary/50" />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-d-muted mb-1">Email</label>
+                <input type="email" value={form.email} onChange={set('email')} placeholder="john@example.com" className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text placeholder:text-d-muted focus:outline-none focus:ring-2 focus:ring-d-primary/50" />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-d-muted mb-1">City</label>
+                <input value={form.city} onChange={set('city')} placeholder="Montreal" className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text placeholder:text-d-muted focus:outline-none focus:ring-2 focus:ring-d-primary/50" />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-d-muted mb-1">Source</label>
+                <select value={form.source} onChange={set('source')} className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50">
+                  {SOURCE_LIST.map((s) => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-d-muted mb-1">Language</label>
+                <select value={form.language} onChange={set('language')} className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text focus:outline-none focus:ring-2 focus:ring-d-primary/50">
+                  <option value="">—</option>
+                  <option value="fr">Français</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-d-muted mb-1">Notes</label>
+              <textarea value={form.notes} onChange={set('notes')} rows={2} placeholder="Optional notes..." className="w-full rounded-xl border border-d-border bg-d-surface px-3 py-2 text-sm text-d-text placeholder:text-d-muted focus:outline-none focus:ring-2 focus:ring-d-primary/50 resize-y" />
+            </div>
+            {error && <p className="text-xs text-rose-500">{error}</p>}
+            <div className="flex justify-end gap-2 pt-2">
+              <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl border border-d-border text-xs font-medium text-d-muted hover:text-d-text">Cancel</button>
+              <button type="submit" disabled={saving} className="px-4 py-2 rounded-xl bg-d-primary text-white text-xs font-semibold hover:opacity-90 disabled:opacity-50">
+                {saving ? 'Creating...' : 'Create Lead'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All statuses' },
@@ -81,6 +176,16 @@ export default function LeadsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const abortRef = useRef(null);
+  const [addOpen, setAddOpen] = useState(false);
+
+  // Open modal when ?create=true
+  useEffect(() => {
+    if (router.query.create === 'true') {
+      setAddOpen(true);
+      // Clean URL without reloading
+      router.replace('/platform/leads', undefined, { shallow: true });
+    }
+  }, [router.query.create]);
 
   async function loadLeads(params = {}) {
     abortRef.current?.abort();
@@ -172,6 +277,15 @@ export default function LeadsPage() {
 
   return (
     <DashboardLayout title="Leads">
+      <AddLeadModal
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onCreated={(lead) => {
+          setAddOpen(false);
+          router.push(`/platform/leads/${lead.id}`);
+        }}
+      />
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-lg font-semibold">Leads</h1>
@@ -179,8 +293,17 @@ export default function LeadsPage() {
             All leads captured by your automations (missed calls, emails, forms, cold outreach).
           </p>
         </div>
-        <div className="text-xs">
-          {total} lead{total === 1 ? '' : 's'} · Page {page} of {totalPages}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setAddOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-d-primary text-white text-xs font-medium hover:opacity-90 transition shadow-[0_0_18px_rgb(var(--d-primary-rgb)/0.55)]"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add Lead
+          </button>
+          <div className="text-xs">
+            {total} lead{total === 1 ? '' : 's'} · Page {page} of {totalPages}
+          </div>
         </div>
       </div>
 

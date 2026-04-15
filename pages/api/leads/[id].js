@@ -55,7 +55,7 @@ function stripHtmlToText(html) {
 // ---------------------------------------------------
 
 export default async function handler(req, res) {
-  const allowedMethods = ["GET", "PATCH"];
+  const allowedMethods = ["GET", "PATCH", "DELETE"];
   if (!allowedMethods.includes(req.method)) {
     res.setHeader("Allow", allowedMethods);
     return res.status(405).json({ error: "Method not allowed" });
@@ -73,10 +73,37 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Invalid lead id" });
   }
 
-  // ── PATCH: update lead fields (status, notes) ──
+  // ── DELETE: remove lead ──
+  if (req.method === "DELETE") {
+    try {
+      const { data, error: delError } = await supabase
+        .from("leads")
+        .delete()
+        .eq("id", leadId)
+        .eq("customer_id", customerId)
+        .select("id")
+        .single();
+
+      if (delError) {
+        console.error("[api/leads/[id]] deleteError", delError);
+        return res.status(500).json({ error: "Failed to delete lead" });
+      }
+
+      if (!data) {
+        return res.status(404).json({ error: "Lead not found" });
+      }
+
+      return res.status(200).json({ success: true, deleted: data.id });
+    } catch (err) {
+      console.error("[api/leads/[id]] DELETE error", err);
+      return res.status(500).json({ error: "Failed to delete lead" });
+    }
+  }
+
+  // ── PATCH: update lead fields ──
   if (req.method === "PATCH") {
     try {
-      const { status, notes } = req.body;
+      const { status, notes, name, phone, email, city, source, language } = req.body;
       const validStatuses = ["new", "active", "in_convo", "quoted", "won", "lost", "dead"];
 
       const updates = { updated_at: new Date().toISOString() };
@@ -90,9 +117,13 @@ export default async function handler(req, res) {
         updates.status = status;
       }
 
-      if (notes !== undefined) {
-        updates.notes = notes;
-      }
+      if (notes !== undefined) updates.notes = notes;
+      if (name !== undefined) updates.name = name || null;
+      if (phone !== undefined) updates.phone = phone || null;
+      if (email !== undefined) updates.email = email || null;
+      if (city !== undefined) updates.city = city || null;
+      if (source !== undefined) updates.source = source || null;
+      if (language !== undefined) updates.language = language || null;
 
       if (Object.keys(updates).length === 1) {
         return res.status(400).json({ error: "Nothing to update" });

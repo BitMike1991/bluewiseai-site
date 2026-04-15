@@ -2,6 +2,8 @@
 import { getAuthContext } from "../../lib/supabaseServer";
 import { sendSmsTelnyx } from "../../lib/providers/telnyx";
 import { sendEmailMailgun } from "../../lib/providers/mailgun";
+import { sendEmailGmail } from "../../lib/providers/gmail";
+import { encryptToken } from "../../lib/tokenEncryption";
 
 function isNonEmptyString(v) {
   return typeof v === "string" && v.trim().length > 0;
@@ -127,8 +129,24 @@ export default async function handler(req, res) {
 
     fromAddress = String(customerRow.telnyx_sms_number).trim();
   } else {
-    provider = "mailgun";
-    fromAddress = process.env.MAILGUN_FROM || `BlueWise AI <sales@${process.env.MAILGUN_DOMAIN}>`;
+    // Check if customer has connected Gmail/Outlook OAuth
+    const { data: oauthRow } = await supabase
+      .from("customer_email_oauth")
+      .select("id, provider, access_token, refresh_token, token_expiry, email_address, status")
+      .eq("customer_id", customerId)
+      .eq("status", "active")
+      .in("provider", ["gmail", "outlook"])
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (oauthRow && oauthRow.provider === "gmail") {
+      provider = "gmail";
+      fromAddress = oauthRow.email_address || "Unknown";
+    } else {
+      provider = "mailgun";
+      fromAddress = process.env.MAILGUN_FROM || `BlueWise AI <sales@${process.env.MAILGUN_DOMAIN}>`;
+    }
   }
 
   // ---- Observability: create send_logs row first (best-effort) ----
@@ -172,6 +190,34 @@ export default async function handler(req, res) {
       from: fromAddress,
       body: bodyText,
     });
+  } else if (provider === "gmail") {
+    // Retrieve the OAuth row we already fetched above
+    const { data: gmailOauth } = await supabase
+      .from("customer_email_oauth")
+      .select("id, access_token, refresh_token, token_expiry, email_address")
+      .eq("customer_id", customerId)
+      .eq("provider", "gmail")
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (!gmailOauth) {
+      sendResult = { success: false, error: "Gmail OAuth not found — reconnect in Settings" };
+    } else {
+      sendResult = await sendEmailGmail(
+        { to: finalTo, from: fromAddress, subject: subjectText, body: bodyText, html: htmlText || undefined },
+        gmailOauth,
+        async (newAccessToken, newExpiry) => {
+          await supabase
+            .from("customer_email_oauth")
+            .update({
+              access_token: encryptToken(newAccessToken),
+              token_expiry: newExpiry,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", gmailOauth.id);
+        }
+      );
+    }
   } else {
     sendResult = await sendEmailMailgun({
       to: finalTo,
@@ -179,7 +225,6 @@ export default async function handler(req, res) {
       subject: subjectText,
       body: bodyText,
       html: htmlText || undefined,
-      // replyTo: optional future enhancement
     });
   }
 

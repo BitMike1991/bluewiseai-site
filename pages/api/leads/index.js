@@ -2,8 +2,8 @@
 import { getAuthContext } from "../../../lib/supabaseServer";
 
 export default async function handler(req, res) {
-  if (req.method !== "GET") {
-    res.setHeader("Allow", ["GET"]);
+  if (req.method !== "GET" && req.method !== "POST") {
+    res.setHeader("Allow", ["GET", "POST"]);
     return res.status(405).json({ error: "Method not allowed" });
   }
 
@@ -14,6 +14,52 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: "No customer mapping for this user" });
 
   const { checkRateLimit } = await import("../../../lib/security");
+
+  // ── POST: create a new lead ──
+  if (req.method === "POST") {
+    if (checkRateLimit(req, res, `write:${customerId}`, 30)) return;
+
+    try {
+      const { name, phone, email, city, source, language, notes, status } = req.body || {};
+
+      if (!name && !phone && !email) {
+        return res.status(400).json({ error: "At least one of name, phone, or email is required" });
+      }
+
+      const validStatuses = ["new", "active", "in_convo", "quoted", "won", "lost", "dead"];
+      const leadStatus = status && validStatuses.includes(status) ? status : "new";
+
+      const insert = {
+        customer_id: customerId,
+        name: name || null,
+        phone: phone || null,
+        email: email || null,
+        city: city || null,
+        source: source || "manual",
+        language: language || null,
+        notes: notes || null,
+        status: leadStatus,
+        first_seen_at: new Date().toISOString(),
+      };
+
+      const { data, error: insertError } = await supabase
+        .from("leads")
+        .insert([insert])
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("[api/leads] POST insertError:", insertError);
+        return res.status(500).json({ error: "Failed to create lead" });
+      }
+
+      return res.status(201).json({ success: true, lead: data });
+    } catch (err) {
+      console.error("[api/leads] POST error:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+
   if (checkRateLimit(req, res, `read:${customerId}`, 120)) return;
 
   try {
