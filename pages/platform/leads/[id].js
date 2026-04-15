@@ -6,6 +6,7 @@ import Link from "next/link";
 import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
 import { useBranding } from "../../../src/components/dashboard/BrandingContext";
 import { getBrandingStyles, getStatusBadgeStyle } from "../../../src/components/dashboard/brandingUtils";
+import { useToast } from "../../../src/components/ui/ToastContext";
 
 function formatDate(dateString) {
   if (!dateString) return "\u2014";
@@ -367,6 +368,27 @@ export default function LeadDetailPage() {
   const [sendLoading, setSendLoading] = useState(false);
   const [sendError, setSendError] = useState(null);
   const [sendSuccess, setSendSuccess] = useState(null);
+  const [callLoading, setCallLoading] = useState(false);
+  const toast = useToast();
+
+  async function initiateCall() {
+    if (!data?.lead?.phone || callLoading) return;
+    setCallLoading(true);
+    try {
+      const res = await fetch("/api/calls/initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadPhone: data.lead.phone }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Call failed");
+      toast.success("Appel en cours — votre téléphone va sonner");
+    } catch (err) {
+      toast.error(err.message || "Erreur lors de l'appel");
+    } finally {
+      setCallLoading(false);
+    }
+  }
 
   async function loadLead() {
     if (!id) return;
@@ -742,6 +764,21 @@ export default function LeadDetailPage() {
                   title={!lead?.email ? "Lead has no email" : "Send email"}
                 >
                   Send email
+                </button>
+
+                <button
+                  type="button"
+                  onClick={initiateCall}
+                  className={cx(
+                    "px-3 py-1.5 rounded-xl text-xs font-medium border transition",
+                    lead?.phone && !callLoading
+                      ? "bg-green-600/80 hover:bg-green-600/70 text-white border-green-500/50"
+                      : "bg-d-surface text-d-muted border-d-border cursor-not-allowed"
+                  )}
+                  disabled={!lead?.phone || callLoading}
+                  title={!lead?.phone ? "Lead has no phone number" : "Call via Groundwire"}
+                >
+                  {callLoading ? "Appel en cours..." : "Appeler"}
                 </button>
 
               </div>

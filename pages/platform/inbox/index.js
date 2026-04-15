@@ -152,6 +152,7 @@ function ThreadView({ conv, onBack }) {
   const [replyText, setReplyText] = useState("");
   const [replyChannel, setReplyChannel] = useState("sms");
   const [sending, setSending] = useState(false);
+  const [callLoading, setCallLoading] = useState(false);
   const bottomRef = useRef(null);
   const abortRef = useRef(null);
 
@@ -188,6 +189,25 @@ function ThreadView({ conv, onBack }) {
     const interval = setInterval(loadThread, 30000);
     return () => clearInterval(interval);
   }, [conv?.leadId, loadThread]);
+
+  const handleCall = async () => {
+    if (!conv?.phone || callLoading) return;
+    setCallLoading(true);
+    try {
+      const res = await fetch("/api/calls/initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadPhone: conv.phone }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Call failed");
+      toast.success("Appel en cours — votre téléphone va sonner");
+    } catch (err) {
+      toast.error(err.message || "Erreur lors de l'appel");
+    } finally {
+      setCallLoading(false);
+    }
+  };
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -370,6 +390,15 @@ function ThreadView({ conv, onBack }) {
               style={{ maxHeight: "100px" }}
             />
           </div>
+          <button
+            type="button"
+            onClick={handleCall}
+            disabled={!conv?.phone || callLoading}
+            className="flex items-center justify-center h-10 w-10 rounded-xl text-white transition-opacity disabled:opacity-30 shrink-0 bg-green-600/80 hover:bg-green-600/70"
+            title={!conv?.phone ? "No phone number" : callLoading ? "Appel en cours..." : "Appeler"}
+          >
+            <Phone className="h-4 w-4" />
+          </button>
           <button
             type="submit"
             disabled={!replyText.trim() || sending}
