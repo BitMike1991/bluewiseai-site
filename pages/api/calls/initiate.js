@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     // Get customer's SIP URI and Telnyx number
     const { data: customer, error: custErr } = await supabase
       .from("customers")
-      .select("telnyx_sip_uri, telnyx_number, business_name")
+      .select("telnyx_sip_uri, telnyx_number, telnyx_connection_id, business_name")
       .eq("id", customerId)
       .single();
 
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${process.env.TELNYX_API_KEY}`,
       },
       body: JSON.stringify({
-        connection_id: "2886901898399450925",
+        connection_id: customer.telnyx_connection_id || "2886901898399450925",
         to: customer.telnyx_sip_uri,
         from: customer.telnyx_number,
         answering_machine_detection: "disabled",
