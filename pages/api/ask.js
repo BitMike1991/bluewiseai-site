@@ -148,6 +148,113 @@ async function fetchInboxActivityByLeadIds(supabase, customerId, leadIds) {
 }
 
 // -----------------------------
+// Tool runner: get_business_analytics
+// -----------------------------
+
+async function runGetAnalyticsTool(supabase, customerId, args) {
+  const range = args.range || "30d";
+  const now = new Date();
+
+  let periodMs = 30 * 86400000;
+  if (range === "7d") periodMs = 7 * 86400000;
+  else if (range === "90d") periodMs = 90 * 86400000;
+  else if (range === "all") periodMs = 365 * 86400000;
+
+  const sinceDate = new Date(now.getTime() - periodMs);
+  const sinceIso = sinceDate.toISOString();
+  const prevSinceIso = new Date(sinceDate.getTime() - periodMs).toISOString();
+  const prevUntilIso = sinceIso;
+
+  // Current period — all queries in parallel
+  const [
+    { data: leads },
+    { data: quotes },
+    { data: contracts },
+    { data: payments },
+    { data: messages },
+    { data: tasks },
+  ] = await Promise.all([
+    supabase.from("leads").select("id, source, status, created_at").eq("customer_id", customerId).gte("created_at", sinceIso),
+    supabase.from("quotes").select("id, total_ttc").eq("customer_id", customerId).not("status", "eq", "draft").gte("created_at", sinceIso),
+    supabase.from("contracts").select("id, signed_at").eq("customer_id", customerId).not("signed_at", "is", null).gte("signed_at", sinceIso),
+    supabase.from("payments").select("id, amount").eq("customer_id", customerId).eq("status", "succeeded").gte("created_at", sinceIso),
+    supabase.from("messages").select("channel, direction").eq("customer_id", customerId).gte("created_at", sinceIso),
+    supabase.from("tasks").select("id, status, type").eq("customer_id", customerId).gte("created_at", sinceIso),
+  ]);
+
+  // Previous period for comparison
+  const [
+    { data: prevLeads },
+    { data: prevPayments },
+  ] = await Promise.all([
+    supabase.from("leads").select("id").eq("customer_id", customerId).gte("created_at", prevSinceIso).lt("created_at", prevUntilIso),
+    supabase.from("payments").select("amount").eq("customer_id", customerId).eq("status", "succeeded").gte("created_at", prevSinceIso).lt("created_at", prevUntilIso),
+  ]);
+
+  // Compute metrics
+  const leadCount = (leads || []).length;
+  const prevLeadCount = (prevLeads || []).length;
+  const quoteCount = (quotes || []).length;
+  const quotesValue = (quotes || []).reduce((s, q) => s + Number(q.total_ttc || 0), 0);
+  const contractCount = (contracts || []).length;
+  const paymentCount = (payments || []).length;
+  const revenue = (payments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
+  const prevRevenue = (prevPayments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
+
+  // Source breakdown
+  const sourceMap = {};
+  for (const l of leads || []) sourceMap[l.source || "unknown"] = (sourceMap[l.source || "unknown"] || 0) + 1;
+  const topSources = Object.entries(sourceMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  // Status breakdown
+  const statusMap = {};
+  for (const l of leads || []) statusMap[l.status || "new"] = (statusMap[l.status || "new"] || 0) + 1;
+
+  // Message volume
+  const msgByChannel = {};
+  for (const m of messages || []) {
+    const ch = m.channel || "other";
+    msgByChannel[ch] = (msgByChannel[ch] || 0) + 1;
+  }
+  const outbound = (messages || []).filter(m => m.direction === "outbound").length;
+  const inbound = (messages || []).filter(m => m.direction === "inbound").length;
+
+  // Tasks
+  const openTasks = (tasks || []).filter(t => t.status === "open" || t.status === "pending").length;
+  const completedTasks = (tasks || []).filter(t => t.status === "completed" || t.status === "done").length;
+
+  // Conversion rate
+  const conversionRate = leadCount > 0 ? Math.round((paymentCount / leadCount) * 1000) / 10 : 0;
+
+  // Trends
+  const leadTrend = prevLeadCount > 0 ? Math.round(((leadCount - prevLeadCount) / prevLeadCount) * 100) : null;
+  const revTrend = prevRevenue > 0 ? Math.round(((revenue - prevRevenue) / prevRevenue) * 100) : null;
+
+  // Format summary
+  const lines = [
+    `📊 BUSINESS ANALYTICS (${range} period)`,
+    ``,
+    `LEADS: ${leadCount} (${leadTrend !== null ? (leadTrend >= 0 ? '+' : '') + leadTrend + '% vs previous period' : 'no comparison data'})`,
+    `  Sources: ${topSources.map(([s, c]) => `${s}: ${c}`).join(', ') || 'none'}`,
+    `  Status: ${Object.entries(statusMap).map(([s, c]) => `${s}: ${c}`).join(', ')}`,
+    ``,
+    `FUNNEL:`,
+    `  Leads: ${leadCount} → Quotes: ${quoteCount} ($${Math.round(quotesValue)}) → Contracts: ${contractCount} → Paid: ${paymentCount}`,
+    `  Conversion rate: ${conversionRate}%`,
+    ``,
+    `REVENUE: $${Math.round(revenue)} (${revTrend !== null ? (revTrend >= 0 ? '+' : '') + revTrend + '% vs previous period' : 'no comparison data'})`,
+    ``,
+    `COMMUNICATIONS: ${(messages || []).length} total`,
+    `  ${Object.entries(msgByChannel).map(([ch, c]) => `${ch}: ${c}`).join(', ')}`,
+    `  Inbound: ${inbound} | Outbound: ${outbound}`,
+    ``,
+    `TASKS: ${openTasks} open, ${completedTasks} completed`,
+  ];
+
+  return { intent: "analytics", summary: lines.join('\n') };
+}
+
+// -----------------------------
 // Tool runner: list_leads (CRM-centric)
 // -----------------------------
 
@@ -2084,6 +2191,7 @@ export default async function handler(req, res) {
     "You can also manage follow-up tasks via tools (create, list, update/complete/cancel/reschedule). " +
     "You can draft client replies (SMS/email) grounded in the lead + latest context via draft_reply. " +
     "You can send messages via send_message (SMS or email) and it MUST persist an outbound row in messages. " +
+    "You can get business analytics via get_business_analytics — use it when asked about KPIs, revenue, conversion rates, lead stats, or how the business is doing. " +
     "LEAD RESOLUTION RULE: If you are not 100% sure which lead the user means, call find_lead first. " +
     "Prefer exact identifiers: email (exact) > phone (exact) > phone last-7 > name fuzzy match. " +
     "CHAINING RULE: If the user asked to SEND and you need a draft, call draft_reply first then send_message in the same flow. " +
@@ -2265,6 +2373,26 @@ export default async function handler(req, res) {
     },
   };
 
+  const getAnalyticsTool = {
+    type: "function",
+    function: {
+      name: "get_business_analytics",
+      description:
+        "Get business performance analytics: leads, funnel, revenue, communications, tasks. Use this when the user asks about business performance, KPIs, stats, conversion rates, revenue, or how the business is doing.",
+      parameters: {
+        type: "object",
+        properties: {
+          range: {
+            type: "string",
+            enum: ["7d", "30d", "90d", "all"],
+            description: "Time range: 7d (week), 30d (month), 90d (quarter), all (year)",
+          },
+        },
+        additionalProperties: false,
+      },
+    },
+  };
+
   const tools = [
     listLeadsTool,
     findLeadTool,
@@ -2273,6 +2401,7 @@ export default async function handler(req, res) {
     createTaskTool,
     updateTaskTool,
     sendMessageTool,
+    getAnalyticsTool,
   ];
   if (!wantsUpdate) tools.push(getTasksTool);
 
@@ -2412,6 +2541,9 @@ export default async function handler(req, res) {
           finalResult = result;
         } else if (name === "send_message") {
           result = await runSendMessageTool(supabase, customerId, args);
+          finalResult = result;
+        } else if (name === "get_business_analytics") {
+          result = await runGetAnalyticsTool(supabase, customerId, args);
           finalResult = result;
         } else {
           result = { error: `Unsupported tool: ${name}` };
