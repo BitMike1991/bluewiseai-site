@@ -556,13 +556,150 @@ function ToolResultCard({ toolName, result, onLeadAction, onLeadNavigate }) {
     );
   }
 
-  // Default: formatted JSON fallback
+  // KPI dashboard — visual tiles
+  if (toolName === "get_kpis" || result?.resultType === "kpi_summary") {
+    const kpi = result.items?.[0];
+    if (!kpi) return <p className="text-sm text-d-muted">No data available.</p>;
+
+    const fmt = (n) => {
+      if (n == null) return "—";
+      if (typeof n === "number") return n.toLocaleString("en-CA");
+      return String(n);
+    };
+    const fmtMoney = (n) => {
+      if (!n) return "$0";
+      return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(n);
+    };
+    const trendBadge = (val) => {
+      if (val == null) return null;
+      const positive = val >= 0;
+      return (
+        <span className={cx("text-[10px] font-semibold px-1.5 py-0.5 rounded-full", positive ? "bg-emerald-500/15 text-emerald-500" : "bg-rose-500/15 text-rose-500")}>
+          {positive ? "+" : ""}{val}%
+        </span>
+      );
+    };
+
+    return (
+      <div className="space-y-3">
+        <p className="text-xs font-semibold text-d-muted uppercase tracking-wide">{kpi.period || "Performance"}</p>
+
+        {/* Top metrics row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="rounded-xl border border-d-border bg-d-surface/60 p-3">
+            <p className="text-[10px] text-d-muted uppercase tracking-wide">Leads</p>
+            <p className="text-xl font-bold text-d-text mt-1">{fmt(kpi.leads?.total)}</p>
+            {trendBadge(kpi.leads?.trend)}
+          </div>
+          <div className="rounded-xl border border-d-border bg-d-surface/60 p-3">
+            <p className="text-[10px] text-d-muted uppercase tracking-wide">Revenue</p>
+            <p className="text-xl font-bold text-d-text mt-1">{fmtMoney(kpi.revenue?.total)}</p>
+            {trendBadge(kpi.revenue?.trend)}
+          </div>
+          <div className="rounded-xl border border-d-border bg-d-surface/60 p-3">
+            <p className="text-[10px] text-d-muted uppercase tracking-wide">Conversion</p>
+            <p className="text-xl font-bold text-d-text mt-1">{kpi.funnel?.conversionRate || 0}%</p>
+          </div>
+          <div className="rounded-xl border border-d-border bg-d-surface/60 p-3">
+            <p className="text-[10px] text-d-muted uppercase tracking-wide">Messages</p>
+            <p className="text-xl font-bold text-d-text mt-1">{fmt(kpi.communications?.total)}</p>
+          </div>
+        </div>
+
+        {/* Funnel */}
+        <div className="rounded-xl border border-d-border bg-d-surface/60 p-3">
+          <p className="text-[10px] text-d-muted uppercase tracking-wide mb-2">Funnel</p>
+          <div className="flex items-center gap-1 text-xs">
+            <span className="font-semibold text-d-text">{fmt(kpi.leads?.total)} leads</span>
+            <ChevronRight className="w-3 h-3 text-d-muted" />
+            <span className="font-semibold text-d-text">{fmt(kpi.funnel?.quotes)} quotes</span>
+            <ChevronRight className="w-3 h-3 text-d-muted" />
+            <span className="font-semibold text-d-text">{fmt(kpi.funnel?.signed)} signed</span>
+            <ChevronRight className="w-3 h-3 text-d-muted" />
+            <span className="font-semibold text-emerald-500">{fmt(kpi.funnel?.payments)} paid</span>
+          </div>
+          {kpi.revenue?.pipeline > 0 && (
+            <p className="text-[10px] text-d-muted mt-1">Pipeline: {fmtMoney(kpi.revenue.pipeline)} · Won: {fmtMoney(kpi.revenue.won)}</p>
+          )}
+        </div>
+
+        {/* Sources + Comms side by side */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {kpi.leads?.bySource && Object.keys(kpi.leads.bySource).length > 0 && (
+            <div className="rounded-xl border border-d-border bg-d-surface/60 p-3">
+              <p className="text-[10px] text-d-muted uppercase tracking-wide mb-2">Lead Sources</p>
+              <div className="space-y-1">
+                {Object.entries(kpi.leads.bySource).sort((a, b) => b[1] - a[1]).map(([src, count]) => (
+                  <div key={src} className="flex items-center justify-between text-xs">
+                    <span className="text-d-muted">{src.replace(/_/g, " ")}</span>
+                    <span className="font-semibold text-d-text">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="rounded-xl border border-d-border bg-d-surface/60 p-3">
+            <p className="text-[10px] text-d-muted uppercase tracking-wide mb-2">Communications</p>
+            <div className="space-y-1 text-xs">
+              {kpi.communications?.byChannel && Object.entries(kpi.communications.byChannel).map(([ch, count]) => (
+                <div key={ch} className="flex items-center justify-between">
+                  <span className="text-d-muted">{ch}</span>
+                  <span className="font-semibold text-d-text">{count}</span>
+                </div>
+              ))}
+              <div className="flex items-center justify-between pt-1 border-t border-d-border/50">
+                <span className="text-d-muted">Inbound / Outbound</span>
+                <span className="font-semibold text-d-text">{fmt(kpi.communications?.inbound)} / {fmt(kpi.communications?.outbound)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Calls */}
+        {kpi.calls?.total > 0 && (
+          <div className="rounded-xl border border-d-border bg-d-surface/60 p-3">
+            <p className="text-[10px] text-d-muted uppercase tracking-wide mb-1">Calls</p>
+            <div className="flex items-center gap-4 text-xs">
+              <span><span className="font-semibold text-d-text">{fmt(kpi.calls.total)}</span> total</span>
+              <span><span className="font-semibold text-emerald-500">{fmt(kpi.calls.successful)}</span> successful</span>
+              {kpi.calls.meetingsBooked > 0 && <span><span className="font-semibold text-d-primary">{fmt(kpi.calls.meetingsBooked)}</span> meetings</span>}
+              {kpi.calls.avgScore && <span>avg score: <span className="font-semibold text-d-text">{kpi.calls.avgScore}</span></span>}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Pipeline
+  if (toolName === "get_pipeline" || result?.resultType === "pipeline") {
+    const items = result.items || [];
+    if (items.length === 0) return <p className="text-sm text-d-muted">No pipeline data.</p>;
+    const total = items.reduce((s, i) => s + (i.count || 0), 0);
+    return (
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-d-muted uppercase tracking-wide">Pipeline — {total} leads</p>
+        <div className="flex flex-wrap gap-2">
+          {items.map((stage) => (
+            <div key={stage.status} className="rounded-xl border border-d-border bg-d-surface/60 px-3 py-2 text-center min-w-[70px]">
+              <p className="text-lg font-bold text-d-text">{stage.count}</p>
+              <p className="text-[10px] text-d-muted capitalize">{(stage.status || "unknown").replace(/_/g, " ")}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Default: formatted JSON fallback — hide raw aiSummary, show clean
   return (
     <div className="rounded-xl border border-d-border bg-d-surface/60 p-3">
       {result.aiSummary && <p className="text-sm text-d-muted mb-2">{result.aiSummary}</p>}
-      <pre className="text-xs text-d-muted whitespace-pre-wrap overflow-x-auto max-h-60">
-        {JSON.stringify(result, null, 2)}
-      </pre>
+      {!result.aiSummary && (
+        <pre className="text-xs text-d-muted whitespace-pre-wrap overflow-x-auto max-h-60">
+          {JSON.stringify(result, null, 2)}
+        </pre>
+      )}
     </div>
   );
 }
