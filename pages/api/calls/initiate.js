@@ -87,7 +87,8 @@ export default async function handler(req, res) {
       direction: "outbound",
       from_number: customer.telnyx_number,
       to_number: leadPhone,
-      status: "ringing_sip",
+      sip_attempted: true,
+      sip_dial_started_at: new Date().toISOString(),
       created_at: new Date().toISOString(),
     });
 
