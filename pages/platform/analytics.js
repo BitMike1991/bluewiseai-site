@@ -152,6 +152,10 @@ export default function AnalyticsPage() {
       sections.push("\nMeta Pixel Events\nEvent,Count");
       data.pixelInsights.events.forEach(e => sections.push(`"${e.name}",${e.count}`));
     }
+    if (data.trafficInsights?.daily?.length) {
+      sections.push("\nWebsite Traffic\nDate,Sessions,Users,Pageviews,Bounce Rate");
+      data.trafficInsights.daily.forEach(d => sections.push(`${d.date},${d.sessions},${d.users},${d.pageviews},${d.bounceRate}`));
+    }
 
     const blob = new Blob([sections.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -725,14 +729,64 @@ export default function AnalyticsPage() {
           </div>
         ) : null}
 
-        {/* Row 8: Website Traffic — Coming Soon */}
-        <div className="rounded-2xl border border-dashed border-d-border bg-d-surface/50 p-6 text-center">
-          <Globe className="w-8 h-8 mx-auto mb-3 text-d-muted opacity-30" />
-          <p className="text-sm font-medium text-d-text mb-1">Website Traffic Analytics</p>
-          <p className="text-xs text-d-muted max-w-md mx-auto">
-            Coming soon — Google Analytics integration will show visitors, pageviews, top pages, and referral sources directly in your dashboard.
-          </p>
-        </div>
+        {/* Row 8: Website Traffic (GA4) */}
+        {data.trafficInsights ? (
+          <div className="rounded-2xl border border-d-border bg-d-surface p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Globe className="w-4 h-4" style={{ color: primary }} />
+              <span className="text-sm font-semibold text-d-text">Website Traffic</span>
+              <span className="text-xs text-d-muted ml-auto">Google Analytics</span>
+            </div>
+
+            {/* KPI tiles */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              <div className="rounded-xl bg-d-bg p-3">
+                <div className="text-xs text-d-muted mb-0.5">Sessions</div>
+                <div className="text-lg font-bold text-d-text">{data.trafficInsights.totals.sessions.toLocaleString()}</div>
+              </div>
+              <div className="rounded-xl bg-d-bg p-3">
+                <div className="text-xs text-d-muted mb-0.5">Users</div>
+                <div className="text-lg font-bold text-d-text">{data.trafficInsights.totals.users.toLocaleString()}</div>
+              </div>
+              <div className="rounded-xl bg-d-bg p-3">
+                <div className="text-xs text-d-muted mb-0.5">Pageviews</div>
+                <div className="text-lg font-bold text-d-text">{data.trafficInsights.totals.pageviews.toLocaleString()}</div>
+              </div>
+              <div className="rounded-xl bg-d-bg p-3">
+                <div className="text-xs text-d-muted mb-0.5">Bounce Rate</div>
+                <div className="text-lg font-bold text-d-text">{data.trafficInsights.totals.bounceRate}%</div>
+              </div>
+            </div>
+
+            {/* Daily sessions chart */}
+            {data.trafficInsights.daily?.length > 1 && (
+              <rc.ResponsiveContainer width="100%" height={200}>
+                <rc.AreaChart data={data.trafficInsights.daily}>
+                  <defs>
+                    <linearGradient id="trafficGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={primary} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={primary} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <rc.CartesianGrid strokeDasharray="3 3" stroke={borderHex} />
+                  <rc.XAxis dataKey="date" {...axisProps} tick={tickProps} tickFormatter={(v) => v.slice(5)} />
+                  <rc.YAxis {...axisProps} tick={tickProps} />
+                  <rc.Tooltip content={<CustomTooltip />} />
+                  <rc.Area type="monotone" dataKey="sessions" name="Sessions" stroke={primary} fill="url(#trafficGrad)" strokeWidth={2} />
+                  <rc.Area type="monotone" dataKey="users" name="Users" stroke={accent} fill="none" strokeWidth={1.5} strokeDasharray="4 2" />
+                </rc.AreaChart>
+              </rc.ResponsiveContainer>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-d-border bg-d-surface/50 p-6 text-center">
+            <Globe className="w-8 h-8 mx-auto mb-3 text-d-muted opacity-30" />
+            <p className="text-sm font-medium text-d-text mb-1">Website Traffic</p>
+            <p className="text-xs text-d-muted max-w-md mx-auto">
+              Connect Google Analytics to see visitors, pageviews, and bounce rate.
+            </p>
+          </div>
+        )}
       </>
     );
   }

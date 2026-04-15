@@ -362,7 +362,7 @@ export default async function handler(req, res) {
 
     // ── Customer row (for ads + social) ──
     const { data: custRow } = await supabase
-      .from("customers").select("fb_ad_account_id, fb_campaign_ids, fb_page_id, fb_page_access_token, fb_pixel_id, domain")
+      .from("customers").select("fb_ad_account_id, fb_campaign_ids, fb_page_id, fb_page_access_token, fb_pixel_id, ga4_property_id, domain")
       .eq("id", customerId).single();
 
     // ── 8. Facebook Ads insights (full campaign analysis) ──
@@ -636,6 +636,21 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── 11. GA4 Website Traffic (optional) ──
+    let trafficInsights = null;
+    const ga4PropId = custRow?.ga4_property_id;
+    if (ga4PropId) {
+      try {
+        const { fetchGA4Traffic } = await import("../../lib/ga4");
+        const dayCount = range === "7d" ? 7 : range === "90d" ? 90 : range === "all" ? 365 : 30;
+        const trafficStart = new Date(now.getTime() - dayCount * 86400000).toISOString().slice(0, 10);
+        const trafficEnd = now.toISOString().slice(0, 10);
+        trafficInsights = await fetchGA4Traffic(ga4PropId, trafficStart, trafficEnd);
+      } catch (trafficErr) {
+        console.error("[api/analytics] GA4 traffic fetch error:", trafficErr.message);
+      }
+    }
+
     const result = {
       kpis,
       leadsPerDay,
@@ -648,6 +663,7 @@ export default async function handler(req, res) {
       adsInsights,
       socialInsights,
       pixelInsights,
+      trafficInsights,
     };
     return res.status(200).json(result);
   } catch (err) {

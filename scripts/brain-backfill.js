@@ -26,14 +26,7 @@ function sleep(ms) {
 }
 
 function extractContent(msg) {
-  // Try common content fields
-  const parts = [];
-  if (msg.body) parts.push(msg.body);
-  if (msg.content && msg.content !== msg.body) parts.push(msg.content);
-  if (msg.text && msg.text !== msg.body && msg.text !== msg.content) parts.push(msg.text);
-  if (msg.email_body && msg.email_body !== msg.body) parts.push(msg.email_body);
-  const combined = parts.join("\n").trim();
-  return combined || null;
+  return (msg.body || "").trim() || null;
 }
 
 async function fetchAllMessages() {
@@ -45,7 +38,7 @@ async function fetchAllMessages() {
   while (true) {
     const { data, error } = await supabase
       .from("inbox_messages")
-      .select("id, lead_id, body, content, text, email_body, channel, direction, created_at")
+      .select("id, lead_id, body, direction, message_type, created_at")
       .order("id", { ascending: true })
       .range(offset, offset + pageSize - 1);
 
@@ -150,7 +143,7 @@ async function main() {
       lead_id: msg.lead_id,
       content: content.substring(0, 8000), // cap content length
       metadata: {
-        channel: msg.channel || null,
+        message_type: msg.message_type || null,
         direction: msg.direction || null,
         created_at: msg.created_at || null,
       },
