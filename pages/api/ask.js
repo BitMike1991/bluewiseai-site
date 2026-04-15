@@ -2191,7 +2191,8 @@ export default async function handler(req, res) {
     "You can also manage follow-up tasks via tools (create, list, update/complete/cancel/reschedule). " +
     "You can draft client replies (SMS/email) grounded in the lead + latest context via draft_reply. " +
     "You can send messages via send_message (SMS or email) and it MUST persist an outbound row in messages. " +
-    "You can get business analytics via get_business_analytics — use it when asked about KPIs, revenue, conversion rates, lead stats, or how the business is doing. " +
+    "You can get business analytics via get_business_analytics — ALWAYS use this tool (not list_leads) when asked about business performance, KPIs, revenue, conversion rates, how the business is doing, stats, or comparisons between periods. " +
+    "When you receive analytics data, don't just repeat the numbers — ANALYZE them like a business advisor. Highlight what's going well, what's concerning, and give 2-3 actionable recommendations. Be direct and specific. " +
     "LEAD RESOLUTION RULE: If you are not 100% sure which lead the user means, call find_lead first. " +
     "Prefer exact identifiers: email (exact) > phone (exact) > phone last-7 > name fuzzy match. " +
     "CHAINING RULE: If the user asked to SEND and you need a draft, call draft_reply first then send_message in the same flow. " +
