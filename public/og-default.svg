@@ -1,0 +1,19 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0a1a"/>
+      <stop offset="100%" stop-color="#111133"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#60a5fa"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1200" height="4" fill="url(#accent)"/>
+  <text x="100" y="220" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="700" fill="white">BlueWise AI</text>
+  <text x="100" y="310" font-family="system-ui, -apple-system, sans-serif" font-size="36" fill="#94a3b8">AI-Powered Business Automation</text>
+  <text x="100" y="370" font-family="system-ui, -apple-system, sans-serif" font-size="36" fill="#94a3b8">for Contractors</text>
+  <text x="100" y="470" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="#3b82f6">Voice AI  •  Smart CRM  •  Automated Quotes  •  Payments</text>
+  <text x="100" y="560" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#64748b">bluewiseai.com</text>
+</svg>

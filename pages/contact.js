@@ -1,3 +1,4 @@
+import PageHead from "../src/components/PageHead";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import {
@@ -151,6 +152,7 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-bg text-white">
+      <PageHead page="/contact" locale={locale} />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-20 space-y-12">
 
         <ScrollReveal>

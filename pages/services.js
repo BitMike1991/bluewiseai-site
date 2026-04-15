@@ -1,3 +1,4 @@
+import PageHead from "../src/components/PageHead";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
@@ -143,6 +144,7 @@ export default function Services() {
 
   return (
     <div className="min-h-screen bg-bg text-white">
+      <PageHead page="/services" locale={locale} />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 space-y-16">
 
         {/* HERO */}

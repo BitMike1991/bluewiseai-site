@@ -1,3 +1,4 @@
+import PageHead from "../src/components/PageHead";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import Image from "next/image";
@@ -174,6 +175,7 @@ export default function Artisan() {
 
   return (
     <div className="min-h-screen bg-bg text-white">
+      <PageHead page="/artisan" locale={locale} />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 space-y-20">
 
         {/* HERO */}

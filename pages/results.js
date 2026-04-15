@@ -1,3 +1,4 @@
+import PageHead from "../src/components/PageHead";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import {
@@ -182,6 +183,7 @@ export default function Results() {
 
   return (
     <div className="min-h-screen bg-bg text-white">
+      <PageHead page="/results" locale={locale} />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 space-y-16">
 
         {/* TITLE */}
