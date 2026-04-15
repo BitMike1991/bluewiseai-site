@@ -145,6 +145,8 @@ function classifyChannel(channelValue) {
 
   if (s === "sms" || s.includes("sms") || s.includes("telnyx") || s.includes("text")) return "sms";
 
+  if (s === "call" || s.includes("call") || s.includes("voice") || s.includes("phone")) return "call";
+
   return s || "unknown";
 }
 
@@ -185,9 +187,10 @@ function TimelineItem({ item }) {
   const [expanded, setExpanded] = useState(false);
 
   if (isMessage) {
-    title = isInbound ? "Inbound message" : "Outbound message";
-
     const channelClass = classifyChannel(item.channel);
+    title = channelClass === "call"
+      ? (isInbound ? "Inbound call transcript" : "Outbound call transcript")
+      : (isInbound ? "Inbound message" : "Outbound message");
 
     pill = (
       <span className="uppercase tracking-wide text-[0.65rem] px-1.5 py-0.5 rounded-full bg-d-surface/80 text-d-muted">
@@ -546,7 +549,10 @@ export default function LeadDetailPage() {
     }
 
     if (timelineFilter === "calls") {
-      return timeline.filter((it) => it.type === "event" && (it.eventType || "").toLowerCase().includes("call"));
+      return timeline.filter((it) =>
+        (it.type === "event" && (it.eventType || "").toLowerCase().includes("call")) ||
+        (it.type === "message" && classifyChannel(it.channel) === "call")
+      );
     }
 
     if (timelineFilter === "missed_calls") {
