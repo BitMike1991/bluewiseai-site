@@ -2207,7 +2207,7 @@ export default async function handler(req, res) {
     function: {
       name: "list_leads",
       description:
-        "Get CRM leads from the 'leads' table, enriched with stats from 'inbox_leads'.",
+        "List individual CRM leads with their details. Use for browsing leads, filtering by status/source, or finding leads that need follow-up. Do NOT use for business performance questions — use get_business_analytics instead.",
       parameters: {
         type: "object",
         properties: {
