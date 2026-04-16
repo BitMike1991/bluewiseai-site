@@ -31,10 +31,21 @@ const STATUS_OPTIONS = [
 
 function StatusSelector({ status, onChange, loading }) {
   const [open, setOpen] = useState(false);
+  const [align, setAlign] = useState("left");
+  const btnRef = useRef(null);
   const current = STATUS_OPTIONS.find((s) => s.value === status) || STATUS_OPTIONS[0];
 
+  useEffect(() => {
+    if (!open || !btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    const dropdownWidth = 160; // w-40
+    const spaceRight = window.innerWidth - rect.left;
+    // If dropdown would overflow right edge, flip to right-align
+    setAlign(spaceRight < dropdownWidth + 16 ? "right" : "left");
+  }, [open]);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={btnRef}>
       <button
         type="button"
         onClick={() => !loading && setOpen(!open)}
@@ -52,7 +63,7 @@ function StatusSelector({ status, onChange, loading }) {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-50 w-40 rounded-xl border border-d-border bg-d-surface shadow-xl shadow-black/60 py-1">
+          <div className={`absolute top-full mt-1 z-50 w-40 max-w-[calc(100vw-2rem)] rounded-xl border border-d-border bg-d-surface shadow-xl shadow-black/60 py-1 ${align === "right" ? "right-0" : "left-0"}`}>
             {STATUS_OPTIONS.map((s) => (
               <button
                 key={s.value}
