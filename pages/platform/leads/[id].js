@@ -7,7 +7,7 @@ import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
 import { useBranding } from "../../../src/components/dashboard/BrandingContext";
 import { getBrandingStyles, getStatusBadgeStyle } from "../../../src/components/dashboard/brandingUtils";
 import { useToast } from "../../../src/components/ui/ToastContext";
-import { Pencil, Trash2, X, Check, Sparkles } from "lucide-react";
+import { Pencil, Trash2, X, Check, Sparkles, MessageCircle, Info, ListTodo, Phone, Mail } from "lucide-react";
 
 function formatDate(dateString) {
   if (!dateString) return "\u2014";
@@ -518,6 +518,7 @@ export default function LeadDetailPage() {
   const [statusLoading, setStatusLoading] = useState(false);
 
   const [timelineFilter, setTimelineFilter] = useState("all");
+  const [mobileTab, setMobileTab] = useState("convo"); // convo | infos | tasks
 
   const [sendOpen, setSendOpen] = useState(false);
   const [sendChannel, setSendChannel] = useState("sms");
@@ -816,40 +817,91 @@ export default function LeadDetailPage() {
           </button>
         </div>
       )}
-      <div className="h-full w-full px-6 py-6 text-d-text">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
-          <div className="flex items-center gap-3">
-            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-d-primary/15 border border-d-primary/40 shadow-[0_0_20px_rgb(var(--d-primary-rgb)/0.5)]">
-              <span className="text-sm font-semibold text-d-primary">
-                {lead?.name?.[0]?.toUpperCase() || lead?.phone?.slice(-2) || lead?.email?.[0]?.toUpperCase() || "L"}
-              </span>
+      <div className="h-full w-full px-4 sm:px-6 py-4 sm:py-6 text-d-text pb-24 lg:pb-6">
+        {/* Sticky header on mobile — name + status always visible */}
+        <div className="sticky top-0 z-30 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 sm:py-0 bg-d-bg/95 backdrop-blur-md sm:bg-transparent sm:backdrop-blur-none mb-4 sm:mb-6 border-b border-d-border/40 sm:border-0">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-d-primary/15 border border-d-primary/40 shadow-[0_0_20px_rgb(var(--d-primary-rgb)/0.5)]">
+                <span className="text-sm font-semibold text-d-primary">
+                  {lead?.name?.[0]?.toUpperCase() || lead?.phone?.slice(-2) || lead?.email?.[0]?.toUpperCase() || "L"}
+                </span>
+              </div>
+              <div className="flex flex-col min-w-0 flex-1">
+                <h1 className="text-base sm:text-xl font-semibold text-d-text tracking-tight truncate">
+                  {lead?.name || lead?.phone || lead?.email || "Lead"}
+                </h1>
+                <p className="text-[11px] sm:text-xs text-d-muted truncate">
+                  {lead?.source ? `Source: ${lead.source}` : "Captured by your automations"}
+                </p>
+              </div>
+              {/* Status pill on mobile — inline with header */}
+              <div className="sm:hidden shrink-0">
+                {lead && (
+                  <StatusSelector
+                    status={lead.status || "new"}
+                    onChange={handleStatusChange}
+                    loading={statusLoading}
+                  />
+                )}
+              </div>
             </div>
-            <div className="flex flex-col min-w-0">
-              <h1 className="text-lg sm:text-xl font-semibold text-d-text tracking-tight truncate">
-                {lead?.name || lead?.phone || lead?.email || "Lead"}
-              </h1>
-              <p className="text-xs text-d-muted truncate">
-                {lead?.source ? `Source: ${lead.source}` : "Captured by your automations"}
+
+            <div className="hidden sm:flex sm:flex-col sm:items-end gap-2">
+              {lead && (
+                <StatusSelector
+                  status={lead.status || "new"}
+                  onChange={handleStatusChange}
+                  loading={statusLoading}
+                />
+              )}
+              <p className="text-xs text-d-muted">
+                Last contact: <span className="text-d-text">{formatDate(lead?.lastContactAt)}</span>
               </p>
             </div>
           </div>
+        </div>
 
-          <div className="flex items-center sm:flex-col sm:items-end gap-2 pl-13 sm:pl-0">
-            {lead && (
-              <StatusSelector
-                status={lead.status || "new"}
-                onChange={handleStatusChange}
-                loading={statusLoading}
-              />
-            )}
-            <p className="text-xs text-d-muted hidden sm:block">
-              Last contact: <span className="text-d-text">{formatDate(lead?.lastContactAt)}</span>
-            </p>
+        {/* Mobile tabs — sticky below header */}
+        <div className="lg:hidden sticky top-[72px] z-20 -mx-4 px-4 bg-d-bg/95 backdrop-blur-md border-b border-d-border/40 mb-4">
+          <div className="flex gap-1">
+            {[
+              { key: "convo", label: "Conversation", icon: MessageCircle, badge: stats.totalMessages },
+              { key: "infos", label: "Infos", icon: Info },
+              { key: "tasks", label: "Tasks", icon: ListTodo, badge: openTasks.length },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const active = mobileTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setMobileTab(tab.key)}
+                  className={cx(
+                    "flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold border-b-2 transition",
+                    active
+                      ? "text-d-primary border-d-primary"
+                      : "text-d-muted border-transparent hover:text-d-text"
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{tab.label}</span>
+                  {tab.badge ? (
+                    <span className={cx(
+                      "ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold",
+                      active ? "bg-d-primary text-white" : "bg-d-border/50 text-d-muted"
+                    )}>{tab.badge}</span>
+                  ) : null}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-6">
-          <div className="bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40">
+          <div className={cx(
+            "bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40",
+            mobileTab === "convo" ? "block" : "hidden lg:block"
+          )}>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
               <div className="min-w-0">
                 <h2 className="text-sm font-semibold text-d-text tracking-wide">Conversation timeline</h2>
@@ -898,8 +950,15 @@ export default function LeadDetailPage() {
             )}
           </div>
 
-          <div className="space-y-4">
-            <div className="bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40">
+          <div className={cx(
+            "space-y-4",
+            (mobileTab === "infos" || mobileTab === "tasks") ? "block" : "hidden lg:block"
+          )}>
+            {/* Quick actions — desktop only (mobile uses sticky bottom bar) */}
+            <div className={cx(
+              "bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40",
+              "hidden lg:block"
+            )}>
               <h2 className="text-sm font-semibold text-d-text mb-3 tracking-wide">Quick actions</h2>
 
               <div className="flex flex-wrap gap-3">
@@ -951,6 +1010,11 @@ export default function LeadDetailPage() {
               </div>
             </div>
 
+            {/* INFO SECTIONS — visible when mobileTab=infos OR on desktop */}
+            <div className={cx(
+              "space-y-4",
+              mobileTab === "infos" ? "block" : "hidden lg:block"
+            )}>
             {/* Form submissions (Facebook lead ads, web forms) */}
             {formSubmissions.length > 0 && (
               <div className="bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40">
@@ -1076,8 +1140,13 @@ export default function LeadDetailPage() {
                 </ul>
               </div>
             )}
+            </div>
+            {/* END info sections */}
 
-            <div className="bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40">
+            <div className={cx(
+              "bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40",
+              mobileTab === "tasks" ? "block" : "hidden lg:block"
+            )}>
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-sm font-semibold text-d-text tracking-wide">Follow-up tasks</h2>
                 <div className="flex items-center gap-2 text-[11px] text-d-muted">
@@ -1137,6 +1206,52 @@ export default function LeadDetailPage() {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Sticky bottom action bar — mobile only */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-d-bg/95 backdrop-blur-md border-t border-d-border/60 px-3 py-2 flex items-center gap-2 shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
+          <button
+            type="button"
+            onClick={initiateCall}
+            disabled={!lead?.phone || callLoading}
+            className={cx(
+              "flex-1 flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl text-[11px] font-semibold transition",
+              lead?.phone && !callLoading
+                ? "bg-green-600/90 text-white hover:bg-green-600"
+                : "bg-d-surface text-d-muted opacity-50"
+            )}
+          >
+            <Phone className="w-4 h-4" />
+            <span>{callLoading ? "..." : "Call"}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => openSendModal("sms")}
+            disabled={!lead?.phone}
+            className={cx(
+              "flex-1 flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl text-[11px] font-semibold transition",
+              lead?.phone
+                ? "bg-d-primary text-white hover:opacity-90"
+                : "bg-d-surface text-d-muted opacity-50"
+            )}
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>SMS</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => openSendModal("email")}
+            disabled={!lead?.email}
+            className={cx(
+              "flex-1 flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl text-[11px] font-semibold transition border",
+              lead?.email
+                ? "bg-d-surface border-d-border text-d-text hover:border-d-primary"
+                : "bg-d-surface border-d-border text-d-muted opacity-50"
+            )}
+          >
+            <Mail className="w-4 h-4" />
+            <span>Email</span>
+          </button>
         </div>
 
         {/* Send Modal */}
