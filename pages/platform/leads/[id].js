@@ -1214,6 +1214,9 @@ export default function LeadDetailPage() {
           </div>
         </div>
 
+        {/* Spacer to ensure last content clears bottom bar on mobile */}
+        <div className="h-32 lg:hidden" aria-hidden="true" style={{ marginBottom: "env(safe-area-inset-bottom)" }} />
+
         {/* Sticky bottom action bar — mobile only, safe-area aware */}
         <div
           className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-d-bg/95 backdrop-blur-md border-t border-d-border/60 px-3 pt-2 flex items-center gap-2 shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
