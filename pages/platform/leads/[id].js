@@ -1,7 +1,7 @@
 // pages/platform/leads/[id].js
 
 import { useRouter } from "next/router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
 import { useBranding } from "../../../src/components/dashboard/BrandingContext";
