@@ -817,7 +817,7 @@ export default function LeadDetailPage() {
           </button>
         </div>
       )}
-      <div className="h-full w-full px-4 sm:px-6 py-0 sm:py-6 text-d-text pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-6">
+      <div className="h-full w-full px-4 sm:px-6 py-0 sm:py-6 text-d-text pb-40 lg:pb-6">
         {/* Sticky header on mobile — name + status always visible */}
         <div
           className="sticky top-0 z-30 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 sm:py-0 bg-d-bg/95 backdrop-blur-md sm:bg-transparent sm:backdrop-blur-none sm:mb-6 border-b border-d-border/40 sm:border-0"
