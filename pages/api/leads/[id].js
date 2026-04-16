@@ -247,8 +247,8 @@ export default async function handler(req, res) {
         : Promise.resolve({ data: [] }),
       // 4) Inbox leads
       supabase.from("inbox_leads").select("id, customer_id, lead_id, profile_id, source, status, priority, is_emergency, service_type, subject, summary, first_seen_at, last_contact_at, last_missed_call_at, missed_call_count, next_follow_up_at, created_at, updated_at").eq("customer_id", String(customerId)).eq("lead_id", leadId).order("last_contact_at", { ascending: false, nullsFirst: false }).order("created_at", { ascending: false }),
-      // 6) Messages from canonical table
-      supabase.from("messages").select("id, lead_id, direction, channel, message_type, subject, body, created_at").eq("customer_id", customerId).eq("lead_id", leadId).order("created_at", { ascending: true }),
+      // 6) Messages from canonical table (includes raw_payload for MMS media URLs)
+      supabase.from("messages").select("id, lead_id, direction, channel, message_type, subject, body, raw_payload, created_at").eq("customer_id", customerId).eq("lead_id", leadId).order("created_at", { ascending: true }),
       // 7) Tasks
       supabase.from("tasks").select("id, customer_id, lead_id, status, type, title, description, priority, due_at, completed_at, created_at, updated_at").eq("customer_id", customerId).eq("lead_id", leadId).order("due_at", { ascending: true, nullsFirst: false }),
       // 9) Jobs
@@ -287,7 +287,8 @@ export default async function handler(req, res) {
 
     const inboxMessageRows = inboxMessagesResult.data || [];
 
-    // Photos: need 2nd query since inbox_attachments has no lead_id, only message_id
+    // Photos: merge from TWO sources
+    // Source 1: legacy inbox_attachments (linked via inbox_messages)
     const photoMsgIds = (photosResult.data || []).map((m) => m.id);
     let photos = [];
     if (photoMsgIds.length > 0) {
@@ -298,6 +299,30 @@ export default async function handler(req, res) {
         .order("created_at", { ascending: false });
       photos = (attachments || []).filter((a) => (a.content_type || "").startsWith("image/"));
     }
+    // Source 2: new `messages` table raw_payload.mediaUrls (from Universal Inbound Router MMS)
+    const messageRows = emailMessagesResult.data || [];
+    const mmsPhotos = [];
+    for (const m of messageRows) {
+      const urls = m.raw_payload?.mediaUrls || [];
+      for (const url of urls) {
+        mmsPhotos.push({
+          id: `msg-${m.id}-${mmsPhotos.length}`,
+          message_id: m.id,
+          file_url: url,
+          content_type: "image/jpeg",
+          created_at: m.created_at,
+        });
+      }
+    }
+    // Merge + dedupe by file_url
+    const seenUrls = new Set(photos.map((p) => p.file_url));
+    for (const p of mmsPhotos) {
+      if (!seenUrls.has(p.file_url)) {
+        photos.push(p);
+        seenUrls.add(p.file_url);
+      }
+    }
+    photos.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
     // Dedup SMS messages
     function toEpoch(ts) {
