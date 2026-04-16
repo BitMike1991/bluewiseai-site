@@ -817,18 +817,21 @@ export default function LeadDetailPage() {
           </button>
         </div>
       )}
-      <div className="h-full w-full px-4 sm:px-6 py-4 sm:py-6 text-d-text pb-24 lg:pb-6">
+      <div className="h-full w-full px-4 sm:px-6 py-0 sm:py-6 text-d-text pb-28 lg:pb-6">
         {/* Sticky header on mobile — name + status always visible */}
-        <div className="sticky top-0 z-30 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 sm:py-0 bg-d-bg/95 backdrop-blur-md sm:bg-transparent sm:backdrop-blur-none mb-4 sm:mb-6 border-b border-d-border/40 sm:border-0">
+        <div
+          className="sticky top-0 z-30 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 sm:py-0 bg-d-bg/95 backdrop-blur-md sm:bg-transparent sm:backdrop-blur-none sm:mb-6 border-b border-d-border/40 sm:border-0"
+          style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
+        >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-d-primary/15 border border-d-primary/40 shadow-[0_0_20px_rgb(var(--d-primary-rgb)/0.5)]">
+              <div className="inline-flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-2xl bg-d-primary/15 border border-d-primary/40 shadow-[0_0_20px_rgb(var(--d-primary-rgb)/0.5)]">
                 <span className="text-sm font-semibold text-d-primary">
                   {lead?.name?.[0]?.toUpperCase() || lead?.phone?.slice(-2) || lead?.email?.[0]?.toUpperCase() || "L"}
                 </span>
               </div>
               <div className="flex flex-col min-w-0 flex-1">
-                <h1 className="text-base sm:text-xl font-semibold text-d-text tracking-tight truncate">
+                <h1 className="text-[15px] sm:text-xl font-semibold text-d-text tracking-tight truncate leading-tight">
                   {lead?.name || lead?.phone || lead?.email || "Lead"}
                 </h1>
                 <p className="text-[11px] sm:text-xs text-d-muted truncate">
@@ -863,8 +866,8 @@ export default function LeadDetailPage() {
         </div>
 
         {/* Mobile tabs — sticky below header */}
-        <div className="lg:hidden sticky top-[72px] z-20 -mx-4 px-4 bg-d-bg/95 backdrop-blur-md border-b border-d-border/40 mb-4">
-          <div className="flex gap-1">
+        <div className="lg:hidden sticky top-[68px] z-20 -mx-4 px-2 bg-d-bg/95 backdrop-blur-md border-b border-d-border/40 mb-4">
+          <div className="flex gap-1" style={{ touchAction: "manipulation" }}>
             {[
               { key: "convo", label: "Conversation", icon: MessageCircle, badge: stats.totalMessages },
               { key: "infos", label: "Infos", icon: Info },
@@ -877,17 +880,20 @@ export default function LeadDetailPage() {
                   key={tab.key}
                   onClick={() => setMobileTab(tab.key)}
                   className={cx(
-                    "flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold border-b-2 transition",
+                    "flex-1 flex items-center justify-center gap-1.5 min-h-[48px] py-3 px-2 text-xs font-semibold border-b-2 transition-all duration-200 active:bg-d-surface/40",
                     active
                       ? "text-d-primary border-d-primary"
-                      : "text-d-muted border-transparent hover:text-d-text"
+                      : "text-d-muted border-transparent"
                   )}
+                  style={{ touchAction: "manipulation" }}
+                  aria-label={tab.label}
+                  aria-current={active ? "page" : undefined}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{tab.label}</span>
                   {tab.badge ? (
                     <span className={cx(
-                      "ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold",
+                      "ml-0.5 inline-flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full text-[10px] font-bold shrink-0",
                       active ? "bg-d-primary text-white" : "bg-d-border/50 text-d-muted"
                     )}>{tab.badge}</span>
                   ) : null}
@@ -1208,20 +1214,25 @@ export default function LeadDetailPage() {
           </div>
         </div>
 
-        {/* Sticky bottom action bar — mobile only */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-d-bg/95 backdrop-blur-md border-t border-d-border/60 px-3 py-2 flex items-center gap-2 shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
+        {/* Sticky bottom action bar — mobile only, safe-area aware */}
+        <div
+          className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-d-bg/95 backdrop-blur-md border-t border-d-border/60 px-3 pt-2 flex items-center gap-2 shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))", touchAction: "manipulation" }}
+        >
           <button
             type="button"
             onClick={initiateCall}
             disabled={!lead?.phone || callLoading}
             className={cx(
-              "flex-1 flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl text-[11px] font-semibold transition",
+              "flex-1 flex flex-col items-center justify-center gap-1 min-h-[52px] py-2.5 rounded-xl text-[11px] font-semibold transition-all duration-200 active:scale-95",
               lead?.phone && !callLoading
-                ? "bg-green-600/90 text-white hover:bg-green-600"
+                ? "bg-green-600/90 text-white shadow-md shadow-green-900/30 hover:bg-green-600"
                 : "bg-d-surface text-d-muted opacity-50"
             )}
+            style={{ touchAction: "manipulation" }}
+            aria-label="Call lead"
           >
-            <Phone className="w-4 h-4" />
+            <Phone className="w-5 h-5" />
             <span>{callLoading ? "..." : "Call"}</span>
           </button>
           <button
@@ -1229,13 +1240,15 @@ export default function LeadDetailPage() {
             onClick={() => openSendModal("sms")}
             disabled={!lead?.phone}
             className={cx(
-              "flex-1 flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl text-[11px] font-semibold transition",
+              "flex-1 flex flex-col items-center justify-center gap-1 min-h-[52px] py-2.5 rounded-xl text-[11px] font-semibold transition-all duration-200 active:scale-95",
               lead?.phone
-                ? "bg-d-primary text-white hover:opacity-90"
+                ? "bg-d-primary text-white shadow-md shadow-d-primary/30 hover:opacity-90"
                 : "bg-d-surface text-d-muted opacity-50"
             )}
+            style={{ touchAction: "manipulation" }}
+            aria-label="Send SMS"
           >
-            <MessageCircle className="w-4 h-4" />
+            <MessageCircle className="w-5 h-5" />
             <span>SMS</span>
           </button>
           <button
@@ -1243,13 +1256,15 @@ export default function LeadDetailPage() {
             onClick={() => openSendModal("email")}
             disabled={!lead?.email}
             className={cx(
-              "flex-1 flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl text-[11px] font-semibold transition border",
+              "flex-1 flex flex-col items-center justify-center gap-1 min-h-[52px] py-2.5 rounded-xl text-[11px] font-semibold transition-all duration-200 active:scale-95 border",
               lead?.email
                 ? "bg-d-surface border-d-border text-d-text hover:border-d-primary"
                 : "bg-d-surface border-d-border text-d-muted opacity-50"
             )}
+            style={{ touchAction: "manipulation" }}
+            aria-label="Send email"
           >
-            <Mail className="w-4 h-4" />
+            <Mail className="w-5 h-5" />
             <span>Email</span>
           </button>
         </div>
