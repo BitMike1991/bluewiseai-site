@@ -226,7 +226,7 @@ export default async function handler(req, res) {
     };
 
     //
-    // 2-4) Fetch PROFILE, IDENTITIES, INBOX_LEADS, TASKS, JOBS, MESSAGES — ALL IN PARALLEL
+    // 2-4) Fetch PROFILE, IDENTITIES, INBOX_LEADS, TASKS, JOBS, MESSAGES, FORM SUBMISSIONS — ALL IN PARALLEL
     //
     const [
       profileResult,
@@ -235,6 +235,7 @@ export default async function handler(req, res) {
       emailMessagesResult,
       taskResult,
       jobResult,
+      formSubmissionResult,
     ] = await Promise.all([
       // 2) Profile
       lead.profile_id
@@ -252,6 +253,8 @@ export default async function handler(req, res) {
       supabase.from("tasks").select("id, customer_id, lead_id, status, type, title, description, priority, due_at, completed_at, created_at, updated_at").eq("customer_id", customerId).eq("lead_id", leadId).order("due_at", { ascending: true, nullsFirst: false }),
       // 9) Jobs
       supabase.from("jobs").select("id, job_id, client_name, project_type, quote_amount, status, created_at").eq("customer_id", customerId).eq("lead_id", leadId).order("created_at", { ascending: false }),
+      // 10) Form submissions (Facebook lead ads, web forms, etc.) — fetch most recent per event_type
+      supabase.from("inbox_lead_events").select("id, event_type, payload, created_at").eq("customer_id", customerId).filter("payload->>leads_id", "eq", String(leadId)).in("event_type", ["facebook_lead_received", "web_form_submitted"]).order("created_at", { ascending: false }).limit(10),
     ]);
 
     const profile = profileResult.data || null;
@@ -355,8 +358,29 @@ export default async function handler(req, res) {
 
     const jobs = jobResult.data || [];
 
+    // Extract form submissions from events payload
+    const formSubmissions = (formSubmissionResult?.data || []).map((e) => {
+      const p = e.payload || {};
+      // Flatten known fields + include any additional custom form answers
+      const knownExcludes = new Set(["leads_id", "ad_id", "form_id", "leadgen_id", "page_id"]);
+      const answers = {};
+      for (const [k, v] of Object.entries(p)) {
+        if (knownExcludes.has(k)) continue;
+        if (v == null || v === "") continue;
+        answers[k] = v;
+      }
+      return {
+        id: e.id,
+        event_type: e.event_type,
+        submitted_at: e.created_at,
+        ad_id: p.ad_id || null,
+        form_id: p.form_id || null,
+        answers,
+      };
+    });
+
     //
-    // 10) Unified payload
+    // 11) Unified payload
     //
     return res.status(200).json({
       lead,
@@ -369,6 +393,7 @@ export default async function handler(req, res) {
       tasks,
       photos,
       jobs,
+      formSubmissions,
     });
   } catch (err) {
     console.error("[api/leads/[id]] unexpected error", err);

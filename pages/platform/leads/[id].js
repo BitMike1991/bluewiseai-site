@@ -7,7 +7,7 @@ import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
 import { useBranding } from "../../../src/components/dashboard/BrandingContext";
 import { getBrandingStyles, getStatusBadgeStyle } from "../../../src/components/dashboard/brandingUtils";
 import { useToast } from "../../../src/components/ui/ToastContext";
-import { Pencil, Trash2, X, Check } from "lucide-react";
+import { Pencil, Trash2, X, Check, Sparkles } from "lucide-react";
 
 function formatDate(dateString) {
   if (!dateString) return "\u2014";
@@ -642,8 +642,9 @@ export default function LeadDetailPage() {
 
       const photos = json.photos || [];
       const jobs = json.jobs || [];
+      const formSubmissions = json.formSubmissions || [];
 
-      setData({ lead, inboxLead, timeline, stats, tasks, photos, jobs });
+      setData({ lead, inboxLead, timeline, stats, tasks, photos, jobs, formSubmissions });
     } catch (err) {
       console.error("Lead detail fetch error", err);
       setError(err.message || "Failed to load lead");
@@ -694,6 +695,7 @@ export default function LeadDetailPage() {
   const tasks = data?.tasks || [];
   const photos = data?.photos || [];
   const jobs = data?.jobs || [];
+  const formSubmissions = data?.formSubmissions || [];
 
   const [lightboxUrl, setLightboxUrl] = useState(null);
 
@@ -948,6 +950,48 @@ export default function LeadDetailPage() {
 
               </div>
             </div>
+
+            {/* Form submissions (Facebook lead ads, web forms) */}
+            {formSubmissions.length > 0 && (
+              <div className="bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40">
+                <h2 className="text-sm font-semibold text-d-text mb-3 tracking-wide flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-d-primary" />
+                  Form submission
+                </h2>
+                {formSubmissions.map((sub) => {
+                  const FIELD_LABELS = {
+                    name: "Name",
+                    full_name: "Name",
+                    phone: "Phone",
+                    email: "Email",
+                    city: "City",
+                    custom_windows: "Number of windows",
+                    project_type: "Project type",
+                    what_project: "Project type",
+                    type_de_projet: "Type de projet",
+                  };
+                  const label = (key) => FIELD_LABELS[key] || key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+                  const entries = Object.entries(sub.answers || {}).filter(([k, v]) => v != null && v !== "");
+                  return (
+                    <div key={sub.id} className="space-y-2">
+                      <p className="text-[10px] uppercase tracking-wide text-d-muted">
+                        {sub.event_type === "facebook_lead_received" ? "Facebook Lead Ad" : "Web form"}
+                        {" · "}
+                        {formatDate(sub.submitted_at)}
+                      </p>
+                      <dl className="grid grid-cols-1 gap-y-1.5 text-sm text-d-text">
+                        {entries.map(([key, value]) => (
+                          <div key={key} className="flex justify-between gap-4">
+                            <dt className="text-d-muted text-xs uppercase tracking-wide">{label(key)}</dt>
+                            <dd className="font-medium text-right break-words max-w-[60%]">{String(value)}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Photos */}
             {photos.length > 0 && (
