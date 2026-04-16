@@ -2,7 +2,7 @@
 // App Router Route Handler (works alongside Pages Router pages)
 // Required for proper Web Response streaming with AI SDK 6
 
-import { streamText, convertToModelMessages } from "ai";
+import { streamText, convertToModelMessages, stepCountIs } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -155,7 +155,7 @@ export async function POST(req) {
     system: systemPrompt,
     messages: modelMessages,
     tools,
-    maxSteps: isApproved ? 2 : 5,
+    stopWhen: stepCountIs(isApproved ? 2 : 5),
   });
 
   // Manual SSE stream — bypass SDK's toUIMessageStreamResponse to avoid
