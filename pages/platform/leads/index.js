@@ -328,7 +328,7 @@ export default function LeadsPage() {
           </button>
         </form>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <Select value={statusFilter} onChange={(v) => { setStatusFilter(v); loadLeads({ page: 1, statusFilter: v }); }} options={STATUS_OPTIONS} />
           <Select value={sourceFilter} onChange={(v) => { setSourceFilter(v); loadLeads({ page: 1, sourceFilter: v }); }} options={SOURCE_OPTIONS} />
           <Select value={dateFilter} onChange={(v) => { setDateFilter(v); loadLeads({ page: 1, dateFilter: v }); }} options={DATE_OPTIONS} />

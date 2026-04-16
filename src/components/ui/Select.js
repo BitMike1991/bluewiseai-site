@@ -16,6 +16,7 @@ export default function Select({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [highlighted, setHighlighted] = useState(-1);
+  const [dropdownAlign, setDropdownAlign] = useState("left"); // 'left' or 'right'
   const ref = useRef(null);
   const listRef = useRef(null);
   const searchRef = useRef(null);
@@ -36,10 +37,20 @@ export default function Select({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  // Focus search on open
+  // Focus search on open + detect best alignment
   useEffect(() => {
     if (open && searchable && searchRef.current) searchRef.current.focus();
-    if (open) setHighlighted(-1);
+    if (open) {
+      setHighlighted(-1);
+      // Check viewport position — if button is closer to right edge, align dropdown right
+      if (ref.current) {
+        const rect = ref.current.getBoundingClientRect();
+        const spaceRight = window.innerWidth - rect.left;
+        const spaceLeft = rect.right;
+        // If less than 240px space to the right, flip to right-align
+        setDropdownAlign(spaceRight < 240 && spaceLeft >= 240 ? "right" : "left");
+      }
+    }
     if (!open) setSearch("");
   }, [open, searchable]);
 
@@ -108,7 +119,7 @@ export default function Select({
         <div
           ref={listRef}
           role="listbox"
-          className="absolute z-30 top-full left-0 right-0 mt-1 max-h-60 overflow-auto rounded-xl border border-[var(--d-border,#1e1e2e)] bg-[var(--d-surface,#111119)] shadow-2xl"
+          className={`absolute z-50 top-full mt-1 max-h-60 min-w-full w-max max-w-[calc(100vw-2rem)] overflow-auto rounded-xl border border-[var(--d-border,#1e1e2e)] bg-[var(--d-surface,#111119)] shadow-2xl ${dropdownAlign === "right" ? "right-0" : "left-0"}`}
         >
           {searchable && (
             <div className="sticky top-0 p-1.5 bg-[var(--d-surface,#111119)] border-b border-[var(--d-border,#1e1e2e)]/40">
