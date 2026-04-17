@@ -520,6 +520,11 @@ export default async function handler(req, res) {
       }
     }
 
+    // 2a. Pre-compute acceptance_url (needed for DB insert meta below)
+    const acceptance_url = customer.id === 9
+      ? `https://pur-construction-site.vercel.app/q/${quote_number}`
+      : `https://${customer.domain || 'bluewiseai.com'}/q/${quote_number}`;
+
     // 2. Quote versioning — supersede old quotes
     const { data: existingQuotes } = await supabase
       .from('quotes')
@@ -562,10 +567,6 @@ export default async function handler(req, res) {
     if (quoteErr) throw new Error('Quote creation failed: ' + quoteErr.message);
 
     // 4. Generate HTML — route by template
-    const acceptance_url = customer.id === 9
-      ? `https://pur-construction-site.vercel.app/q/${quote_number}`
-      : `https://${customer.domain || 'bluewiseai.com'}/q/${quote_number}`;
-
     const templateData = {
       quote_number, date, valid_days: qValid, start_date,
       client_name, client_phone, client_email, client_address, client_city,
