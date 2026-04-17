@@ -22,6 +22,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Circle,
+  Upload,
+  ExternalLink,
 } from 'lucide-react';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -344,51 +346,190 @@ function TabApercu({ job, events, lead, payments }) {
 
 // ── Tab: Commande ─────────────────────────────────────────────────────────────
 
-function TabCommande({ commandeDraft }) {
-  if (commandeDraft) {
-    return (
-      <div className="rounded-xl border border-d-border p-4">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-semibold text-d-text">Commande en cours</p>
-          <span className="text-xs text-d-muted">MAJ {relativeTime(commandeDraft.updated_at)}</span>
-        </div>
-        <div className="space-y-2 text-xs">
-          {commandeDraft.supplier && (
-            <div className="flex justify-between">
-              <span className="text-d-muted">Fournisseur</span>
-              <span className="text-d-text">{commandeDraft.supplier}</span>
-            </div>
-          )}
-          {commandeDraft.items_count != null && (
-            <div className="flex justify-between">
-              <span className="text-d-muted">Articles</span>
-              <span className="text-d-text">{commandeDraft.items_count}</span>
-            </div>
-          )}
-          <div className="flex justify-between">
-            <span className="text-d-muted">Statut</span>
-            <span className="text-d-text capitalize">{commandeDraft.status || 'brouillon'}</span>
-          </div>
-        </div>
-        <button
-          type="button"
-          disabled
-          className="mt-4 w-full px-4 py-2 rounded-xl text-xs font-medium bg-d-primary/20 text-d-primary/50 border border-d-primary/20 cursor-not-allowed"
-          title="Disponible dans P10"
-        >
-          Ouvrir dans le Hub — bientôt disponible
-        </button>
-      </div>
-    );
+function TabCommande({ commandeDraft, jobId, onPricingApplied }) {
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState(null); // { matched, unmatched, partial_matches, total_ttc }
+  const [uploadError, setUploadError] = useState(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  async function handleFile(file) {
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      setUploadError('Seuls les fichiers PDF sont acceptés.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('Fichier trop volumineux (max 10 MB).');
+      return;
+    }
+
+    setUploading(true);
+    setUploadError(null);
+    setUploadResult(null);
+
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fetch(`/api/jobs/${jobId}/apply-supplier-pricing`, {
+        method: 'POST',
+        body: form,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setUploadError(data.error || 'Erreur serveur');
+      } else {
+        setUploadResult(data);
+        if (onPricingApplied) onPricingApplied();
+      }
+    } catch {
+      setUploadError('Erreur réseau — réessaie.');
+    } finally {
+      setUploading(false);
+    }
   }
 
+  function handleDrop(e) {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFile(file);
+  }
+
+  function handleInputChange(e) {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
+    e.target.value = '';
+  }
+
+  const commandeSection = commandeDraft ? (
+    <div className="rounded-xl border border-d-border p-4 mb-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm font-semibold text-d-text">Commande fournisseur</p>
+        <span className="text-xs text-d-muted">MAJ {relativeTime(commandeDraft.updated_at)}</span>
+      </div>
+      <div className="space-y-2 text-xs">
+        {commandeDraft.supplier && (
+          <div className="flex justify-between">
+            <span className="text-d-muted">Fournisseur</span>
+            <span className="text-d-text">{commandeDraft.supplier}</span>
+          </div>
+        )}
+        {commandeDraft.items_count != null && (
+          <div className="flex justify-between">
+            <span className="text-d-muted">Articles</span>
+            <span className="text-d-text">{commandeDraft.items_count}</span>
+          </div>
+        )}
+        <div className="flex justify-between">
+          <span className="text-d-muted">Statut</span>
+          <span className="text-d-text capitalize">{commandeDraft.status || 'brouillon'}</span>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div className="rounded-xl border border-dashed border-d-border/60 p-4 text-center mb-4">
+      <Package size={20} className="mx-auto mb-2 text-d-muted/40" />
+      <p className="text-xs text-d-muted">Aucune commande liée — utilisez le hub PUR pour en créer une.</p>
+    </div>
+  );
+
   return (
-    <div className="rounded-xl border border-dashed border-d-border/60 p-8 text-center">
-      <Package size={28} className="mx-auto mb-3 text-d-muted/40" />
-      <p className="text-sm text-d-muted">Aucune commande fournisseur</p>
-      <p className="text-xs text-d-muted/60 mt-1">
-        Les commandes sont créées dans le hub de Jérémy (P10).
-      </p>
+    <div className="space-y-4">
+      {commandeSection}
+
+      {/* Supplier soumission upload */}
+      <div className="rounded-xl border border-d-border p-4">
+        <p className="text-sm font-semibold text-d-text mb-1">Soumission fournisseur</p>
+        <p className="text-xs text-d-muted mb-3">
+          Téléverse le PDF de soumission Royalty pour distribuer les prix au devis.
+        </p>
+
+        {uploadResult ? (
+          <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-4">
+            <p className="text-sm font-semibold text-emerald-400 mb-2">
+              Devis mis à jour
+            </p>
+            <div className="space-y-1 text-xs mb-3">
+              <div className="flex justify-between">
+                <span className="text-d-muted">Articles matchés</span>
+                <span className="text-emerald-400 font-medium">{uploadResult.matched}</span>
+              </div>
+              {uploadResult.unmatched > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-d-muted">Sans prix</span>
+                  <span className="text-amber-400 font-medium">{uploadResult.unmatched}</span>
+                </div>
+              )}
+              {uploadResult.partial_matches > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-d-muted">Matchs partiels</span>
+                  <span className="text-amber-400 font-medium">{uploadResult.partial_matches}</span>
+                </div>
+              )}
+              <div className="flex justify-between border-t border-emerald-500/20 pt-1 mt-1">
+                <span className="text-d-muted">Total TTC</span>
+                <span className="text-d-text font-semibold">
+                  {Number(uploadResult.total_ttc).toLocaleString('fr-CA', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}&nbsp;$
+                </span>
+              </div>
+            </div>
+            {(uploadResult.unmatched > 0 || uploadResult.partial_matches > 0) && (
+              <p className="text-xs text-amber-400 mb-3">
+                Vérifie l&apos;onglet Devis — certains articles nécessitent une révision manuelle.
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => setUploadResult(null)}
+              className="text-xs text-d-muted hover:text-d-text transition"
+            >
+              Téléverser un autre PDF
+            </button>
+          </div>
+        ) : (
+          <label
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            className={`flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
+              dragOver
+                ? 'border-d-primary bg-d-primary/10'
+                : 'border-d-border/60 hover:border-d-primary/50 hover:bg-d-surface/40'
+            } ${uploading ? 'pointer-events-none opacity-60' : ''}`}
+          >
+            <input
+              type="file"
+              accept="application/pdf,.pdf"
+              className="sr-only"
+              onChange={handleInputChange}
+              disabled={uploading}
+            />
+            {uploading ? (
+              <>
+                <div className="w-8 h-8 border-2 border-d-primary/40 border-t-d-primary rounded-full animate-spin" />
+                <p className="text-xs text-d-muted">Analyse en cours...</p>
+              </>
+            ) : (
+              <>
+                <Upload size={24} className="text-d-muted/60" />
+                <div className="text-center">
+                  <p className="text-sm text-d-text font-medium">Déposer le PDF de soumission</p>
+                  <p className="text-xs text-d-muted mt-0.5">ou cliquer pour choisir · PDF uniquement · max 10 MB</p>
+                </div>
+              </>
+            )}
+          </label>
+        )}
+
+        {uploadError && (
+          <div className="mt-3 rounded-xl bg-rose-500/10 border border-rose-500/30 px-3 py-2.5 text-xs text-rose-400">
+            {uploadError}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -902,7 +1043,15 @@ export default function JobDetailPage() {
       case 'commande':
         return tabLoading.commande
           ? <div className="py-8 text-center text-xs text-d-muted animate-pulse">Chargement...</div>
-          : <TabCommande commandeDraft={tabData.commande ?? null} />;
+          : <TabCommande
+              commandeDraft={tabData.commande ?? null}
+              jobId={job.id}
+              onPricingApplied={() => {
+                // Reload job base data + devis tab after pricing applied
+                loadJob();
+                setTabData((prev) => ({ ...prev, devis: undefined }));
+              }}
+            />;
 
       case 'devis':
         return tabLoading.devis
