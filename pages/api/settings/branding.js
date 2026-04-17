@@ -37,7 +37,7 @@ export default async function handler(req, res) {
   try {
     const { data, error } = await supabase
       .from("customers")
-      .select("branding")
+      .select("branding, enabled_hub_tools")
       .eq("id", customerId)
       .single();
 
@@ -55,8 +55,10 @@ export default async function handler(req, res) {
       }
     }
 
+    const enabledHubTools = Array.isArray(data?.enabled_hub_tools) ? data.enabled_hub_tools : [];
+
     res.setHeader("Cache-Control", "private, max-age=300, stale-while-revalidate=600");
-    return res.status(200).json({ branding: merged });
+    return res.status(200).json({ branding: merged, enabledHubTools });
   } catch (err) {
     console.error("Branding endpoint error:", err);
     return res.status(500).json({ error: "Internal server error" });

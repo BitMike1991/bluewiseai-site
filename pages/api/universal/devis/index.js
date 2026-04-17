@@ -2,46 +2,10 @@
 // Called by n8n after owner confirms quote in Slack
 // Fetches per-customer branding, warranties, exclusions, payment schedule from quote_config
 import { getSupabaseServerClient } from '../../../../lib/supabaseServer';
+import { generatePurQuoteHtml } from '../../../../lib/quote-templates/pur.js';
+import { mergeConfig } from '../../../../lib/quote-config.js';
 
 const supabase = getSupabaseServerClient();
-
-const DEFAULT_QUOTE_CONFIG = {
-  branding: {
-    logo_url: null,
-    primary_color: '#1e40af',
-    accent_color: '#2563eb',
-    business_name: 'BlueWise AI',
-    legal_name: 'BlueWise AI',
-    phone: '',
-    email: '',
-    address: '',
-    rbq_number: null
-  },
-  quote: {
-    prefix: 'BW',
-    valid_days: 30,
-    exclusions: ['Tout travail non explicitement décrit dans le présent devis'],
-    warranties: [],
-    notes_template: null
-  },
-  payment_schedule: [
-    { label: '50 % — Dépôt', description: 'À la signature du devis', percentage: 50 },
-    { label: '50 % — Solde final', description: 'À la fin des travaux', percentage: 50 }
-  ],
-  promotions: []
-};
-
-function mergeConfig(dbConfig) {
-  if (!dbConfig) return DEFAULT_QUOTE_CONFIG;
-  return {
-    branding: { ...DEFAULT_QUOTE_CONFIG.branding, ...(dbConfig.branding || {}) },
-    quote: { ...DEFAULT_QUOTE_CONFIG.quote, ...(dbConfig.quote || {}) },
-    contract: dbConfig.contract || {},
-    pricing_guide: dbConfig.pricing_guide || {},
-    payment_schedule: dbConfig.payment_schedule || DEFAULT_QUOTE_CONFIG.payment_schedule,
-    promotions: dbConfig.promotions || []
-  };
-}
 
 function formatMoney(amount) {
   return Number(amount).toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
@@ -556,6 +520,11 @@ export default async function handler(req, res) {
       }
     }
 
+    // 2a. Pre-compute acceptance_url (needed for DB insert meta below)
+    const acceptance_url = customer.id === 9
+      ? `https://pur-construction-site.vercel.app/q/${quote_number}`
+      : `https://${customer.domain || 'bluewiseai.com'}/q/${quote_number}`;
+
     // 2. Quote versioning — supersede old quotes
     const { data: existingQuotes } = await supabase
       .from('quotes')
@@ -574,7 +543,7 @@ export default async function handler(req, res) {
         .eq('id', existingQuotes[0].id);
     }
 
-    // 3. Insert quote record
+    // 3. Insert quote record (html stored in meta.html — no dedicated html_content column)
     const { data: quoteRow, error: quoteErr } = await supabase
       .from('quotes')
       .insert({
@@ -590,19 +559,27 @@ export default async function handler(req, res) {
         payment_terms: config.payment_schedule,
         valid_until: new Date(Date.now() + qValid * 86400000).toISOString().split('T')[0],
         notes: notes || null,
-        status: 'draft'
+        status: 'draft',
+        meta: { acceptance_url }
       })
       .select('id')
       .single();
     if (quoteErr) throw new Error('Quote creation failed: ' + quoteErr.message);
 
-    // 4. Generate HTML
-    const html = generateQuoteHtml({
+    // 4. Generate HTML — route by template
+    const templateData = {
       quote_number, date, valid_days: qValid, start_date,
       client_name, client_phone, client_email, client_address, client_city,
       project_description, line_items: processedItems, subtotal, tax_gst, tax_qst, total_ttc,
-      notes
-    }, config);
+      notes, acceptance_url
+    };
+
+    let html;
+    if (config.branding?.html_template === 'pur') {
+      html = generatePurQuoteHtml(templateData, config);
+    } else {
+      html = generateQuoteHtml(templateData, config);
+    }
 
     // 5. Update lead status
     if (lead_id) {
@@ -632,7 +609,8 @@ export default async function handler(req, res) {
       filename,
       html,
       total_ttc,
-      url: `https://${domain}/${filename}`
+      url: `https://${domain}/${filename}`,
+      public_url: acceptance_url
     });
 
   } catch (error) {

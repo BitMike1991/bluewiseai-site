@@ -40,11 +40,32 @@ function saveCache(branding) {
 
 const BrandingContext = createContext({
   branding: DEFAULT_BRANDING,
+  enabledHubTools: [],
   loading: true,
 });
 
+const HUB_CACHE_KEY = "bw-hub-tools-cache";
+
+function loadCachedHubTools() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(HUB_CACHE_KEY);
+    if (!raw) return null;
+    const { tools, ts } = JSON.parse(raw);
+    if (Date.now() - ts > CACHE_TTL) return null;
+    return tools;
+  } catch { return null; }
+}
+
+function saveHubToolsCache(tools) {
+  try {
+    localStorage.setItem(HUB_CACHE_KEY, JSON.stringify({ tools, ts: Date.now() }));
+  } catch {}
+}
+
 export function BrandingProvider({ children }) {
   const [branding, setBranding] = useState(() => loadCached() || DEFAULT_BRANDING);
+  const [enabledHubTools, setEnabledHubTools] = useState(() => loadCachedHubTools() || []);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,8 +75,11 @@ export function BrandingProvider({ children }) {
         if (res.ok) {
           const data = await res.json();
           const fresh = data.branding || DEFAULT_BRANDING;
+          const tools = Array.isArray(data.enabledHubTools) ? data.enabledHubTools : [];
           setBranding(fresh);
+          setEnabledHubTools(tools);
           saveCache(fresh);
+          saveHubToolsCache(tools);
         }
       } catch {
         // Fail gracefully — keep cached or defaults
@@ -67,7 +91,7 @@ export function BrandingProvider({ children }) {
   }, []);
 
   return (
-    <BrandingContext.Provider value={{ branding, loading }}>
+    <BrandingContext.Provider value={{ branding, enabledHubTools, loading }}>
       {children}
     </BrandingContext.Provider>
   );
@@ -78,5 +102,8 @@ export function useBranding() {
 }
 
 export function clearBrandingCache() {
-  try { localStorage.removeItem(CACHE_KEY); } catch {}
+  try {
+    localStorage.removeItem(CACHE_KEY);
+    localStorage.removeItem(HUB_CACHE_KEY);
+  } catch {}
 }

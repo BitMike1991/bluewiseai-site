@@ -63,27 +63,44 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Job not found" });
     }
 
+    // Parse expand param: ?expand=quotes,contracts,payments,tasks,events,commande_drafts
+    const expandParam = req.query.expand || "";
+    const expand = new Set(expandParam.split(",").map((s) => s.trim()).filter(Boolean));
+    // Default: always fetch contracts, payments, events, lead (backward compat)
+    const fetchContracts = expand.size === 0 || expand.has("contracts");
+    const fetchPayments  = expand.size === 0 || expand.has("payments");
+    const fetchEvents    = expand.size === 0 || expand.has("events");
+    const fetchQuotes    = expand.has("quotes");
+    const fetchTasks     = expand.has("tasks");
+    const fetchCommande  = expand.has("commande_drafts");
+
     // Fetch related data in parallel
-    const [contractsRes, paymentsRes, eventsRes, leadRes] = await Promise.all([
-      supabase
-        .from("contracts")
-        .select("*")
-        .eq("job_id", job.id)
-        .eq("customer_id", customerId)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("payments")
-        .select("*")
-        .eq("job_id", job.id)
-        .eq("customer_id", customerId)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("job_events")
-        .select("*")
-        .eq("job_id", job.id)
-        .eq("customer_id", customerId)
-        .order("created_at", { ascending: false })
-        .limit(50),
+    const [contractsRes, paymentsRes, eventsRes, leadRes, quotesRes, tasksRes, commandeRes] = await Promise.all([
+      fetchContracts
+        ? supabase
+            .from("contracts")
+            .select("*")
+            .eq("job_id", job.id)
+            .eq("customer_id", customerId)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] }),
+      fetchPayments
+        ? supabase
+            .from("payments")
+            .select("*")
+            .eq("job_id", job.id)
+            .eq("customer_id", customerId)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] }),
+      fetchEvents
+        ? supabase
+            .from("job_events")
+            .select("*")
+            .eq("job_id", job.id)
+            .eq("customer_id", customerId)
+            .order("created_at", { ascending: false })
+            .limit(50)
+        : Promise.resolve({ data: [] }),
       job.lead_id
         ? supabase
             .from("leads")
@@ -91,6 +108,35 @@ export default async function handler(req, res) {
             .eq("id", job.lead_id)
             .eq("customer_id", customerId)
             .single()
+        : Promise.resolve({ data: null }),
+      fetchQuotes
+        ? supabase
+            .from("quotes")
+            .select("id, job_id, customer_id, quote_number, version, line_items, subtotal, tax_gst, tax_qst, total_ttc, status, valid_until, notes, storage_path, created_at, updated_at")
+            .eq("job_id", job.id)
+            .eq("customer_id", customerId)
+            .order("version", { ascending: false })
+        : Promise.resolve({ data: null }),
+      fetchTasks
+        ? supabase
+            .from("tasks")
+            .select("id, lead_id, type, title, description, due_at, status, priority, completed_at, created_at")
+            .eq("customer_id", customerId)
+            .or(
+              job.lead_id
+                ? `job_id.eq.${job.id},lead_id.eq.${job.lead_id}`
+                : `job_id.eq.${job.id}`
+            )
+            .order("due_at", { ascending: true, nullsFirst: false })
+        : Promise.resolve({ data: null }),
+      fetchCommande
+        ? supabase
+            .from("commande_drafts")
+            .select("id, job_id, supplier, items_count, status, created_at, updated_at")
+            .eq("job_id", job.id)
+            .eq("customer_id", customerId)
+            .order("updated_at", { ascending: false })
+            .limit(1)
         : Promise.resolve({ data: null }),
     ]);
 
@@ -128,14 +174,20 @@ export default async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({
+    const response = {
       job,
       contracts: contractsRes.data || [],
       payments: paymentsRes.data || [],
       events: eventsRes.data || [],
       lead: leadRes.data || null,
       photos,
-    });
+    };
+
+    if (fetchQuotes)   response.quotes          = quotesRes.data   || [];
+    if (fetchTasks)    response.tasks            = tasksRes.data    || [];
+    if (fetchCommande) response.commande_draft   = commandeRes.data?.[0] ?? null;
+
+    return res.status(200).json(response);
   } catch (err) {
     console.error("[api/jobs/[id]] Error:", err);
     return res.status(500).json({ error: "Internal server error" });
