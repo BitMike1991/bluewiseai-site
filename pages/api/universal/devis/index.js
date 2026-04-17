@@ -2,6 +2,7 @@
 // Called by n8n after owner confirms quote in Slack
 // Fetches per-customer branding, warranties, exclusions, payment schedule from quote_config
 import { getSupabaseServerClient } from '../../../../lib/supabaseServer';
+import { generatePurQuoteHtml } from '../../../../lib/quote-templates/pur.js';
 
 const supabase = getSupabaseServerClient();
 
@@ -574,7 +575,7 @@ export default async function handler(req, res) {
         .eq('id', existingQuotes[0].id);
     }
 
-    // 3. Insert quote record
+    // 3. Insert quote record (html stored in meta.html — no dedicated html_content column)
     const { data: quoteRow, error: quoteErr } = await supabase
       .from('quotes')
       .insert({
@@ -590,19 +591,31 @@ export default async function handler(req, res) {
         payment_terms: config.payment_schedule,
         valid_until: new Date(Date.now() + qValid * 86400000).toISOString().split('T')[0],
         notes: notes || null,
-        status: 'draft'
+        status: 'draft',
+        meta: { acceptance_url }
       })
       .select('id')
       .single();
     if (quoteErr) throw new Error('Quote creation failed: ' + quoteErr.message);
 
-    // 4. Generate HTML
-    const html = generateQuoteHtml({
+    // 4. Generate HTML — route by template
+    const acceptance_url = customer.id === 9
+      ? `https://pur-construction-site.vercel.app/q/${quote_number}`
+      : `https://${customer.domain || 'bluewiseai.com'}/q/${quote_number}`;
+
+    const templateData = {
       quote_number, date, valid_days: qValid, start_date,
       client_name, client_phone, client_email, client_address, client_city,
       project_description, line_items: processedItems, subtotal, tax_gst, tax_qst, total_ttc,
-      notes
-    }, config);
+      notes, acceptance_url
+    };
+
+    let html;
+    if (config.branding?.html_template === 'pur') {
+      html = generatePurQuoteHtml(templateData, config);
+    } else {
+      html = generateQuoteHtml(templateData, config);
+    }
 
     // 5. Update lead status
     if (lead_id) {
@@ -632,7 +645,8 @@ export default async function handler(req, res) {
       filename,
       html,
       total_ttc,
-      url: `https://${domain}/${filename}`
+      url: `https://${domain}/${filename}`,
+      public_url: acceptance_url
     });
 
   } catch (error) {
