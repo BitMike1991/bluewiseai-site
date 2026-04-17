@@ -1,6 +1,7 @@
 // Universal Quote Acceptance API — Multi-tenant
-// Client clicks "J'accepte" → marks quote accepted → fires n8n webhook for auto contract
+// Client clicks "J'accepte" → marks quote accepted → auto-creates contract → returns sign URL
 // customer_id is resolved FROM the quote record, never hardcoded
+// Interac flow only — NO Stripe/CC processing
 import { getSupabaseServerClient } from '../../../../lib/supabaseServer';
 
 const supabase = getSupabaseServerClient();
@@ -20,7 +21,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { quote_number } = req.body;
+    const { quote_number, selected_tier } = req.body;
 
     if (!quote_number) {
       return res.status(400).json({ error: 'quote_number requis' });
@@ -47,10 +48,10 @@ export default async function handler(req, res) {
     let quote = quotes[0];
     const customerId = quote.customer_id;
 
-    // Fetch customer for phone/email in error messages
+    // Fetch customer for phone/email in error messages + contract routing
     const { data: customer } = await supabase
       .from('customers')
-      .select('business_name, quote_config')
+      .select('business_name, quote_config, domain, interac_email')
       .eq('id', customerId)
       .single();
 
@@ -68,12 +69,33 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Dossier introuvable' });
     }
 
-    // 2. Already accepted
+    // 2. Already accepted — look up existing contract to return sign/success URL
     if (quote.status === 'accepted') {
+      const { data: existingContract } = await supabase
+        .from('contracts')
+        .select('signature_request_id, signature_status')
+        .eq('job_id', quote.job_id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const custDomain = customer?.domain || 'bluewiseai.com';
+      let redirectUrl = null;
+      if (existingContract?.signature_request_id) {
+        if (existingContract.signature_status === 'signed') {
+          redirectUrl = `https://${custDomain}/q/${quote.quote_number || quote_number}/success`;
+        } else {
+          redirectUrl = `https://${custDomain}/q/${quote.quote_number || quote_number}/sign`;
+        }
+      }
+
       return res.status(200).json({
         success: true,
         message: 'Ce devis a déjà été accepté. Votre contrat est en cours de préparation.',
-        already_accepted: true
+        already_accepted: true,
+        quote_number: quote.quote_number || quote_number,
+        contract_number: existingContract?.signature_request_id || null,
+        contract_url: redirectUrl
       });
     }
 
@@ -119,13 +141,16 @@ export default async function handler(req, res) {
       quote = { ...quote, ...latest };
     }
 
-    // 5. Mark quote as accepted
+    // 5. Mark quote as accepted (include selected_tier in meta if provided)
+    const quoteMeta = { accepted_ip: ip, accepted_ua: userAgent };
+    if (selected_tier) quoteMeta.selected_tier = selected_tier;
+
     await supabase
       .from('quotes')
       .update({
         status: 'accepted',
         responded_at: acceptedAt,
-        meta: { accepted_ip: ip, accepted_ua: userAgent },
+        meta: quoteMeta,
         updated_at: new Date().toISOString()
       })
       .eq('id', quote.id);
@@ -182,11 +207,63 @@ export default async function handler(req, res) {
       console.error('n8n webhook error:', e);
     }
 
+    // 9. Auto-create contract (Interac flow — no payment gateway)
+    // Guard: check if a contract already exists for this job_id (n8n may have created one)
+    const { data: existingContract } = await supabase
+      .from('contracts')
+      .select('signature_request_id, signature_status')
+      .eq('job_id', quote.job_id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    let contractResult = null;
+
+    if (existingContract?.signature_request_id) {
+      // Reuse existing — no duplicate
+      contractResult = { contract_number: existingContract.signature_request_id };
+    } else {
+      // Create contract via internal S2S call
+      try {
+        const siteUrl = process.env.SITE_URL || 'https://www.bluewiseai.com';
+        const contractResp = await fetch(
+          `${siteUrl}/api/universal/contrat/create`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              quote_id: quote.id,
+              customer_id: customerId,
+              api_key: process.env.UNIVERSAL_API_KEY
+            })
+          }
+        );
+        contractResult = await contractResp.json();
+        if (!contractResp.ok) {
+          console.error('[devis/accept] contract create failed', contractResult);
+          // Non-fatal — quote is accepted, contract can be retried
+          contractResult = null;
+        }
+      } catch (err) {
+        console.error('[devis/accept] contract create exception', err);
+        contractResult = null;
+      }
+    }
+
+    // Build sign URL using customer domain (not BW domain for other tenants)
+    const custDomain = customer?.domain || 'bluewiseai.com';
+    const qNum = quote.quote_number || quote_number;
+    const contractUrl = contractResult?.contract_number
+      ? `https://${custDomain}/q/${qNum}/sign`
+      : null;
+
     return res.status(200).json({
       success: true,
-      message: 'Devis accepté! Votre contrat sera envoyé sous peu.',
-      quote_number: quote.quote_number || quote_number,
-      accepted_at: acceptedAt
+      message: 'Devis accepté! Signez votre contrat pour confirmer.',
+      quote_number: qNum,
+      accepted_at: acceptedAt,
+      contract_number: contractResult?.contract_number || null,
+      contract_url: contractUrl
     });
 
   } catch (error) {
