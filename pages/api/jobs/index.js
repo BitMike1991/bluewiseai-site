@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   if (checkRateLimit(req, res, `read:${customerId}`, 120)) return;
 
   try {
-    const { status, search, page = "1", pageSize = "20" } = req.query;
+    const { status, search, page = "1", pageSize = "20", from: fromDate, to: toDate } = req.query;
 
     const pageNum = Math.max(parseInt(page, 10) || 1, 1);
     const sizeNum = Math.min(Math.max(parseInt(pageSize, 10) || 20, 1), 100);
@@ -60,8 +60,25 @@ export default async function handler(req, res) {
       )
       .eq("customer_id", customerId);
 
+    // Status filter: supports comma-separated multi-status e.g. ?status=draft,measuring
     if (status && status !== "all") {
-      jobsQuery = jobsQuery.eq("status", status);
+      const statusList = status.split(',').map((s) => s.trim()).filter(Boolean);
+      if (statusList.length === 1) {
+        jobsQuery = jobsQuery.eq("status", statusList[0]);
+      } else if (statusList.length > 1) {
+        jobsQuery = jobsQuery.in("status", statusList);
+      }
+    }
+
+    // Date range filter on updated_at
+    if (fromDate) {
+      jobsQuery = jobsQuery.gte("updated_at", new Date(fromDate).toISOString());
+    }
+    if (toDate) {
+      // Add one day so toDate is inclusive
+      const end = new Date(toDate);
+      end.setDate(end.getDate() + 1);
+      jobsQuery = jobsQuery.lt("updated_at", end.toISOString());
     }
 
     if (term) {
@@ -81,7 +98,7 @@ export default async function handler(req, res) {
     }
 
     jobsQuery = jobsQuery
-      .order("created_at", { ascending: false })
+      .order("updated_at", { ascending: false })
       .range(offset, offset + sizeNum - 1);
 
     const { data: jobRows, error: jobError, count: totalCount } =
@@ -99,10 +116,10 @@ export default async function handler(req, res) {
       });
     }
 
-    // Fetch contracts and payments for these jobs
+    // Fetch contracts, payments, and latest quote per job
     const jobIds = jobs.map((j) => j.id);
 
-    const [contractsRes, paymentsRes] = await Promise.all([
+    const [contractsRes, paymentsRes, quotesRes] = await Promise.all([
       supabase
         .from("contracts")
         .select("id, job_id, signature_status, signed_at")
@@ -113,6 +130,12 @@ export default async function handler(req, res) {
         .select("id, job_id, payment_type, amount, status, paid_at")
         .eq("customer_id", customerId)
         .in("job_id", jobIds),
+      supabase
+        .from("quotes")
+        .select("id, job_id, total_ttc, version, status, updated_at")
+        .eq("customer_id", customerId)
+        .in("job_id", jobIds)
+        .order("version", { ascending: false }),
     ]);
 
     const contractsByJobId = new Map();
@@ -131,9 +154,20 @@ export default async function handler(req, res) {
       }
     }
 
+    // Keyed by job_id → latest quote (already sorted by version DESC, first match wins)
+    const latestQuoteByJobId = new Map();
+    if (quotesRes.data) {
+      for (const q of quotesRes.data) {
+        if (!latestQuoteByJobId.has(q.job_id)) {
+          latestQuoteByJobId.set(q.job_id, q);
+        }
+      }
+    }
+
     const items = jobs.map((job) => {
       const contracts = contractsByJobId.get(job.id) || [];
       const payments = paymentsByJobId.get(job.id) || [];
+      const latestQuote = latestQuoteByJobId.get(job.id) || null;
       const totalPaid = payments
         .filter((p) => p.status === "paid" || p.status === "succeeded")
         .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
@@ -144,6 +178,8 @@ export default async function handler(req, res) {
         contract_signed: contracts.some((c) => c.signature_status === "signed"),
         payments_count: payments.length,
         total_paid: totalPaid,
+        latest_quote_total_ttc: latestQuote?.total_ttc ?? null,
+        latest_quote_status: latestQuote?.status ?? null,
       };
     });
 
