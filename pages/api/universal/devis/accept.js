@@ -234,7 +234,7 @@ export default async function handler(req, res) {
             body: JSON.stringify({
               quote_id: quote.id,
               customer_id: customerId,
-              api_key: process.env.UNIVERSAL_API_KEY
+              api_key: (process.env.UNIVERSAL_API_KEY || '').trim()
             })
           }
         );

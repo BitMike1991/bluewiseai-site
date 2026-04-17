@@ -424,7 +424,7 @@ export default async function handler(req, res) {
     if (!process.env.UNIVERSAL_API_KEY) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    const validKeys = [process.env.UNIVERSAL_API_KEY];
+    const validKeys = [process.env.UNIVERSAL_API_KEY.trim()];
     if (!validKeys.includes(api_key)) {
       // Try per-customer key
       if (customer_id) {

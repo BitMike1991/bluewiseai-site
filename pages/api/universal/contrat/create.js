@@ -892,8 +892,8 @@ export default async function handler(req, res) {
     if (!process.env.UNIVERSAL_API_KEY) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    const validKeys = [process.env.UNIVERSAL_API_KEY];
-    const isUniversalAuth = validKeys.includes(api_key);
+    const validKeys = [process.env.UNIVERSAL_API_KEY.trim()];
+    const isUniversalAuth = validKeys.includes(api_key?.trim());
 
     if (!isUniversalAuth && !api_key) {
       return res.status(401).json({ error: 'Unauthorized: api_key required' });
