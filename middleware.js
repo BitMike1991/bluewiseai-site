@@ -2,6 +2,20 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+// Domain → customer_id mapping (static, Edge-safe — no DB call).
+// This is a routing hint only. Session cookie remains the source of truth for auth.
+const DOMAIN_TO_CUSTOMER_ID = {
+  "bluewiseai.com": 1,
+  "www.bluewiseai.com": 1,
+  "app.bluewiseai.com": 1,
+  "serviceplus.plus": 8,
+  "www.serviceplus.plus": 8,
+  "app.serviceplus.plus": 8,
+  "hub.purconstruction.com": 9,
+  "purconstruction.com": 9,
+  "www.purconstruction.com": 9,
+};
+
 export async function middleware(req) {
   let res = NextResponse.next();
   const { pathname, search } = req.nextUrl;
@@ -23,6 +37,7 @@ export async function middleware(req) {
 
   const isProtected =
     pathname.startsWith("/platform") ||
+    pathname.startsWith("/hub") ||
     pathname.startsWith("/api/ask") ||
     pathname.startsWith("/api/send") ||
     pathname.startsWith("/api/inbox") ||
@@ -92,12 +107,21 @@ export async function middleware(req) {
     }
   }
 
+  // Inject x-tenant-customer-id hint based on Host header (routing hint only).
+  // Downstream pages/APIs must still validate via authenticated session.
+  const host = req.headers.get("host")?.split(":")[0] || "";
+  const tenantId = DOMAIN_TO_CUSTOMER_ID[host];
+  if (tenantId) {
+    res.headers.set("x-tenant-customer-id", String(tenantId));
+  }
+
   return res;
 }
 
 export const config = {
   matcher: [
     "/platform/:path*",
+    "/hub/:path*",
     "/api/auth/:path*",
     "/api/ask",
     "/api/send",

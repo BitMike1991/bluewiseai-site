@@ -7,7 +7,16 @@ import {
   LayoutDashboard, Users, Briefcase, Inbox, Phone, Calendar,
   Target, CheckSquare, DollarSign, CreditCard, Settings, BarChart2,
   X, ChevronsUpDown, PanelLeftClose, PanelLeft,
+  ShoppingCart, BookOpen, FileText, Layers,
 } from "lucide-react";
+
+// Hub tool definitions — stub pages only until P11
+const HUB_TOOL_DEFS = {
+  commande: { label: "Commande fournisseur", href: "/hub/commande", icon: ShoppingCart },
+  toiture: { label: "Calculateur toiture", href: "/hub/toiture", icon: Layers },
+  catalogues: { label: "Catalogues", href: "/hub/catalogues", icon: BookOpen },
+  fiches: { label: "Fiches techniques", href: "/hub/fiches", icon: FileText },
+};
 
 const NAV_SECTIONS = [
   {
@@ -43,7 +52,7 @@ const ALL_NAV_ITEMS = NAV_SECTIONS.flatMap((s) => s.items);
 
 export default function Sidebar({ isOpen, onClose, customerName }) {
   const router = useRouter();
-  const { branding } = useBranding();
+  const { branding, enabledHubTools } = useBranding();
   const [collapsed, setCollapsed] = useState(false);
   const [badges, setBadges] = useState({});
 
@@ -164,47 +173,66 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
                     const Icon = item.icon;
                     const badgeVal = item.badgeKey ? badges[item.badgeKey] : 0;
                     return (
-                      <Link
+                      <NavLink
                         key={item.href}
                         href={item.href}
-                        onClick={() => { if (typeof window !== "undefined" && window.innerWidth < 768) onClose?.(); }}
-                        className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${collapsed ? "justify-center" : ""}`}
-                        style={
-                          isActive
-                            ? { backgroundColor: sidebarIsDark ? `${primaryColor}25` : `${primaryColor}15`, color: sidebarIsDark ? "#ffffff" : primaryColor, fontWeight: 500 }
-                            : { color: navText }
-                        }
-                        title={collapsed ? item.label : undefined}
-                        onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = `${borderColor}30`; }}
-                        onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = ""; }}
-                      >
-                        <Icon
-                          className="w-4 h-4 shrink-0"
-                          style={{ color: isActive ? (sidebarIsDark ? "#ffffff" : primaryColor) : navIcon }}
-                        />
-                        {!collapsed && (
-                          <>
-                            <span className="flex-1 truncate">{item.label}</span>
-                            {badgeVal > 0 && (
-                              <span
-                                className="text-[9px] font-semibold rounded-full px-1.5 min-w-[18px] text-center text-white"
-                                style={{ backgroundColor: item.badgeKey === "calls" ? "#f43f5e" : primaryColor }}
-                              >
-                                {badgeVal > 99 ? "99+" : badgeVal}
-                              </span>
-                            )}
-                          </>
-                        )}
-                        {collapsed && badgeVal > 0 && (
-                          <span className="absolute top-1 right-1 h-2 w-2 rounded-full" style={{ backgroundColor: item.badgeKey === "calls" ? "#f43f5e" : primaryColor }} />
-                        )}
-                      </Link>
+                        label={item.label}
+                        Icon={Icon}
+                        isActive={isActive}
+                        collapsed={collapsed}
+                        onClose={onClose}
+                        sidebarIsDark={sidebarIsDark}
+                        primaryColor={primaryColor}
+                        navText={navText}
+                        navIcon={navIcon}
+                        borderColor={borderColor}
+                        badgeVal={badgeVal}
+                        badgeKey={item.badgeKey}
+                      />
                     );
                   })}
                 </div>
               </div>
             );
           })}
+
+          {/* Hub section — only shown if tenant has enabled_hub_tools */}
+          {Array.isArray(enabledHubTools) && enabledHubTools.length > 0 && (
+            <div>
+              <div className="mx-2 my-2 border-t" style={{ borderColor: `${borderColor}40` }} />
+              {!collapsed && (
+                <div className="px-3 mt-1 mb-1 text-[9px] uppercase tracking-widest" style={{ color: `${navText}80` }}>
+                  Hub
+                </div>
+              )}
+              <div className="space-y-0.5">
+                {enabledHubTools.map((toolId) => {
+                  const def = HUB_TOOL_DEFS[toolId];
+                  if (!def) return null;
+                  const isActive = router.pathname === def.href || router.pathname.startsWith(def.href + "/");
+                  const Icon = def.icon;
+                  return (
+                    <NavLink
+                      key={def.href}
+                      href={def.href}
+                      label={def.label}
+                      Icon={Icon}
+                      isActive={isActive}
+                      collapsed={collapsed}
+                      onClose={onClose}
+                      sidebarIsDark={sidebarIsDark}
+                      primaryColor={primaryColor}
+                      navText={navText}
+                      navIcon={navIcon}
+                      borderColor={borderColor}
+                      badgeVal={0}
+                      badgeKey={null}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </nav>
 
         {/* Collapse toggle (desktop only) */}
@@ -238,6 +266,47 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
         )}
       </aside>
     </>
+  );
+}
+
+function NavLink({ href, label, Icon, isActive, collapsed, onClose, sidebarIsDark, primaryColor, navText, navIcon, borderColor, badgeVal, badgeKey }) {
+  return (
+    <Link
+      href={href}
+      onClick={() => { if (typeof window !== "undefined" && window.innerWidth < 768) onClose?.(); }}
+      className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${collapsed ? "justify-center" : ""}`}
+      style={
+        isActive
+          ? { backgroundColor: sidebarIsDark ? `${primaryColor}25` : `${primaryColor}15`, color: sidebarIsDark ? "#ffffff" : primaryColor, fontWeight: 500 }
+          : { color: navText }
+      }
+      title={collapsed ? label : undefined}
+      aria-current={isActive ? "page" : undefined}
+      onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = `${borderColor}30`; }}
+      onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = ""; }}
+    >
+      <Icon
+        className="w-4 h-4 shrink-0"
+        style={{ color: isActive ? (sidebarIsDark ? "#ffffff" : primaryColor) : navIcon }}
+        aria-hidden="true"
+      />
+      {!collapsed && (
+        <>
+          <span className="flex-1 truncate">{label}</span>
+          {badgeVal > 0 && (
+            <span
+              className="text-[9px] font-semibold rounded-full px-1.5 min-w-[18px] text-center text-white"
+              style={{ backgroundColor: badgeKey === "calls" ? "#f43f5e" : primaryColor }}
+            >
+              {badgeVal > 99 ? "99+" : badgeVal}
+            </span>
+          )}
+        </>
+      )}
+      {collapsed && badgeVal > 0 && (
+        <span className="absolute top-1 right-1 h-2 w-2 rounded-full" style={{ backgroundColor: badgeKey === "calls" ? "#f43f5e" : primaryColor }} />
+      )}
+    </Link>
   );
 }
 
