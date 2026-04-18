@@ -1,10 +1,12 @@
 // pages/platform/jobs/[id].js
 // P8 — Job detail with 7-tab shell + read data
+// P9 — Devis tab upgraded to DevisEditor (split-view WYSIWYG)
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import DashboardLayout from '../../../src/components/dashboard/DashboardLayout';
 import StatusBadge from '../../../src/components/jobs/StatusBadge';
+import DevisEditor from '../../../src/components/jobs/DevisEditor';
 import { getStatusMeta, STATUS_ORDER } from '../../../lib/status-config';
 import {
   ChevronLeft,
@@ -625,7 +627,7 @@ function TabDevis({ quotes }) {
 
                 {q.valid_until && (
                   <p className="text-[10px] text-d-muted mt-3">
-                    Valide jusqu'au {formatShortDate(q.valid_until)}
+                    Valide jusqu&apos;au {formatShortDate(q.valid_until)}
                   </p>
                 )}
               </div>
@@ -1053,10 +1055,35 @@ export default function JobDetailPage() {
               }}
             />;
 
-      case 'devis':
-        return tabLoading.devis
-          ? <div className="py-8 text-center text-xs text-d-muted animate-pulse">Chargement...</div>
-          : <TabDevis quotes={tabData.devis ?? []} />;
+      case 'devis': {
+        if (tabLoading.devis) {
+          return <div className="py-8 text-center text-xs text-d-muted animate-pulse">Chargement...</div>;
+        }
+        const devisQuotes = tabData.devis ?? [];
+        // Use latest non-superseded quote for the editor, or first
+        const latestQuote = devisQuotes.find(q => q.status !== 'superseded') || devisQuotes[0] || null;
+
+        if (!latestQuote) {
+          return (
+            <div className="rounded-xl border border-dashed border-d-border/60 p-8 text-center">
+              <FileText size={28} className="mx-auto mb-3 text-d-muted/40" />
+              <p className="text-sm text-d-muted mb-4">Aucun devis généré pour ce projet.</p>
+            </div>
+          );
+        }
+
+        return (
+          <DevisEditor
+            job={job}
+            quote={latestQuote}
+            onSaved={() => {
+              // Reload job base + devis tab data
+              loadJob();
+              setTabData(prev => ({ ...prev, devis: undefined }));
+            }}
+          />
+        );
+      }
 
       case 'contrat':
         return <TabContrat contracts={contracts} />;

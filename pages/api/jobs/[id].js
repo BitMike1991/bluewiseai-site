@@ -17,13 +17,24 @@ export default async function handler(req, res) {
   const { id } = req.query;
   if (!id) return res.status(400).json({ error: "Missing job id" });
 
-  // ── PATCH: update job fields (notes, status) ──
+  // ── PATCH: update job fields (notes, status, client info) ──
   if (req.method === "PATCH") {
     try {
-      const { notes, status } = req.body;
+      const {
+        notes,
+        status,
+        client_name,
+        client_phone,
+        client_email,
+        client_address,
+      } = req.body;
       const updates = { updated_at: new Date().toISOString() };
-      if (notes !== undefined) updates.notes = notes;
-      if (status) updates.status = status;
+      if (notes          !== undefined) updates.notes          = notes;
+      if (status         !== undefined) updates.status         = status;
+      if (client_name    !== undefined) updates.client_name    = client_name;
+      if (client_phone   !== undefined) updates.client_phone   = client_phone;
+      if (client_email   !== undefined) updates.client_email   = client_email;
+      if (client_address !== undefined) updates.client_address = client_address;
 
       if (Object.keys(updates).length === 1) {
         return res.status(400).json({ error: "Nothing to update" });
