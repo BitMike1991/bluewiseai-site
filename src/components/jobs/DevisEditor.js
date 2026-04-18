@@ -114,9 +114,21 @@ const WINDOW_TYPES = [
   'Porte-fenêtre',
   "Porte d'entrée",
   'Porte patio',
+  'Porte simple',
   'Fenêtre fixe',
   'Autre',
 ];
+
+/**
+ * Returns true if this item is a "porte simple" (entry door + optional side lites).
+ * Used to show the "Nombre de side lites" dropdown.
+ */
+function isPorteSimple(item) {
+  const text = [item.type || '', item.model || '', item.description || '']
+    .join(' ')
+    .toLowerCase();
+  return text.includes('simple') && !text.includes('patio');
+}
 
 function LineItemRow({ item, index, onChange, onDelete }) {
   const [expanded, setExpanded] = useState(false);
@@ -300,6 +312,26 @@ function LineItemRow({ item, index, onChange, onDelete }) {
               className="w-full px-2 py-1.5 rounded-lg border border-d-border bg-d-surface text-xs text-d-text placeholder:text-d-muted/40 resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
             />
           </div>
+
+          {/* Side lites — only shown for porte simple */}
+          {isPorteSimple(item) && (
+            <div>
+              <label className="block text-[10px] text-d-muted mb-1">
+                Nombre de side lites{' '}
+                <span className="text-d-muted/60 font-normal">(750 $/côté)</span>
+              </label>
+              <select
+                value={item.sides ?? 0}
+                onChange={e => update('sides', Number(e.target.value))}
+                aria-label="Nombre de side lites"
+                className="w-full px-2 py-1.5 rounded-lg border border-d-border bg-d-surface text-xs text-d-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+              >
+                <option value={0}>0 — porte seule</option>
+                <option value={1}>1 side lite</option>
+                <option value={2}>2 side lites</option>
+              </select>
+            </div>
+          )}
         </div>
       )}
     </div>

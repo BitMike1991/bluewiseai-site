@@ -149,6 +149,14 @@ export default async function handler(req, res) {
     const enrichedItems = enrichedOrders[0]?.items || [];
 
     // Apply pricing formula to matched items
+    // Load hardcoded pricing config for this customer (cid-specific, no cross-tenant risk)
+    const { data: customer } = await supabase
+      .from('customers')
+      .select('quote_config')
+      .eq('id', customerId)
+      .single();
+    const hardcodedConfig = customer?.quote_config?.hardcoded_pricing || null;
+
     const pricingParams = { escomptePct, markupPct: 20, perLinearInch: 3, minPerWindow: 400 };
 
     let matched = 0;
@@ -167,8 +175,14 @@ export default async function handler(req, res) {
           unitPrice: enriched.unitPrice,
           dimensions: enriched.dimensions || li.dimensions,
           qty: li.qty || 1,
+          type: li.type || '',
+          model: li.model || '',
+          description: li.description || '',
+          specs: li.specs || '',
+          sides: li.sides || 0,
         },
-        pricingParams
+        pricingParams,
+        hardcodedConfig
       );
 
       // Flag partial/dims-only matches for UI warning
