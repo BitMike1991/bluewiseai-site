@@ -16,6 +16,8 @@ import {
   ChevronUp,
   X,
   Loader2,
+  ShoppingCart,
+  CheckCircle2,
 } from 'lucide-react';
 import { STATUS_META, STATUS_ORDER } from '../../../lib/status-config';
 import { itemSketchSvg } from '../../../lib/quote-templates/pur.js';
@@ -130,7 +132,7 @@ function isPorteSimple(item) {
   return text.includes('simple') && !text.includes('patio');
 }
 
-function LineItemRow({ item, index, onChange, onDelete }) {
+function LineItemRow({ item, index, onChange, onDelete, onToggleBC }) {
   const [expanded, setExpanded] = useState(false);
   const auto = buildDescription(item);
   const total = (Number(item.qty) || 0) * (Number(item.unit_price) || 0);
@@ -183,7 +185,7 @@ function LineItemRow({ item, index, onChange, onDelete }) {
           )}
         </div>
 
-        {/* Expand + delete */}
+        {/* Expand + BC queue + delete */}
         <div className="flex items-start gap-1.5 flex-shrink-0">
           <button
             type="button"
@@ -192,6 +194,22 @@ function LineItemRow({ item, index, onChange, onDelete }) {
             className="text-d-muted hover:text-d-text transition focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60 rounded p-0.5"
           >
             {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+          {/* +BC toggle — adds item to next batch bon de commande */}
+          <button
+            type="button"
+            onClick={() => onToggleBC && onToggleBC(index)}
+            aria-label={item._queued_for_bc ? 'Retirer du bon de commande' : 'Ajouter au prochain bon de commande'}
+            title={item._queued_for_bc ? 'Retiré du BC' : 'Ajouter au BC'}
+            className={`transition flex-shrink-0 focus-visible:outline-none focus-visible:ring-1 rounded p-0.5 ${
+              item._queued_for_bc
+                ? 'text-emerald-400 focus-visible:ring-emerald-400/60'
+                : 'text-d-muted/50 hover:text-emerald-400 focus-visible:ring-emerald-400/60'
+            }`}
+          >
+            {item._queued_for_bc
+              ? <CheckCircle2 size={13} />
+              : <ShoppingCart size={13} />}
           </button>
           <button
             type="button"
@@ -634,6 +652,35 @@ export default function DevisEditor({ job, quote, onSaved }) {
     setItems(prev => prev.filter((_, i) => i !== index));
   }
 
+  // Toggle _queued_for_bc on a line item + immediately PATCH quote
+  async function toggleItemBC(index) {
+    const item = dataItems[index];
+    if (!item) return;
+
+    // Don't allow toggling if already dispatched to a sent BC
+    if (item._bc_sent_at) return;
+
+    const next = !item._queued_for_bc;
+    const updatedItem = { ...item, _queued_for_bc: next };
+    updateItem(index, updatedItem);
+
+    // Immediate save so the pending API picks it up
+    const saveItems = buildSaveItems().map((it, i) => {
+      if (i === index) return { ...it, _queued_for_bc: next };
+      return it;
+    });
+
+    try {
+      await fetch(`/api/quotes/${quote.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ line_items: saveItems }),
+      });
+    } catch {
+      // Non-fatal — item state is updated in UI, will persist on next full save
+    }
+  }
+
   function handleCopyLink() {
     const url = `https://pur-construction-site.vercel.app/q/${quote.quote_number}`;
     navigator.clipboard.writeText(url).then(() => {
@@ -833,6 +880,7 @@ export default function DevisEditor({ job, quote, onSaved }) {
                     index={i}
                     onChange={updateItem}
                     onDelete={deleteItem}
+                    onToggleBC={toggleItemBC}
                   />
                 ))}
               </div>
