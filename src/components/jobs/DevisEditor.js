@@ -474,13 +474,23 @@ export default function DevisEditor({ job, quote, onSaved }) {
     quote?.meta?.price_display_mode || 'unitaire'
   );
 
+  // Defensive parse: line_items may arrive as JSON string from some write paths (backfill bug hardened)
+  const parsedLineItems = (() => {
+    const raw = quote?.line_items;
+    if (Array.isArray(raw)) return raw;
+    if (typeof raw === 'string') {
+      try { const p = JSON.parse(raw); return Array.isArray(p) ? p : []; } catch { return []; }
+    }
+    return [];
+  })();
+
   // Quote fields
-  const [items,       setItems]       = useState(quote?.line_items || []);
+  const [items,       setItems]       = useState(parsedLineItems);
   const [installCost, setInstallCost] = useState(
     // Try to find install item in line_items
     (() => {
-      if (!quote?.line_items) return '0';
-      const inst = quote.line_items.find(
+      if (!parsedLineItems.length) return '0';
+      const inst = parsedLineItems.find(
         it => (it.description || '').toLowerCase().includes('install') ||
               (it.type || '').toLowerCase().includes('install')
       );

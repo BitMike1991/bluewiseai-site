@@ -605,7 +605,7 @@ for (const [jobIdStr, r] of Object.entries(results)) {
     await sbUpdate('quotes',
       { customer_id: `eq.${CUSTOMER_ID}`, job_id: `eq.${jobId}` },
       {
-        line_items:  JSON.stringify(lineItems),
+        line_items:  lineItems,  // pass array directly — sbUpdate already JSON.stringifies the whole body
         subtotal:    totals.subtotal,
         tax_gst:     totals.tax_gst,
         tax_qst:     totals.tax_qst,
