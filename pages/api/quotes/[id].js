@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     // Verify quote belongs to this customer (multi-tenant safety)
     const { data: existing, error: fetchErr } = await supabase
       .from('quotes')
-      .select('id, customer_id, job_id, subtotal, line_items')
+      .select('id, customer_id, job_id, subtotal, line_items, meta')
       .eq('id', id)
       .eq('customer_id', customerId)
       .maybeSingle();
@@ -37,6 +37,7 @@ export default async function handler(req, res) {
       notes,
       valid_until,
       status,
+      meta,
     } = req.body;
 
     const updates = { updated_at: new Date().toISOString() };
@@ -46,6 +47,10 @@ export default async function handler(req, res) {
     if (notes !== undefined) updates.notes = notes;
     if (valid_until !== undefined) updates.valid_until = valid_until;
     if (status !== undefined) updates.status = status;
+    // meta: merge with existing to preserve acceptance_url and other fields
+    if (meta !== undefined) {
+      updates.meta = { ...(existing.meta || {}), ...meta };
+    }
 
     // Recompute totals from line_items if not explicitly provided
     if (line_items !== undefined) {

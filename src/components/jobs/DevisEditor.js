@@ -419,6 +419,11 @@ export default function DevisEditor({ job, quote, onSaved }) {
   );
   const [jobStatus, setJobStatus] = useState(job?.status || 'draft');
 
+  // Price display mode
+  const [priceDisplayMode, setPriceDisplayMode] = useState(
+    quote?.meta?.price_display_mode || 'unitaire'
+  );
+
   // Quote fields
   const [items,       setItems]       = useState(quote?.line_items || []);
   const [installCost, setInstallCost] = useState(
@@ -507,6 +512,7 @@ export default function DevisEditor({ job, quote, onSaved }) {
             tax_qst,
             total_ttc,
             notes,
+            meta: { price_display_mode: priceDisplayMode },
           }),
         }),
       ]);
@@ -526,7 +532,7 @@ export default function DevisEditor({ job, quote, onSaved }) {
       setSaving(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientName, clientPhone, clientEmail, clientAddress, jobStatus, items, installCost, notes, subtotal, tax_gst, tax_qst, total_ttc, job.id, quote.id, onSaved]);
+  }, [clientName, clientPhone, clientEmail, clientAddress, jobStatus, items, installCost, notes, priceDisplayMode, subtotal, tax_gst, tax_qst, total_ttc, job.id, quote.id, onSaved]);
 
   // Ctrl+S keyboard shortcut
   useEffect(() => {
@@ -551,6 +557,22 @@ export default function DevisEditor({ job, quote, onSaved }) {
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [dirty]);
+
+  async function handlePriceDisplayModeChange(newMode) {
+    setPriceDisplayMode(newMode);
+    markDirty();
+    // Immediately persist meta so iframe preview reflects the change
+    try {
+      await fetch(`/api/quotes/${quote.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ meta: { price_display_mode: newMode } }),
+      });
+      setPreviewKey(Date.now());
+    } catch {
+      // non-fatal — will be saved on next full save
+    }
+  }
 
   function addItem() {
     markDirty();
@@ -718,6 +740,36 @@ export default function DevisEditor({ job, quote, onSaved }) {
                 />
               </div>
             </div>
+          </section>
+
+          {/* PRIX MODE */}
+          <section className="rounded-xl border border-d-border bg-d-surface/30 p-4">
+            <p className="text-[10px] font-semibold text-d-muted uppercase tracking-wider mb-3">Mode d&apos;affichage des prix</p>
+            <div className="flex gap-1 p-1 rounded-xl bg-d-bg border border-d-border w-fit">
+              {[
+                { value: 'unitaire', label: 'Prix unitaire' },
+                { value: 'total', label: 'Prix total' },
+              ].map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => handlePriceDisplayModeChange(value)}
+                  aria-pressed={priceDisplayMode === value}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/50 ${
+                    priceDisplayMode === value
+                      ? 'bg-d-primary text-white shadow-sm'
+                      : 'text-d-muted hover:text-d-text'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-d-muted/60 mt-2">
+              {priceDisplayMode === 'unitaire'
+                ? 'Mention « Installation incluse » sous chaque article'
+                : 'Mention « Installation incluse » une fois au total'}
+            </p>
           </section>
 
           {/* ITEMS */}
