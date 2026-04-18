@@ -185,7 +185,9 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC }) {
   const [showCalc, setShowCalc] = useState(false);
   const auto = buildDescription(item);
   const total = (Number(item.qty) || 0) * (Number(item.unit_price) || 0);
-  const hasBreakdown = !!(item._cost || item._list_price);
+  // Show breakdown button whenever item has ANY pricing signal OR dimensions
+  // (dimensions alone allow us to compute perimeter-based fees)
+  const hasBreakdown = !!(item._cost || item._list_price || item.unit_price || (item.dimensions?.width && item.dimensions?.height));
 
   // Generate SVG sketch for this item
   const sketchSvg = itemSketchSvg(item);
