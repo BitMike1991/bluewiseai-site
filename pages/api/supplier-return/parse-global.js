@@ -24,7 +24,7 @@ import pdfParse from 'pdf-parse/lib/pdf-parse.js';
 import { getAuthContext } from '../../../lib/supabaseServer';
 import { parseDocuments } from '../../../lib/devis/parser';
 import { parseFractionalInch, modelFamily } from '../../../lib/devis/matcher';
-import { computeClientPrice, detectHardcodedType, DEFAULT_PRICING } from '../../../lib/devis/pricing';
+import { computeClientPrice, computeHardcodedPrice, detectHardcodedType, DEFAULT_PRICING } from '../../../lib/devis/pricing';
 
 export const config = { api: { bodyParser: false } };
 
@@ -251,6 +251,11 @@ export default async function handler(req, res) {
     _used: false,
   }));
 
+  // Declare result buckets early so hardcoded items can push into matches during build
+  const matches = [];
+  const unmatchedQuoteItems = [];
+  const quotesTouched = new Set();
+
   // Build flat list of all quote items
   const allQuoteItems = [];
   for (const quote of quotes) {
@@ -259,8 +264,39 @@ export default async function handler(req, res) {
       const li = lineItems[idx];
       // Skip items already priced (idempotency guard)
       if (li._price_applied_at) continue;
-      // Skip hardcoded items — they don't need soumission matching
-      if (hardcodedConfig && detectHardcodedType(li, hardcodedConfig)) continue;
+
+      // Hardcoded items: auto-price directly — no soumission match needed
+      if (hardcodedConfig) {
+        const hc = detectHardcodedType(li, hardcodedConfig);
+        if (hc) {
+          const priced = computeHardcodedPrice(
+            {
+              dimensions: li.dimensions,
+              qty: li.qty || 1,
+              sides: li.sides || 0,
+            },
+            hc,
+            pricingParams
+          );
+          matches.push({
+            quote_number:     quote.quote_number || `q-${quote.id}`,
+            quote_id:         quote.id,
+            job_id:           quote.job_id,
+            client_name:      jobMap[quote.job_id] || '',
+            item_idx:         idx,
+            parsed_idx:       null,
+            match_confidence: 'hardcoded',
+            parsed_model:     hc.config_key,
+            parsed_dims:      null,
+            listPrice:        hc.base_cost,
+            new_unit_price:   priced.clientUnit,
+            new_total:        priced.clientTotal,
+            hardcoded_type:   hc.config_key,
+          });
+          quotesTouched.add(quote.id);
+          continue;
+        }
+      }
 
       allQuoteItems.push({
         quote_id: quote.id,
@@ -307,10 +343,8 @@ export default async function handler(req, res) {
   }
 
   // ── 5. Build results ──────────────────────────────────────────────────────
-
-  const matches = [];
-  const unmatchedQuoteItems = [];
-  const quotesTouched = new Set();
+  // (matches, unmatchedQuoteItems, quotesTouched already declared above — hardcoded
+  //  items were pushed into matches during allQuoteItems build above)
 
   for (const qi of allQuoteItems) {
     if (qi._matched_sou_idx !== null) {

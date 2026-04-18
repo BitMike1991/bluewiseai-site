@@ -21,7 +21,7 @@ import pdfParse from 'pdf-parse';
 import { getAuthContext } from '../../../../lib/supabaseServer';
 import { parseDocuments } from '../../../../lib/devis/parser';
 import { matchPrices } from '../../../../lib/devis/matcher';
-import { computeClientPrice, DEFAULT_PRICING } from '../../../../lib/devis/pricing';
+import { computeClientPrice, computeHardcodedPrice, detectHardcodedType, DEFAULT_PRICING } from '../../../../lib/devis/pricing';
 
 export const config = { api: { bodyParser: false } };
 
@@ -235,6 +235,49 @@ export default async function handler(req, res) {
       if (enriched._already_priced) {
         quoteMatched++;
         continue;
+      }
+
+      // Hardcoded path: check before soumission match
+      if (hardcodedConfig) {
+        const hc = detectHardcodedType(li, hardcodedConfig);
+        if (hc) {
+          const priced = computeHardcodedPrice(
+            { dimensions: li.dimensions, qty: li.qty || 1, sides: li.sides || 0 },
+            hc,
+            pricingParams
+          );
+          updatedLineItems[idx] = {
+            ...li,
+            unit_price:        priced.clientUnit,
+            total:             priced.clientTotal,
+            _supplier_cost:    priced.cost,
+            _match_confidence: 'hardcoded',
+            _hardcoded_type:   hc.config_key,
+            _price_applied_at: nowIso,
+          };
+          quoteMatched++;
+          totalMatched++;
+
+          // Expense row
+          if (priced.cost > 0 && enriched._jobId) {
+            const qty = li.qty || 1;
+            const amount = Math.round(priced.cost * qty * 100) / 100;
+            expenseRows.push({
+              customer_id: customerId,
+              job_id:      enriched._jobId,
+              category:    'materiel_fournisseur',
+              description: `[${li.type || 'Article'}] ${li.model || ''} ${qty}x (hardcoded)`.replace(/\s+/g, ' ').trim(),
+              total:       amount,
+              subtotal:    amount,
+              source:      'bon_de_commande',
+              source_ref:  bc.bc_number,
+              vendor:      'hardcoded',
+              paid_at:     nowIso.slice(0, 10),
+            });
+            jobsAffected.add(enriched._jobId);
+          }
+          continue;
+        }
       }
 
       if (!enriched.matched || enriched.unitPrice == null) {

@@ -23,7 +23,7 @@
  */
 
 import { getAuthContext } from '../../../lib/supabaseServer';
-import { computeClientPrice, computeProjectTotals, DEFAULT_PRICING } from '../../../lib/devis/pricing';
+import { computeClientPrice, computeHardcodedPrice, detectHardcodedType, computeProjectTotals, DEFAULT_PRICING } from '../../../lib/devis/pricing';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -119,43 +119,71 @@ export default async function handler(req, res) {
       // Idempotency guard
       if (li._price_applied_at) continue;
 
-      const parsedItem = parsedPayload._parsed_items[m.parsed_idx];
-      if (!parsedItem || parsedItem.unitPrice == null) continue;
-
-      // Compute price
+      // Hardcoded path: parse-global emits parsed_idx=null for hardcoded items
+      const isHardcoded = m.match_confidence === 'hardcoded' || m.parsed_idx == null;
       let priceResult;
-      try {
-        priceResult = computeClientPrice(
+
+      if (isHardcoded) {
+        // Re-detect hardcoded type and compute price directly
+        const hc = hardcodedConfig ? detectHardcodedType(li, hardcodedConfig) : null;
+        if (!hc) continue; // safety: no hardcoded match found — skip
+        priceResult = computeHardcodedPrice(
           {
-            unitPrice:   parsedItem.unitPrice,
-            dimensions:  li.dimensions || parsedItem.dimensions,
-            qty:         li.qty || 1,
-            type:        li.type || '',
-            model:       li.model || li.config_code || '',
-            description: li.description || '',
-            specs:       li.specs || '',
-            sides:       li.sides || 0,
+            dimensions: li.dimensions,
+            qty: li.qty || 1,
+            sides: li.sides || 0,
           },
-          pricingParams,
-          hardcodedConfig
+          hc,
+          pricingParams
         );
-      } catch {
-        priceResult = computeClientPrice(
-          { unitPrice: parsedItem.unitPrice, dimensions: li.dimensions || parsedItem.dimensions, qty: li.qty || 1 },
-          pricingParams,
-          null
+      } else {
+        const parsedItem = parsedPayload._parsed_items[m.parsed_idx];
+        if (!parsedItem || parsedItem.unitPrice == null) continue;
+
+        // Compute price
+        try {
+          priceResult = computeClientPrice(
+            {
+              unitPrice:   parsedItem.unitPrice,
+              dimensions:  li.dimensions || parsedItem.dimensions,
+              qty:         li.qty || 1,
+              type:        li.type || '',
+              model:       li.model || li.config_code || '',
+              description: li.description || '',
+              specs:       li.specs || '',
+              sides:       li.sides || 0,
+            },
+            pricingParams,
+            hardcodedConfig
+          );
+        } catch {
+          priceResult = computeClientPrice(
+            { unitPrice: parsedItem.unitPrice, dimensions: li.dimensions || parsedItem.dimensions, qty: li.qty || 1 },
+            pricingParams,
+            null
+          );
+        }
+      }
+
+      // Determine confidence
+      let confidence;
+      if (isHardcoded) {
+        confidence = 'hardcoded';
+      } else {
+        const isManual = (body.manual_assignments || []).some(
+          ma => ma.quote_id == quoteId && ma.item_idx === idx
+        );
+        confidence = isManual ? 'manual' : (
+          (parsedPayload.matches || []).find(
+            au => au.quote_id == quoteId && au.item_idx === idx
+          )?.match_confidence || 'exact'
         );
       }
 
-      // Determine confidence: check if it was in auto-matches or manual
-      const isManual = (body.manual_assignments || []).some(
-        ma => ma.quote_id == quoteId && ma.item_idx === idx
-      );
-      const confidence = isManual ? 'manual' : (
-        (parsedPayload.matches || []).find(
-          au => au.quote_id == quoteId && au.item_idx === idx
-        )?.match_confidence || 'exact'
-      );
+      // Supplier list price for display (null for hardcoded — no soumission item)
+      const supplierListPrice = isHardcoded
+        ? null
+        : (parsedPayload._parsed_items[m.parsed_idx]?.unitPrice ?? null);
 
       // Update line item
       lineItems[idx] = {
@@ -163,9 +191,10 @@ export default async function handler(req, res) {
         unit_price:           priceResult.clientUnit,
         total:                priceResult.clientTotal,
         _supplier_cost:       priceResult.cost,
-        _supplier_list_price: parsedItem.unitPrice,
+        _supplier_list_price: supplierListPrice,
         _match_confidence:    confidence,
         _price_applied_at:    nowIso,
+        ...(isHardcoded ? { _hardcoded_type: m.hardcoded_type } : {}),
       };
 
       quoteApplied++;

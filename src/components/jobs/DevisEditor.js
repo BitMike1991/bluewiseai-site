@@ -156,6 +156,30 @@ function isPorteSimple(item) {
   return text.includes('simple') && !text.includes('patio');
 }
 
+/**
+ * Returns true if this item qualifies for auto-ENERGY STAR (PVC fenêtre, not porte).
+ * Mirrors the logic in lib/quote-templates/pur.js renderItemCard.
+ */
+function isPvcFenetre(item) {
+  const typeText = (item.type || '').toLowerCase();
+  const specsText = (Array.isArray(item.specs) ? item.specs.join(' ') : item.specs || '').toLowerCase();
+  return (
+    typeText.includes('fenêtre') &&
+    !typeText.includes('porte') &&
+    (specsText.includes('pvc') || typeText.includes('pvc') || (item.model || '').toLowerCase().includes('pvc'))
+  );
+}
+
+/**
+ * Returns true if the item should display the ENERGY STAR badge.
+ * Respects explicit opt-out (item.energy_star === false).
+ */
+function showEnergyStarBadge(item) {
+  if (item.energy_star === false) return false;
+  if (item.energy_star === true || item.energy) return true;
+  return isPvcFenetre(item);
+}
+
 function LineItemRow({ item, index, onChange, onDelete, onToggleBC }) {
   const [expanded, setExpanded] = useState(false);
   const [showCalc, setShowCalc] = useState(false);
@@ -208,6 +232,16 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC }) {
           </div>
           {dimLabel && (
             <div className="text-[10px] font-mono text-d-muted mt-0.5">{dimLabel}</div>
+          )}
+          {/* ENERGY STAR badge */}
+          {showEnergyStarBadge(item) && (
+            <span
+              className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide"
+              style={{ background: '#E9EFE7', color: '#2A2C35', border: '1px solid #2A2C35' }}
+              title="Homologué ENERGY STAR"
+            >
+              ★ ENERGY STAR
+            </span>
           )}
           {/* Wide-match warning badge */}
           {item._match_status === 'partial_wide' && (
@@ -455,6 +489,25 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC }) {
                 <option value={2}>2 side lites</option>
               </select>
             </div>
+          )}
+
+          {/* ENERGY STAR toggle — shown for PVC fenêtres or when explicitly set */}
+          {(isPvcFenetre(item) || item.energy_star != null) && (
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showEnergyStarBadge(item)}
+                onChange={e => update('energy_star', e.target.checked)}
+                aria-label="Homologué ENERGY STAR"
+                className="rounded border-d-border focus-visible:ring-1 focus-visible:ring-d-primary/60"
+              />
+              <span className="text-[10px] text-d-muted">
+                Homologué ENERGY STAR
+                {isPvcFenetre(item) && item.energy_star !== false && (
+                  <span className="ml-1 text-d-muted/50 font-normal">(auto — PVC fenêtre)</span>
+                )}
+              </span>
+            </label>
           )}
         </div>
       )}

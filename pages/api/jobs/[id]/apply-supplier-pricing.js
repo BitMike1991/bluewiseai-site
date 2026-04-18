@@ -17,7 +17,7 @@ import pdfParse from 'pdf-parse';
 import { getAuthContext } from '../../../../lib/supabaseServer';
 import { parseDocuments } from '../../../../lib/devis/parser';
 import { matchPrices } from '../../../../lib/devis/matcher';
-import { computeClientPrice, computeProjectTotals, DEFAULT_PRICING } from '../../../../lib/devis/pricing';
+import { computeClientPrice, computeHardcodedPrice, detectHardcodedType, computeProjectTotals, DEFAULT_PRICING } from '../../../../lib/devis/pricing';
 
 export const config = { api: { bodyParser: false } };
 
@@ -167,6 +167,39 @@ export default async function handler(req, res) {
     const partialMatches = [];
 
     const updatedLineItems = existingLineItems.map((li, i) => {
+      // Skip already-priced items (idempotency guard)
+      if (li._price_applied_at) {
+        matched++;
+        return li;
+      }
+
+      // Hardcoded path: check before soumission match
+      if (hardcodedConfig) {
+        const hc = detectHardcodedType(li, hardcodedConfig);
+        if (hc) {
+          const priced = computeHardcodedPrice(
+            { dimensions: li.dimensions, qty: li.qty || 1, sides: li.sides || 0 },
+            hc,
+            pricingParams
+          );
+          matched++;
+          return {
+            ...li,
+            unit_price:        priced.clientUnit,
+            total:             priced.clientTotal,
+            _supplier_cost:    priced.cost,
+            _match_status:     'hardcoded',
+            _match_confidence: 'hardcoded',
+            _hardcoded_type:   hc.config_key,
+            _price_applied_at: new Date().toISOString(),
+            _perimeter:        priced._perimeter,
+            _urethane:         priced._urethane,
+            _moulure:          priced._moulure,
+            _calking:          priced._calking,
+          };
+        }
+      }
+
       const enriched = enrichedItems.find((e) => e._li_index === i);
       if (!enriched || !enriched.matched || enriched.unitPrice == null) {
         unmatched++;
