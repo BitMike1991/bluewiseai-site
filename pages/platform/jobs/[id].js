@@ -259,6 +259,7 @@ const TABS = [
   { id: 'devis',     label: 'Devis',       icon: FileText },
   { id: 'contrat',   label: 'Contrat',     icon: PenLine },
   { id: 'paiements', label: 'Paiements',   icon: CreditCard },
+  { id: 'finances',  label: 'Finances',    icon: CreditCard },
   { id: 'taches',    label: 'Tâches',      icon: CheckSquare },
   { id: 'timeline',  label: 'Timeline',    icon: Clock },
 ];
@@ -773,6 +774,126 @@ function TabPaiements({ payments, quoteAmount }) {
   );
 }
 
+// ── Tab: Finances ─────────────────────────────────────────────────────────────
+
+const EXPENSE_CATEGORY_LABELS = {
+  materiel_fournisseur: 'Matériel fournisseur',
+  main_oeuvre:          'Main-d\'œuvre',
+  'main-oeuvre':        'Main-d\'œuvre',
+  sous_traitance:       'Sous-traitance',
+  'sous-traitance':     'Sous-traitance',
+  autre:                'Autre',
+};
+
+function TabFinances({ finances, quoteAmount }) {
+  if (!finances) {
+    return (
+      <div className="rounded-xl border border-dashed border-d-border/60 p-8 text-center">
+        <CreditCard size={28} className="mx-auto mb-3 text-d-muted/40" />
+        <p className="text-sm text-d-muted">Données financières non disponibles.</p>
+      </div>
+    );
+  }
+
+  const expenses = finances.expenses || [];
+  const revenue = parseFloat(quoteAmount || 0);
+  const totalExpenses = parseFloat(finances.totalExpenses || 0);
+  const margeB = revenue - totalExpenses;
+  const margePct = revenue > 0 ? (margeB / revenue) * 100 : 0;
+
+  // Group expenses by category
+  const grouped = {};
+  for (const exp of expenses) {
+    const cat = exp.category || 'autre';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(exp);
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Revenue vs Cost summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="rounded-xl border border-d-border bg-d-surface/40 p-3">
+          <p className="text-[10px] text-d-muted mb-1">Revenu (devis)</p>
+          <p className="text-sm font-semibold text-d-text">{formatCurrencyQC(revenue)}</p>
+        </div>
+        <div className="rounded-xl border border-d-border bg-d-surface/40 p-3">
+          <p className="text-[10px] text-d-muted mb-1">Dépenses</p>
+          <p className="text-sm font-semibold text-rose-400">{formatCurrencyQC(totalExpenses)}</p>
+        </div>
+        <div className="rounded-xl border border-d-border bg-d-surface/40 p-3">
+          <p className="text-[10px] text-d-muted mb-1">Marge brute</p>
+          <p className={`text-sm font-semibold ${margeB >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+            {formatCurrencyQC(margeB)}
+          </p>
+        </div>
+        <div className="rounded-xl border border-d-border bg-d-surface/40 p-3">
+          <p className="text-[10px] text-d-muted mb-1">Marge %</p>
+          <p className={`text-sm font-semibold ${margePct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+            {margePct.toFixed(1)}&nbsp;%
+          </p>
+        </div>
+      </div>
+
+      {/* Expenses table */}
+      {expenses.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-d-border/60 p-8 text-center">
+          <CreditCard size={22} className="mx-auto mb-2 text-d-muted/40" />
+          <p className="text-sm text-d-muted">Aucune dépense enregistrée pour ce projet.</p>
+          <p className="text-xs text-d-muted/60 mt-1">
+            Les dépenses matériaux s'ajoutent automatiquement lors du traitement d'un retour fournisseur.
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-d-border overflow-hidden">
+          <div className="px-4 py-3 border-b border-d-border bg-d-surface/30">
+            <p className="text-xs font-semibold text-d-muted">
+              Dépenses ({expenses.length})
+            </p>
+          </div>
+
+          {/* Per-category sections */}
+          {Object.entries(grouped).map(([cat, rows]) => {
+            const catTotal = rows.reduce((s, e) => s + Number(e.amount || 0), 0);
+            const catLabel = EXPENSE_CATEGORY_LABELS[cat] || cat.replace(/_/g, ' ');
+            return (
+              <div key={cat}>
+                <div className="px-4 py-2 bg-d-surface/50 border-b border-d-border/40 flex items-center justify-between">
+                  <span className="text-[10px] font-semibold text-d-muted uppercase tracking-wider">{catLabel}</span>
+                  <span className="text-xs font-medium text-d-text">{formatCurrencyQC(catTotal)}</span>
+                </div>
+                {rows.map((exp, i) => (
+                  <div
+                    key={exp.id || i}
+                    className="flex items-center justify-between px-4 py-2.5 border-b border-d-border/30 last:border-0 text-xs"
+                  >
+                    <div className="flex-1 min-w-0 pr-3">
+                      <p className="text-d-text truncate">{exp.description}</p>
+                      {exp.vendor && (
+                        <p className="text-[10px] text-d-muted mt-0.5">{exp.vendor}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-4 flex-shrink-0 text-right">
+                      <span className="text-d-muted hidden sm:block">{exp.date ? formatShortDate(exp.date) : '—'}</span>
+                      <span className="font-medium text-d-text">{formatCurrencyQC(exp.amount)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+
+          {/* Footer total */}
+          <div className="px-4 py-3 border-t border-d-border bg-d-surface/50 flex items-center justify-between">
+            <span className="text-xs font-semibold text-d-muted">Total dépenses</span>
+            <span className="text-sm font-bold text-rose-400">{formatCurrencyQC(totalExpenses)}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Tab: Tâches ───────────────────────────────────────────────────────────────
 
 function TabTaches({ jobId, tasks, onTaskToggle }) {
@@ -1090,6 +1211,9 @@ export default function JobDetailPage() {
 
       case 'paiements':
         return <TabPaiements payments={payments} quoteAmount={quoteAmount} />;
+
+      case 'finances':
+        return <TabFinances finances={finances} quoteAmount={quoteAmount} />;
 
       case 'taches':
         return tabLoading.taches

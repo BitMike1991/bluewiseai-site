@@ -16,6 +16,9 @@ import {
   Loader2,
   X,
   ExternalLink,
+  Upload,
+  AlertTriangle,
+  FileText,
 } from 'lucide-react';
 
 const TOOL_ID = 'commande';
@@ -151,6 +154,254 @@ function SendModal({ bc, onClose, onSent }) {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Retour Fournisseur section ────────────────────────────────────────────────
+
+function RetourFournisseur({ bc, bcId, onReceived }) {
+  const [uploading,   setUploading]   = useState(false);
+  const [dragOver,    setDragOver]    = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  const [result,      setResult]      = useState(null);
+
+  async function handleFile(file) {
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      setUploadError('Seuls les fichiers PDF sont acceptés.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('Fichier trop volumineux (max 10 MB).');
+      return;
+    }
+    setUploading(true);
+    setUploadError(null);
+    setResult(null);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const r = await fetch(`/api/bons-de-commande/${bcId}/apply-return`, {
+        method: 'POST',
+        body: form,
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'Erreur serveur');
+      setResult(j);
+      if (onReceived) onReceived(j);
+    } catch (err) {
+      setUploadError(err.message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFile(file);
+  }
+
+  function handleInputChange(e) {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
+    e.target.value = '';
+  }
+
+  // Already received state
+  if (bc.status === 'received' && !result) {
+    return (
+      <div className="mt-6 rounded-xl border border-d-border bg-d-surface/30 p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <CheckCircle2 size={16} className="text-emerald-400" />
+          <h2 className="text-sm font-semibold text-d-text">Retour fournisseur</h2>
+        </div>
+        <p className="text-xs text-d-muted">
+          Soumission déjà traitée le{' '}
+          <span className="text-d-text">{fmtDate(bc.received_at)}</span>
+        </p>
+        <p className="text-xs text-d-muted mt-1">
+          Les prix ont été distribués aux devis liés. Consultez chaque projet pour les détails.
+        </p>
+      </div>
+    );
+  }
+
+  // Not sent yet
+  if (bc.status !== 'sent' && bc.status !== 'received') {
+    return null;
+  }
+
+  // Result summary card
+  if (result) {
+    const firstJobId = result.jobs_affected?.[0];
+    return (
+      <div className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <CheckCircle2 size={16} className="text-emerald-400" />
+          <h2 className="text-sm font-semibold text-d-text">Retour fournisseur traité</h2>
+        </div>
+
+        {/* Top-level stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div className="rounded-lg bg-d-surface/60 border border-d-border/50 px-3 py-2">
+            <p className="text-[10px] text-d-muted mb-0.5">Articles associés</p>
+            <p className="text-lg font-bold text-emerald-400">{result.matched}</p>
+          </div>
+          <div className="rounded-lg bg-d-surface/60 border border-d-border/50 px-3 py-2">
+            <p className="text-[10px] text-d-muted mb-0.5">Sans correspondance</p>
+            <p className={`text-lg font-bold ${result.unmatched > 0 ? 'text-amber-400' : 'text-d-muted'}`}>
+              {result.unmatched}
+            </p>
+          </div>
+          <div className="rounded-lg bg-d-surface/60 border border-d-border/50 px-3 py-2">
+            <p className="text-[10px] text-d-muted mb-0.5">Dépenses enregistrées</p>
+            <p className="text-sm font-bold text-d-text">
+              {Number(result.total_expenses_recorded).toLocaleString('fr-CA', {
+                minimumFractionDigits: 2, maximumFractionDigits: 2,
+              })}&nbsp;$
+            </p>
+          </div>
+          <div className="rounded-lg bg-d-surface/60 border border-d-border/50 px-3 py-2">
+            <p className="text-[10px] text-d-muted mb-0.5">Escompte fournisseur</p>
+            <p className="text-sm font-bold text-d-text">{result.escompte_pct || 0}%</p>
+          </div>
+        </div>
+
+        {/* Per-project breakdown */}
+        {result.breakdown && result.breakdown.length > 0 && (
+          <div className="mb-4">
+            <p className="text-[10px] font-semibold text-d-muted uppercase tracking-wider mb-2">
+              Par projet
+            </p>
+            <div className="space-y-2">
+              {result.breakdown.map((b) => (
+                <div
+                  key={b.quote_id}
+                  className="flex items-center justify-between px-3 py-2 rounded-lg border border-d-border/50 bg-d-surface/40 text-xs"
+                >
+                  <div className="flex items-center gap-2">
+                    <FileText size={12} className="text-d-muted" />
+                    <span className="font-mono text-d-primary">{b.quote_number}</span>
+                    {b.all_priced && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
+                        Prêt
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 text-right">
+                    <span className="text-d-muted">
+                      {b.matched} ok{b.unmatched > 0 && <span className="text-amber-400"> · {b.unmatched} manquant</span>}
+                    </span>
+                    <span className="font-medium text-d-text">
+                      {Number(b.new_total_ttc).toLocaleString('fr-CA', {
+                        minimumFractionDigits: 2, maximumFractionDigits: 2,
+                      })}&nbsp;$
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Unmatched items needing manual entry */}
+        {result.unmatched_items && result.unmatched_items.length > 0 && (
+          <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <AlertTriangle size={13} className="text-amber-400" />
+              <p className="text-xs font-semibold text-amber-400">
+                {result.unmatched_items.length} article{result.unmatched_items.length > 1 ? 's' : ''} à entrer manuellement
+              </p>
+            </div>
+            <ul className="space-y-1">
+              {result.unmatched_items.map((u, i) => (
+                <li key={i} className="text-xs text-d-muted">
+                  <span className="font-mono text-d-text/70">{u.quote_number}</span>
+                  {' '}· {u.description || `Article #${u.item_index + 1}`}
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-d-muted mt-2">
+              Ouvrez les devis correspondants pour entrer les prix manuellement.
+            </p>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {firstJobId && (
+            <a
+              href={`/platform/jobs/${firstJobId}`}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-d-primary text-white text-xs font-semibold hover:opacity-90 transition"
+            >
+              <ExternalLink size={12} /> Voir les devis mis à jour
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() => setResult(null)}
+            className="text-xs text-d-muted hover:text-d-text transition"
+          >
+            Téléverser un autre PDF
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Upload dropzone (bc.status === 'sent')
+  return (
+    <div className="mt-6 rounded-xl border border-d-border p-5">
+      <div className="flex items-center gap-2 mb-1">
+        <Upload size={15} className="text-d-muted" />
+        <h2 className="text-sm font-semibold text-d-text">Retour fournisseur</h2>
+      </div>
+      <p className="text-xs text-d-muted mb-4">
+        Téléverse la soumission PDF de Royalty pour distribuer les prix à tous les devis de ce BC.
+      </p>
+
+      <label
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        className={`flex flex-col items-center justify-center gap-3 p-8 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
+          dragOver
+            ? 'border-d-primary bg-d-primary/10'
+            : 'border-d-border/60 hover:border-d-primary/50 hover:bg-d-surface/40'
+        } ${uploading ? 'pointer-events-none opacity-60' : ''}`}
+      >
+        <input
+          type="file"
+          accept="application/pdf,.pdf"
+          className="sr-only"
+          onChange={handleInputChange}
+          disabled={uploading}
+        />
+        {uploading ? (
+          <>
+            <Loader2 size={28} className="text-d-primary animate-spin" />
+            <p className="text-sm text-d-text font-medium">Analyse du PDF fournisseur...</p>
+            <p className="text-xs text-d-muted">Correspondance des articles en cours</p>
+          </>
+        ) : (
+          <>
+            <Upload size={28} className="text-d-muted/60" />
+            <div className="text-center">
+              <p className="text-sm text-d-text font-medium">Glisser la soumission fournisseur ici</p>
+              <p className="text-xs text-d-muted mt-0.5">ou cliquer pour choisir un PDF · max 10 MB</p>
+            </div>
+          </>
+        )}
+      </label>
+
+      {uploadError && (
+        <div className="mt-3 rounded-xl bg-rose-500/10 border border-rose-500/30 px-3 py-2.5 text-xs text-rose-400 flex items-center gap-2">
+          <AlertTriangle size={13} /> {uploadError}
+        </div>
+      )}
     </div>
   );
 }
@@ -308,6 +559,16 @@ export default function BcDetailPage() {
             <p className="text-sm">Aucun rendu HTML disponible pour ce bon de commande.</p>
           </div>
         )}
+
+        {/* Retour fournisseur */}
+        <RetourFournisseur
+          bc={bc}
+          bcId={id}
+          onReceived={(result) => {
+            setBc(prev => ({ ...prev, status: 'received', received_at: result.received_at || new Date().toISOString() }));
+            setToast({ msg: `${result.matched} articles associés — BC marqué reçu`, type: 'success' });
+          }}
+        />
       </div>
     </DashboardLayout>
   );
