@@ -44,7 +44,8 @@ const BrandingContext = createContext({
   loading: true,
 });
 
-const HUB_CACHE_KEY = "bw-hub-tools-cache";
+// v2 — busted after P9 to force refetch of enabled_hub_tools on existing sessions
+const HUB_CACHE_KEY = "bw-hub-tools-cache-v2";
 
 function loadCachedHubTools() {
   if (typeof window === "undefined") return null;

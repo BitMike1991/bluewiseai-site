@@ -207,7 +207,7 @@ export default function TopNav({ onLogout, onToggleSidebar, userName, customerNa
   return (
     <>
       <header
-        className="flex items-center justify-between px-4 md:px-6 py-2.5 backdrop-blur"
+        className="sticky top-0 z-40 flex items-center justify-between px-4 md:px-6 py-2.5 backdrop-blur"
         style={{ borderBottom: `1px solid ${borderColor}`, backgroundColor: `${surfaceColor}cc` }}
       >
         {/* Left: Hamburger + Breadcrumb */}
