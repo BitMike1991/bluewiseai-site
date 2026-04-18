@@ -18,6 +18,10 @@ import {
   Loader2,
   ShoppingCart,
   CheckCircle2,
+  Upload,
+  Info,
+  Users,
+  AlertTriangle,
 } from 'lucide-react';
 import { STATUS_META, STATUS_ORDER } from '../../../lib/status-config';
 import { itemSketchSvg } from '../../../lib/quote-templates/pur.js';
@@ -40,17 +44,37 @@ function buildDescription(item) {
   return parts.join(' — ') || item.description || 'Article';
 }
 
-function computeTotals(items, installCost) {
+// Per-item fee breakdown using stored metadata (set after supplier upload)
+function computeItemBreakdown(item) {
+  const listPrice  = Number(item._list_price) || 0;
+  const cost       = Number(item._cost) || 0;
+  const w = parseFloat(item.dimensions?.width) || 0;
+  const h = parseFloat(item.dimensions?.height) || 0;
+  const perimeter  = 2 * (w + h);
+  const markup     = cost > 0 ? cost * 0.20 : 0;
+  const linear     = perimeter * 3;
+  const urethane   = Number(item._urethane) || (perimeter > 0 ? Math.ceil(perimeter / 150) * 6.75 : 0);
+  const moulure    = Number(item._moulure)  || (perimeter > 0 ? perimeter * 0.04 : 0);
+  const calking    = Number(item._calking)  || (perimeter > 0 ? Math.ceil(perimeter / 120) * 6.75 : 0);
+  const unitPrice  = Number(item.unit_price) || 0;
+  const qty        = Number(item.qty) || 1;
+  return { listPrice, cost, markup, perimeter, linear, urethane, moulure, calking, unitPrice, qty };
+}
+
+function computeTotals(items, installCost, opts = {}) {
   const install = parseFloat(installCost) || 0;
   const lineSubtotal = (items || []).reduce(
     (s, it) => s + (Number(it.qty) || 0) * (Number(it.unit_price) || 0),
     0
   );
-  const subtotal  = lineSubtotal + install;
+  const overhead  = 200;
+  const gaz       = 100;
+  const container = opts.container ? 175 : 0;
+  const subtotal  = lineSubtotal + install + overhead + gaz + container;
   const tax_gst   = subtotal * 0.05;
   const tax_qst   = subtotal * 0.09975;
   const total_ttc = subtotal + tax_gst + tax_qst;
-  return { subtotal, tax_gst, tax_qst, total_ttc };
+  return { lineSubtotal, install, overhead, gaz, container, subtotal, tax_gst, tax_qst, total_ttc };
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
@@ -134,8 +158,10 @@ function isPorteSimple(item) {
 
 function LineItemRow({ item, index, onChange, onDelete, onToggleBC }) {
   const [expanded, setExpanded] = useState(false);
+  const [showCalc, setShowCalc] = useState(false);
   const auto = buildDescription(item);
   const total = (Number(item.qty) || 0) * (Number(item.unit_price) || 0);
+  const hasBreakdown = !!(item._cost || item._list_price);
 
   // Generate SVG sketch for this item
   const sketchSvg = itemSketchSvg(item);
@@ -182,6 +208,15 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC }) {
           </div>
           {dimLabel && (
             <div className="text-[10px] font-mono text-d-muted mt-0.5">{dimLabel}</div>
+          )}
+          {/* Wide-match warning badge */}
+          {item._match_status === 'partial_wide' && (
+            <div className="flex items-center gap-1 mt-1">
+              <AlertTriangle size={10} className="text-amber-400 flex-shrink-0" />
+              <span className="text-[9px] text-amber-400 font-medium">
+                À vérifier — match large (±5&quot;)
+              </span>
+            </div>
           )}
         </div>
 
@@ -249,7 +284,78 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC }) {
           />
         </label>
         <span className="text-xs font-semibold text-d-text ml-auto">{fmtQC(total)}</span>
+        {hasBreakdown && (
+          <button
+            type="button"
+            onClick={() => setShowCalc(v => !v)}
+            aria-label="Voir le détail du calcul de prix"
+            className="ml-1 text-[9px] text-d-primary/70 hover:text-d-primary flex items-center gap-0.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60 rounded px-1"
+          >
+            <Info size={10} />
+            Détail
+          </button>
+        )}
       </div>
+
+      {/* Per-item fee breakdown — collapsible */}
+      {hasBreakdown && showCalc && (() => {
+        const bd = computeItemBreakdown(item);
+        const urethaneCans = bd.perimeter > 0 ? Math.ceil(bd.perimeter / 150) : 0;
+        const calkingTubes = bd.perimeter > 0 ? Math.ceil(bd.perimeter / 120) : 0;
+        return (
+          <div className="mx-3 mb-3 rounded-lg border border-d-border/50 bg-[#1a1c22] p-3 text-[10px] font-mono text-d-muted space-y-0.5">
+            <div className="text-[9px] uppercase tracking-wider text-d-muted/50 mb-1.5">Détail du calcul</div>
+            {bd.listPrice > 0 && (
+              <div className="flex justify-between">
+                <span>Prix liste fournisseur</span>
+                <span className="text-d-text">{fmtQC(bd.listPrice)}</span>
+              </div>
+            )}
+            {bd.cost > 0 && (
+              <div className="flex justify-between">
+                <span>Coût (escompte 40%)</span>
+                <span className="text-d-text">{fmtQC(bd.cost)}</span>
+              </div>
+            )}
+            {bd.markup > 0 && (
+              <div className="flex justify-between">
+                <span>Markup 20%</span>
+                <span className="text-emerald-400/80">+{fmtQC(bd.markup)}</span>
+              </div>
+            )}
+            {bd.perimeter > 0 && (
+              <>
+                <div className="flex justify-between">
+                  <span>Linéaire ({bd.perimeter.toFixed(1)}&quot; × 3,00&nbsp;$)</span>
+                  <span className="text-emerald-400/80">+{fmtQC(bd.linear)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Urethane ({urethaneCans} cannette{urethaneCans > 1 ? 's' : ''})</span>
+                  <span className="text-emerald-400/80">+{fmtQC(bd.urethane)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Moulure ({bd.perimeter.toFixed(1)}&quot; × 0,04&nbsp;$)</span>
+                  <span className="text-emerald-400/80">+{fmtQC(bd.moulure)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Calking ({calkingTubes} tube{calkingTubes > 1 ? 's' : ''})</span>
+                  <span className="text-emerald-400/80">+{fmtQC(bd.calking)}</span>
+                </div>
+              </>
+            )}
+            <div className="border-t border-d-border/40 pt-1 flex justify-between font-semibold">
+              <span className="text-d-text">Prix unitaire client</span>
+              <span className="text-d-primary">{fmtQC(bd.unitPrice)}</span>
+            </div>
+            {bd.qty > 1 && (
+              <div className="flex justify-between text-d-muted/70">
+                <span>× {bd.qty} unités</span>
+                <span>{fmtQC(bd.unitPrice * bd.qty)}</span>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Expanded detail */}
       {expanded && (
@@ -474,6 +580,18 @@ export default function DevisEditor({ job, quote, onSaved }) {
     quote?.meta?.price_display_mode || 'unitaire'
   );
 
+  // Project fees toggles
+  const [containerOn,     setContainerOn]     = useState(!!(quote?.meta?.container_option));
+  const [sousTrOpen,      setSousTrOpen]      = useState(!!(quote?.meta?.sous_traitance_option));
+  const [employees,       setEmployees]       = useState(
+    Array.isArray(quote?.meta?.employees) ? quote.meta.employees : []
+  );
+
+  // Supplier upload state (for AwaitingSupplierCard)
+  const [supplierUploading, setSupplierUploading] = useState(false);
+  const [supplierResult,    setSupplierResult]    = useState(null);
+  const [supplierError,     setSupplierError]     = useState(null);
+
   // Defensive parse: line_items may arrive as JSON string from some write paths (backfill bug hardened)
   const parsedLineItems = (() => {
     const raw = quote?.line_items;
@@ -520,7 +638,23 @@ export default function DevisEditor({ job, quote, onSaved }) {
   const dataItems = items.filter(
     it => !(it.description || '').toLowerCase().startsWith('installation')
   );
-  const { subtotal, tax_gst, tax_qst, total_ttc } = computeTotals(dataItems, installCost);
+  const { lineSubtotal, install: installAmt, overhead, gaz, container, subtotal, tax_gst, tax_qst, total_ttc } =
+    computeTotals(dataItems, installCost, { container: containerOn });
+
+  // Compute internal expenses
+  const totalPerimeter = dataItems.reduce((s, it) => {
+    const w = parseFloat(it.dimensions?.width) || 0;
+    const h = parseFloat(it.dimensions?.height) || 0;
+    return s + 2 * (w + h);
+  }, 0);
+  const sousTrCost = sousTrOpen ? totalPerimeter * 1.5 : 0;
+  const employeesCost = employees.reduce((s, emp) => {
+    return s + (parseFloat(emp.rate) || 0) * (parseFloat(emp.hours) || 0);
+  }, 0);
+  const totalExpenses = sousTrCost + employeesCost;
+  const margeRevenue = subtotal;
+  const margeBrute = margeRevenue - totalExpenses;
+  const margePct = margeRevenue > 0 ? (margeBrute / margeRevenue * 100) : 0;
 
   // All line items to save = content items + install item if > 0
   function buildSaveItems() {
@@ -531,13 +665,13 @@ export default function DevisEditor({ job, quote, onSaved }) {
       total:      (Number(it.qty) || 0) * (Number(it.unit_price) || 0),
       description: buildDescription(it),
     }));
-    const installAmt = parseFloat(installCost) || 0;
-    if (installAmt > 0) {
+    const installAmtNum = parseFloat(installCost) || 0;
+    if (installAmtNum > 0) {
       clean.push({
-        description: 'Installation',
+        description: 'Installation, finition et moulures extérieures',
         qty: 1,
-        unit_price: installAmt,
-        total: installAmt,
+        unit_price: installAmtNum,
+        total: installAmtNum,
         type: 'Installation',
       });
     }
@@ -572,7 +706,12 @@ export default function DevisEditor({ job, quote, onSaved }) {
             tax_qst,
             total_ttc,
             notes,
-            meta: { price_display_mode: priceDisplayMode },
+            meta: {
+              price_display_mode:   priceDisplayMode,
+              container_option:     containerOn,
+              sous_traitance_option: sousTrOpen,
+              employees,
+            },
           }),
         }),
       ]);
@@ -592,7 +731,7 @@ export default function DevisEditor({ job, quote, onSaved }) {
       setSaving(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientName, clientPhone, clientEmail, clientAddress, jobStatus, items, installCost, notes, priceDisplayMode, subtotal, tax_gst, tax_qst, total_ttc, job.id, quote.id, onSaved]);
+  }, [clientName, clientPhone, clientEmail, clientAddress, jobStatus, items, installCost, notes, priceDisplayMode, containerOn, sousTrOpen, employees, subtotal, tax_gst, tax_qst, total_ttc, job.id, quote.id, onSaved]);
 
   // Ctrl+S keyboard shortcut
   useEffect(() => {
@@ -626,11 +765,54 @@ export default function DevisEditor({ job, quote, onSaved }) {
       await fetch(`/api/quotes/${quote.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ meta: { price_display_mode: newMode } }),
+        body: JSON.stringify({
+          meta: {
+            price_display_mode:   newMode,
+            container_option:     containerOn,
+            sous_traitance_option: sousTrOpen,
+            employees,
+          },
+        }),
       });
       setPreviewKey(Date.now());
     } catch {
       // non-fatal — will be saved on next full save
+    }
+  }
+
+  // Supplier upload (used by the AwaitingSupplierCard inside Devis tab)
+  async function handleSupplierFile(file) {
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      setSupplierError('Seuls les fichiers PDF sont acceptés.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setSupplierError('Fichier trop volumineux (max 10 MB).');
+      return;
+    }
+    setSupplierUploading(true);
+    setSupplierError(null);
+    setSupplierResult(null);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fetch(`/api/jobs/${job.id}/apply-supplier-pricing`, {
+        method: 'POST',
+        body: form,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSupplierError(data.error || 'Erreur serveur');
+      } else {
+        setSupplierResult(data);
+        // Reload the editor so line items reflect new prices
+        if (onSaved) onSaved();
+      }
+    } catch {
+      setSupplierError('Erreur réseau — réessaie.');
+    } finally {
+      setSupplierUploading(false);
     }
   }
 
@@ -689,6 +871,19 @@ export default function DevisEditor({ job, quote, onSaved }) {
     } catch {
       // Non-fatal — item state is updated in UI, will persist on next full save
     }
+  }
+
+  function addEmployee() {
+    markDirty();
+    setEmployees(prev => [...prev, { name: '', rate: '', hours: '' }]);
+  }
+  function updateEmployee(idx, field, value) {
+    markDirty();
+    setEmployees(prev => prev.map((e, i) => i === idx ? { ...e, [field]: value } : e));
+  }
+  function removeEmployee(idx) {
+    markDirty();
+    setEmployees(prev => prev.filter((_, i) => i !== idx));
   }
 
   function handleCopyLink() {
@@ -779,6 +974,106 @@ export default function DevisEditor({ job, quote, onSaved }) {
 
         {/* ── LEFT PANE — form ── */}
         <div className="lg:w-[55%] flex flex-col gap-4 overflow-y-auto lg:max-h-[80vh] pr-1">
+
+          {/* ── SOUMISSION UPLOAD CARD — visible only when awaiting_supplier ── */}
+          {quote.status === 'awaiting_supplier' && !supplierResult && (
+            <section className="rounded-xl border-2 border-dashed border-amber-500/40 bg-amber-500/5 p-4">
+              <div className="flex items-start gap-3 mb-3">
+                <Upload size={20} className="text-amber-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-d-text">
+                    En attente de la soumission fournisseur
+                  </p>
+                  <p className="text-xs text-d-muted mt-0.5">
+                    Téléverse le PDF Royalty — le parser détectera les prix et appliquera la formule automatiquement à chaque article.
+                  </p>
+                </div>
+              </div>
+              <label
+                onDragOver={e => { e.preventDefault(); }}
+                onDrop={e => {
+                  e.preventDefault();
+                  const f = e.dataTransfer.files?.[0];
+                  if (f) handleSupplierFile(f);
+                }}
+                className={`flex flex-col items-center justify-center gap-2 p-5 rounded-xl border-2 border-dashed cursor-pointer transition-colors
+                  border-amber-500/30 hover:border-amber-500/60 hover:bg-amber-500/5
+                  ${supplierUploading ? 'pointer-events-none opacity-60' : ''}`}
+              >
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  className="sr-only"
+                  disabled={supplierUploading}
+                  onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (f) handleSupplierFile(f);
+                    e.target.value = '';
+                  }}
+                />
+                {supplierUploading ? (
+                  <>
+                    <div className="w-7 h-7 border-2 border-amber-500/40 border-t-amber-400 rounded-full animate-spin" />
+                    <p className="text-xs text-amber-400">Analyse en cours...</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload size={22} className="text-amber-400/70" />
+                    <p className="text-sm font-medium text-d-text">Glisser la soumission Royalty ici</p>
+                    <p className="text-xs text-d-muted">ou cliquer pour choisir un PDF · max 10 MB</p>
+                  </>
+                )}
+              </label>
+              {supplierError && (
+                <div className="mt-2 rounded-xl bg-rose-500/10 border border-rose-500/30 px-3 py-2 text-xs text-rose-400">
+                  {supplierError}
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* ── UPLOAD RESULT SUMMARY ── */}
+          {supplierResult && (
+            <section className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+              <p className="text-sm font-semibold text-emerald-400 mb-2">Soumission appliquée</p>
+              <div className="space-y-1 text-xs mb-3">
+                <div className="flex justify-between">
+                  <span className="text-d-muted">Articles matchés</span>
+                  <span className="text-emerald-400 font-medium">{supplierResult.matched}</span>
+                </div>
+                {supplierResult.unmatched > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-d-muted">Sans prix</span>
+                    <span className="text-amber-400 font-medium">{supplierResult.unmatched}</span>
+                  </div>
+                )}
+                {supplierResult.partial_matches > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-d-muted">Matchs à vérifier</span>
+                    <span className="text-amber-400 font-medium">{supplierResult.partial_matches}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t border-emerald-500/20 pt-1">
+                  <span className="text-d-muted">Nouveau TTC</span>
+                  <span className="text-d-text font-semibold">
+                    {Number(supplierResult.total_ttc).toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}&nbsp;$
+                  </span>
+                </div>
+              </div>
+              {(supplierResult.unmatched > 0 || supplierResult.partial_matches > 0) && (
+                <p className="text-xs text-amber-400 mb-2">
+                  Vérifier les articles marqués « À vérifier » ci-dessous.
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => setSupplierResult(null)}
+                className="text-xs text-d-muted hover:text-d-text transition"
+              >
+                Masquer
+              </button>
+            </section>
+          )}
 
           {/* CLIENT */}
           <section className="rounded-xl border border-d-border bg-d-surface/30 p-4">
@@ -927,24 +1222,176 @@ export default function DevisEditor({ job, quote, onSaved }) {
             />
           </section>
 
-          {/* TOTALS summary */}
-          <section className="rounded-xl border border-d-border bg-d-surface/30 px-4 py-3">
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex justify-between py-1">
-                <span className="text-d-muted">Sous-total</span>
-                <span className="text-d-text font-medium">{fmtQC(subtotal)}</span>
+          {/* ── FRAIS PROJET ── */}
+          <section className="rounded-xl border border-d-border bg-d-surface/30 p-4">
+            <p className="text-[10px] font-semibold text-d-muted uppercase tracking-wider mb-3">Frais projet</p>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between items-center py-1 border-b border-d-border/30">
+                <span className="text-d-muted">Overhead fixe</span>
+                <span className="text-d-text font-mono">{fmtQC(200)}</span>
               </div>
-              <div className="flex justify-between py-1">
+              <div className="flex justify-between items-center py-1 border-b border-d-border/30">
+                <span className="text-d-muted">Gaz / visite</span>
+                <span className="text-d-text font-mono">{fmtQC(100)}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-d-border/30">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={containerOn}
+                    onChange={e => { setContainerOn(e.target.checked); markDirty(); }}
+                    aria-label="Activer conteneur à déchets"
+                    className="w-3.5 h-3.5 rounded accent-d-primary"
+                  />
+                  <span className="text-d-muted">Conteneur à déchets</span>
+                </label>
+                <span className={`font-mono ${containerOn ? 'text-d-text' : 'text-d-muted/40'}`}>
+                  {fmtQC(175)}
+                </span>
+              </div>
+            </div>
+
+            {/* Totals breakdown */}
+            <div className="mt-3 pt-3 border-t border-d-border/50 space-y-1 text-xs">
+              <div className="flex justify-between">
+                <span className="text-d-muted">Sous-total articles</span>
+                <span className="text-d-text font-mono">{fmtQC(lineSubtotal + installAmt)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-d-muted">+ Overhead + Gaz{containerOn ? ' + Container' : ''}</span>
+                <span className="text-d-text font-mono">{fmtQC(overhead + gaz + container)}</span>
+              </div>
+              <div className="flex justify-between font-semibold border-t border-d-border/50 pt-1">
+                <span className="text-d-muted">Sous-total HT</span>
+                <span className="text-d-text font-mono">{fmtQC(subtotal)}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-d-muted">TPS (5 %)</span>
-                <span className="text-d-text">{fmtQC(tax_gst)}</span>
+                <span className="text-d-text font-mono">{fmtQC(tax_gst)}</span>
               </div>
-              <div className="flex justify-between py-1">
+              <div className="flex justify-between">
                 <span className="text-d-muted">TVQ (9,975 %)</span>
-                <span className="text-d-text">{fmtQC(tax_qst)}</span>
+                <span className="text-d-text font-mono">{fmtQC(tax_qst)}</span>
               </div>
-              <div className="flex justify-between py-1 font-semibold">
-                <span className="text-d-text">Total TTC</span>
-                <span className="text-d-primary">{fmtQC(total_ttc)}</span>
+              <div className="flex justify-between font-bold text-sm pt-1 border-t border-d-border/50">
+                <span className="text-d-text">TOTAL TTC</span>
+                <span className="text-d-primary font-mono">{fmtQC(total_ttc)}</span>
+              </div>
+            </div>
+          </section>
+
+          {/* ── INTERNE (pas sur devis client) ── */}
+          <section className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+            <p className="text-[10px] font-semibold text-amber-400/80 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <Info size={11} /> Interne — pas sur le devis client
+            </p>
+
+            {/* Sous-traitance toggle */}
+            <div className="flex items-center justify-between mb-3">
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-d-muted">
+                <input
+                  type="checkbox"
+                  checked={sousTrOpen}
+                  onChange={e => { setSousTrOpen(e.target.checked); markDirty(); }}
+                  aria-label="Activer coût de sous-traitance"
+                  className="w-3.5 h-3.5 rounded accent-amber-500"
+                />
+                <span>
+                  Sous-traitance
+                  {totalPerimeter > 0 && (
+                    <span className="ml-1 text-d-muted/60">
+                      ({totalPerimeter.toFixed(0)}&quot; × 1,50&nbsp;$)
+                    </span>
+                  )}
+                </span>
+              </label>
+              <span className={`text-xs font-mono ${sousTrOpen ? 'text-amber-400' : 'text-d-muted/40'}`}>
+                {fmtQC(sousTrCost)}
+              </span>
+            </div>
+
+            {/* Employés */}
+            <div className="mb-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-d-muted flex items-center gap-1">
+                  <Users size={11} /> Employés
+                </span>
+                <button
+                  type="button"
+                  onClick={addEmployee}
+                  aria-label="Ajouter un employé"
+                  className="text-[10px] text-d-primary/70 hover:text-d-primary flex items-center gap-0.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60 rounded px-1"
+                >
+                  <Plus size={10} /> Ajouter
+                </button>
+              </div>
+              {employees.length === 0 ? (
+                <p className="text-[10px] text-d-muted/50 italic">Aucun employé ajouté.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {employees.map((emp, idx) => (
+                    <div key={idx} className="flex items-center gap-1.5 text-xs">
+                      <input
+                        type="text"
+                        value={emp.name}
+                        onChange={e => updateEmployee(idx, 'name', e.target.value)}
+                        placeholder="Nom"
+                        aria-label={`Nom employé ${idx + 1}`}
+                        className="flex-1 px-2 py-1 rounded-lg border border-d-border/60 bg-d-surface text-d-text text-xs placeholder:text-d-muted/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+                      />
+                      <input
+                        type="number"
+                        value={emp.rate}
+                        onChange={e => updateEmployee(idx, 'rate', e.target.value)}
+                        placeholder="$/h"
+                        aria-label={`Taux employé ${idx + 1}`}
+                        min="0"
+                        step="0.5"
+                        className="w-16 px-2 py-1 rounded-lg border border-d-border/60 bg-d-surface text-d-text text-xs text-right placeholder:text-d-muted/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+                      />
+                      <input
+                        type="number"
+                        value={emp.hours}
+                        onChange={e => updateEmployee(idx, 'hours', e.target.value)}
+                        placeholder="h"
+                        aria-label={`Heures employé ${idx + 1}`}
+                        min="0"
+                        step="0.5"
+                        className="w-14 px-2 py-1 rounded-lg border border-d-border/60 bg-d-surface text-d-text text-xs text-right placeholder:text-d-muted/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+                      />
+                      <span className="w-20 text-right font-mono text-[10px] text-d-muted">
+                        {fmtQC((parseFloat(emp.rate) || 0) * (parseFloat(emp.hours) || 0))}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeEmployee(idx)}
+                        aria-label={`Supprimer employé ${idx + 1}`}
+                        className="text-rose-400/60 hover:text-rose-400 flex-shrink-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-400/60 rounded p-0.5"
+                      >
+                        <X size={11} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Marge brute summary */}
+            <div className="pt-3 border-t border-amber-500/20 space-y-1 text-xs">
+              <div className="flex justify-between">
+                <span className="text-d-muted">Total dépenses internes</span>
+                <span className="text-rose-400 font-mono">{fmtQC(totalExpenses)}</span>
+              </div>
+              <div className="flex justify-between font-semibold">
+                <span className="text-d-muted">
+                  Marge brute
+                  <span className="font-normal ml-1 text-d-muted/60">
+                    ({margePct >= 0 ? '+' : ''}{margePct.toFixed(1)}%)
+                  </span>
+                </span>
+                <span className={`font-mono ${margeBrute >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {fmtQC(margeBrute)}
+                </span>
               </div>
             </div>
           </section>

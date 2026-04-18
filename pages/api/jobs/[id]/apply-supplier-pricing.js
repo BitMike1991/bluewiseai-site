@@ -17,7 +17,7 @@ import pdfParse from 'pdf-parse';
 import { getAuthContext } from '../../../../lib/supabaseServer';
 import { parseDocuments } from '../../../../lib/devis/parser';
 import { matchPrices } from '../../../../lib/devis/matcher';
-import { computeClientPrice } from '../../../../lib/devis/pricing';
+import { computeClientPrice, computeProjectTotals, DEFAULT_PRICING } from '../../../../lib/devis/pricing';
 
 export const config = { api: { bodyParser: false } };
 
@@ -156,8 +156,11 @@ export default async function handler(req, res) {
       .eq('id', customerId)
       .single();
     const hardcodedConfig = customer?.quote_config?.hardcoded_pricing || null;
+    const customerPricing = customer?.quote_config?.pricing || {};
 
-    const pricingParams = { escomptePct, markupPct: 20, perLinearInch: 3, minPerWindow: 400 };
+    // Spread DEFAULT_PRICING so supply fees (urethane/moulure/calking) are always included.
+    // Customer-specific overrides win if present.
+    const pricingParams = { ...DEFAULT_PRICING, ...customerPricing, escomptePct };
 
     let matched = 0;
     let unmatched = 0;
@@ -170,7 +173,7 @@ export default async function handler(req, res) {
         return { ...li, unit_price: null, total: null, _match_status: 'unmatched' };
       }
 
-      const { clientUnit, clientTotal } = computeClientPrice(
+      const cost_detail = computeClientPrice(
         {
           unitPrice: enriched.unitPrice,
           dimensions: enriched.dimensions || li.dimensions,
@@ -184,10 +187,15 @@ export default async function handler(req, res) {
         pricingParams,
         hardcodedConfig
       );
+      const { clientUnit, clientTotal, cost } = cost_detail;
 
-      // Flag partial/dims-only matches for UI warning
-      const isPartial = enriched.soumissionItemNumber == null;
-      if (isPartial) partialMatches.push(i);
+      // Flag partial/dims-only/wide matches for UI warning
+      const matchStatus = enriched.match_confidence === 'partial_wide'
+        ? 'partial_wide'
+        : enriched.soumissionItemNumber == null
+          ? 'partial'
+          : 'matched';
+      if (matchStatus !== 'matched') partialMatches.push(i);
 
       matched++;
       return {
@@ -196,32 +204,50 @@ export default async function handler(req, res) {
         total: clientTotal,
         _list_price: enriched.unitPrice,
         _soumission_item: enriched.soumissionItemNumber,
-        _match_status: isPartial ? 'partial' : 'matched',
+        _match_status: matchStatus,
+        _cost: cost,
+        _perimeter: cost_detail?._perimeter,
+        _urethane: cost_detail?._urethane,
+        _moulure: cost_detail?._moulure,
+        _calking: cost_detail?._calking,
       };
     });
 
-    // Compute totals
-    const subtotal = updatedLineItems.reduce((s, li) => s + (li.total || 0), 0);
-    const tax_gst = subtotal * 0.05;
-    const tax_qst = subtotal * 0.09975;
-    const total_ttc = subtotal + tax_gst + tax_qst;
+    // Determine if all items are priced
+    const allPriced = updatedLineItems.every(
+      (li) => li.unit_price != null && li.unit_price > 0
+    );
+
+    // Compute project-level totals (overhead + gaz + optional container)
+    const containerOn = !!(quote.meta?.container_option);
+    const projectTotals = computeProjectTotals(
+      updatedLineItems.map(li => ({ total: li.total || 0 })),
+      pricingParams,
+      { container: containerOn }
+    );
+
+    const nowIso = new Date().toISOString();
 
     // Update quote
     const { error: quoteUpdateError } = await supabase
       .from('quotes')
       .update({
         line_items: updatedLineItems,
-        subtotal: Math.round(subtotal * 100) / 100,
-        tax_gst: Math.round(tax_gst * 100) / 100,
-        tax_qst: Math.round(tax_qst * 100) / 100,
-        total_ttc: Math.round(total_ttc * 100) / 100,
-        status: 'ready',
-        updated_at: new Date().toISOString(),
+        subtotal: projectTotals.subtotal,
+        tax_gst: projectTotals.tax_gst,
+        tax_qst: projectTotals.tax_qst,
+        total_ttc: projectTotals.total_ttc,
+        status: allPriced ? 'ready' : quote.status,
+        updated_at: nowIso,
         meta: {
+          ...(quote.meta || {}),
           soumission_number: soumission.soumissionNumber,
           soumission_date: soumission.date,
           escompte_pct: escomptePct,
-          applied_at: new Date().toISOString(),
+          applied_at: nowIso,
+          overhead: projectTotals.overhead,
+          gaz: projectTotals.gaz,
+          container: projectTotals.container,
         },
       })
       .eq('id', quote.id)
@@ -232,13 +258,63 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Erreur mise à jour du devis' });
     }
 
-    // Update job status + quote_amount
+    // Build expense rows per matched item + project fees
+    const expenseRows = [];
+    updatedLineItems.forEach((li) => {
+      if (li._cost > 0 && li._match_status !== 'unmatched') {
+        const qty = li.qty || 1;
+        expenseRows.push({
+          customer_id: customerId,
+          job_id: parseInt(jobId, 10),
+          category: 'materiel_fournisseur',
+          description: `[${li.type || 'Article'}] ${li.model || ''} ${qty}x`.replace(/\s+/g, ' ').trim(),
+          total: Math.round(li._cost * qty * 100) / 100,
+          subtotal: Math.round(li._cost * qty * 100) / 100,
+          source: 'soumission_fournisseur',
+          source_ref: soumission.soumissionNumber || null,
+          vendor: soumission.fournisseur || 'Royalty',
+          paid_at: nowIso.slice(0, 10),
+        });
+      }
+    });
+
+    // Fixed project expenses
+    expenseRows.push({
+      customer_id: customerId,
+      job_id: parseInt(jobId, 10),
+      category: 'overhead',
+      description: 'Frais généraux projet',
+      total: projectTotals.overhead,
+      subtotal: projectTotals.overhead,
+      source: 'soumission_fournisseur',
+      paid_at: nowIso.slice(0, 10),
+    });
+    expenseRows.push({
+      customer_id: customerId,
+      job_id: parseInt(jobId, 10),
+      category: 'gaz_carburant',
+      description: 'Gaz / carburant visite',
+      total: projectTotals.gaz,
+      subtotal: projectTotals.gaz,
+      source: 'soumission_fournisseur',
+      paid_at: nowIso.slice(0, 10),
+    });
+
+    if (expenseRows.length > 0) {
+      const { error: expErr } = await supabase.from('expenses').insert(expenseRows);
+      if (expErr) {
+        // Non-fatal — prices applied, accounting rows failed
+        console.error('[apply-supplier-pricing] expense insert error', expErr);
+      }
+    }
+
+    // Update job status + quote_amount (only flip to awaiting_client_approval if all priced)
     await supabase
       .from('jobs')
       .update({
-        status: 'awaiting_client_approval',
-        quote_amount: Math.round(subtotal * 100) / 100,
-        updated_at: new Date().toISOString(),
+        status: allPriced ? 'awaiting_client_approval' : job.status,
+        quote_amount: projectTotals.subtotal,
+        updated_at: nowIso,
       })
       .eq('id', jobId)
       .eq('customer_id', customerId);
@@ -256,8 +332,12 @@ export default async function handler(req, res) {
           partial_matches: partialMatches.length,
           escompte_pct: escomptePct,
           soumission_number: soumission.soumissionNumber,
-          subtotal: Math.round(subtotal * 100) / 100,
-          total_ttc: Math.round(total_ttc * 100) / 100,
+          subtotal: projectTotals.subtotal,
+          total_ttc: projectTotals.total_ttc,
+          overhead: projectTotals.overhead,
+          gaz: projectTotals.gaz,
+          container: projectTotals.container,
+          all_priced: allPriced,
         },
       });
 
@@ -266,10 +346,14 @@ export default async function handler(req, res) {
       matched,
       unmatched,
       partial_matches: partialMatches.length,
-      subtotal: Math.round(subtotal * 100) / 100,
-      tax_gst: Math.round(tax_gst * 100) / 100,
-      tax_qst: Math.round(tax_qst * 100) / 100,
-      total_ttc: Math.round(total_ttc * 100) / 100,
+      all_priced: allPriced,
+      subtotal: projectTotals.subtotal,
+      tax_gst: projectTotals.tax_gst,
+      tax_qst: projectTotals.tax_qst,
+      total_ttc: projectTotals.total_ttc,
+      overhead: projectTotals.overhead,
+      gaz: projectTotals.gaz,
+      container: projectTotals.container,
       escompte_pct: escomptePct,
       items_preview: updatedLineItems.slice(0, 5),
     });

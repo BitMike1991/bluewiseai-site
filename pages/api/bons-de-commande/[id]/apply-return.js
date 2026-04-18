@@ -21,7 +21,7 @@ import pdfParse from 'pdf-parse';
 import { getAuthContext } from '../../../../lib/supabaseServer';
 import { parseDocuments } from '../../../../lib/devis/parser';
 import { matchPrices } from '../../../../lib/devis/matcher';
-import { computeClientPrice } from '../../../../lib/devis/pricing';
+import { computeClientPrice, DEFAULT_PRICING } from '../../../../lib/devis/pricing';
 
 export const config = { api: { bodyParser: false } };
 
@@ -137,7 +137,9 @@ export default async function handler(req, res) {
   const hardcodedConfig = customer?.quote_config?.hardcoded_pricing || null;
 
   const escomptePct = soumission.escomptePct || 0;
-  const pricingParams = { escomptePct, markupPct: 20, perLinearInch: 3, minPerWindow: 400 };
+  const customerPricing = customer?.quote_config?.pricing || {};
+  // Spread DEFAULT_PRICING so supply fees (urethane/moulure/calking) are always included.
+  const pricingParams = { ...DEFAULT_PRICING, ...customerPricing, escomptePct };
 
   // ── 4. Collect unique quote_ids from item_refs ────────────────────────────
   const quoteIdSet = new Set(itemRefs.map((r) => r.quote_id).filter(Boolean));
