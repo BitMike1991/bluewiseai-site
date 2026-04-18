@@ -1,7 +1,10 @@
 // Universal Contract Generation API — Multi-tenant
 // Called by n8n when a quote is accepted → generates full contract HTML
 // Fully dynamic via quote_config from the customers table
+// Template routing: config.branding.html_template === 'pur' → PÜR specialized template
+//                   otherwise → generic blue template (BW / SP)
 import { getSupabaseServerClient } from '../../../../lib/supabaseServer';
+import { generatePurContractHtml } from '../../../../lib/contract-templates/pur.js';
 
 const supabase = getSupabaseServerClient();
 
@@ -1011,11 +1014,11 @@ export default async function handler(req, res) {
     const contract_number = generateContractNumber(prefix);
     const date = new Date().toISOString().split('T')[0];
 
-    // ── Generate HTML ──
-    const html = generateContractHtml(
-      { contract_number, date, ...contractData },
-      config
-    );
+    // ── Generate HTML — route to PÜR template for customer_id 9 ──
+    const isPur = config.branding?.html_template === 'pur';
+    const html = isPur
+      ? generatePurContractHtml({ contract_number, date, ...contractData }, config)
+      : generateContractHtml({ contract_number, date, ...contractData }, config);
 
     const filename = `${prefix}-contrat-${contract_number.split('-C-')[1] || contract_number}.html`;
 
