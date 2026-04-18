@@ -44,35 +44,31 @@ const BrandingContext = createContext({
   loading: true,
 });
 
-// v2 — busted after P9 to force refetch of enabled_hub_tools on existing sessions
-const HUB_CACHE_KEY = "bw-hub-tools-cache-v2";
-
-function loadCachedHubTools() {
-  if (typeof window === "undefined") return null;
+// NO CACHE for hub tools — small payload, must reflect live DB state
+// Cache caused stale data after schema changes (Mikael's "Créer devis" bug)
+function loadCachedHubTools() { return null; }
+function saveHubToolsCache() {}
+function clearHubToolsCache() {
+  if (typeof window === "undefined") return;
   try {
-    const raw = localStorage.getItem(HUB_CACHE_KEY);
-    if (!raw) return null;
-    const { tools, ts } = JSON.parse(raw);
-    if (Date.now() - ts > CACHE_TTL) return null;
-    return tools;
-  } catch { return null; }
-}
-
-function saveHubToolsCache(tools) {
-  try {
-    localStorage.setItem(HUB_CACHE_KEY, JSON.stringify({ tools, ts: Date.now() }));
+    localStorage.removeItem("bw-hub-tools-cache");
+    localStorage.removeItem("bw-hub-tools-cache-v2");
   } catch {}
 }
 
 export function BrandingProvider({ children }) {
+  // Clear any legacy hub_tools cache on mount (one-time cleanup)
+  if (typeof window !== "undefined") {
+    clearHubToolsCache();
+  }
   const [branding, setBranding] = useState(() => loadCached() || DEFAULT_BRANDING);
-  const [enabledHubTools, setEnabledHubTools] = useState(() => loadCachedHubTools() || []);
+  const [enabledHubTools, setEnabledHubTools] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchBranding() {
       try {
-        const res = await fetch("/api/settings/branding");
+        const res = await fetch("/api/settings/branding", { cache: "no-store" });
         if (res.ok) {
           const data = await res.json();
           const fresh = data.branding || DEFAULT_BRANDING;
@@ -80,10 +76,16 @@ export function BrandingProvider({ children }) {
           setBranding(fresh);
           setEnabledHubTools(tools);
           saveCache(fresh);
-          saveHubToolsCache(tools);
+          // Debug: expose on window for Mikael to inspect
+          if (typeof window !== "undefined") {
+            window.__bwHubTools = tools;
+            window.__bwBranding = fresh;
+          }
+        } else {
+          console.warn("[BrandingContext] /api/settings/branding returned", res.status);
         }
-      } catch {
-        // Fail gracefully — keep cached or defaults
+      } catch (err) {
+        console.error("[BrandingContext] fetch failed:", err);
       } finally {
         setLoading(false);
       }
