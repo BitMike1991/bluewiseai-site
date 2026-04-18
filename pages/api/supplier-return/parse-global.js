@@ -16,7 +16,11 @@ import formidable from 'formidable';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import pdfParse from 'pdf-parse';
+// Import pdf-parse lib directly to avoid the broken index.js which runs
+// readFileSync('./test/data/05-versions-space.pdf') at module load time —
+// that path doesn't exist in Vercel's serverless environment and causes
+// "The string did not match the expected pattern" crash on every upload.
+import pdfParse from 'pdf-parse/lib/pdf-parse.js';
 import { getAuthContext } from '../../../lib/supabaseServer';
 import { parseDocuments } from '../../../lib/devis/parser';
 import { parseFractionalInch, modelFamily } from '../../../lib/devis/matcher';
