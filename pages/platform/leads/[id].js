@@ -7,7 +7,7 @@ import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
 import { useBranding } from "../../../src/components/dashboard/BrandingContext";
 import { getBrandingStyles, getStatusBadgeStyle } from "../../../src/components/dashboard/brandingUtils";
 import { useToast } from "../../../src/components/ui/ToastContext";
-import { Pencil, Trash2, X, Check, Sparkles, MessageCircle, Info, ListTodo, Phone, Mail } from "lucide-react";
+import { Pencil, Trash2, X, Check, Sparkles, MessageCircle, Info, ListTodo, Phone, Mail, FileText } from "lucide-react";
 
 function formatDate(dateString) {
   if (!dateString) return "\u2014";
@@ -509,8 +509,9 @@ function LeadDetailsCard({ lead, leadId, onUpdated, onDeleted }) {
 export default function LeadDetailPage() {
   const router = useRouter();
   const { id } = router.query;
-  const { branding } = useBranding();
+  const { branding, enabledHubTools } = useBranding();
   const styles = getBrandingStyles(branding);
+  const showDevisButton = Array.isArray(enabledHubTools) && enabledHubTools.includes('commande');
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1013,6 +1014,19 @@ export default function LeadDetailPage() {
                   {callLoading ? "Appel en cours..." : "Appeler"}
                 </button>
 
+                {showDevisButton && id && (
+                  <a
+                    href={`https://hub.purconstruction.com/hub/commande?prefill=${id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Créer un devis pour ce lead dans le hub PUR"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-d-primary/50 bg-d-primary/10 text-d-primary hover:bg-d-primary/20 transition focus:outline-none focus:ring-2 focus:ring-d-primary/50"
+                  >
+                    <FileText className="h-3.5 w-3.5" aria-hidden="true" />
+                    Créer un devis
+                  </a>
+                )}
+
               </div>
             </div>
 
@@ -1270,6 +1284,19 @@ export default function LeadDetailPage() {
             <Mail className="w-5 h-5" />
             <span>Email</span>
           </button>
+          {showDevisButton && id && (
+            <a
+              href={`https://hub.purconstruction.com/hub/commande?prefill=${id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Créer un devis pour ce lead dans le hub PUR"
+              className="flex-1 flex flex-col items-center justify-center gap-1 min-h-[52px] py-2.5 rounded-xl text-[11px] font-semibold transition-all duration-200 active:scale-95 border border-d-primary/40 bg-d-primary/10 text-d-primary focus:outline-none focus:ring-2 focus:ring-d-primary/50"
+              style={{ touchAction: "manipulation" }}
+            >
+              <FileText className="w-5 h-5" aria-hidden="true" />
+              <span>Devis</span>
+            </a>
+          )}
         </div>
 
         {/* Send Modal */}
