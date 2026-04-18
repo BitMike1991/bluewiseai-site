@@ -18,6 +18,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { STATUS_META, STATUS_ORDER } from '../../../lib/status-config';
+import { itemSketchSvg } from '../../../lib/quote-templates/pur.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -122,6 +123,16 @@ function LineItemRow({ item, index, onChange, onDelete }) {
   const auto = buildDescription(item);
   const total = (Number(item.qty) || 0) * (Number(item.unit_price) || 0);
 
+  // Generate SVG sketch for this item
+  const sketchSvg = itemSketchSvg(item);
+
+  // Build header label: type + model + ouvrant badge
+  const typeLabel = item.type || 'Article';
+  const modelLabel = item.model ? ` ${item.model}` : '';
+  const dimLabel = (item.dimensions?.width && item.dimensions?.height)
+    ? `${item.dimensions.width}" × ${item.dimensions.height}"`
+    : null;
+
   function update(field, value) {
     onChange(index, { ...item, [field]: value });
   }
@@ -132,54 +143,82 @@ function LineItemRow({ item, index, onChange, onDelete }) {
 
   return (
     <div className="rounded-xl border border-d-border bg-d-surface/30 overflow-hidden">
-      {/* Collapsed row */}
-      <div className="flex items-center gap-2 px-3 py-2.5">
-        <button
-          type="button"
-          onClick={() => setExpanded(v => !v)}
-          aria-label={expanded ? 'Réduire' : 'Développer'}
-          className="flex-shrink-0 text-d-muted hover:text-d-text transition focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60 rounded"
-        >
-          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </button>
+      {/* Item header with SVG preview */}
+      <div className="flex gap-3 px-3 pt-3 pb-2">
+        {/* SVG preview box — 60×60 */}
+        <div
+          className="flex-shrink-0 rounded border border-d-border/60 bg-[#F2F5F0] flex items-center justify-center overflow-hidden"
+          style={{ width: 60, height: 60 }}
+          aria-hidden="true"
+          dangerouslySetInnerHTML={{ __html: sketchSvg }}
+        />
 
-        <span className="flex-1 text-xs text-d-text truncate" title={auto}>{auto}</span>
+        {/* Item identity */}
+        <div className="flex-1 min-w-0">
+          <div className="font-mono text-[10px] font-semibold text-d-muted mb-0.5">
+            Item #{index + 1}
+          </div>
+          <div className="text-xs font-semibold text-d-text truncate">
+            {typeLabel}{modelLabel}
+            {item.ouvrant && (
+              <span className="ml-1.5 inline-block px-1.5 py-0.5 rounded bg-[#E9EFE7] text-[9px] font-mono font-bold text-[#2A2C35]">
+                {item.ouvrant}
+              </span>
+            )}
+          </div>
+          {dimLabel && (
+            <div className="text-[10px] font-mono text-d-muted mt-0.5">{dimLabel}</div>
+          )}
+        </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <label className="flex items-center gap-1 text-xs text-d-muted">
-            Qté
-            <input
-              type="number"
-              min="1"
-              step="1"
-              value={item.qty ?? 1}
-              onChange={e => update('qty', e.target.value)}
-              aria-label={`Quantité article ${index + 1}`}
-              className="w-14 px-1.5 py-0.5 rounded-lg border border-d-border bg-d-surface text-d-text text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
-            />
-          </label>
-          <label className="flex items-center gap-1 text-xs text-d-muted">
-            Prix
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={item.unit_price ?? 0}
-              onChange={e => update('unit_price', e.target.value)}
-              aria-label={`Prix unitaire article ${index + 1}`}
-              className="w-20 px-1.5 py-0.5 rounded-lg border border-d-border bg-d-surface text-d-text text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
-            />
-          </label>
-          <span className="text-xs font-semibold text-d-text w-20 text-right">{fmtQC(total)}</span>
+        {/* Expand + delete */}
+        <div className="flex items-start gap-1.5 flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setExpanded(v => !v)}
+            aria-label={expanded ? 'Réduire' : 'Développer'}
+            className="text-d-muted hover:text-d-text transition focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60 rounded p-0.5"
+          >
+            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
           <button
             type="button"
             onClick={() => onDelete(index)}
             aria-label={`Supprimer l'article ${index + 1}`}
-            className="text-rose-400/60 hover:text-rose-400 transition flex-shrink-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-400/60 rounded"
+            className="text-rose-400/60 hover:text-rose-400 transition flex-shrink-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-400/60 rounded p-0.5"
           >
             <Trash2 size={13} />
           </button>
         </div>
+      </div>
+
+      {/* Inline qty/price summary — always visible */}
+      <div className="flex items-center gap-2 px-3 pb-2.5">
+        <label className="flex items-center gap-1 text-xs text-d-muted">
+          Qté
+          <input
+            type="number"
+            min="1"
+            step="1"
+            value={item.qty ?? 1}
+            onChange={e => update('qty', e.target.value)}
+            aria-label={`Quantité article ${index + 1}`}
+            className="w-14 px-1.5 py-0.5 rounded-lg border border-d-border bg-d-surface text-d-text text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+          />
+        </label>
+        <label className="flex items-center gap-1 text-xs text-d-muted">
+          Prix
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={item.unit_price ?? 0}
+            onChange={e => update('unit_price', e.target.value)}
+            aria-label={`Prix unitaire article ${index + 1}`}
+            className="w-20 px-1.5 py-0.5 rounded-lg border border-d-border bg-d-surface text-d-text text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+          />
+        </label>
+        <span className="text-xs font-semibold text-d-text ml-auto">{fmtQC(total)}</span>
       </div>
 
       {/* Expanded detail */}
