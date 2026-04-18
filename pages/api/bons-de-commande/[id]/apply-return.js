@@ -377,13 +377,10 @@ export default async function handler(req, res) {
       console.error('[apply-return] quote update error', quoteUpdateErr);
     }
 
-    // Flip job status if quote is now ready
+    // DO NOT auto-flip job.status. quote.status='ready' is enough — job stays at
+    // its current state (usually 'measuring'). Real flip to 'awaiting_client_approval'
+    // happens when Jérémy clicks "Envoyer au client".
     if (allPriced && quote.job_id) {
-      await supabase
-        .from('jobs')
-        .update({ status: 'awaiting_client_approval', updated_at: nowIso })
-        .eq('id', quote.job_id)
-        .eq('customer_id', customerId);
       jobsAffected.add(quote.job_id);
     }
 

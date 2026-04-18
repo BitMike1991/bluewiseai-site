@@ -308,11 +308,12 @@ export default async function handler(req, res) {
       }
     }
 
-    // Update job status + quote_amount (only flip to awaiting_client_approval if all priced)
+    // Update job quote_amount. DO NOT flip job.status here — "awaiting_client_approval"
+    // means client received devis. Pricing being applied doesn't mean it was sent.
+    // The real flip happens when Jérémy clicks "Envoyer au client" (separate action).
     await supabase
       .from('jobs')
       .update({
-        status: allPriced ? 'awaiting_client_approval' : job.status,
         quote_amount: projectTotals.subtotal,
         updated_at: nowIso,
       })

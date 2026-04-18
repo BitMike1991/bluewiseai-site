@@ -225,14 +225,11 @@ export default async function handler(req, res) {
       continue;
     }
 
-    // Flip job if all priced
+    // DO NOT auto-flip job.status. "awaiting_client_approval" means client received
+    // the devis — which is a separate action from pricing being applied.
+    // Jérémy clicks "Envoyer au client" later to actually send + flip status.
     if (allPriced && quote.job_id) {
-      await supabase
-        .from('jobs')
-        .update({ status: 'awaiting_client_approval', updated_at: nowIso })
-        .eq('id', quote.job_id)
-        .eq('customer_id', customerId);
-      quotesFlipped++;
+      quotesFlipped++;  // tracking for summary — quote.status='ready' means "ready to send"
     }
 
     // Overhead + gaz once per job
