@@ -5,6 +5,7 @@
 import { getSupabaseServerClient } from '../../../../lib/supabaseServer';
 import { checkRateLimit } from '../../../../lib/security';
 import { applyCorsHeaders } from '../../../../lib/universal-api-auth';
+import { fetchWithTimeout } from '../../../../lib/fetch-with-timeout';
 
 const supabase = getSupabaseServerClient();
 
@@ -196,14 +197,20 @@ export default async function handler(req, res) {
       accepted_ip: ip
     };
 
+    // Fire-and-forget n8n webhook with 4s cap. If n8n is slow or down, the
+    // client isn't blocked on their "J'accepte" click — we log and move on.
     try {
-      await fetch('https://automation.bluewiseai.com/webhook/sp-quote-accepted', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(webhookPayload)
-      });
+      await fetchWithTimeout(
+        'https://automation.bluewiseai.com/webhook/sp-quote-accepted',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(webhookPayload)
+        },
+        4000
+      );
     } catch (e) {
-      console.error('n8n webhook error:', e);
+      console.warn('[devis/accept] n8n webhook skipped', e?.name === 'AbortError' ? 'timeout' : e?.message);
     }
 
     // 9. Auto-create contract (Interac flow — no payment gateway)
@@ -222,10 +229,12 @@ export default async function handler(req, res) {
       // Reuse existing — no duplicate
       contractResult = { contract_number: existingContract.signature_request_id };
     } else {
-      // Create contract via internal S2S call
-      try {
-        const siteUrl = process.env.SITE_URL || 'https://www.bluewiseai.com';
-        const contractResp = await fetch(
+      // Create contract via internal S2S call, with 1 retry on transient failure.
+      // Idempotency: before retry we re-check contracts table so we don't create
+      // a second contract if the first succeeded partially.
+      const siteUrl = process.env.SITE_URL || 'https://www.bluewiseai.com';
+      const createContract = async () => {
+        const r = await fetchWithTimeout(
           `${siteUrl}/api/universal/contrat/create`,
           {
             method: 'POST',
@@ -235,17 +244,48 @@ export default async function handler(req, res) {
               customer_id: customerId,
               api_key: (process.env.UNIVERSAL_API_KEY || '').trim()
             })
-          }
+          },
+          8000
         );
-        contractResult = await contractResp.json();
-        if (!contractResp.ok) {
-          console.error('[devis/accept] contract create failed', contractResult);
-          // Non-fatal — quote is accepted, contract can be retried
-          contractResult = null;
+        const body = await r.json().catch(() => ({}));
+        return { ok: r.ok, body };
+      };
+
+      try {
+        let attempt = await createContract();
+        if (!attempt.ok) {
+          console.warn('[devis/accept] contract create failed, retrying in 500ms', attempt.body);
+          await new Promise(r => setTimeout(r, 500));
+          // Idempotency re-check before retry
+          const { data: retryCheck } = await supabase
+            .from('contracts')
+            .select('signature_request_id')
+            .eq('job_id', quote.job_id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (retryCheck?.signature_request_id) {
+            contractResult = { contract_number: retryCheck.signature_request_id };
+          } else {
+            attempt = await createContract();
+            contractResult = attempt.ok ? attempt.body : null;
+          }
+        } else {
+          contractResult = attempt.body;
         }
       } catch (err) {
-        console.error('[devis/accept] contract create exception', err);
+        console.error('[devis/accept] contract create exception', err?.message);
         contractResult = null;
+      }
+
+      // If both attempts failed, log an ops-visible job_event so Jérémy sees it
+      if (!contractResult?.contract_number) {
+        await supabase.from('job_events').insert({
+          job_id: quote.job_id,
+          customer_id: customerId,
+          event_type: 'contract_create_failed',
+          details: { quote_number: quote.quote_number, ip, user_agent: userAgent },
+        });
       }
     }
 
@@ -255,6 +295,21 @@ export default async function handler(req, res) {
     const contractUrl = contractResult?.contract_number
       ? `https://${custDomain}/q/${qNum}/sign`
       : null;
+
+    // If the contract couldn't be created, tell the client plainly —
+    // the quote is still saved as accepted, Jérémy will handle the contract
+    // manually. This beats a blank spinner + silent fail.
+    if (!contractUrl) {
+      return res.status(200).json({
+        success: true,
+        message: 'Devis accepté! Jérémy va préparer le contrat manuellement et te recontacter.',
+        quote_number: qNum,
+        accepted_at: acceptedAt,
+        contract_number: null,
+        contract_url: null,
+        contract_pending: true,
+      });
+    }
 
     return res.status(200).json({
       success: true,
