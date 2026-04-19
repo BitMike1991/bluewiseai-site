@@ -1463,12 +1463,23 @@ export default function JobDetailPage() {
           <DevisEditor
             job={job}
             quote={latestQuote}
-            onSaved={() => {
-              // Reload job base + finances + devis tab data so top stats cards
-              // and Résumé financier reflect the updated subtotal/TTC/promo.
+            onSaved={async () => {
+              // Refresh top stats cards + finances.
               loadJob();
               loadFinances();
-              setTabData(prev => ({ ...prev, devis: undefined }));
+              // Refresh tabData.devis in-place (don't clear it) so a later tab
+              // switch remounts DevisEditor with the newly-saved values. Clearing
+              // would unmount the live editor on every 3s idle auto-save — no
+              // re-fetch trigger, stranding the UI in an "Aucun devis" state.
+              try {
+                const res = await fetch(`/api/jobs/${id}?expand=quotes`);
+                if (res.ok) {
+                  const json = await res.json();
+                  setTabData(prev => ({ ...prev, devis: json.quotes ?? [] }));
+                }
+              } catch {
+                /* non-fatal — editor holds state, next manual load will refresh */
+              }
             }}
           />
         );
