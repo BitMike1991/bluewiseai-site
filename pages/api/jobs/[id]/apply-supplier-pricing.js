@@ -291,55 +291,16 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Erreur mise à jour du devis' });
     }
 
-    // Build expense rows per matched item + project fees
-    const expenseRows = [];
-    updatedLineItems.forEach((li) => {
-      if (li._cost > 0 && li._match_status !== 'unmatched') {
-        const qty = li.qty || 1;
-        expenseRows.push({
-          customer_id: customerId,
-          job_id: parseInt(jobId, 10),
-          category: 'materiel_fournisseur',
-          description: `[${li.type || 'Article'}] ${li.model || ''} ${qty}x`.replace(/\s+/g, ' ').trim(),
-          total: Math.round(li._cost * qty * 100) / 100,
-          subtotal: Math.round(li._cost * qty * 100) / 100,
-          source: 'soumission_fournisseur',
-          source_ref: soumission.soumissionNumber || null,
-          vendor: soumission.fournisseur || 'Royalty',
-          paid_at: nowIso.slice(0, 10),
-        });
-      }
-    });
-
-    // Fixed project expenses
-    expenseRows.push({
-      customer_id: customerId,
-      job_id: parseInt(jobId, 10),
-      category: 'overhead',
-      description: 'Frais généraux projet',
-      total: projectTotals.overhead,
-      subtotal: projectTotals.overhead,
-      source: 'soumission_fournisseur',
-      paid_at: nowIso.slice(0, 10),
-    });
-    expenseRows.push({
-      customer_id: customerId,
-      job_id: parseInt(jobId, 10),
-      category: 'gaz_carburant',
-      description: 'Gaz / carburant visite',
-      total: projectTotals.gaz,
-      subtotal: projectTotals.gaz,
-      source: 'soumission_fournisseur',
-      paid_at: nowIso.slice(0, 10),
-    });
-
-    if (expenseRows.length > 0) {
-      const { error: expErr } = await supabase.from('expenses').insert(expenseRows);
-      if (expErr) {
-        // Non-fatal — prices applied, accounting rows failed
-        console.error('[apply-supplier-pricing] expense insert error', expErr);
-      }
-    }
+    // NOTE: We do NOT auto-insert ANY expense rows here.
+    // Principle: expenses = what Jérémy actually pays and logs himself.
+    //   - Supplier material cost from the PDF = PROJECTION (stored on line_items._cost,
+    //     surfaced as `estimatedMaterialCost` in /api/jobs/[id]/finances). Jérémy logs the
+    //     real Royalty invoice manually when it arrives.
+    //   - Overhead (200$) + gaz (100$) = pricing formulas to charge the client, not cash
+    //     Jérémy hands out. He logs real overhead/gas receipts manually.
+    //   - Urethane / moulure / calking per-item fees = same — client charges only.
+    // This prevents double-counting against margin and keeps the expenses table as a clean
+    // ledger of real out-of-pocket costs.
 
     // Update job quote_amount. DO NOT flip job.status here — "awaiting_client_approval"
     // means client received devis. Pricing being applied doesn't mean it was sent.

@@ -130,17 +130,19 @@ function PipelineDots({ status, size = 'sm' }) {
 
 // ── Summary cards ─────────────────────────────────────────────────────────────
 
-function SummaryCards({ job, payments }) {
+function SummaryCards({ job, payments, finances }) {
   const address = job.client_address;
   const addressStr = address
     ? [address.street, address.city, address.province, address.postal_code].filter(Boolean).join(', ')
     : null;
 
-  const totalPaid = (payments || [])
+  const totalPaid = finances?.totalPaid ?? (payments || [])
     .filter((p) => p.status === 'paid' || p.status === 'succeeded')
     .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
 
-  const quoteAmount = parseFloat(job.quote_amount || 0);
+  // "Devis" shown to Jérémy = full TTC (what the client will pay), not HT subtotal.
+  // Pull from finances.ttc (live quote) with fallback to legacy jobs.quote_amount.
+  const quoteAmount = finances?.ttc ?? parseFloat(job.quote_amount || 0);
   const balanceDue = quoteAmount - totalPaid;
   const meta = getStatusMeta(job.status);
 
@@ -796,9 +798,13 @@ function TabFinances({ finances, quoteAmount }) {
   }
 
   const expenses = finances.expenses || [];
-  const revenue = parseFloat(quoteAmount || 0);
+  // Revenue = live TTC from quote (what the client pays), not HT subtotal
+  const revenue = parseFloat(finances.ttc ?? quoteAmount ?? 0);
   const totalExpenses = parseFloat(finances.totalExpenses || 0);
-  const margeB = revenue - totalExpenses;
+  const estimatedMaterialCost = parseFloat(finances.estimatedMaterialCost || 0);
+  // Projected margin = TTC - estimated material cost - logged expenses
+  // (Jérémy's realistic net before he adds his own labor/sous-tr costs)
+  const margeB = revenue - estimatedMaterialCost - totalExpenses;
   const margePct = revenue > 0 ? (margeB / revenue) * 100 : 0;
 
   // Group expenses by category
@@ -812,17 +818,25 @@ function TabFinances({ finances, quoteAmount }) {
   return (
     <div className="space-y-4">
       {/* Revenue vs Cost summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <div className="rounded-xl border border-d-border bg-d-surface/40 p-3">
-          <p className="text-[10px] text-d-muted mb-1">Revenu (devis)</p>
+          <p className="text-[10px] text-d-muted mb-1">Revenu (TTC client)</p>
           <p className="text-sm font-semibold text-d-text">{formatCurrencyQC(revenue)}</p>
         </div>
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
+          <p className="text-[10px] text-d-muted mb-1" title="Somme des _cost × qty des items — projection de ce que Jérémy paiera au fournisseur">
+            Coût matière estimé
+          </p>
+          <p className="text-sm font-semibold text-amber-300/90">{formatCurrencyQC(estimatedMaterialCost)}</p>
+        </div>
         <div className="rounded-xl border border-d-border bg-d-surface/40 p-3">
-          <p className="text-[10px] text-d-muted mb-1">Dépenses</p>
+          <p className="text-[10px] text-d-muted mb-1" title="Dépenses réelles loggées par Jérémy (factures payées, gaz, sous-traitance, etc.)">
+            Dépenses réelles
+          </p>
           <p className="text-sm font-semibold text-rose-400">{formatCurrencyQC(totalExpenses)}</p>
         </div>
         <div className="rounded-xl border border-d-border bg-d-surface/40 p-3">
-          <p className="text-[10px] text-d-muted mb-1">Marge brute</p>
+          <p className="text-[10px] text-d-muted mb-1">Marge projetée</p>
           <p className={`text-sm font-semibold ${margeB >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
             {formatCurrencyQC(margeB)}
           </p>
@@ -839,9 +853,9 @@ function TabFinances({ finances, quoteAmount }) {
       {expenses.length === 0 ? (
         <div className="rounded-xl border border-dashed border-d-border/60 p-8 text-center">
           <CreditCard size={22} className="mx-auto mb-2 text-d-muted/40" />
-          <p className="text-sm text-d-muted">Aucune dépense enregistrée pour ce projet.</p>
+          <p className="text-sm text-d-muted">Aucune dépense réelle loggée pour ce projet.</p>
           <p className="text-xs text-d-muted/60 mt-1">
-            Les dépenses matériaux s'ajoutent automatiquement lors du traitement d'un retour fournisseur.
+            Logge tes achats au fur et à mesure (facture Royalty, gaz, cannettes, sous-traitance).
           </p>
         </div>
       ) : (
@@ -1151,9 +1165,14 @@ export default function JobDetailPage() {
     .filter((p) => p.status === 'paid' || p.status === 'succeeded')
     .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
   const totalExpenses   = finances?.totalExpenses ?? 0;
+  const estimatedMaterialCost = finances?.estimatedMaterialCost ?? 0;
   const balanceRemaining = finances?.balanceRemaining ?? (ttc - totalPaid);
-  const margin           = finances?.margin        ?? (totalPaid - subtotal - totalExpenses);
-  const marginPct        = finances?.marginPct     ?? (subtotal > 0 ? (margin / subtotal) * 100 : 0);
+  // Use projected margin until real payments start flowing; switch to realized after.
+  const marginMode = finances?.marginMode ?? (totalPaid === 0 ? 'projected' : 'realized');
+  const margin           = finances?.margin        ?? (marginMode === 'projected'
+    ? (ttc - estimatedMaterialCost - totalExpenses)
+    : (totalPaid - totalExpenses));
+  const marginPct        = finances?.marginPct     ?? 0;
   const progressPct      = finances?.progressPct   ?? (ttc > 0 ? Math.min(100, Math.round((totalPaid / ttc) * 100)) : 0);
   const expenses         = finances?.expenses      ?? [];
 
@@ -1293,7 +1312,7 @@ export default function JobDetailPage() {
       </div>
 
       {/* Summary cards */}
-      <SummaryCards job={job} payments={payments} />
+      <SummaryCards job={job} payments={payments} finances={finances} />
 
       {/* Financial summary card (preserved from existing page) */}
       <div className="mb-6 rounded-xl border border-d-border p-4">
@@ -1337,8 +1356,16 @@ export default function JobDetailPage() {
             <span className="text-sm font-semibold text-emerald-400">{formatCurrencyQC(totalPaid)}</span>
           </div>
           <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/20">
-            <span className="text-xs text-d-muted">Dépenses</span>
+            <span className="text-xs text-d-muted" title="Dépenses réelles loggées par Jérémy (factures payées, gaz, etc.)">
+              Dépenses réelles
+            </span>
             <span className="text-sm font-semibold text-rose-400">{formatCurrencyQC(totalExpenses)}</span>
+          </div>
+          <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-amber-500/5 border border-amber-500/15">
+            <span className="text-xs text-d-muted" title="Coût matière estimé = somme des _cost × qty des items du devis (projection avant paiement fournisseur)">
+              Coût matière estimé
+            </span>
+            <span className="text-sm font-medium text-amber-300/90">{formatCurrencyQC(estimatedMaterialCost)}</span>
           </div>
           <div className={`flex items-center justify-between px-3 py-2 rounded-lg border ${
             balanceRemaining <= 0 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-amber-500/10 border-amber-500/20'
@@ -1351,13 +1378,15 @@ export default function JobDetailPage() {
           <div className={`flex items-center justify-between px-3 py-2 rounded-lg border ${
             margin >= 0 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-rose-500/10 border-rose-500/20'
           }`}>
-            <span className="text-xs text-d-muted">Marge</span>
+            <span className="text-xs text-d-muted">
+              {marginMode === 'projected' ? 'Marge projetée' : 'Marge'}
+            </span>
             <div className="text-right">
               <p className={`text-sm font-semibold ${margin >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                 {formatCurrencyQC(margin)}
               </p>
               <p className={`text-[10px] ${margin >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {marginPct.toFixed(1)}%
+                {Number(marginPct || 0).toFixed(1)}%
               </p>
             </div>
           </div>

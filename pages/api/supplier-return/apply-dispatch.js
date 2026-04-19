@@ -100,8 +100,6 @@ export default async function handler(req, res) {
 
   let appliedCount       = 0;
   let quotesFlipped      = 0;
-  const expenseRows      = [];
-  const jobsWithExpenses = new Set(); // track which jobs got overhead/gaz
   const quoteResults     = [];
 
   for (const [quoteId, qMatches] of Object.entries(matchesByQuote)) {
@@ -200,23 +198,9 @@ export default async function handler(req, res) {
       quoteApplied++;
       appliedCount++;
 
-      // Expense row for this item
-      if (priceResult.cost > 0) {
-        const qty    = li.qty || 1;
-        const amount = Math.round(priceResult.cost * qty * 100) / 100;
-        expenseRows.push({
-          customer_id: customerId,
-          job_id:      quote.job_id,
-          category:    'materiel_fournisseur',
-          description: `[${li.type || 'Article'}] ${li.model || li.config_code || ''} ×${qty}`.replace(/\s+/g, ' ').trim(),
-          total:       amount,
-          subtotal:    amount,
-          source:      'supplier_return_global',
-          source_ref:  parsedPayload.soumission_number || null,
-          vendor:      fournisseur,
-          paid_at:     nowDate,
-        });
-      }
+      // NOTE: supplier material cost is NOT auto-inserted into expenses. It's stored on
+      // line_items._cost and surfaced as estimatedMaterialCost in the finances API.
+      // Jérémy logs the actual supplier invoice manually when he pays Royalty.
     }
 
     if (quoteApplied === 0) continue;
@@ -261,40 +245,10 @@ export default async function handler(req, res) {
       quotesFlipped++;  // tracking for summary — quote.status='ready' means "ready to send"
     }
 
-    // Overhead + gaz once per job
-    if (quote.job_id && !jobsWithExpenses.has(quote.job_id)) {
-      jobsWithExpenses.add(quote.job_id);
-      const overhead = pricingParams.overheadPerJob ?? 200;
-      const gaz      = pricingParams.gazPerJob      ?? 100;
-      if (overhead > 0) {
-        expenseRows.push({
-          customer_id: customerId,
-          job_id:      quote.job_id,
-          category:    'overhead',
-          description: 'Frais overhead projet',
-          total:       overhead,
-          subtotal:    overhead,
-          source:      'supplier_return_global',
-          source_ref:  parsedPayload.soumission_number || null,
-          vendor:      null,
-          paid_at:     nowDate,
-        });
-      }
-      if (gaz > 0) {
-        expenseRows.push({
-          customer_id: customerId,
-          job_id:      quote.job_id,
-          category:    'gaz',
-          description: 'Frais déplacement (gaz)',
-          total:       gaz,
-          subtotal:    gaz,
-          source:      'supplier_return_global',
-          source_ref:  parsedPayload.soumission_number || null,
-          vendor:      null,
-          paid_at:     nowDate,
-        });
-      }
-    }
+    // NOTE: overhead (200$) and gaz (100$) are CLIENT CHARGES on the quote total,
+    // NOT real expenses Jérémy pays out. They were previously auto-inserted here as
+    // expense rows — that double-counted them against his margin. Removed.
+    // Jérémy logs his real gas + overhead manually when the receipts actually hit.
 
     quoteResults.push({
       quote_id:       quoteId,
@@ -306,25 +260,14 @@ export default async function handler(req, res) {
     });
   }
 
-  // ── 4. Insert expense rows ────────────────────────────────────────────────
-  let totalExpensesRecorded = 0;
-  if (expenseRows.length > 0) {
-    const { error: expErr } = await supabase.from('expenses').insert(expenseRows);
-    if (expErr) {
-      console.error('[apply-dispatch] expense insert error', expErr);
-      // Non-fatal
-    } else {
-      totalExpensesRecorded = expenseRows.reduce((s, e) => s + Number(e.total || 0), 0);
-    }
-  }
-
-  // ── 5. Return summary ─────────────────────────────────────────────────────
+  // ── 4. Return summary ─────────────────────────────────────────────────────
+  // NOTE: no expense rows are auto-inserted anymore — see comments above. Jérémy logs
+  // real supplier invoices + overhead + gaz manually as they hit. The projected cost
+  // is surfaced via line_items._cost + /api/jobs/[id]/finances estimatedMaterialCost.
   return res.status(200).json({
     success:                  true,
     applied_count:            appliedCount,
     quotes_flipped_to_ready:  quotesFlipped,
-    total_expenses_recorded:  Math.round(totalExpensesRecorded * 100) / 100,
-    expense_rows_inserted:    expenseRows.length,
     breakdown:                quoteResults,
   });
 }

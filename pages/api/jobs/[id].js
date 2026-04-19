@@ -27,6 +27,7 @@ export default async function handler(req, res) {
         client_phone,
         client_email,
         client_address,
+        quote_amount,
       } = req.body;
       const updates = { updated_at: new Date().toISOString() };
       if (notes          !== undefined) updates.notes          = notes;
@@ -35,6 +36,7 @@ export default async function handler(req, res) {
       if (client_phone   !== undefined) updates.client_phone   = client_phone;
       if (client_email   !== undefined) updates.client_email   = client_email;
       if (client_address !== undefined) updates.client_address = client_address;
+      if (quote_amount   !== undefined) updates.quote_amount   = Number(quote_amount) || 0;
 
       if (Object.keys(updates).length === 1) {
         return res.status(400).json({ error: "Nothing to update" });

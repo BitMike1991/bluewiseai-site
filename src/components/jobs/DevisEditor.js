@@ -767,6 +767,7 @@ export default function DevisEditor({ job, quote, onSaved }) {
             client_email:   clientEmail,
             client_address: clientAddress,
             status:         jobStatus,
+            quote_amount:   subtotal,
           }),
         }),
         fetch(`/api/quotes/${quote.id}`, {

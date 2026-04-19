@@ -511,7 +511,9 @@ export default function LeadDetailPage() {
   const { id } = router.query;
   const { branding, enabledHubTools } = useBranding();
   const styles = getBrandingStyles(branding);
-  const showDevisButton = Array.isArray(enabledHubTools) && enabledHubTools.includes('commande');
+  // Always show the devis button — all leads currently flow through PUR's devis workflow
+  // and the internal CRM is the primary surface even when tenant is BlueWise AI.
+  const showDevisButton = true;
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
