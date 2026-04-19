@@ -5,6 +5,7 @@
 // webhook pipeline.
 
 import { getAuthContext } from "../../../lib/supabaseServer";
+import { alertJeremy } from "../../../lib/notifications/jeremy-alert";
 
 const ALLOWED_METHODS = ["POST"];
 
@@ -61,7 +62,7 @@ export default async function handler(req, res) {
   // ── Tenant guard: the job must belong to this customer ──
   const { data: job, error: jobErr } = await supabase
     .from("jobs")
-    .select("id, status, customer_id, client_name")
+    .select("id, job_id, status, customer_id, client_name")
     .eq("id", job_id)
     .eq("customer_id", customerId)
     .maybeSingle();
@@ -147,6 +148,23 @@ export default async function handler(req, res) {
     });
   } catch (e) {
     console.warn("[/api/payments] job_event log failed", e?.message);
+  }
+
+  // Alert Jérémy directly when a deposit is received.
+  // Avoid pinging on manual partial payments — only the first deposit that
+  // transitions status is interesting enough to SMS.
+  if (payment_type === "deposit" && newJobStatus === "deposit_received") {
+    alertJeremy(supabase, {
+      customerId,
+      eventType: "deposit_received",
+      payload: {
+        job_id_human: job.job_id,
+        client_name: job.client_name,
+        total_ttc: payment.amount,
+        method,
+        job_url: `https://bluewiseai.com/platform/jobs/${job.id}`,
+      },
+    }).catch(() => {});
   }
 
   return res.status(201).json({

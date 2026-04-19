@@ -6,6 +6,7 @@ import { getSupabaseServerClient } from '../../../../lib/supabaseServer';
 import { checkRateLimit } from '../../../../lib/security';
 import { applyCorsHeaders } from '../../../../lib/universal-api-auth';
 import { fetchWithTimeout } from '../../../../lib/fetch-with-timeout';
+import { alertJeremy } from '../../../../lib/notifications/jeremy-alert';
 
 const supabase = getSupabaseServerClient();
 
@@ -295,6 +296,18 @@ export default async function handler(req, res) {
     const contractUrl = contractResult?.contract_number
       ? `https://${custDomain}/q/${qNum}/sign`
       : null;
+
+    // Alert Jérémy (fire-and-forget — never blocks the client)
+    alertJeremy(supabase, {
+      customerId,
+      eventType: contractUrl ? 'quote_accepted' : 'contract_create_failed',
+      payload: {
+        job_id_human: job.job_id,
+        client_name: job.client_name,
+        total_ttc: quote.total_ttc,
+        job_url: `https://${custDomain}/platform/jobs/${job.id}`,
+      },
+    }).catch(() => {});
 
     // If the contract couldn't be created, tell the client plainly —
     // the quote is still saved as accepted, Jérémy will handle the contract

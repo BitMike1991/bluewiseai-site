@@ -4,6 +4,7 @@
 
 import { getSupabaseServerClient } from '../../../../lib/supabaseServer';
 import { applyCorsHeaders } from '../../../../lib/universal-api-auth';
+import { alertJeremy } from '../../../../lib/notifications/jeremy-alert';
 
 const MAX_SIGNATURE_BYTES = 500 * 1024;       // 500 KB — signature PNG
 const MAX_SIGNED_HTML_BYTES = 1.5 * 1024 * 1024; // 1.5 MB — rendered contract with embedded image
@@ -299,6 +300,19 @@ export default async function handler(req, res) {
     } catch (e) {
       console.error('n8n webhook error:', e);
     }
+
+    // Alert Jérémy directly (fire-and-forget)
+    alertJeremy(supabase, {
+      customerId,
+      eventType: 'contract_signed',
+      payload: {
+        job_id_human: jobData?.job_id,
+        client_name: jobData?.client_name || signer_name,
+        total_ttc: totalTtc,
+        deposit_amount: depositAmount,
+        job_url: `https://bluewiseai.com/platform/jobs/${jobId}`,
+      },
+    }).catch(() => {});
 
     // ── 10. Return success ────────────────────────────────────────────────────
     return res.status(200).json({
