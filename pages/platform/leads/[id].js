@@ -535,25 +535,6 @@ export default function LeadDetailPage() {
   const [sendError, setSendError] = useState(null);
   const [sendSuccess, setSendSuccess] = useState(null);
   const [callLoading, setCallLoading] = useState(false);
-  const [creatingDevis, setCreatingDevis] = useState(false);
-
-  async function createDevisFromLead() {
-    if (!id || creatingDevis) return;
-    setCreatingDevis(true);
-    try {
-      const res = await fetch('/api/jobs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lead_id: Number(id) }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Erreur création');
-      router.push(`/platform/jobs/${json.id}`);
-    } catch (err) {
-      alert(`Impossible de créer le devis : ${err.message}`);
-      setCreatingDevis(false);
-    }
-  }
   const toast = useToast();
 
   async function initiateCall() {
@@ -1036,16 +1017,16 @@ export default function LeadDetailPage() {
                 </button>
 
                 {showDevisButton && id && (
-                  <button
-                    type="button"
-                    disabled={creatingDevis}
-                    onClick={createDevisFromLead}
-                    aria-label="Créer un devis pour ce lead"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-d-primary/50 bg-d-primary/10 text-d-primary hover:bg-d-primary/20 disabled:opacity-60 disabled:cursor-wait transition focus:outline-none focus:ring-2 focus:ring-d-primary/50"
+                  <a
+                    href={`https://hub.purconstruction.com/hub/commande?prefill=${id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Créer un devis pour ce lead dans le hub PUR"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-d-primary/50 bg-d-primary/10 text-d-primary hover:bg-d-primary/20 transition focus:outline-none focus:ring-2 focus:ring-d-primary/50"
                   >
                     <FileText className="h-3.5 w-3.5" aria-hidden="true" />
-                    {creatingDevis ? 'Création...' : 'Créer un devis'}
-                  </button>
+                    Créer un devis
+                  </a>
                 )}
 
               </div>
@@ -1306,17 +1287,17 @@ export default function LeadDetailPage() {
             <span>Email</span>
           </button>
           {showDevisButton && id && (
-            <button
-              type="button"
-              disabled={creatingDevis}
-              onClick={createDevisFromLead}
-              aria-label="Créer un devis pour ce lead"
-              className="flex-1 flex flex-col items-center justify-center gap-1 min-h-[52px] py-2.5 rounded-xl text-[11px] font-semibold transition-all duration-200 active:scale-95 border border-d-primary/40 bg-d-primary/10 text-d-primary disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-d-primary/50"
+            <a
+              href={`https://hub.purconstruction.com/hub/commande?prefill=${id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Créer un devis pour ce lead dans le hub PUR"
+              className="flex-1 flex flex-col items-center justify-center gap-1 min-h-[52px] py-2.5 rounded-xl text-[11px] font-semibold transition-all duration-200 active:scale-95 border border-d-primary/40 bg-d-primary/10 text-d-primary focus:outline-none focus:ring-2 focus:ring-d-primary/50"
               style={{ touchAction: "manipulation" }}
             >
               <FileText className="w-5 h-5" aria-hidden="true" />
-              <span>{creatingDevis ? '...' : 'Devis'}</span>
-            </button>
+              <span>Devis</span>
+            </a>
           )}
         </div>
 
