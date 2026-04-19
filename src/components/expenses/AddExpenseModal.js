@@ -3,7 +3,7 @@
 // the project picker is replaced with a locked pill so the expense is always
 // filed to the current job.
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import MediaPicker from '../ui/MediaPicker';
 import { Loader2, Link2 } from 'lucide-react';
 
@@ -44,6 +44,8 @@ export default function AddExpenseModal({ jobs = [], presetJobId = null, presetJ
   const [error, setError] = useState(null);
   const [extracting, setExtracting] = useState(false);
   const [extractMeta, setExtractMeta] = useState(null);
+  // Track the last URL we already auto-parsed so re-renders don't retrigger.
+  const autoFilledUrlRef = useRef(null);
 
   async function handleAutoFill() {
     if (!receiptUrl) { setError('Ajoute d\'abord une photo de reçu'); return; }
@@ -71,6 +73,18 @@ export default function AddExpenseModal({ jobs = [], presetJobId = null, presetJ
       setExtracting(false);
     }
   }
+
+  // Auto-fire the AI extractor as soon as Jérémy uploads a receipt photo —
+  // no manual button press. PDFs are skipped (the extractor is vision-only).
+  // Guard on autoFilledUrlRef so re-renders don't retrigger on the same URL.
+  useEffect(() => {
+    if (!receiptUrl) return;
+    if (autoFilledUrlRef.current === receiptUrl) return;
+    if (/\.pdf(\?.*)?$/i.test(receiptUrl)) return;
+    autoFilledUrlRef.current = receiptUrl;
+    handleAutoFill();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [receiptUrl]);
 
   const totalNum = parseFloat(total) || 0;
   const htBase   = totalNum / 1.14975;
@@ -227,7 +241,10 @@ export default function AddExpenseModal({ jobs = [], presetJobId = null, presetJ
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs text-d-muted">Reçu / facture (photo)</label>
+              <div>
+                <label className="block text-xs text-d-muted">Reçu / facture (photo)</label>
+                <span className="text-[9px] text-d-primary/70">✨ Auto-rempli à l&apos;upload · modifiable</span>
+              </div>
               {receiptUrl && !/\.pdf(\?.*)?$/i.test(receiptUrl) && (
                 <button
                   type="button"
@@ -236,7 +253,7 @@ export default function AddExpenseModal({ jobs = [], presetJobId = null, presetJ
                   className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold bg-d-primary/15 text-d-primary border border-d-primary/30 hover:bg-d-primary/25 disabled:opacity-50 transition"
                 >
                   {extracting ? <Loader2 size={10} className="animate-spin" /> : '✨'}
-                  {extracting ? 'Extraction…' : 'Auto-remplir'}
+                  {extracting ? 'Extraction…' : 'Relancer'}
                 </button>
               )}
             </div>
