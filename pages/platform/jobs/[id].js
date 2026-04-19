@@ -8,6 +8,7 @@ import DashboardLayout from '../../../src/components/dashboard/DashboardLayout';
 import StatusBadge from '../../../src/components/jobs/StatusBadge';
 import DevisEditor from '../../../src/components/jobs/DevisEditor';
 import MediaPicker from '../../../src/components/ui/MediaPicker';
+import AddExpenseModal from '../../../src/components/expenses/AddExpenseModal';
 import { getStatusMeta, STATUS_ORDER } from '../../../lib/status-config';
 import {
   ChevronLeft,
@@ -1007,7 +1008,9 @@ const EXPENSE_CATEGORY_LABELS = {
   autre:                'Autre',
 };
 
-function TabFinances({ finances, quoteAmount }) {
+function TabFinances({ finances, quoteAmount, jobId, jobLabel, onExpenseAdded }) {
+  const [addOpen, setAddOpen] = useState(false);
+
   if (!finances) {
     return (
       <div className="rounded-xl border border-dashed border-d-border/60 p-8 text-center">
@@ -1068,6 +1071,29 @@ function TabFinances({ finances, quoteAmount }) {
           </p>
         </div>
       </div>
+
+      {/* Add expense button — pre-links to this job */}
+      {jobId && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setAddOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-rose-500/40 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40"
+          >
+            <CreditCard size={12} /> + Ajouter une dépense
+          </button>
+        </div>
+      )}
+
+      {addOpen && (
+        <AddExpenseModal
+          jobs={[]}
+          presetJobId={jobId}
+          presetJobLabel={jobLabel}
+          onClose={() => setAddOpen(false)}
+          onSaved={() => { setAddOpen(false); onExpenseAdded && onExpenseAdded(); }}
+        />
+      )}
 
       {/* Expenses table */}
       {expenses.length === 0 ? (
@@ -1503,7 +1529,15 @@ export default function JobDetailPage() {
         );
 
       case 'finances':
-        return <TabFinances finances={finances} quoteAmount={quoteAmount} />;
+        return (
+          <TabFinances
+            finances={finances}
+            quoteAmount={quoteAmount}
+            jobId={job.id}
+            jobLabel={`${job.job_id || '#' + job.id}${job.client_name ? ' · ' + job.client_name : ''}`}
+            onExpenseAdded={() => loadFinances()}
+          />
+        );
 
       case 'taches':
         return tabLoading.taches
