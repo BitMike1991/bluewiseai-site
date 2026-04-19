@@ -1037,9 +1037,14 @@ export default async function handler(req, res) {
         // Non-fatal: still return the HTML
       }
 
+      // CRITICAL: do NOT overwrite jobs.job_id here. The contract number lives
+      // in contracts.contract_number (or .storage_path). Before 2026-04-19 this
+      // update clobbered the human-readable job_id (e.g. PUR-733022) with the
+      // contract number (e.g. PUR-C-XXXXXX), destroying the link in every CRM
+      // view. Leave job_id alone; only flip the status.
       const { error: updateErr } = await supabase
         .from('jobs')
-        .update({ status: 'contract_sent', job_id: contract_number, updated_at: new Date().toISOString() })
+        .update({ status: 'contract_sent', updated_at: new Date().toISOString() })
         .eq('id', jobDbId);
 
       if (updateErr) {
