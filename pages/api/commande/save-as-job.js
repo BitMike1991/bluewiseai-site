@@ -206,6 +206,15 @@ function buildLineItems(items, globalSupplier) {
       _source: 'commande',
       _item_index: i,
       _supplier: itemSupplier,
+      // SVG rendering metadata — same shape as the hub commande tool uses
+      // so DevisEditor + /q/[token] can render identical sketches.
+      // Without this, itemSketchSvg falls back to generic rectangles on 50%+
+      // of items (panels/max/widthRatios unknown).
+      _category: it.category || null,
+      _window_type: it.window_type || null,
+      _entry_door_style: it.entry_door_style || null,
+      _patio_collection: it.patio_collection || null,
+      _config: it.config || null,
     };
   });
 }

@@ -31,6 +31,9 @@ import {
   qualifiesForPromo,
   countOpenings,
 } from '../../../lib/devis/promo';
+import WindowConfigSVG from '../hub/commande/svg/WindowConfigSVG';
+import PatioDoorSVG   from '../hub/commande/svg/PatioDoorSVG';
+import EntryDoorSVG   from '../hub/commande/svg/EntryDoorSVG';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -198,8 +201,29 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC }) {
   // (dimensions alone allow us to compute perimeter-based fees)
   const hasBreakdown = !!(item._supplier_cost || item._cost || item._supplier_list_price || item._list_price || item.unit_price || (item.dimensions?.width && item.dimensions?.height));
 
-  // Generate SVG sketch for this item
-  const sketchSvg = itemSketchSvg(item);
+  // SVG sketch — prefer the rich React components from the hub commande tool
+  // when we have the full `_config` object or `_entry_door_style`. Fallback
+  // to the string-based itemSketchSvg for legacy items or items without
+  // identifying metadata.
+  const hasRichSvg = !!(
+    (item._config && item._config.panels)
+    || item._entry_door_style
+  );
+  const sketchSvg = !hasRichSvg ? itemSketchSvg(item) : null;
+
+  function renderRichSketch() {
+    const category = item._category;
+    if (category === 'window' && item._window_type && item._config?.panels) {
+      return <WindowConfigSVG type={item._window_type} config={item._config} width={60} height={60} />;
+    }
+    if (category === 'entry_door' && item._entry_door_style) {
+      return <EntryDoorSVG styleKey={item._entry_door_style} width={60} height={60} />;
+    }
+    if (category === 'patio_door' && item._config?.panels) {
+      return <PatioDoorSVG config={item._config} width={60} height={60} />;
+    }
+    return null;
+  }
 
   // Build header label: type + model + ouvrant badge
   const typeLabel = item.type || 'Article';
@@ -221,12 +245,22 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC }) {
       {/* Item header with SVG preview */}
       <div className="flex gap-3 px-3 pt-3 pb-2">
         {/* SVG preview box — 60×60 */}
-        <div
-          className="flex-shrink-0 rounded border border-d-border/60 bg-[#F2F5F0] flex items-center justify-center overflow-hidden"
-          style={{ width: 60, height: 60 }}
-          aria-hidden="true"
-          dangerouslySetInnerHTML={{ __html: sketchSvg }}
-        />
+        {hasRichSvg ? (
+          <div
+            className="flex-shrink-0 rounded border border-d-border/60 bg-[#F2F5F0] flex items-center justify-center overflow-hidden p-1"
+            style={{ width: 60, height: 60 }}
+            aria-hidden="true"
+          >
+            {renderRichSketch()}
+          </div>
+        ) : (
+          <div
+            className="flex-shrink-0 rounded border border-d-border/60 bg-[#F2F5F0] flex items-center justify-center overflow-hidden"
+            style={{ width: 60, height: 60 }}
+            aria-hidden="true"
+            dangerouslySetInnerHTML={{ __html: sketchSvg }}
+          />
+        )}
 
         {/* Item identity */}
         <div className="flex-1 min-w-0">
