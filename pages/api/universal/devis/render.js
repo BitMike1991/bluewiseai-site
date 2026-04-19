@@ -13,6 +13,7 @@ import { createClient } from '@supabase/supabase-js';
 import { generatePurQuoteHtml } from '../../../../lib/quote-templates/pur.js';
 import { mergeConfig } from '../../../../lib/quote-config.js';
 import { checkRateLimit } from '../../../../lib/security';
+import { applyCorsHeaders } from '../../../../lib/universal-api-auth';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -20,9 +21,7 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (applyCorsHeaders(req, res, { methods: ['GET', 'OPTIONS'] })) return;
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
 
   // 30 renders/min per IP — generous for legit clients refreshing, blocks
