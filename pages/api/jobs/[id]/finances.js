@@ -121,12 +121,17 @@ export default async function handler(req, res) {
     const margin = useProjected ? marginProjected : marginRealized;
     const marginPct = useProjected ? marginProjectedPct : marginRealizedPct;
 
+    const promoEnabled = !!(latestQuote?.meta?.promo_enabled);
+    const promoRebate = Number(latestQuote?.meta?.promo_rebate || 0);
+
     return res.status(200).json({
       jobId: job.job_id,
       clientName: job.client_name,
       status: job.status,
       progressPct: job.progress_pct || 0,
       quoteAmount: subtotal,
+      promoEnabled,
+      promoRebate,
       subtotal: Math.round(subtotal * 100) / 100,
       tps: Math.round(tps * 100) / 100,
       tvq: Math.round(tvq * 100) / 100,

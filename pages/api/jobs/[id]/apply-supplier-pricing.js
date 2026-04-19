@@ -18,6 +18,7 @@ import { getAuthContext } from '../../../../lib/supabaseServer';
 import { parseDocuments } from '../../../../lib/devis/parser';
 import { matchPrices } from '../../../../lib/devis/matcher';
 import { computeClientPrice, computeHardcodedPrice, detectHardcodedType, computeProjectTotals, DEFAULT_PRICING } from '../../../../lib/devis/pricing';
+import { qualifiesForPromo, computePromoDoorRebate } from '../../../../lib/devis/promo';
 
 export const config = { api: { bodyParser: false } };
 
@@ -251,12 +252,16 @@ export default async function handler(req, res) {
       (li) => li.unit_price != null && li.unit_price > 0
     );
 
-    // Compute project-level totals (overhead + gaz + optional container)
-    const containerOn = !!(quote.meta?.container_option);
+    // Compute project-level totals (overhead + gaz + optional container + optional promo rebate)
+    const containerOn       = !!(quote.meta?.container_option);
+    const existingPromoFlag = quote.meta?.promo_enabled;
+    const promoEligible     = qualifiesForPromo(updatedLineItems);
+    const promoActive       = promoEligible && existingPromoFlag !== false;
+    const promoRebate       = promoActive ? computePromoDoorRebate(pricingParams) : 0;
     const projectTotals = computeProjectTotals(
       updatedLineItems.map(li => ({ total: li.total || 0 })),
       pricingParams,
-      { container: containerOn }
+      { container: containerOn, promoRebate }
     );
 
     const nowIso = new Date().toISOString();
@@ -281,6 +286,8 @@ export default async function handler(req, res) {
           overhead: projectTotals.overhead,
           gaz: projectTotals.gaz,
           container: projectTotals.container,
+          promo_enabled: promoActive,
+          promo_rebate:  promoRebate,
         },
       })
       .eq('id', quote.id)

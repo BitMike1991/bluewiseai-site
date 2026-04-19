@@ -25,6 +25,12 @@ import {
 } from 'lucide-react';
 import { STATUS_META, STATUS_ORDER } from '../../../lib/status-config';
 import { itemSketchSvg } from '../../../lib/quote-templates/pur.js';
+import {
+  PROMO_QTY_THRESHOLD,
+  computePromoDoorRebate,
+  qualifiesForPromo,
+  countOpenings,
+} from '../../../lib/devis/promo';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -645,6 +651,14 @@ export default function DevisEditor({ job, quote, onSaved }) {
     Array.isArray(quote?.meta?.employees) ? quote.meta.employees : []
   );
 
+  // Promo state — auto-on when eligible unless Jérémy explicitly toggled off
+  const [promoEnabled, setPromoEnabled] = useState(() => {
+    const meta = quote?.meta || {};
+    if (meta.promo_enabled === false) return false;
+    if (meta.promo_enabled === true) return true;
+    return false; // recomputed after items state is set
+  });
+
   // Supplier upload state (for AwaitingSupplierCard)
   const [supplierUploading, setSupplierUploading] = useState(false);
   const [supplierResult,    setSupplierResult]    = useState(null);
@@ -696,8 +710,28 @@ export default function DevisEditor({ job, quote, onSaved }) {
   const dataItems = items.filter(
     it => !(it.description || '').toLowerCase().startsWith('installation')
   );
-  const { lineSubtotal, install: installAmt, overhead, gaz, container, subtotal, tax_gst, tax_qst, total_ttc } =
+  const { lineSubtotal, install: installAmt, overhead, gaz, container, subtotal: rawSubtotal, tax_gst: rawTps, tax_qst: rawTvq, total_ttc: rawTtc } =
     computeTotals(dataItems, installCost, { container: containerOn });
+
+  // Promo: "porte simple offerte" when the quote has 9+ openings and contains a porte simple.
+  // Auto-initialize on first eligibility if meta didn't explicitly say no.
+  const promoEligible = qualifiesForPromo(dataItems);
+  const promoActive   = promoEligible && promoEnabled;
+  const promoRebate   = promoActive ? computePromoDoorRebate() : 0;
+
+  // Auto-enable the first time the quote becomes eligible (unless Jérémy toggled off)
+  useEffect(() => {
+    const meta = quote?.meta || {};
+    if (meta.promo_enabled === false) return;        // respect explicit opt-out
+    if (promoEligible && !promoEnabled) setPromoEnabled(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [promoEligible]);
+
+  // Apply rebate to subtotal and recompute taxes so TTC reflects the discount.
+  const subtotal  = Math.max(0, rawSubtotal - promoRebate);
+  const tax_gst   = subtotal * 0.05;
+  const tax_qst   = subtotal * 0.09975;
+  const total_ttc = subtotal + tax_gst + tax_qst;
 
   // Projected internal expenses.
   // RULE (from Mikael): overhead (200$), gaz (100$), urethane/moulure/calking per-item
@@ -782,6 +816,8 @@ export default function DevisEditor({ job, quote, onSaved }) {
               container_option:     containerOn,
               sous_traitance_option: sousTrOpen,
               employees,
+              promo_enabled:        promoActive,
+              promo_rebate:         promoRebate,
             },
           }),
         }),
@@ -802,7 +838,7 @@ export default function DevisEditor({ job, quote, onSaved }) {
       setSaving(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientName, clientPhone, clientEmail, clientAddress, jobStatus, items, installCost, notes, priceDisplayMode, containerOn, sousTrOpen, employees, subtotal, tax_gst, tax_qst, total_ttc, job.id, quote.id, onSaved]);
+  }, [clientName, clientPhone, clientEmail, clientAddress, jobStatus, items, installCost, notes, priceDisplayMode, containerOn, sousTrOpen, employees, promoActive, promoRebate, subtotal, tax_gst, tax_qst, total_ttc, job.id, quote.id, onSaved]);
 
   // Ctrl+S keyboard shortcut
   useEffect(() => {
@@ -1332,6 +1368,12 @@ export default function DevisEditor({ job, quote, onSaved }) {
                 <span className="text-d-muted">+ Overhead + Gaz{containerOn ? ' + Container' : ''}</span>
                 <span className="text-d-text font-mono">{fmtQC(overhead + gaz + container)}</span>
               </div>
+              {promoActive && (
+                <div className="flex justify-between text-emerald-400">
+                  <span>− Rabais promo (porte simple offerte)</span>
+                  <span className="font-mono">−{fmtQC(promoRebate)}</span>
+                </div>
+              )}
               <div className="flex justify-between font-semibold border-t border-d-border/50 pt-1">
                 <span className="text-d-muted">Sous-total HT</span>
                 <span className="text-d-text font-mono">{fmtQC(subtotal)}</span>
@@ -1348,6 +1390,56 @@ export default function DevisEditor({ job, quote, onSaved }) {
                 <span className="text-d-text">TOTAL TTC</span>
                 <span className="text-d-primary font-mono">{fmtQC(total_ttc)}</span>
               </div>
+            </div>
+          </section>
+
+          {/* ── PROMO — Porte simple offerte ── */}
+          <section className={`rounded-xl border p-4 ${
+            promoActive
+              ? 'border-emerald-500/30 bg-emerald-500/5'
+              : promoEligible
+                ? 'border-d-border bg-d-surface/30'
+                : 'border-d-border/40 bg-d-surface/10 opacity-60'
+          }`}>
+            <div className="flex items-center justify-between mb-2">
+              <p className={`text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1.5 ${
+                promoActive ? 'text-emerald-400' : 'text-d-muted'
+              }`}>
+                🎁 Promo — Porte simple offerte
+              </p>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={promoActive}
+                  disabled={!promoEligible}
+                  onChange={e => { setPromoEnabled(e.target.checked); markDirty(); }}
+                  aria-label="Activer le rabais promo porte simple offerte"
+                  className="w-3.5 h-3.5 rounded accent-emerald-500"
+                />
+                <span className="text-[11px] text-d-muted">
+                  {promoActive ? 'Appliqué' : promoEligible ? 'Disponible' : 'Non éligible'}
+                </span>
+              </label>
+            </div>
+            <div className="text-[11px] text-d-muted space-y-0.5">
+              <p>
+                Éligibilité : 9 ouvertures ou plus + au moins une porte simple.
+                {' '}
+                <span className={promoEligible ? 'text-emerald-400/90' : 'text-d-muted/70'}>
+                  Actuel : {countOpenings(dataItems)} ouverture(s){' '}
+                  {promoEligible ? '✓' : `— ${Math.max(0, PROMO_QTY_THRESHOLD - countOpenings(dataItems))} de plus requis`}
+                </span>
+              </p>
+              {promoActive && (
+                <p className="text-emerald-400/90 font-mono pt-1">
+                  Rabais appliqué : −{fmtQC(promoRebate)} (porte simple de base 800 $ cost + installation offerte)
+                </p>
+              )}
+              {promoEligible && !promoActive && (
+                <p className="text-amber-400/80">
+                  Coché désactivé par Jérémy. Client paie la porte simple au prix plein.
+                </p>
+              )}
             </div>
           </section>
 

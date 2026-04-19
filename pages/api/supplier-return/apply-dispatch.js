@@ -24,6 +24,7 @@
 
 import { getAuthContext } from '../../../lib/supabaseServer';
 import { computeClientPrice, computeHardcodedPrice, detectHardcodedType, computeProjectTotals, DEFAULT_PRICING } from '../../../lib/devis/pricing';
+import { qualifiesForPromo, computePromoDoorRebate } from '../../../lib/devis/promo';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -205,8 +206,18 @@ export default async function handler(req, res) {
 
     if (quoteApplied === 0) continue;
 
-    // Recompute totals
-    const totals = computeProjectTotals(lineItems, pricingParams);
+    // Promo "porte simple offerte" — auto-apply when the updated quote now qualifies,
+    // unless Jérémy previously opted out via meta.promo_enabled === false.
+    const existingPromoFlag = quote.meta?.promo_enabled;
+    const promoEligible     = qualifiesForPromo(lineItems);
+    const promoActive       = promoEligible && existingPromoFlag !== false;
+    const promoRebate       = promoActive ? computePromoDoorRebate(pricingParams) : 0;
+
+    // Recompute totals (with rebate if promo is active)
+    const totals = computeProjectTotals(lineItems, pricingParams, {
+      container:   !!(quote.meta?.container_option),
+      promoRebate,
+    });
 
     // All items priced?
     const allPriced = lineItems.every(li => li.unit_price != null && li.unit_price > 0);
@@ -217,7 +228,7 @@ export default async function handler(req, res) {
       .from('quotes')
       .update({
         line_items:  lineItems,
-        subtotal:    totals.itemsTotal,
+        subtotal:    totals.subtotal,
         tax_gst:     totals.tax_gst,
         tax_qst:     totals.tax_qst,
         total_ttc:   totals.total_ttc,
@@ -228,6 +239,8 @@ export default async function handler(req, res) {
           soumission_number:         parsedPayload.soumission_number,
           escompte_pct:              escomptePct,
           supplier_return_applied_at: nowIso,
+          promo_enabled:             promoActive,
+          promo_rebate:              promoRebate,
         },
       })
       .eq('id', quoteId)
