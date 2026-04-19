@@ -8,6 +8,7 @@
 // TD1, TP-1015) are stored but unused until F-P10 ships the calc.
 
 import { getAuthContext } from '../../../lib/supabaseServer';
+import { encryptSin, isValidSinFormat } from '../../../lib/payroll/sin-crypto';
 
 const ALLOWED_STATUS = new Set(['active', 'inactive']);
 
@@ -38,8 +39,12 @@ export default async function handler(req, res) {
       first_name, last_name,
       role, hourly_rate, status,
       phone, email, hire_date, notes,
-      td1_federal, tp1015_qc, sin_encrypted,
+      td1_federal, tp1015_qc,
+      sin_plain,
     } = req.body || {};
+    // sin_encrypted is NEVER accepted from client — raw ciphertext bypasses
+    // Luhn validation and could let the caller shove any string into the
+    // column. Clients send sin_plain → server encrypts.
 
     if (!first_name || !String(first_name).trim()) {
       return res.status(400).json({ error: 'first_name is required' });
@@ -66,8 +71,20 @@ export default async function handler(req, res) {
       notes:      notes || null,
       td1_federal: td1_federal != null ? Number(td1_federal) : null,
       tp1015_qc:   tp1015_qc   != null ? Number(tp1015_qc)   : null,
-      sin_encrypted: sin_encrypted || null,
+      sin_encrypted: null,
     };
+
+    if (sin_plain) {
+      if (!isValidSinFormat(sin_plain)) {
+        return res.status(400).json({ error: 'NAS invalide (9 chiffres + Luhn)' });
+      }
+      try {
+        row.sin_encrypted = encryptSin(sin_plain);
+      } catch (e) {
+        console.error('[api/employees] SIN encryption failed', e.message);
+        return res.status(500).json({ error: 'Échec du chiffrement NAS (vérifier PAYROLL_SIN_KEY)' });
+      }
+    }
 
     const { data, error } = await supabase
       .from('employees')

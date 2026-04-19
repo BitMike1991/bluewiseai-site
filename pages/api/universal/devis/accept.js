@@ -157,11 +157,13 @@ export default async function handler(req, res) {
       })
       .eq('id', quote.id);
 
-    // 6. Update job status
+    // 6. Update job status (defense-in-depth: verify tenant on write even
+    // though quote.job_id is sourced from a tenant-scoped row)
     await supabase
       .from('jobs')
       .update({ status: 'accepted', updated_at: new Date().toISOString() })
-      .eq('id', quote.job_id);
+      .eq('id', quote.job_id)
+      .eq('customer_id', customerId);
 
     // 7. Log event
     await supabase

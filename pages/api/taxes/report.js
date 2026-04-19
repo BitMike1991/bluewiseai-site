@@ -52,12 +52,16 @@ function reverseCalcIfMissing(amount, storedTps, storedTvq) {
   if (storedTps != null && storedTvq != null) {
     return { tps: toNumber(storedTps), tvq: toNumber(storedTvq), subtotal: toNumber(amount) - toNumber(storedTps) - toNumber(storedTvq) };
   }
-  const ht = toNumber(amount) / 1.14975;
-  return {
-    tps: Math.round(ht * 0.05 * 100) / 100,
-    tvq: Math.round(ht * 0.09975 * 100) / 100,
-    subtotal: Math.round(ht * 100) / 100,
-  };
+  // Rounding policy: round TPS + TVQ independently, then derive subtotal as
+  // (TTC − TPS − TVQ) so the three components always reconstitute the TTC
+  // exactly. Prior version rounded subtotal separately, which drifted by up
+  // to $0.03 per transaction and accumulated across a quarter's report.
+  const amt = toNumber(amount);
+  const ht  = amt / 1.14975;
+  const tps = Math.round(ht * 0.05 * 100) / 100;
+  const tvq = Math.round(ht * 0.09975 * 100) / 100;
+  const subtotal = Math.round((amt - tps - tvq) * 100) / 100;
+  return { tps, tvq, subtotal };
 }
 
 function buildCsv(rows) {

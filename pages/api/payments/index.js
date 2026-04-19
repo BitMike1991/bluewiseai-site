@@ -75,20 +75,29 @@ export default async function handler(req, res) {
   const nowIso = new Date().toISOString();
   const paidAtNorm = paid_at ? new Date(paid_at).toISOString() : nowIso;
 
+  // Auto-split TPS/TVQ at 14.975% when the caller hasn't provided them.
+  // Derive subtotal as (TTC − TPS − TVQ) so the three components always
+  // reconstitute TTC exactly (no rounding drift feeding the tax report).
+  const ttc = Math.round(amt * 100) / 100;
+  const htBase = ttc / 1.14975;
+  const autoTps = Math.round(htBase * 0.05   * 100) / 100;
+  const autoTvq = Math.round(htBase * 0.09975 * 100) / 100;
+  const autoSub = Math.round((ttc - autoTps - autoTvq) * 100) / 100;
+
   // ── Insert payment ──
   const paymentRow = {
     customer_id: customerId,
     job_id: job.id,
-    amount: Math.round(amt * 100) / 100,
+    amount: ttc,
     currency: "CAD",
     payment_method: method,
     payment_type,
     status: "succeeded",
     paid_at: paidAtNorm,
     confirmed_by: user.email || user.id,
-    subtotal: subtotal != null ? Number(subtotal) : null,
-    tps:      tps      != null ? Number(tps)      : null,
-    tvq:      tvq      != null ? Number(tvq)      : null,
+    subtotal: subtotal != null ? Number(subtotal) : autoSub,
+    tps:      tps      != null ? Number(tps)      : autoTps,
+    tvq:      tvq      != null ? Number(tvq)      : autoTvq,
     receipt_url: receipt_url || null,
     meta: {
       entered_via: "manual_ui",
