@@ -81,6 +81,7 @@ export default async function handler(req, res) {
     total_ttc:           Number(quote.total_ttc),
     notes:               quote.notes,
     acceptance_url,
+    meta:                quote.meta || {},
   };
 
   const html = generatePurQuoteHtml(templateData, config);

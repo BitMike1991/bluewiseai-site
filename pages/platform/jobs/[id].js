@@ -1189,8 +1189,9 @@ export default function JobDetailPage() {
               commandeDraft={tabData.commande ?? null}
               jobId={job.id}
               onPricingApplied={() => {
-                // Reload job base data + devis tab after pricing applied
+                // Reload job base data + finances + devis tab after pricing applied
                 loadJob();
+                loadFinances();
                 setTabData((prev) => ({ ...prev, devis: undefined }));
               }}
             />;
@@ -1217,8 +1218,10 @@ export default function JobDetailPage() {
             job={job}
             quote={latestQuote}
             onSaved={() => {
-              // Reload job base + devis tab data
+              // Reload job base + finances + devis tab data so top stats cards
+              // and Résumé financier reflect the updated subtotal/TTC/promo.
               loadJob();
+              loadFinances();
               setTabData(prev => ({ ...prev, devis: undefined }));
             }}
           />
