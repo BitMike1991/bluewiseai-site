@@ -41,6 +41,7 @@ const NAV_SECTIONS = [
       { key: "finances", href: "/platform/finances", label: "Finances", icon: DollarSign },
       { key: "payments", href: "/platform/payments", label: "Paiements", icon: HandCoins },
       { key: "expenses", href: "/platform/expenses", label: "Dépenses", icon: Wallet },
+      { key: "taxes", href: "/platform/taxes", label: "Taxes TPS/TVQ", icon: Receipt },
       { key: "campaigns", href: "/platform/campaigns", label: "Campaigns", icon: Target },
       { key: "analytics", href: "/platform/analytics", label: "Analytics", icon: BarChart2 },
       { key: "tasks", href: "/platform/tasks", label: "Tasks", icon: CheckSquare, badgeKey: "tasks" },
