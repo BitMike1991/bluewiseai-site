@@ -749,6 +749,13 @@ export default function DevisEditor({ job, quote, onSaved }) {
   const [petitsFraisOn, setPetitsFraisOn] = useState(
     quote?.meta?.petits_frais_on === undefined ? true : !!quote.meta.petits_frais_on
   );
+  // Client discount — mode 'amount' | 'percent' (radio toggle). Value is raw
+  // number interpreted by mode. Applied as a visible negative line on the
+  // devis (and contract), reduces subtotal before taxes.
+  const [discountMode,  setDiscountMode]  = useState(quote?.meta?.discount_mode || 'amount');
+  const [discountValue, setDiscountValue] = useState(
+    quote?.meta?.discount_value != null ? String(quote.meta.discount_value) : ''
+  );
   const [sousTrOpen,      setSousTrOpen]      = useState(!!(quote?.meta?.sous_traitance_option));
   const [employees,       setEmployees]       = useState(
     Array.isArray(quote?.meta?.employees) ? quote.meta.employees : []
@@ -830,8 +837,19 @@ export default function DevisEditor({ job, quote, onSaved }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [promoEligible]);
 
-  // Apply rebate to subtotal and recompute taxes so TTC reflects the discount.
-  const subtotal  = Math.max(0, rawSubtotal - promoRebate);
+  // Client discount — %/$ toggle. Applied AFTER the promo rebate so a devis
+  // can have both (promo = automatic volume gift; discount = manual
+  // client-facing rebate).
+  const discountRawValue = parseFloat(discountValue) || 0;
+  const preDiscountSubtotal = Math.max(0, rawSubtotal - promoRebate);
+  const clientDiscount = discountRawValue <= 0
+    ? 0
+    : discountMode === 'percent'
+      ? Math.min(preDiscountSubtotal, preDiscountSubtotal * (discountRawValue / 100))
+      : Math.min(preDiscountSubtotal, discountRawValue);
+
+  // Apply rebate + client discount to subtotal and recompute taxes.
+  const subtotal  = Math.max(0, preDiscountSubtotal - clientDiscount);
   const tax_gst   = subtotal * 0.05;
   const tax_qst   = subtotal * 0.09975;
   const total_ttc = subtotal + tax_gst + tax_qst;
@@ -922,6 +940,9 @@ export default function DevisEditor({ job, quote, onSaved }) {
               promo_enabled:        promoActive,
               promo_rebate:         promoRebate,
               petits_frais_on:      petitsFraisOn,
+              discount_mode:        discountMode,
+              discount_value:       discountRawValue,
+              discount_amount:      Math.round(clientDiscount * 100) / 100,
             },
           }),
         }),
@@ -942,7 +963,7 @@ export default function DevisEditor({ job, quote, onSaved }) {
       setSaving(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientName, clientPhone, clientEmail, clientAddress, jobStatus, items, installCost, notes, priceDisplayMode, containerOn, petitsFraisOn, sousTrOpen, employees, promoActive, promoRebate, subtotal, tax_gst, tax_qst, total_ttc, job.id, quote.id, onSaved]);
+  }, [clientName, clientPhone, clientEmail, clientAddress, jobStatus, items, installCost, notes, priceDisplayMode, containerOn, petitsFraisOn, sousTrOpen, employees, promoActive, promoRebate, discountMode, discountValue, clientDiscount, subtotal, tax_gst, tax_qst, total_ttc, job.id, quote.id, onSaved]);
 
   // Ctrl+S keyboard shortcut
   useEffect(() => {
@@ -1504,6 +1525,55 @@ export default function DevisEditor({ job, quote, onSaved }) {
               </div>
             </div>
 
+            {/* Escompte client (%/$) */}
+            <div className="mt-3 pt-3 border-t border-d-border/50">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-semibold text-d-text">Escompte client</span>
+                <div className="inline-flex rounded-lg overflow-hidden border border-d-border text-[10px]">
+                  <button
+                    type="button"
+                    onClick={() => { setDiscountMode('amount'); markDirty(); }}
+                    aria-pressed={discountMode === 'amount'}
+                    className={`px-2.5 py-1 transition ${
+                      discountMode === 'amount'
+                        ? 'bg-d-primary text-white'
+                        : 'bg-d-surface text-d-muted hover:text-d-text'
+                    }`}
+                  >$</button>
+                  <button
+                    type="button"
+                    onClick={() => { setDiscountMode('percent'); markDirty(); }}
+                    aria-pressed={discountMode === 'percent'}
+                    className={`px-2.5 py-1 transition ${
+                      discountMode === 'percent'
+                        ? 'bg-d-primary text-white'
+                        : 'bg-d-surface text-d-muted hover:text-d-text'
+                    }`}
+                  >%</button>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  step={discountMode === 'percent' ? '0.1' : '1'}
+                  value={discountValue}
+                  onChange={e => { setDiscountValue(e.target.value); markDirty(); }}
+                  placeholder={discountMode === 'percent' ? 'Ex: 5' : 'Ex: 500'}
+                  aria-label="Montant de l'escompte client"
+                  className="flex-1 px-2.5 py-1.5 rounded-lg border border-d-border bg-d-surface text-xs text-d-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+                />
+                <span className="text-[10px] text-d-muted w-16">
+                  {discountMode === 'percent' ? '% du HT' : 'montant'}
+                </span>
+              </div>
+              {clientDiscount > 0 && (
+                <div className="mt-2 text-[10px] text-emerald-400/90 font-mono">
+                  Rabais appliqué : −{fmtQC(clientDiscount)}
+                </div>
+              )}
+            </div>
+
             {/* Totals breakdown */}
             <div className="mt-3 pt-3 border-t border-d-border/50 space-y-1 text-xs">
               <div className="flex justify-between">
@@ -1518,6 +1588,12 @@ export default function DevisEditor({ job, quote, onSaved }) {
                 <div className="flex justify-between text-emerald-400">
                   <span>− Rabais promo (porte simple offerte)</span>
                   <span className="font-mono">−{fmtQC(promoRebate)}</span>
+                </div>
+              )}
+              {clientDiscount > 0 && (
+                <div className="flex justify-between text-emerald-400">
+                  <span>− Escompte client{discountMode === 'percent' ? ` (${discountRawValue}%)` : ''}</span>
+                  <span className="font-mono">−{fmtQC(clientDiscount)}</span>
                 </div>
               )}
               <div className="flex justify-between font-semibold border-t border-d-border/50 pt-1">

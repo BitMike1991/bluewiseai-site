@@ -225,6 +225,23 @@ export default async function handler(req, res) {
       promoRebate,
     });
 
+    // Preserve client discount the editor may have set. Apply on top of
+    // recomputed subtotal the same way DevisEditor does, then re-recompute
+    // taxes so the stored total_ttc stays correct after dispatcher re-runs.
+    const storedDiscMode   = quote.meta?.discount_mode === 'percent' ? 'percent' : 'amount';
+    const storedDiscValue  = Number(quote.meta?.discount_value || 0);
+    let clientDiscount = 0;
+    if (storedDiscValue > 0) {
+      clientDiscount = storedDiscMode === 'percent'
+        ? Math.min(totals.subtotal, totals.subtotal * (storedDiscValue / 100))
+        : Math.min(totals.subtotal, storedDiscValue);
+      const adjSubtotal  = Math.max(0, totals.subtotal - clientDiscount);
+      totals.subtotal    = Math.round(adjSubtotal * 100) / 100;
+      totals.tax_gst     = +(adjSubtotal * 0.05).toFixed(2);
+      totals.tax_qst     = +(adjSubtotal * 0.09975).toFixed(2);
+      totals.total_ttc   = +(adjSubtotal + totals.tax_gst + totals.tax_qst).toFixed(2);
+    }
+
     // All items priced?
     const allPriced = lineItems.every(li => li.unit_price != null && li.unit_price > 0);
     const newStatus = allPriced ? 'ready' : quote.status;
@@ -248,6 +265,9 @@ export default async function handler(req, res) {
           promo_enabled:             promoActive,
           promo_rebate:              promoRebate,
           petits_frais_on:           petitsFrais,
+          discount_mode:             storedDiscMode,
+          discount_value:            storedDiscValue,
+          discount_amount:           Math.round(clientDiscount * 100) / 100,
         },
       })
       .eq('id', quoteId)
