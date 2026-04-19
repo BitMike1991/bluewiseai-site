@@ -61,6 +61,8 @@ export default function App({ Component, pageProps }) {
   return (
     <>
       <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content="#0a0a12" />
         <title>{OG_TITLE[locale]}</title>
         <meta name="description" content={OG_DESC[locale]} />
         <meta property="og:type" content="website" />

@@ -353,15 +353,15 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais 
           )}
         </div>
 
-        {/* Expand + BC queue + delete */}
-        <div className="flex items-start gap-1.5 flex-shrink-0">
+        {/* Expand + BC queue + delete — min 44×44 touch targets on mobile */}
+        <div className="flex items-start gap-0.5 sm:gap-1.5 flex-shrink-0 -mr-1 sm:mr-0">
           <button
             type="button"
             onClick={() => setExpanded(v => !v)}
             aria-label={expanded ? 'Réduire' : 'Développer'}
-            className="text-d-muted hover:text-d-text transition focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60 rounded p-0.5"
+            className="text-d-muted hover:text-d-text transition focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60 rounded p-2.5 sm:p-0.5 -m-1 sm:m-0"
           >
-            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
           {/* +BC toggle — adds item to next batch bon de commande */}
           <button
@@ -369,45 +369,47 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais 
             onClick={() => onToggleBC && onToggleBC(index)}
             aria-label={item._queued_for_bc ? 'Retirer du bon de commande' : 'Ajouter au prochain bon de commande'}
             title={item._queued_for_bc ? 'Retiré du BC' : 'Ajouter au BC'}
-            className={`transition flex-shrink-0 focus-visible:outline-none focus-visible:ring-1 rounded p-0.5 ${
+            className={`transition flex-shrink-0 focus-visible:outline-none focus-visible:ring-1 rounded p-2.5 sm:p-0.5 -m-1 sm:m-0 ${
               item._queued_for_bc
                 ? 'text-emerald-400 focus-visible:ring-emerald-400/60'
                 : 'text-d-muted/50 hover:text-emerald-400 focus-visible:ring-emerald-400/60'
             }`}
           >
             {item._queued_for_bc
-              ? <CheckCircle2 size={13} />
-              : <ShoppingCart size={13} />}
+              ? <CheckCircle2 size={15} />
+              : <ShoppingCart size={15} />}
           </button>
           <button
             type="button"
             onClick={() => onDelete(index)}
             aria-label={`Supprimer l'article ${index + 1}`}
-            className="text-rose-400/60 hover:text-rose-400 transition flex-shrink-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-400/60 rounded p-0.5"
+            className="text-rose-400/60 hover:text-rose-400 transition flex-shrink-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-400/60 rounded p-2.5 sm:p-0.5 -m-1 sm:m-0"
           >
-            <Trash2 size={13} />
+            <Trash2 size={15} />
           </button>
         </div>
       </div>
 
       {/* Inline qty/price summary — always visible */}
       <div className="flex items-center gap-2 px-3 pb-2.5">
-        <label className="flex items-center gap-1 text-xs text-d-muted">
+        <label className="flex items-center gap-1.5 text-xs text-d-muted">
           Qté
           <input
             type="number"
+            inputMode="numeric"
             min="1"
             step="1"
             value={item.qty ?? 1}
             onChange={e => update('qty', e.target.value)}
             aria-label={`Quantité article ${index + 1}`}
-            className="w-14 px-1.5 py-0.5 rounded-lg border border-d-border bg-d-surface text-d-text text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+            className="w-16 sm:w-14 min-h-[36px] sm:min-h-0 px-2 py-1.5 sm:py-0.5 rounded-lg border border-d-border bg-d-surface text-d-text text-sm sm:text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
           />
         </label>
-        <label className="flex items-center gap-1 text-xs text-d-muted">
+        <label className="flex items-center gap-1.5 text-xs text-d-muted">
           Prix
           <input
             type="number"
+            inputMode="decimal"
             min="0"
             step="0.01"
             value={Number(effectiveUnit.toFixed(2))}
@@ -418,7 +420,7 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais 
               onChange(index, { ...item, unit_price: canonicalNew, _unit_price_full: canonicalNew });
             }}
             aria-label={`Prix unitaire article ${index + 1}`}
-            className="w-20 px-1.5 py-0.5 rounded-lg border border-d-border bg-d-surface text-d-text text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+            className="w-24 sm:w-20 min-h-[36px] sm:min-h-0 px-2 py-1.5 sm:py-0.5 rounded-lg border border-d-border bg-d-surface text-d-text text-sm sm:text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
           />
         </label>
         <span className="text-xs font-semibold text-d-text ml-auto">{fmtQC(total)}</span>

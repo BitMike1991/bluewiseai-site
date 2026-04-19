@@ -20,6 +20,9 @@
 
 html {
   scroll-behavior: smooth;
+  /* iOS: prevent auto-enlarging landscape text */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -29,6 +32,25 @@ body {
   color: var(--text);
   min-height: 100vh;
   overflow-x: hidden;
+  /* iOS: cleaner tap feedback than the default translucent gray flash */
+  -webkit-tap-highlight-color: transparent;
+  /* Prevent pull-to-refresh / over-scroll bounce inside the app shell */
+  overscroll-behavior-y: none;
+}
+
+/* Eliminate the 300ms tap delay and double-tap-to-zoom on interactive
+   elements — primary actions should feel instant on mobile. */
+a,
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="checkbox"],
+input[type="radio"],
+label,
+select,
+summary {
+  touch-action: manipulation;
 }
 
 /* ─── Focus States: Accessible + On-Brand ─── */

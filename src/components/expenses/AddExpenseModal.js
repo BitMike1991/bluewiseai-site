@@ -123,24 +123,24 @@ export default function AddExpenseModal({ jobs = [], presetJobId = null, presetJ
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto" onClick={onClose}>
+    <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-start justify-center p-3 sm:p-4 overflow-y-auto" onClick={onClose}>
       <form
         onClick={(e) => e.stopPropagation()}
         onSubmit={submit}
-        className="bg-d-bg border border-d-border rounded-2xl shadow-2xl w-full max-w-md p-6 my-8"
+        className="bg-d-bg border border-d-border rounded-2xl shadow-2xl w-full max-w-md p-4 sm:p-6 my-4 sm:my-8"
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-d-text">Ajouter une dépense</h2>
-          <button type="button" onClick={onClose} className="text-d-muted hover:text-d-text">✕</button>
+          <button type="button" onClick={onClose} aria-label="Fermer" className="text-d-muted hover:text-d-text -m-2 p-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/50">✕</button>
         </div>
 
         <div className="space-y-3">
           <div>
             <label className="block text-xs text-d-muted mb-1">Montant total TTC ($)</label>
             <input
-              type="number" step="0.01" min="0" autoFocus
+              type="number" inputMode="decimal" step="0.01" min="0" autoFocus
               value={total} onChange={(e) => setTotal(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm"
+              className="w-full px-3 py-2.5 rounded-xl border border-d-border bg-d-surface text-base sm:text-sm"
               required
             />
             {totalNum > 0 && (
@@ -150,21 +150,21 @@ export default function AddExpenseModal({ jobs = [], presetJobId = null, presetJ
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-d-muted mb-1">Fournisseur</label>
               <input
                 type="text"
                 value={vendor} onChange={(e) => setVendor(e.target.value)}
                 placeholder="Ex: Royalty"
-                className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm"
+                className="w-full px-3 py-2.5 rounded-xl border border-d-border bg-d-surface text-base sm:text-sm"
               />
             </div>
             <div>
               <label className="block text-xs text-d-muted mb-1">Catégorie</label>
               <select
                 value={category} onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm"
+                className="w-full px-3 py-2.5 rounded-xl border border-d-border bg-d-surface text-base sm:text-sm"
               >
                 {Object.entries(EXPENSE_CATEGORY_LABELS).map(([k, v]) => (
                   <option key={k} value={k}>{v}</option>
@@ -173,20 +173,20 @@ export default function AddExpenseModal({ jobs = [], presetJobId = null, presetJ
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-d-muted mb-1">Date payée</label>
               <input
                 type="date"
                 value={paidAt} onChange={(e) => setPaidAt(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm"
+                className="w-full px-3 py-2.5 rounded-xl border border-d-border bg-d-surface text-base sm:text-sm"
               />
             </div>
             <div>
               <label className="block text-xs text-d-muted mb-1">Méthode</label>
               <select
                 value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm"
+                className="w-full px-3 py-2.5 rounded-xl border border-d-border bg-d-surface text-base sm:text-sm"
               >
                 <option value="interac">Interac</option>
                 <option value="cash">Cash</option>
@@ -211,7 +211,7 @@ export default function AddExpenseModal({ jobs = [], presetJobId = null, presetJ
             ) : (
               <select
                 value={jobId} onChange={(e) => setJobId(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm"
+                className="w-full px-3 py-2.5 rounded-xl border border-d-border bg-d-surface text-base sm:text-sm"
               >
                 <option value="">— Non lié —</option>
                 {jobs.map((j) => (
@@ -226,7 +226,7 @@ export default function AddExpenseModal({ jobs = [], presetJobId = null, presetJ
             <input
               type="text"
               value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm"
+              className="w-full px-3 py-2.5 rounded-xl border border-d-border bg-d-surface text-base sm:text-sm"
             />
           </div>
 
@@ -235,7 +235,7 @@ export default function AddExpenseModal({ jobs = [], presetJobId = null, presetJ
             <textarea
               rows={2}
               value={description} onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm"
+              className="w-full px-3 py-2.5 rounded-xl border border-d-border bg-d-surface text-base sm:text-sm"
             />
           </div>
 
