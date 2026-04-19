@@ -651,6 +651,91 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── 12. Devis pipeline metrics (30-day window) ──
+    // Conversion rate: signed / sent. Avg deal: median of signed TTC.
+    // Cycle time: median days from created_at → signed_at.
+    // Margin by month: live projection from quotes.total_ttc − line_items._cost×qty (by month).
+    let devisMetrics = null;
+    try {
+      const since30 = new Date(now.getTime() - 30 * 86400000).toISOString();
+      const [{ data: recentJobs }, { data: recentQuotes }] = await Promise.all([
+        supabase
+          .from("jobs")
+          .select("id, status, quote_amount, created_at, signed_at, deposit_paid_at")
+          .eq("customer_id", customerId)
+          .gte("created_at", since30),
+        supabase
+          .from("quotes")
+          .select("id, job_id, status, subtotal, total_ttc, line_items, created_at")
+          .eq("customer_id", customerId)
+          .neq("status", "superseded")
+          .gte("created_at", since30),
+      ]);
+
+      const jobs = recentJobs || [];
+      const quotes = recentQuotes || [];
+
+      // conversion: sent_or_beyond = quote.status in ['ready','sent','accepted','signed'] OR job.status past awaiting_client_approval
+      const sentStatuses = new Set(["sent", "accepted"]);
+      const signedStatuses = new Set(["signed", "contract_signed", "deposit_received", "in_production", "installed", "closed"]);
+      const sentCount   = jobs.filter(j => ["awaiting_client_approval","accepted","contract_sent","contract_signed","deposit_received","in_production","installed","closed"].includes(j.status)).length;
+      const signedCount = jobs.filter(j => signedStatuses.has(j.status) || j.signed_at).length;
+      const conversionRate = sentCount > 0 ? Math.round((signedCount / sentCount) * 100) : 0;
+
+      // Avg deal size (median) of signed jobs' TTC
+      const signedJobIds = new Set(jobs.filter(j => signedStatuses.has(j.status) || j.signed_at).map(j => j.id));
+      const signedTotals = quotes
+        .filter(q => signedJobIds.has(q.job_id))
+        .map(q => Number(q.total_ttc || 0))
+        .filter(v => v > 0)
+        .sort((a, b) => a - b);
+      const avgDealSize = signedTotals.length
+        ? (signedTotals[Math.floor(signedTotals.length / 2)])
+        : 0;
+
+      // Cycle time (days): signed_at - created_at median
+      const cycles = jobs
+        .filter(j => j.signed_at && j.created_at)
+        .map(j => (new Date(j.signed_at) - new Date(j.created_at)) / 86400000)
+        .filter(d => d >= 0 && d <= 365)
+        .sort((a, b) => a - b);
+      const cycleTimeP50 = cycles.length ? Math.round(cycles[Math.floor(cycles.length / 2)]) : 0;
+
+      // Margin by month (last 6 months) — revenue = quote TTC, cost = Σ(_cost × qty)
+      const monthMap = {};
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = d.toISOString().slice(0, 7);
+        monthMap[key] = { month: key, revenue: 0, estimatedCost: 0, margin: 0 };
+      }
+      for (const q of quotes) {
+        const key = (q.created_at || '').slice(0, 7);
+        if (!monthMap[key]) continue;
+        monthMap[key].revenue += Number(q.total_ttc || 0);
+        const items = Array.isArray(q.line_items) ? q.line_items : [];
+        const cost = items.reduce((s, li) => s + (Number(li._supplier_cost ?? li._cost ?? 0) * (Number(li.qty) || 1)), 0);
+        monthMap[key].estimatedCost += cost;
+      }
+      const marginByMonth = Object.values(monthMap).map(m => ({
+        ...m,
+        revenue: Math.round(m.revenue * 100) / 100,
+        estimatedCost: Math.round(m.estimatedCost * 100) / 100,
+        margin: Math.round((m.revenue - m.estimatedCost) * 100) / 100,
+      }));
+
+      devisMetrics = {
+        window: "30d",
+        conversion_rate_pct: conversionRate,
+        sent_count: sentCount,
+        signed_count: signedCount,
+        avg_deal_size: Math.round(avgDealSize * 100) / 100,
+        cycle_time_days_p50: cycleTimeP50,
+        margin_by_month: marginByMonth,
+      };
+    } catch (devisErr) {
+      console.error("[api/analytics] Devis metrics error:", devisErr?.message);
+    }
+
     const result = {
       kpis,
       leadsPerDay,
@@ -664,6 +749,7 @@ export default async function handler(req, res) {
       socialInsights,
       pixelInsights,
       trafficInsights,
+      devisMetrics,
     };
     return res.status(200).json(result);
   } catch (err) {
