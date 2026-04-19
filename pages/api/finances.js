@@ -28,12 +28,14 @@ export default async function handler(req, res) {
       { data: pendingRows },
     ] = await Promise.all([
       supabase.from("payments")
-        .select("amount, created_at, job_id, payment_type")
+        .select("id, amount, created_at, paid_at, job_id, payment_type, payment_method, status, receipt_url, tps, tvq, subtotal")
         .eq("customer_id", customerId)
-        .eq("status", "succeeded"),
+        .eq("status", "succeeded")
+        .order("paid_at", { ascending: false }),
       supabase.from("expenses")
-        .select("total, category, vendor, paid_at, receipt_url, description, job_id")
-        .eq("customer_id", customerId),
+        .select("id, total, subtotal, tps, tvq, category, vendor, paid_at, receipt_url, description, job_id, invoice_number, payment_method")
+        .eq("customer_id", customerId)
+        .order("paid_at", { ascending: false }),
       supabase.from("jobs")
         .select("id, quote_amount")
         .eq("customer_id", customerId)
@@ -229,6 +231,11 @@ export default async function handler(req, res) {
         tpsMtd,
         tvqMtd,
       },
+      // Full ledgers (scoped to tenant). Used by /platform/payments +
+      // /platform/expenses for the cross-job rollup views.
+      paymentsAllTime: allPayments || [],
+      expenses:        allExpenses || [],
+      paymentsPending: pendingRows || [],
     });
   } catch (err) {
     console.error("[api/finances] Error:", err);
