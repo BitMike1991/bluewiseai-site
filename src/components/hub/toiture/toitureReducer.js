@@ -7,6 +7,7 @@
 export const INITIAL_STATE = {
   step: 0,
   client: { name: '', phone: '', email: '', address: '', city: '', postal: '', notes: '' },
+  house_photo_url: '',
   measures: { surface: 0, eaves_length: 0, ridge: 0, pitch_category: null, complexity: null },
   shingle_type: 'bardeau_standard',
   quantities: { bardeau_standard: 0, cap_bardeau: 0, pitch: 0, syntec: 0, glace_eau: 0, maximum: 0, event: 0, clou: 0 },
@@ -50,6 +51,7 @@ export const T = {
   SET_PRICING_MODE: 'SET_PRICING_MODE',
   SET_TIER: 'SET_TIER',
   SET_RESULT: 'SET_RESULT',
+  SET_HOUSE_PHOTO: 'SET_HOUSE_PHOTO',
   RESTORE_STATE: 'RESTORE_STATE',
   RESET_ALL: 'RESET_ALL',
 };
@@ -61,6 +63,9 @@ export default function toitureReducer(state, action) {
 
     case T.SET_CLIENT_FIELD:
       return { ...state, client: { ...state.client, [action.field]: action.value } };
+
+    case T.SET_HOUSE_PHOTO:
+      return { ...state, house_photo_url: action.payload || '' };
 
     case T.SET_MEASURES_FIELD:
       return { ...state, measures: { ...state.measures, [action.field]: action.value } };

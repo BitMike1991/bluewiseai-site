@@ -1,5 +1,6 @@
 import { T } from '../toitureReducer';
 import { Input, Textarea } from '@/components/hub/ui';
+import MediaPicker from '@/components/ui/MediaPicker';
 import s from '../toiture.module.css';
 
 export default function ClientInfo({ state, dispatch }) {
@@ -22,6 +23,19 @@ export default function ClientInfo({ state, dispatch }) {
       </div>
       <div style={{ marginTop: 12 }}>
         <Textarea label="Notes" value={state.client.notes} onChange={set('notes')} placeholder="Notes sur le projet..." />
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <label style={{ display: 'block', fontSize: 12, marginBottom: 6, color: '#6b7280', fontWeight: 600 }}>
+          Photo de la maison (apparaît sur le devis)
+        </label>
+        <MediaPicker
+          value={state.house_photo_url}
+          onChange={(url) => dispatch({ type: T.SET_HOUSE_PHOTO, payload: url })}
+          bucket="media"
+          context="toiture"
+          label="Prendre/ajouter photo"
+          accept="image/*"
+        />
       </div>
     </div>
   );
