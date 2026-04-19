@@ -12,6 +12,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { generatePurQuoteHtml } from '../../../../lib/quote-templates/pur.js';
 import { mergeConfig } from '../../../../lib/quote-config.js';
+import { checkRateLimit } from '../../../../lib/security';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -23,6 +24,11 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
+
+  // 30 renders/min per IP — generous for legit clients refreshing, blocks
+  // token enumeration attempts.
+  const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
+  if (checkRateLimit(req, res, `devis-render:${ip}`, 30)) return;
 
   const { quote_number } = req.query;
   if (!quote_number) return res.status(400).json({ error: 'quote_number required' });

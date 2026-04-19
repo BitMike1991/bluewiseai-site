@@ -9,6 +9,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { generatePurQuoteHtml } from '../../../../lib/quote-templates/pur.js';
 import { mergeConfig } from '../../../../lib/quote-config.js';
+import { checkRateLimit } from '../../../../lib/security';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -19,6 +20,11 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).end('GET only');
   }
+
+  // 30 renders/min per IP — iframe preview reloads on every save, so this is
+  // generous for legit use.
+  const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
+  if (checkRateLimit(req, res, `devis-render-iframe:${ip}`, 30)) return;
 
   const { quote_number } = req.query;
   if (!quote_number) {

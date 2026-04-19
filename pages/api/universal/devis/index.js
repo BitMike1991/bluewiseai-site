@@ -1,6 +1,7 @@
 // Universal Quote Creation API — Multi-tenant
 // Called by n8n after owner confirms quote in Slack
 // Fetches per-customer branding, warranties, exclusions, payment schedule from quote_config
+import crypto from 'crypto';
 import { getSupabaseServerClient } from '../../../../lib/supabaseServer';
 import { generatePurQuoteHtml } from '../../../../lib/quote-templates/pur.js';
 import { mergeConfig } from '../../../../lib/quote-config.js';
@@ -11,8 +12,12 @@ function formatMoney(amount) {
   return Number(amount).toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
 }
 
+// CSPRNG-backed quote token generation. 16 hex chars = 64 bits of entropy,
+// making enumeration of the public /q/[token] surface computationally infeasible.
+// Legacy 6-digit numeric tokens are still accepted on read paths for backward
+// compatibility with quotes already sent to clients.
 function generateQuoteNumber(prefix) {
-  return (prefix || 'BW') + '-' + Math.floor(100000 + Math.random() * 900000);
+  return (prefix || 'BW') + '-' + crypto.randomBytes(8).toString('hex');
 }
 
 function generateQuoteHtml(data, config) {

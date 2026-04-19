@@ -3,6 +3,7 @@
 // customer_id is resolved FROM the quote record, never hardcoded
 // Interac flow only — NO Stripe/CC processing
 import { getSupabaseServerClient } from '../../../../lib/supabaseServer';
+import { checkRateLimit } from '../../../../lib/security';
 
 const supabase = getSupabaseServerClient();
 
@@ -20,14 +21,18 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Rate limit: 5 accept attempts per IP per minute. Protects against
+  // enumeration + accidental double-click storms. Legitimate clients only
+  // accept once; legit retries happen seconds apart, not 5+ times/minute.
+  const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
+  if (checkRateLimit(req, res, `devis-accept:${ip}`, 5)) return;
+
   try {
     const { quote_number, selected_tier } = req.body;
 
     if (!quote_number) {
       return res.status(400).json({ error: 'quote_number requis' });
     }
-
-    const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
     const userAgent = req.headers['user-agent'] || 'unknown';
     const acceptedAt = new Date().toISOString();
 

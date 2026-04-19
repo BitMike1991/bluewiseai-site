@@ -1,11 +1,14 @@
 // pages/api/jobs/index.js
+import crypto from "crypto";
 import { getAuthContext } from "../../../lib/supabaseServer";
 import { mergeConfig } from "../../../lib/quote-config.js";
 
 const ALLOWED_METHODS = ["GET", "POST"];
 
+// CSPRNG job id. 16 hex chars = 64 bits of entropy. Legacy 6-digit ids stay
+// readable by every downstream system (no migration needed for existing jobs).
 function generateJobId(prefix) {
-  return (prefix || 'BW') + '-' + Math.floor(100000 + Math.random() * 900000);
+  return (prefix || 'BW') + '-' + crypto.randomBytes(8).toString('hex');
 }
 
 export default async function handler(req, res) {
