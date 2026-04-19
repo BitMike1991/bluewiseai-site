@@ -820,12 +820,19 @@ export default function DevisEditor({ job, quote, onSaved }) {
   const [discountValue, setDiscountValue] = useState(
     quote?.meta?.discount_value != null ? String(quote.meta.discount_value) : ''
   );
-  // Complexity surcharge — % baked into each item's unit_price proportionally
-  // (not as a visible line). Used when the job has extra complexity that
-  // inflates every item's work. Invisible to the client on the devis.
-  const [complexityPct, setComplexityPct] = useState(
-    quote?.meta?.complexity_pct != null ? String(quote.meta.complexity_pct) : ''
+  // Complexity surcharge — baked into each item's unit_price proportionally
+  // (not a visible line on the client devis). Mode 'percent' multiplies each
+  // item; mode 'amount' distributes a flat dollar value pro-rata across items.
+  // Legacy `complexity_pct` is migrated to mode='percent'.
+  const [complexityMode, setComplexityMode] = useState(
+    quote?.meta?.complexity_mode || 'percent'
   );
+  const [complexityValue, setComplexityValue] = useState(() => {
+    const v = quote?.meta?.complexity_value != null
+      ? quote.meta.complexity_value
+      : quote?.meta?.complexity_pct;
+    return v != null ? String(v) : '';
+  });
   const [sousTrOpen,      setSousTrOpen]      = useState(!!(quote?.meta?.sous_traitance_option));
   const [employees,       setEmployees]       = useState(
     Array.isArray(quote?.meta?.employees) ? quote.meta.employees : []
@@ -887,6 +894,10 @@ export default function DevisEditor({ job, quote, onSaved }) {
   const [showSend,  setShowSend]  = useState(false);
 
   const savedRef = useRef(false);
+  // Suppresses the "Enregistré" toast when the save was triggered by idle
+  // auto-save rather than Ctrl+S / manual button. Ref so handleSave reads the
+  // latest value without being a dep.
+  const autoSavingRef = useRef(false);
 
   // Mark dirty on any field change
   function markDirty() {
@@ -904,12 +915,19 @@ export default function DevisEditor({ job, quote, onSaved }) {
 
   // Complexity surcharge baked pro-rata into items (invisible on client devis).
   // Multiplier applied to the items portion only — overhead/gaz/container
-  // unaffected because they're fixed project fees.
-  const complexityPctNum = Math.max(0, parseFloat(complexityPct) || 0);
-  const complexityMultiplier = 1 + complexityPctNum / 100;
-  const complexityAdj = complexityPctNum > 0
-    ? (lineSubtotal + installAmt) * (complexityMultiplier - 1)
-    : 0;
+  // unaffected because they're fixed project fees. Mode 'amount' distributes a
+  // flat dollar value across items by deriving the equivalent multiplier from
+  // the items+install base, so every item scales by its share.
+  const complexityRawValue = Math.max(0, parseFloat(complexityValue) || 0);
+  const complexityBase = lineSubtotal + installAmt;
+  const complexityAdj = complexityRawValue <= 0 || complexityBase <= 0
+    ? 0
+    : complexityMode === 'percent'
+      ? complexityBase * (complexityRawValue / 100)
+      : Math.min(complexityRawValue, complexityBase * 10); // safety cap
+  const complexityMultiplier = complexityBase > 0
+    ? 1 + complexityAdj / complexityBase
+    : 1;
 
   // Promo: "porte simple offerte" when the quote has 9+ openings and contains a porte simple.
   // Auto-initialize on first eligibility if meta didn't explicitly say no.
@@ -1042,8 +1060,11 @@ export default function DevisEditor({ job, quote, onSaved }) {
               discount_mode:        discountMode,
               discount_value:       discountRawValue,
               discount_amount:      Math.round(clientDiscount * 100) / 100,
-              complexity_pct:       complexityPctNum,
+              complexity_mode:      complexityMode,
+              complexity_value:     complexityRawValue,
+              complexity_pct:       complexityMode === 'percent' ? complexityRawValue : 0,
               complexity_amount:    Math.round(complexityAdj * 100) / 100,
+              complexity_multiplier: Math.round(complexityMultiplier * 10000) / 10000,
             },
           }),
         }),
@@ -1056,15 +1077,18 @@ export default function DevisEditor({ job, quote, onSaved }) {
       setDirty(false);
       savedRef.current = true;
       setPreviewKey(Date.now()); // reload iframe
-      setToast({ msg: 'Enregistré', type: 'success' });
+      if (!autoSavingRef.current) {
+        setToast({ msg: 'Enregistré', type: 'success' });
+      }
       if (onSaved) onSaved();
     } catch (err) {
       setToast({ msg: `Erreur: ${err.message}`, type: 'error' });
     } finally {
       setSaving(false);
+      autoSavingRef.current = false;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientName, clientPhone, clientEmail, clientAddress, jobStatus, items, installCost, notes, priceDisplayMode, containerOn, petitsFraisOn, sousTrOpen, employees, promoActive, promoRebate, discountMode, discountValue, clientDiscount, complexityPct, complexityAdj, subtotal, tax_gst, tax_qst, total_ttc, job.id, quote.id, onSaved]);
+  }, [clientName, clientPhone, clientEmail, clientAddress, jobStatus, items, installCost, notes, priceDisplayMode, containerOn, petitsFraisOn, sousTrOpen, employees, promoActive, promoRebate, discountMode, discountValue, clientDiscount, complexityMode, complexityValue, complexityAdj, subtotal, tax_gst, tax_qst, total_ttc, job.id, quote.id, onSaved]);
 
   // Ctrl+S keyboard shortcut
   useEffect(() => {
@@ -1089,6 +1113,20 @@ export default function DevisEditor({ job, quote, onSaved }) {
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [dirty]);
+
+  // Auto-save on 3s idle — keeps iframe preview + parent stats cards live as
+  // Jérémy edits. Skips while already saving to avoid racing writes. Marks
+  // autoSavingRef so the save toast is suppressed (no flicker every 3s).
+  useEffect(() => {
+    if (!dirty || saving) return;
+    const t = setTimeout(() => {
+      if (!savedRef.current) {
+        autoSavingRef.current = true;
+        handleSave();
+      }
+    }, 3000);
+    return () => clearTimeout(t);
+  }, [dirty, saving, handleSave]);
 
   async function handlePriceDisplayModeChange(newMode) {
     setPriceDisplayMode(newMode);
@@ -1680,21 +1718,45 @@ export default function DevisEditor({ job, quote, onSaved }) {
             <div className="mt-3 pt-3 border-t border-d-border/50">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-semibold text-d-text">Surcharge complexité</span>
-                <span className="text-[10px] text-amber-400/80">% invisible client</span>
+                <div className="inline-flex rounded-lg overflow-hidden border border-d-border text-[10px]">
+                  <button
+                    type="button"
+                    onClick={() => { setComplexityMode('amount'); markDirty(); }}
+                    aria-pressed={complexityMode === 'amount'}
+                    className={`px-2.5 py-1 transition ${
+                      complexityMode === 'amount'
+                        ? 'bg-amber-500/80 text-white'
+                        : 'bg-d-surface text-d-muted hover:text-d-text'
+                    }`}
+                  >$</button>
+                  <button
+                    type="button"
+                    onClick={() => { setComplexityMode('percent'); markDirty(); }}
+                    aria-pressed={complexityMode === 'percent'}
+                    className={`px-2.5 py-1 transition ${
+                      complexityMode === 'percent'
+                        ? 'bg-amber-500/80 text-white'
+                        : 'bg-d-surface text-d-muted hover:text-d-text'
+                    }`}
+                  >%</button>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
                   min="0"
-                  step="1"
-                  value={complexityPct}
-                  onChange={e => { setComplexityPct(e.target.value); markDirty(); }}
-                  placeholder="Ex: 15"
-                  aria-label="Pourcentage de surcharge complexité"
+                  step={complexityMode === 'percent' ? '0.1' : '1'}
+                  value={complexityValue}
+                  onChange={e => { setComplexityValue(e.target.value); markDirty(); }}
+                  placeholder={complexityMode === 'percent' ? 'Ex: 15' : 'Ex: 500'}
+                  aria-label="Valeur de surcharge complexité"
                   className="flex-1 px-2.5 py-1.5 rounded-lg border border-d-border bg-d-surface text-xs text-d-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
                 />
-                <span className="text-[10px] text-d-muted w-20">% des items</span>
+                <span className="text-[10px] text-d-muted w-20">
+                  {complexityMode === 'percent' ? '% des items' : '$ pro-rata'}
+                </span>
               </div>
+              <div className="mt-1 text-[9px] text-amber-400/70">Invisible au client · distribué par item</div>
               {complexityAdj > 0 && (
                 <div className="mt-2 text-[10px] text-amber-400/90 font-mono">
                   Ajouté (pro-rata) : +{fmtQC(complexityAdj)}
@@ -1714,7 +1776,7 @@ export default function DevisEditor({ job, quote, onSaved }) {
               </div>
               {complexityAdj > 0 && (
                 <div className="flex justify-between text-amber-400/90">
-                  <span>+ Complexité ({complexityPctNum}%) — invisible client</span>
+                  <span>+ Complexité ({complexityMode === 'percent' ? `${complexityRawValue}%` : fmtQC(complexityRawValue)}) — invisible client</span>
                   <span className="font-mono">+{fmtQC(complexityAdj)}</span>
                 </div>
               )}
