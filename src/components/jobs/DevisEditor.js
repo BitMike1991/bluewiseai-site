@@ -1043,8 +1043,24 @@ export default function DevisEditor({ job, quote, onSaved }) {
     setEmployees(prev => prev.filter((_, i) => i !== idx));
   }
 
+  // Build the public quote URL. Prefer the acceptance_url stamped on the quote
+  // meta at creation time (that's what was actually emailed/SMSed to the
+  // client). Fallback to the hub subdomain for PUR, else the current origin.
+  function publicQuoteUrl() {
+    const fromMeta = quote?.meta?.acceptance_url;
+    if (fromMeta) return fromMeta;
+    if (typeof window !== 'undefined') {
+      const host = window.location.hostname;
+      // If we're on the BW platform side, prefer hub.purconstruction.com for PUR
+      const isPur = host === 'bluewiseai.com' || host === 'www.bluewiseai.com';
+      const base = isPur ? 'https://hub.purconstruction.com' : window.location.origin;
+      return `${base}/q/${quote.quote_number}`;
+    }
+    return `/q/${quote.quote_number}`;
+  }
+
   function handleCopyLink() {
-    const url = `https://pur-construction-site.vercel.app/q/${quote.quote_number}`;
+    const url = publicQuoteUrl();
     navigator.clipboard.writeText(url).then(() => {
       setToast({ msg: 'Lien copié', type: 'success' });
     }).catch(() => {
@@ -1053,7 +1069,7 @@ export default function DevisEditor({ job, quote, onSaved }) {
   }
 
   function handleOpenPreview() {
-    window.open(`https://pur-construction-site.vercel.app/q/${quote.quote_number}`, '_blank');
+    window.open(publicQuoteUrl(), '_blank');
   }
 
   const iframeSrc = `/api/universal/devis/render-iframe?quote_number=${quote.quote_number}&t=${previewKey}`;

@@ -1,7 +1,7 @@
 // pages/platform/leads/[id].js
 
 import { useRouter } from "next/router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "../../../src/components/dashboard/DashboardLayout";
 import { useBranding } from "../../../src/components/dashboard/BrandingContext";
@@ -521,7 +521,22 @@ export default function LeadDetailPage() {
   const [statusLoading, setStatusLoading] = useState(false);
 
   const [timelineFilter, setTimelineFilter] = useState("all");
-  const [mobileTab, setMobileTab] = useState("convo"); // convo | infos | tasks
+  const [mobileTab, _setMobileTab] = useState("convo"); // convo | infos | tasks
+  const setMobileTab = useCallback((tab) => {
+    _setMobileTab(tab);
+    try {
+      if (typeof window !== 'undefined' && id) {
+        window.sessionStorage.setItem(`leads-${id}-tab`, tab);
+      }
+    } catch { /* ignore */ }
+  }, [id]);
+  useEffect(() => {
+    if (!id || typeof window === 'undefined') return;
+    try {
+      const saved = window.sessionStorage.getItem(`leads-${id}-tab`);
+      if (saved) _setMobileTab(saved);
+    } catch { /* ignore */ }
+  }, [id]);
 
   const [sendOpen, setSendOpen] = useState(false);
   const [sendChannel, setSendChannel] = useState("sms");

@@ -1209,8 +1209,26 @@ export default function JobDetailPage() {
   const [finances, setFinances]     = useState(null);
   const [lightboxUrl, setLightboxUrl] = useState(null);
 
-  // Tab state
-  const [activeTab, setActiveTab]   = useState('apercu');
+  // Tab state — persisted per-job in sessionStorage so navigating away and
+  // back (common on iPad) restores the same tab.
+  const [activeTab, _setActiveTab] = useState('apercu');
+  const setActiveTab = useCallback((tab) => {
+    _setActiveTab(tab);
+    try {
+      if (typeof window !== 'undefined' && id) {
+        window.sessionStorage.setItem(`jobs-${id}-tab`, tab);
+      }
+    } catch { /* sessionStorage blocked — ignore */ }
+  }, [id]);
+
+  // Restore tab on mount / id change
+  useEffect(() => {
+    if (!id || typeof window === 'undefined') return;
+    try {
+      const saved = window.sessionStorage.getItem(`jobs-${id}-tab`);
+      if (saved) _setActiveTab(saved);
+    } catch { /* ignore */ }
+  }, [id]);
   // Per-tab data cache (lazy-loaded on first visit)
   const [tabData, setTabData]       = useState({});
   const [tabLoading, setTabLoading] = useState({});
@@ -1265,14 +1283,22 @@ export default function JobDetailPage() {
   }, [id, tabData, tabLoading]);
 
   // Load finances (for the existing financial summary card)
+  const [financesError, setFinancesError] = useState(null);
   async function loadFinances() {
     if (!id) return;
     try {
       const res = await fetch(`/api/jobs/${id}/finances`);
-      if (!res.ok) return;
+      if (!res.ok) {
+        setFinancesError(`Finances indisponibles (HTTP ${res.status})`);
+        return;
+      }
       const json = await res.json();
       setFinances(json);
-    } catch { /* silent */ }
+      setFinancesError(null);
+    } catch (err) {
+      console.warn('[loadFinances]', err?.message);
+      setFinancesError('Erreur réseau — recharge la page');
+    }
   }
 
   useEffect(() => {
