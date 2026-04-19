@@ -88,9 +88,13 @@ function computeTotals(items, installCost, opts = {}) {
     (s, it) => s + (Number(it.qty) || 0) * (Number(it.unit_price) || 0),
     0
   );
+  // Use computeItemBreakdown so items without stored _urethane/_moulure/_calking
+  // (manually-added lines that never hit apply-supplier-pricing) still get the
+  // credit via the perimeter fallback — matches what the UI displays per-item.
   const cannetteCredit = petitsFrais ? 0 : (items || []).reduce((s, it) => {
+    const bd = computeItemBreakdown(it);
     const q = Number(it.qty) || 1;
-    return s + q * (Number(it._urethane || 0) + Number(it._moulure || 0) + Number(it._calking || 0));
+    return s + q * (bd.urethane + bd.moulure + bd.calking);
   }, 0);
   const lineSubtotal = rawLineSubtotal - cannetteCredit;
   const overhead  = petitsFrais ? 200 : 0;
