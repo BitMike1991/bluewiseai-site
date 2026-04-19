@@ -842,6 +842,15 @@ function AddPaymentModal({ jobId, suggestedDepositAmount, onClose, onSaved }) {
       setError('Montant invalide');
       return;
     }
+    // Auto-split TPS/TVQ on the payment row (assumes the amount IS the TTC
+    // reçu, standard for Quebec construction revenue). Same reverse-calc the
+    // finances API uses but stored once at insert time so future audits can
+    // reconcile without recomputation drift.
+    const htBase = amt / 1.14975;
+    const computedTps = Math.round(htBase * 0.05 * 100) / 100;
+    const computedTvq = Math.round(htBase * 0.09975 * 100) / 100;
+    const computedSubtotal = Math.round(htBase * 100) / 100;
+
     setSaving(true);
     try {
       const res = await fetch('/api/payments', {
@@ -856,6 +865,9 @@ function AddPaymentModal({ jobId, suggestedDepositAmount, onClose, onSaved }) {
           paid_at: paidAt ? new Date(paidAt).toISOString() : undefined,
           note: note.trim() || undefined,
           receipt_url: receiptUrl || undefined,
+          subtotal: computedSubtotal,
+          tps: computedTps,
+          tvq: computedTvq,
         }),
       });
       const json = await res.json().catch(() => ({}));
