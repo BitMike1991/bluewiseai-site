@@ -532,11 +532,47 @@ function SendModal({ quote, job, onClose, onSent }) {
   const [phone, setPhone]   = useState(job?.client_phone || '');
   const [email, setEmail]   = useState(job?.client_email || '');
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState(null);
+  const [sendResult, setSendResult] = useState(null);
 
   async function handleSend() {
     setSending(true);
+    setSendError(null);
+    setSendResult(null);
     try {
-      // Mark quote as sent + job as awaiting_client_approval
+      // Step 1: actually send SMS + email via the universal send endpoint.
+      // If neither recipient is provided, skip the send and still flip status
+      // (matches the old soft behavior — Jérémy might copy the link manually).
+      const wantSms   = !!phone;
+      const wantEmail = !!email;
+      const channel = wantSms && wantEmail ? 'both' : wantSms ? 'sms' : wantEmail ? 'email' : null;
+
+      let sendData = null;
+      if (channel) {
+        const sendResp = await fetch('/api/universal/devis/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            quote_id: quote.id,
+            channel,
+            phone_override: wantSms ? phone : undefined,
+            email_override: wantEmail ? email : undefined,
+          }),
+        });
+        sendData = await sendResp.json().catch(() => null);
+        if (!sendResp.ok && (!sendData || !sendData.success)) {
+          // Surface the error but still give Jérémy the option to flip status manually
+          throw new Error(
+            sendData?.results?.sms?.error
+            || sendData?.results?.email?.error
+            || sendData?.error
+            || `Erreur envoi (HTTP ${sendResp.status})`
+          );
+        }
+        setSendResult(sendData);
+      }
+
+      // Step 2: flip quote + job status
       await Promise.all([
         fetch(`/api/quotes/${quote.id}`, {
           method: 'PATCH',
@@ -549,9 +585,11 @@ function SendModal({ quote, job, onClose, onSent }) {
           body: JSON.stringify({ status: 'awaiting_client_approval' }),
         }),
       ]);
-      onSent({ phone, email });
-    } catch {
-      // non-fatal
+
+      onSent({ phone, email, sendResult: sendData });
+    } catch (err) {
+      console.error('[DevisEditor.handleSend]', err);
+      setSendError(err?.message || 'Erreur inconnue');
     } finally {
       setSending(false);
     }
@@ -601,9 +639,21 @@ function SendModal({ quote, job, onClose, onSent }) {
               className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm text-d-text placeholder:text-d-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/50"
             />
           </div>
-          <p className="text-[10px] text-amber-400">
-            Envoi SMS/Email — TODO câblage Telnyx en P12. Marque quand même le statut « Envoyé ».
-          </p>
+          {sendError && (
+            <p className="text-[11px] text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
+              {sendError}
+            </p>
+          )}
+          {sendResult && (
+            <div className="text-[11px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-3 py-2 space-y-0.5">
+              {sendResult.results?.sms?.attempted && (
+                <div>SMS : {sendResult.results.sms.success ? '✓ envoyé' : `✕ ${sendResult.results.sms.error || 'échec'}`}</div>
+              )}
+              {sendResult.results?.email?.attempted && (
+                <div>Email : {sendResult.results.email.success ? `✓ envoyé (${sendResult.results.email.provider})` : `✕ ${sendResult.results.email.error || 'échec'}`}</div>
+              )}
+            </div>
+          )}
         </div>
 
         <button
@@ -1023,9 +1073,17 @@ export default function DevisEditor({ job, quote, onSaved }) {
           quote={quote}
           job={{ ...job, client_phone: clientPhone, client_email: clientEmail }}
           onClose={() => setShowSend(false)}
-          onSent={() => {
+          onSent={({ sendResult }) => {
             setShowSend(false);
-            setToast({ msg: 'Statut mis à jour — envoi SMS/email en P12', type: 'success' });
+            const smsOk   = sendResult?.results?.sms?.success;
+            const emailOk = sendResult?.results?.email?.success;
+            const parts = [];
+            if (smsOk)   parts.push('SMS ✓');
+            if (emailOk) parts.push('Email ✓');
+            const msg = parts.length
+              ? `Devis envoyé (${parts.join(' + ')})`
+              : 'Statut mis à jour';
+            setToast({ msg, type: 'success' });
             setJobStatus('awaiting_client_approval');
           }}
         />
