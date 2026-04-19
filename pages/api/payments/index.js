@@ -112,6 +112,10 @@ export default async function handler(req, res) {
   // Only for deposit payments that succeed, and only when the job is in a
   // state where deposit-received makes sense. Skip silently otherwise.
   let newJobStatus = null;
+  // Only fire the transition (and downstream Jérémy SMS alert) when the job
+  // actually moved into `deposit_received` for the first time. Recording a
+  // partial top-up on a job already in `deposit_received` must NOT re-trigger
+  // the SMS — CoVe finding 2026-04-19.
   if (payment_type === "deposit") {
     const nextStatus = DEPOSIT_STATUS_FLIP[job.status];
     if (nextStatus && nextStatus !== job.status) {
@@ -125,9 +129,9 @@ export default async function handler(req, res) {
         .eq("id", job.id)
         .eq("customer_id", customerId);
       if (!updErr) newJobStatus = nextStatus;
-    } else if (job.status === "contract_signed" || job.status === "awaiting_deposit") {
-      newJobStatus = nextStatus;
     }
+    // Intentionally no `else` — keeping newJobStatus as null on the idempotent
+    // path prevents the deposit alert from re-firing.
   }
 
   // ── Log job_event for ops + audit ──

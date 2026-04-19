@@ -3,6 +3,7 @@
 // Fully dynamic via quote_config from the customers table
 // Template routing: config.branding.html_template === 'pur' → PÜR specialized template
 //                   otherwise → generic blue template (BW / SP)
+import crypto from 'crypto';
 import { getSupabaseServerClient } from '../../../../lib/supabaseServer';
 import { generatePurContractHtml } from '../../../../lib/contract-templates/pur.js';
 import { applyCorsHeaders } from '../../../../lib/universal-api-auth';
@@ -99,9 +100,12 @@ function mergeConfig(dbConfig) {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+// CSPRNG contract token — matches generateQuoteNumber in universal/devis/index.js.
+// 16 hex chars = 64 bits of entropy, making contract number enumeration
+// computationally infeasible.
 function generateContractNumber(prefix) {
   const p = (prefix || 'BW').toUpperCase();
-  return `${p}-C-${Math.floor(100000 + Math.random() * 900000)}`;
+  return `${p}-C-${crypto.randomBytes(8).toString('hex')}`;
 }
 
 function formatMoney(amount) {

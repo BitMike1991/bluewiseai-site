@@ -13,6 +13,7 @@
  * Returns: { success, job_id, job_id_human, quote_number, url, lead_id?, lead_matched? }
  */
 
+import crypto from 'crypto';
 import { sbInsert, sbSelect, sbUpdate } from '@/lib/supabase-server';
 import { getAuthContext } from '../../../lib/supabaseServer';
 
@@ -22,9 +23,12 @@ import { getAuthContext } from '../../../lib/supabaseServer';
 const CUSTOMER_ID = 9;
 const BW_CRM_BASE = 'https://www.bluewiseai.com/platform/jobs';
 
+// CSPRNG quote token — keeps a date prefix for human readability but uses
+// 8 hex chars of crypto entropy instead of a 4-digit random (keyspace was
+// only 10K/day → trivial to enumerate).
 function generateQuoteNumber() {
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const rand = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+  const rand = crypto.randomBytes(4).toString('hex');
   return `PUR-${today}-${rand}`;
 }
 

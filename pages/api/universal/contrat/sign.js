@@ -93,7 +93,7 @@ export default async function handler(req, res) {
     const storagePath = contract_number.replace('-C-', '-contrat-') + '.html';
     const { data: contract, error: contractLookupErr } = await supabase
       .from('contracts')
-      .select('id, job_id, customer_id, signature_status, storage_path, storage_bucket')
+      .select('id, job_id, customer_id, signature_status, storage_path, storage_bucket, created_at')
       .or(`storage_path.eq.${storagePath},storage_path.eq.${contract_number}`)
       .maybeSingle();
 
@@ -133,13 +133,28 @@ export default async function handler(req, res) {
       });
     }
 
-    // ── 4b. Phone gate — soft enforcement (backward-compatible).
-    // If the client supplies `client_phone_last4`, validate it against the
-    // phone we have on file. Reject on mismatch. If the client omits the
-    // field, skip the check (legacy contracts sent before this gate existed
-    // don't have the input in their embedded form). New contracts include
-    // the phone input in the template → the field will be present.
-    if (client_phone_last4 != null && String(client_phone_last4).trim() !== '') {
+    // ── 4b. Phone gate — hard for post-chain contracts, soft for legacy.
+    //
+    // Legacy contracts (created before 2026-04-19) don't have the phone input
+    // in their embedded form, so we can't require it — backward-compat only.
+    // Post-chain contracts MUST provide client_phone_last4; omitting the field
+    // would otherwise let an attacker bypass the gate by stripping the field
+    // from their POST (CoVe finding 2026-04-19).
+    const PHONE_GATE_CUTOFF = '2026-04-19T00:00:00Z';
+    const createdAt = contract.created_at ? new Date(contract.created_at) : null;
+    const postChain = createdAt && createdAt >= new Date(PHONE_GATE_CUTOFF);
+    const phoneSupplied = client_phone_last4 != null && String(client_phone_last4).trim() !== '';
+
+    if (postChain && !phoneSupplied) {
+      const n = recordSignAttempt(contract_number);
+      console.warn('[contrat/sign] phone gate missing on post-chain contract', { contract_number, attempt: n, ip });
+      return res.status(400).json({
+        error: 'Vérification téléphone requise. Entrez les 4 derniers chiffres du numéro fourni lors du devis.',
+        attempts_remaining: Math.max(0, SIGN_MAX_ATTEMPTS - n),
+      });
+    }
+
+    if (phoneSupplied) {
       const { data: jobRow } = await supabase
         .from('jobs')
         .select('client_phone')
