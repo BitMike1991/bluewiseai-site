@@ -32,6 +32,7 @@ import {
   countOpenings,
 } from '../../../lib/devis/promo';
 import WindowConfigSVG from '../hub/commande/svg/WindowConfigSVG';
+import MediaPicker from '../ui/MediaPicker';
 import PatioDoorSVG   from '../hub/commande/svg/PatioDoorSVG';
 import EntryDoorSVG   from '../hub/commande/svg/EntryDoorSVG';
 
@@ -567,6 +568,24 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC }) {
               </span>
             </label>
           )}
+
+          {/* Photos de la fenêtre/porte existante — référence pour l'installateur */}
+          <div>
+            <label className="block text-[10px] text-d-muted mb-1">
+              Photos de l'ouverture existante
+              <span className="ml-1 text-d-muted/60 font-normal">(pour l'installateur)</span>
+            </label>
+            <MediaPicker
+              value={Array.isArray(item._photos) ? item._photos : []}
+              onChange={(urls) => update('_photos', urls)}
+              multiple
+              bucket="media"
+              context="window"
+              label="Prendre photo"
+              accept="image/*"
+              maxFiles={5}
+            />
+          </div>
         </div>
       )}
     </div>
