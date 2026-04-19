@@ -756,6 +756,12 @@ export default function DevisEditor({ job, quote, onSaved }) {
   const [discountValue, setDiscountValue] = useState(
     quote?.meta?.discount_value != null ? String(quote.meta.discount_value) : ''
   );
+  // Complexity surcharge — % baked into each item's unit_price proportionally
+  // (not as a visible line). Used when the job has extra complexity that
+  // inflates every item's work. Invisible to the client on the devis.
+  const [complexityPct, setComplexityPct] = useState(
+    quote?.meta?.complexity_pct != null ? String(quote.meta.complexity_pct) : ''
+  );
   const [sousTrOpen,      setSousTrOpen]      = useState(!!(quote?.meta?.sous_traitance_option));
   const [employees,       setEmployees]       = useState(
     Array.isArray(quote?.meta?.employees) ? quote.meta.employees : []
@@ -823,6 +829,15 @@ export default function DevisEditor({ job, quote, onSaved }) {
   const { lineSubtotal, install: installAmt, overhead, gaz, container, subtotal: rawSubtotal, tax_gst: rawTps, tax_qst: rawTvq, total_ttc: rawTtc } =
     computeTotals(dataItems, installCost, { container: containerOn, petitsFrais: petitsFraisOn });
 
+  // Complexity surcharge baked pro-rata into items (invisible on client devis).
+  // Multiplier applied to the items portion only — overhead/gaz/container
+  // unaffected because they're fixed project fees.
+  const complexityPctNum = Math.max(0, parseFloat(complexityPct) || 0);
+  const complexityMultiplier = 1 + complexityPctNum / 100;
+  const complexityAdj = complexityPctNum > 0
+    ? (lineSubtotal + installAmt) * (complexityMultiplier - 1)
+    : 0;
+
   // Promo: "porte simple offerte" when the quote has 9+ openings and contains a porte simple.
   // Auto-initialize on first eligibility if meta didn't explicitly say no.
   const promoEligible = qualifiesForPromo(dataItems);
@@ -841,7 +856,9 @@ export default function DevisEditor({ job, quote, onSaved }) {
   // can have both (promo = automatic volume gift; discount = manual
   // client-facing rebate).
   const discountRawValue = parseFloat(discountValue) || 0;
-  const preDiscountSubtotal = Math.max(0, rawSubtotal - promoRebate);
+  // Subtotal with complexity added first, then promo subtracted.
+  const withComplexity = rawSubtotal + complexityAdj;
+  const preDiscountSubtotal = Math.max(0, withComplexity - promoRebate);
   const clientDiscount = discountRawValue <= 0
     ? 0
     : discountMode === 'percent'
@@ -943,6 +960,8 @@ export default function DevisEditor({ job, quote, onSaved }) {
               discount_mode:        discountMode,
               discount_value:       discountRawValue,
               discount_amount:      Math.round(clientDiscount * 100) / 100,
+              complexity_pct:       complexityPctNum,
+              complexity_amount:    Math.round(complexityAdj * 100) / 100,
             },
           }),
         }),
@@ -963,7 +982,7 @@ export default function DevisEditor({ job, quote, onSaved }) {
       setSaving(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientName, clientPhone, clientEmail, clientAddress, jobStatus, items, installCost, notes, priceDisplayMode, containerOn, petitsFraisOn, sousTrOpen, employees, promoActive, promoRebate, discountMode, discountValue, clientDiscount, subtotal, tax_gst, tax_qst, total_ttc, job.id, quote.id, onSaved]);
+  }, [clientName, clientPhone, clientEmail, clientAddress, jobStatus, items, installCost, notes, priceDisplayMode, containerOn, petitsFraisOn, sousTrOpen, employees, promoActive, promoRebate, discountMode, discountValue, clientDiscount, complexityPct, complexityAdj, subtotal, tax_gst, tax_qst, total_ttc, job.id, quote.id, onSaved]);
 
   // Ctrl+S keyboard shortcut
   useEffect(() => {
@@ -1574,6 +1593,32 @@ export default function DevisEditor({ job, quote, onSaved }) {
               )}
             </div>
 
+            {/* Surcharge complexité — invisible au client (baked dans items) */}
+            <div className="mt-3 pt-3 border-t border-d-border/50">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-semibold text-d-text">Surcharge complexité</span>
+                <span className="text-[10px] text-amber-400/80">% invisible client</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={complexityPct}
+                  onChange={e => { setComplexityPct(e.target.value); markDirty(); }}
+                  placeholder="Ex: 15"
+                  aria-label="Pourcentage de surcharge complexité"
+                  className="flex-1 px-2.5 py-1.5 rounded-lg border border-d-border bg-d-surface text-xs text-d-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+                />
+                <span className="text-[10px] text-d-muted w-20">% des items</span>
+              </div>
+              {complexityAdj > 0 && (
+                <div className="mt-2 text-[10px] text-amber-400/90 font-mono">
+                  Ajouté (pro-rata) : +{fmtQC(complexityAdj)}
+                </div>
+              )}
+            </div>
+
             {/* Totals breakdown */}
             <div className="mt-3 pt-3 border-t border-d-border/50 space-y-1 text-xs">
               <div className="flex justify-between">
@@ -1584,6 +1629,12 @@ export default function DevisEditor({ job, quote, onSaved }) {
                 <span className="text-d-muted">+ Overhead + Gaz{containerOn ? ' + Container' : ''}</span>
                 <span className="text-d-text font-mono">{fmtQC(overhead + gaz + container)}</span>
               </div>
+              {complexityAdj > 0 && (
+                <div className="flex justify-between text-amber-400/90">
+                  <span>+ Complexité ({complexityPctNum}%) — invisible client</span>
+                  <span className="font-mono">+{fmtQC(complexityAdj)}</span>
+                </div>
+              )}
               {promoActive && (
                 <div className="flex justify-between text-emerald-400">
                   <span>− Rabais promo (porte simple offerte)</span>

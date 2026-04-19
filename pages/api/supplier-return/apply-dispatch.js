@@ -225,22 +225,35 @@ export default async function handler(req, res) {
       promoRebate,
     });
 
-    // Preserve client discount the editor may have set. Apply on top of
-    // recomputed subtotal the same way DevisEditor does, then re-recompute
-    // taxes so the stored total_ttc stays correct after dispatcher re-runs.
+    // Preserve client discount + complexity surcharge from editor state.
+    // Complexity is applied FIRST (inflates items portion), then promo
+    // already applied in totals above, then discount.
+    const storedComplexityPct = Math.max(0, Number(quote.meta?.complexity_pct || 0));
+    const complexityAdj = storedComplexityPct > 0
+      ? Math.round((totals.itemsTotal * storedComplexityPct / 100) * 100) / 100
+      : 0;
+
     const storedDiscMode   = quote.meta?.discount_mode === 'percent' ? 'percent' : 'amount';
     const storedDiscValue  = Number(quote.meta?.discount_value || 0);
-    let clientDiscount = 0;
-    if (storedDiscValue > 0) {
-      clientDiscount = storedDiscMode === 'percent'
-        ? Math.min(totals.subtotal, totals.subtotal * (storedDiscValue / 100))
-        : Math.min(totals.subtotal, storedDiscValue);
-      const adjSubtotal  = Math.max(0, totals.subtotal - clientDiscount);
-      totals.subtotal    = Math.round(adjSubtotal * 100) / 100;
-      totals.tax_gst     = +(adjSubtotal * 0.05).toFixed(2);
-      totals.tax_qst     = +(adjSubtotal * 0.09975).toFixed(2);
-      totals.total_ttc   = +(adjSubtotal + totals.tax_gst + totals.tax_qst).toFixed(2);
+
+    if (complexityAdj > 0 || storedDiscValue > 0) {
+      let adjSubtotal = totals.subtotal + complexityAdj;
+      if (storedDiscValue > 0) {
+        const disc = storedDiscMode === 'percent'
+          ? Math.min(adjSubtotal, adjSubtotal * (storedDiscValue / 100))
+          : Math.min(adjSubtotal, storedDiscValue);
+        adjSubtotal = Math.max(0, adjSubtotal - disc);
+      }
+      totals.subtotal  = Math.round(adjSubtotal * 100) / 100;
+      totals.tax_gst   = +(adjSubtotal * 0.05).toFixed(2);
+      totals.tax_qst   = +(adjSubtotal * 0.09975).toFixed(2);
+      totals.total_ttc = +(adjSubtotal + totals.tax_gst + totals.tax_qst).toFixed(2);
     }
+    const clientDiscount = storedDiscValue > 0
+      ? (storedDiscMode === 'percent'
+        ? (totals.itemsTotal + complexityAdj) * (storedDiscValue / 100)
+        : storedDiscValue)
+      : 0;
 
     // All items priced?
     const allPriced = lineItems.every(li => li.unit_price != null && li.unit_price > 0);
@@ -268,6 +281,8 @@ export default async function handler(req, res) {
           discount_mode:             storedDiscMode,
           discount_value:            storedDiscValue,
           discount_amount:           Math.round(clientDiscount * 100) / 100,
+          complexity_pct:            storedComplexityPct,
+          complexity_amount:         complexityAdj,
         },
       })
       .eq('id', quoteId)
