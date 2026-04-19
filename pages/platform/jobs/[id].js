@@ -1277,10 +1277,12 @@ export default function JobDetailPage() {
   const [tabLoading, setTabLoading] = useState({});
 
   // Load base data (job + contracts + payments + events + lead + photos)
-  async function loadJob() {
+  // silent=true suppresses the top-level loading spinner so refreshes (e.g.
+  // triggered by devis autosave → onSaved) don't unmount the tab tree mid-edit.
+  async function loadJob(silent = false) {
     if (!id) return;
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError(null);
       const res = await fetch(`/api/jobs/${id}`);
       if (!res.ok) throw new Error(`Erreur ${res.status}`);
@@ -1290,7 +1292,7 @@ export default function JobDetailPage() {
       console.error(err);
       setError(err.message);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
@@ -1464,13 +1466,14 @@ export default function JobDetailPage() {
             job={job}
             quote={latestQuote}
             onSaved={async () => {
-              // Refresh top stats cards + finances.
-              loadJob();
+              // Silent refresh — loadJob(true) skips setLoading(true) so the top
+              // spinner doesn't flash + unmount the DevisEditor tree mid-edit.
+              // Without this, the autosave → loadJob → setLoading(true) chain
+              // unmounts DevisEditor, then on remount its useState reads the
+              // stale prop (old meta) before the quotes refetch lands — dropping
+              // the toggle change back to its pre-save value.
+              loadJob(true);
               loadFinances();
-              // Refresh tabData.devis in-place (don't clear it) so a later tab
-              // switch remounts DevisEditor with the newly-saved values. Clearing
-              // would unmount the live editor on every 3s idle auto-save — no
-              // re-fetch trigger, stranding the UI in an "Aucun devis" state.
               try {
                 const res = await fetch(`/api/jobs/${id}?expand=quotes`);
                 if (res.ok) {
