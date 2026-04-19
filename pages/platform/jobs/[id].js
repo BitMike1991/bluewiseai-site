@@ -7,6 +7,7 @@ import Link from 'next/link';
 import DashboardLayout from '../../../src/components/dashboard/DashboardLayout';
 import StatusBadge from '../../../src/components/jobs/StatusBadge';
 import DevisEditor from '../../../src/components/jobs/DevisEditor';
+import MediaPicker from '../../../src/components/ui/MediaPicker';
 import { getStatusMeta, STATUS_ORDER } from '../../../lib/status-config';
 import {
   ChevronLeft,
@@ -751,9 +752,25 @@ function TabPaiements({ payments, quoteAmount, jobId, onPaymentAdded, finances }
           {payments.map((p) => (
             <div
               key={p.id}
-              className="flex items-center justify-between px-4 py-3 rounded-xl border border-d-border bg-d-surface/30"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl border border-d-border bg-d-surface/30"
             >
-              <div>
+              {p.receiptUrl || p.receipt_url ? (
+                <a
+                  href={p.receiptUrl || p.receipt_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-d-border bg-d-surface block"
+                  aria-label="Voir la preuve de paiement"
+                >
+                  {/\.pdf(\?.*)?$/i.test(p.receiptUrl || p.receipt_url) ? (
+                    <div className="w-full h-full flex items-center justify-center text-d-muted text-[9px] font-semibold">PDF</div>
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.receiptUrl || p.receipt_url} alt="Reçu" className="w-full h-full object-cover" loading="lazy" />
+                  )}
+                </a>
+              ) : null}
+              <div className="flex-1 min-w-0">
                 <p className="text-sm text-d-text">
                   {(p.payment_type || 'paiement').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                   {p.method && (
@@ -764,7 +781,7 @@ function TabPaiements({ payments, quoteAmount, jobId, onPaymentAdded, finances }
                 </p>
                 <p className="text-xs text-d-muted">{p.paid_at ? formatDate(p.paid_at) : formatDate(p.created_at)}</p>
               </div>
-              <div className="text-right">
+              <div className="text-right flex-shrink-0">
                 <p className={`text-sm font-medium ${
                   p.status === 'paid' || p.status === 'succeeded' ? 'text-emerald-400' : 'text-amber-500'
                 }`}>
@@ -813,6 +830,7 @@ function AddPaymentModal({ jobId, suggestedDepositAmount, onClose, onSaved }) {
   const [referenceNumber, setReferenceNumber] = useState('');
   const [note, setNote] = useState('');
   const [paidAt, setPaidAt] = useState(new Date().toISOString().slice(0, 10));
+  const [receiptUrl, setReceiptUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
@@ -837,6 +855,7 @@ function AddPaymentModal({ jobId, suggestedDepositAmount, onClose, onSaved }) {
           reference_number: referenceNumber.trim() || undefined,
           paid_at: paidAt ? new Date(paidAt).toISOString() : undefined,
           note: note.trim() || undefined,
+          receipt_url: receiptUrl || undefined,
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -925,6 +944,18 @@ function AddPaymentModal({ jobId, suggestedDepositAmount, onClose, onSaved }) {
             <textarea
               rows={2} value={note} onChange={(e) => setNote(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm text-d-text placeholder:text-d-muted/40"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-d-muted mb-1.5">Preuve de paiement (optionnel)</label>
+            <MediaPicker
+              value={receiptUrl}
+              onChange={setReceiptUrl}
+              bucket="receipts"
+              context="receipt"
+              jobId={jobId}
+              label="Ajouter capture"
+              accept="image/*,application/pdf"
             />
           </div>
           {error && (

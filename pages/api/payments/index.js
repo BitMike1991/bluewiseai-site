@@ -45,6 +45,7 @@ export default async function handler(req, res) {
     subtotal,
     tps,
     tvq,
+    receipt_url,
   } = req.body || {};
 
   // ── Validation ──
@@ -88,6 +89,7 @@ export default async function handler(req, res) {
     subtotal: subtotal != null ? Number(subtotal) : null,
     tps:      tps      != null ? Number(tps)      : null,
     tvq:      tvq      != null ? Number(tvq)      : null,
+    receipt_url: receipt_url || null,
     meta: {
       entered_via: "manual_ui",
       reference_number: reference_number || null,
