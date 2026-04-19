@@ -19,6 +19,7 @@ import { sendEmailGmail } from '../../../../lib/providers/gmail';
 import { sendEmailMailgun } from '../../../../lib/providers/mailgun';
 import { encryptToken } from '../../../../lib/tokenEncryption';
 import { buildDevisNotifyEmail, buildDevisNotifySms } from '../../../../lib/email-templates/devis-notify';
+import { createAutoTasks } from '../../../../lib/tasks/auto';
 
 function normStr(v) {
   if (v == null) return '';
@@ -268,6 +269,16 @@ export default async function handler(req, res) {
 
   const anySuccess = (results.sms.attempted && results.sms.success)
     || (results.email.attempted && results.email.success);
+
+  // Auto-create follow-up task only when the send actually succeeded
+  if (anySuccess) {
+    createAutoTasks(supabase, {
+      customerId: customerIdResolved,
+      jobId: quote.job_id,
+      leadId: job.lead_id || null,
+      eventType: 'quote_sent',
+    }).catch(() => {});
+  }
 
   return res.status(anySuccess ? 200 : 502).json({
     success: anySuccess,

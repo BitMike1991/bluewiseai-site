@@ -5,6 +5,7 @@
 import { getSupabaseServerClient } from '../../../../lib/supabaseServer';
 import { applyCorsHeaders } from '../../../../lib/universal-api-auth';
 import { alertJeremy } from '../../../../lib/notifications/jeremy-alert';
+import { createAutoTasks } from '../../../../lib/tasks/auto';
 
 const MAX_SIGNATURE_BYTES = 500 * 1024;       // 500 KB — signature PNG
 const MAX_SIGNED_HTML_BYTES = 1.5 * 1024 * 1024; // 1.5 MB — rendered contract with embedded image
@@ -312,6 +313,14 @@ export default async function handler(req, res) {
         deposit_amount: depositAmount,
         job_url: `https://bluewiseai.com/platform/jobs/${jobId}`,
       },
+    }).catch(() => {});
+
+    // Auto-create follow-up task for deposit (fire-and-forget)
+    createAutoTasks(supabase, {
+      customerId,
+      jobId,
+      leadId: jobData?.lead_id || null,
+      eventType: 'contract_signed',
     }).catch(() => {});
 
     // ── 10. Return success ────────────────────────────────────────────────────

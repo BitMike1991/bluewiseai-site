@@ -6,6 +6,7 @@
 
 import { getAuthContext } from "../../../lib/supabaseServer";
 import { alertJeremy } from "../../../lib/notifications/jeremy-alert";
+import { createAutoTasks } from "../../../lib/tasks/auto";
 
 const ALLOWED_METHODS = ["POST"];
 
@@ -164,6 +165,12 @@ export default async function handler(req, res) {
         method,
         job_url: `https://bluewiseai.com/platform/jobs/${job.id}`,
       },
+    }).catch(() => {});
+
+    createAutoTasks(supabase, {
+      customerId,
+      jobId: job.id,
+      eventType: "deposit_received",
     }).catch(() => {});
   }
 

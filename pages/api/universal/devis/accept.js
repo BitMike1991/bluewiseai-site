@@ -7,6 +7,7 @@ import { checkRateLimit } from '../../../../lib/security';
 import { applyCorsHeaders } from '../../../../lib/universal-api-auth';
 import { fetchWithTimeout } from '../../../../lib/fetch-with-timeout';
 import { alertJeremy } from '../../../../lib/notifications/jeremy-alert';
+import { createAutoTasks } from '../../../../lib/tasks/auto';
 
 const supabase = getSupabaseServerClient();
 
@@ -308,6 +309,16 @@ export default async function handler(req, res) {
         job_url: `https://${custDomain}/platform/jobs/${job.id}`,
       },
     }).catch(() => {});
+
+    // Auto-tasks (fire-and-forget)
+    if (contractUrl) {
+      createAutoTasks(supabase, {
+        customerId,
+        jobId: quote.job_id,
+        leadId: job.lead_id || null,
+        eventType: 'quote_accepted',
+      }).catch(() => {});
+    }
 
     // If the contract couldn't be created, tell the client plainly —
     // the quote is still saved as accepted, Jérémy will handle the contract
