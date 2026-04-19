@@ -6,29 +6,16 @@ import { getSupabaseServerClient } from '../../../../lib/supabaseServer';
 import { applyCorsHeaders } from '../../../../lib/universal-api-auth';
 import { alertJeremy } from '../../../../lib/notifications/jeremy-alert';
 import { createAutoTasks } from '../../../../lib/tasks/auto';
+import { checkRateLimitDb } from '../../../../lib/security';
 
 const MAX_SIGNATURE_BYTES = 500 * 1024;       // 500 KB — signature PNG
 const MAX_SIGNED_HTML_BYTES = 1.5 * 1024 * 1024; // 1.5 MB — rendered contract with embedded image
 
-// Per-contract sign attempt tracker (wrong phone gate).
-// Keyed by contract_number. 5 attempts per hour max.
-const signAttempts = new Map();
+// Per-contract sign attempt rate-limit. Load-bearing: this is the protection
+// against brute-forcing the 4-digit phone gate. Uses the Supabase-backed
+// limiter (not the in-memory Map) so cold-start Lambdas share state.
 const SIGN_MAX_ATTEMPTS = 5;
 const SIGN_WINDOW_MS = 60 * 60 * 1000;
-
-function recordSignAttempt(contractNumber) {
-  const now = Date.now();
-  const list = (signAttempts.get(contractNumber) || []).filter(ts => now - ts < SIGN_WINDOW_MS);
-  list.push(now);
-  signAttempts.set(contractNumber, list);
-  return list.length;
-}
-
-function isSignAttemptLimited(contractNumber) {
-  const now = Date.now();
-  const list = (signAttempts.get(contractNumber) || []).filter(ts => now - ts < SIGN_WINDOW_MS);
-  return list.length >= SIGN_MAX_ATTEMPTS;
-}
 
 function normalizeLast4(phone) {
   if (!phone) return '';
@@ -78,12 +65,9 @@ export default async function handler(req, res) {
       return res.status(413).json({ error: 'signed_html exceeds 1.5MB limit' });
     }
 
-    // Per-contract attempt rate limit (protects phone gate from brute force)
-    if (isSignAttemptLimited(contract_number)) {
-      return res.status(429).json({
-        error: 'Trop de tentatives. Attendez une heure ou contactez votre entrepreneur.'
-      });
-    }
+    // Per-contract phone-gate brute-force limit is applied ONLY when a phone
+    // check fails (see below) — not on every POST, so legit signers who tap
+    // twice don't burn attempts. Supabase-backed so it survives cold starts.
 
     const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
     const userAgent = req.headers['user-agent'] || 'unknown';
@@ -146,11 +130,14 @@ export default async function handler(req, res) {
     const phoneSupplied = client_phone_last4 != null && String(client_phone_last4).trim() !== '';
 
     if (postChain && !phoneSupplied) {
-      const n = recordSignAttempt(contract_number);
-      console.warn('[contrat/sign] phone gate missing on post-chain contract', { contract_number, attempt: n, ip });
+      const rl = await checkRateLimitDb(supabase, `sign-fail:${contract_number}`, SIGN_MAX_ATTEMPTS, SIGN_WINDOW_MS);
+      if (!rl.allowed) {
+        return res.status(429).json({ error: 'Trop de tentatives. Attendez une heure ou contactez votre entrepreneur.', reset_at: rl.reset_at });
+      }
+      console.warn('[contrat/sign] phone gate missing on post-chain contract', { contract_number, attempt: rl.current_count, ip });
       return res.status(400).json({
         error: 'Vérification téléphone requise. Entrez les 4 derniers chiffres du numéro fourni lors du devis.',
-        attempts_remaining: Math.max(0, SIGN_MAX_ATTEMPTS - n),
+        attempts_remaining: Math.max(0, SIGN_MAX_ATTEMPTS - rl.current_count),
       });
     }
 
@@ -164,11 +151,14 @@ export default async function handler(req, res) {
       const expected = normalizeLast4(jobRow?.client_phone);
       const supplied = normalizeLast4(client_phone_last4);
       if (expected && expected.length === 4 && supplied !== expected) {
-        const n = recordSignAttempt(contract_number);
-        console.warn('[contrat/sign] phone gate failed', { contract_number, attempt: n, ip });
+        const rl = await checkRateLimitDb(supabase, `sign-fail:${contract_number}`, SIGN_MAX_ATTEMPTS, SIGN_WINDOW_MS);
+        if (!rl.allowed) {
+          return res.status(429).json({ error: 'Trop de tentatives. Attendez une heure ou contactez votre entrepreneur.', reset_at: rl.reset_at });
+        }
+        console.warn('[contrat/sign] phone gate failed', { contract_number, attempt: rl.current_count, ip });
         return res.status(401).json({
           error: 'Vérification téléphone échouée. Entrez les 4 derniers chiffres du numéro fourni lors du devis.',
-          attempts_remaining: Math.max(0, SIGN_MAX_ATTEMPTS - n),
+          attempts_remaining: Math.max(0, SIGN_MAX_ATTEMPTS - rl.current_count),
         });
       }
     }

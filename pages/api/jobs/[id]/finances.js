@@ -105,15 +105,20 @@ export default async function handler(req, res) {
 
     const balanceRemaining = Math.max(0, ttc - totalPaid);
 
-    // Projected margin: what Jérémy will net if he pays estimated material cost + logged expenses
-    // against the full client TTC. Shown during quote/contract phase.
-    const marginProjected = ttc - estimatedMaterialCost - totalExpenses;
-    const marginProjectedPct = ttc > 0 ? Math.round((marginProjected / ttc) * 100) : 0;
+    // Margin math uses HT (subtotal), NOT TTC — taxes are passthrough to Revenu
+    // Québec, not Jérémy's revenue. Using TTC would over-state margin % by
+    // ~15% on every job.
+    //
+    // Projected margin: what Jérémy will net if he pays estimated material cost
+    // + logged expenses, against the full client HT. Shown during quote/contract phase.
+    const marginProjected = subtotal - estimatedMaterialCost - totalExpenses;
+    const marginProjectedPct = subtotal > 0 ? Math.round((marginProjected / subtotal) * 100) : 0;
 
-    // Realized margin: what Jérémy has actually netted based on logged payments vs logged expenses.
-    // Only meaningful once money starts flowing.
-    const marginRealized = totalPaid - totalExpenses;
-    const marginRealizedPct = totalPaid > 0 ? Math.round((marginRealized / totalPaid) * 100) : 0;
+    // Realized margin: actual HT received (payment TTC × subtotal/TTC ratio)
+    // minus logged expenses. Accurate once money starts flowing.
+    const totalPaidHt = ttc > 0 ? totalPaid * (subtotal / ttc) : totalPaid;
+    const marginRealized = totalPaidHt - totalExpenses;
+    const marginRealizedPct = totalPaidHt > 0 ? Math.round((marginRealized / totalPaidHt) * 100) : 0;
 
     // Default "margin" field = projected (what Jérémy cares about in quote phase).
     // Frontend can switch to realized once payments come in.

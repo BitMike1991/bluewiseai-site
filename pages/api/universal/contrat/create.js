@@ -966,6 +966,7 @@ export default async function handler(req, res) {
         client_city: null,
         project_description: job?.project_description || '',
         line_items: items,
+        meta: quoteRow.meta || {},  // carries complexity_pct, discount_*, etc.
         subtotal: sub,
         tax_gst: tGst,
         tax_qst: tQst,

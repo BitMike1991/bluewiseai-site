@@ -57,9 +57,11 @@ export default async function handler(req, res) {
     // Per-customer key → trust that mapping
     tenantFilter = resolved;
   } else {
-    // Master key path — two cases:
+    // Master key path — three cases:
     //   a) Browser request (Origin header present) → enforce allowlist → tenant from origin
-    //   b) Server-to-server (no Origin — n8n, curl, SSR proxy) → tenant-agnostic
+    //   b) S2S with explicit ?customer_id=N query param → use that (validated next)
+    //   c) Neither → REJECT. Previously returned tenant-agnostic, which meant
+    //      a leaked master key let any lead be read by ID enumeration.
     const origin = req.headers?.origin || '';
     if (origin) {
       if (!(origin in ORIGIN_TO_CUSTOMER)) {
@@ -68,10 +70,12 @@ export default async function handler(req, res) {
       }
       tenantFilter = ORIGIN_TO_CUSTOMER[origin];
     } else {
-      // No Origin = server-to-server. Master key is already authenticated so this is safe
-      // for trusted infrastructure (n8n workflows). Warn for visibility.
-      console.warn('[universal/leads] master key without Origin (server-to-server call), lead_id=' + id);
-      tenantFilter = null;
+      const cidParam = Number(req.query.customer_id);
+      if (!Number.isInteger(cidParam) || cidParam <= 0) {
+        console.warn('[universal/leads] master key without Origin and no customer_id param', { lead_id: id });
+        return res.status(400).json({ error: 'customer_id query param required for server-to-server master-key calls' });
+      }
+      tenantFilter = cidParam;
     }
   }
 
