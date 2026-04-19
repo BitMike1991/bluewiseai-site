@@ -83,10 +83,20 @@ function matchEntryDoor(item) {
   const type = (item.type || '').toLowerCase();
   const model = (item.model || '').trim();
   if (!type.includes('porte') || type.includes('patio')) return null;
-  // Try direct style match
+  // Try direct style match (if model happens to be a style key)
   const byModel = Object.keys(ENTRY_DOOR_STYLES || {}).find(k => k.toLowerCase() === model.toLowerCase());
   if (byModel) return { styleKey: byModel };
-  // Fall back to plain_door if we have a style with panels=['door']
+  // Infer side count from item.sides or from type text ("Porte + 2 latéraux").
+  const sides = Number(item.sides) || 0;
+  let inferredSides = sides;
+  if (!inferredSides) {
+    const m = type.match(/(\d+)\s*lat[eé]rau/) || type.match(/porte\s*\+\s*(\d+)/);
+    if (m) inferredSides = parseInt(m[1], 10) || 0;
+  }
+  if (inferredSides === 1 && ENTRY_DOOR_STYLES?.single_1side) return { styleKey: 'single_1side' };
+  if (inferredSides >= 2 && ENTRY_DOOR_STYLES?.single_2sides) return { styleKey: 'single_2sides' };
+  if (/porte\s+double|double\s+door/.test(type) && ENTRY_DOOR_STYLES?.double_post) return { styleKey: 'double_post' };
+  // Fall back to plain single door
   const plain = Object.entries(ENTRY_DOOR_STYLES || {}).find(([, v]) => Array.isArray(v.panels) && v.panels.length === 1 && v.panels[0] === 'door');
   if (plain) return { styleKey: plain[0] };
   return null;
