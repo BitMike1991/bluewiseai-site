@@ -6,6 +6,7 @@
 // DELETE → set status='inactive' + end_date=today
 
 import { getAuthContext } from '../../../lib/supabaseServer';
+import { encryptSin, isValidSinFormat } from '../../../lib/payroll/sin-crypto';
 
 const PATCHABLE = new Set([
   'first_name', 'last_name', 'role', 'hourly_rate', 'status',
@@ -33,6 +34,19 @@ export default async function handler(req, res) {
     const patch = {};
     for (const [k, v] of Object.entries(req.body || {})) {
       if (PATCHABLE.has(k)) patch[k] = v;
+    }
+    // sin_plain → encrypted (never stored as plaintext)
+    const rawSin = req.body?.sin_plain;
+    if (rawSin) {
+      if (!isValidSinFormat(rawSin)) {
+        return res.status(400).json({ error: 'NAS invalide (doit avoir 9 chiffres + passer la validation Luhn)' });
+      }
+      try {
+        patch.sin_encrypted = encryptSin(rawSin);
+      } catch (e) {
+        console.error('[api/employees] SIN encryption failed', e.message);
+        return res.status(500).json({ error: 'Échec du chiffrement NAS (vérifier PAYROLL_SIN_KEY env var)' });
+      }
     }
     if (patch.hourly_rate != null) {
       const n = Number(patch.hourly_rate);
