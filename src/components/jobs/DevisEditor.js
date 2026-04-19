@@ -54,6 +54,36 @@ function buildDescription(item) {
   return parts.join(' — ') || item.description || 'Article';
 }
 
+// Canonical unit_price = always "with cannettes baked in" (urethane+moulure+calking).
+// Stored in `_unit_price_full` for round-trip; falls back to item.unit_price for
+// legacy items (pre-feature, unit_price was always canonical).
+function getCanonicalUnitPrice(item) {
+  if (item._unit_price_full != null) return Number(item._unit_price_full) || 0;
+  return Number(item.unit_price) || 0;
+}
+
+// Sum of per-unit cannette fees (urethane + moulure + calking). Prefers stored
+// values (from apply-supplier-pricing); falls back to perimeter-based formula
+// for manually-entered items.
+function getCannettesPerUnit(item) {
+  const stored = Number(item._urethane || 0) + Number(item._moulure || 0) + Number(item._calking || 0);
+  if (stored > 0) return stored;
+  const w = parseFloat(item.dimensions?.width) || 0;
+  const h = parseFloat(item.dimensions?.height) || 0;
+  const perimeter = 2 * (w + h);
+  if (perimeter <= 0) return 0;
+  return Math.ceil(perimeter / 150) * 6.75
+       + perimeter * 0.04
+       + Math.ceil(perimeter / 120) * 6.75;
+}
+
+// Effective displayed unit price = canonical minus cannettes when toggle is OFF.
+function getEffectiveUnitPrice(item, petitsFrais) {
+  const canonical = getCanonicalUnitPrice(item);
+  if (petitsFrais) return canonical;
+  return Math.max(0, canonical - getCannettesPerUnit(item));
+}
+
 // Per-item fee breakdown using stored metadata (set after supplier upload)
 // Field naming varies across codepaths: dispatcher writes `_supplier_cost`, legacy
 // matched path writes `_cost`. Same story for list price (_supplier_list_price vs
@@ -210,11 +240,17 @@ function showEnergyStarBadge(item) {
   return isPvcFenetre(item);
 }
 
-function LineItemRow({ item, index, onChange, onDelete, onToggleBC }) {
+function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais = true }) {
   const [expanded, setExpanded] = useState(false);
   const [showCalc, setShowCalc] = useState(false);
   const auto = buildDescription(item);
-  const total = (Number(item.qty) || 0) * (Number(item.unit_price) || 0);
+  // Internal state stores the canonical unit_price (with cannettes). What Jérémy
+  // edits + sees is the effective price — canonical minus cannettes when the
+  // "petits frais" toggle is OFF.
+  const canonicalUnit = getCanonicalUnitPrice(item);
+  const cannettesPerUnit = getCannettesPerUnit(item);
+  const effectiveUnit = petitsFrais ? canonicalUnit : Math.max(0, canonicalUnit - cannettesPerUnit);
+  const total = (Number(item.qty) || 0) * effectiveUnit;
   // Show breakdown button whenever item has ANY pricing signal OR dimensions
   // (dimensions alone allow us to compute perimeter-based fees)
   const hasBreakdown = !!(item._supplier_cost || item._cost || item._supplier_list_price || item._list_price || item.unit_price || (item.dimensions?.width && item.dimensions?.height));
@@ -374,8 +410,13 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC }) {
             type="number"
             min="0"
             step="0.01"
-            value={item.unit_price ?? 0}
-            onChange={e => update('unit_price', e.target.value)}
+            value={Number(effectiveUnit.toFixed(2))}
+            onChange={e => {
+              const entered = Number(e.target.value) || 0;
+              // Reverse: store canonical = effective + cannettes (if toggle OFF).
+              const canonicalNew = petitsFrais ? entered : entered + cannettesPerUnit;
+              onChange(index, { ...item, unit_price: canonicalNew, _unit_price_full: canonicalNew });
+            }}
             aria-label={`Prix unitaire article ${index + 1}`}
             className="w-20 px-1.5 py-0.5 rounded-lg border border-d-border bg-d-surface text-d-text text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
           />
@@ -806,11 +847,20 @@ export default function DevisEditor({ job, quote, onSaved }) {
   // Defensive parse: line_items may arrive as JSON string from some write paths (backfill bug hardened)
   const parsedLineItems = (() => {
     const raw = quote?.line_items;
-    if (Array.isArray(raw)) return raw;
-    if (typeof raw === 'string') {
-      try { const p = JSON.parse(raw); return Array.isArray(p) ? p : []; } catch { return []; }
+    let arr = [];
+    if (Array.isArray(raw)) arr = raw;
+    else if (typeof raw === 'string') {
+      try { const p = JSON.parse(raw); arr = Array.isArray(p) ? p : []; } catch { arr = []; }
     }
-    return [];
+    // Normalize: internal state always holds the CANONICAL unit_price (with
+    // cannettes). If a previous save persisted an effective (toggle-adjusted)
+    // unit_price, `_unit_price_full` holds the canonical — restore it.
+    return arr.map(it => {
+      if (it && it._unit_price_full != null) {
+        return { ...it, unit_price: Number(it._unit_price_full) || 0 };
+      }
+      return it;
+    });
   })();
 
   // Quote fields
@@ -923,13 +973,22 @@ export default function DevisEditor({ job, quote, onSaved }) {
 
   // All line items to save = content items + install item if > 0
   function buildSaveItems() {
-    const clean = dataItems.map(it => ({
-      ...it,
-      qty:        Number(it.qty) || 1,
-      unit_price: Number(it.unit_price) || 0,
-      total:      (Number(it.qty) || 0) * (Number(it.unit_price) || 0),
-      description: buildDescription(it),
-    }));
+    // Persist EFFECTIVE unit_price (toggle-adjusted) so the client-facing
+    // templates (devis + contract) show the right per-item prices. Canonical
+    // price is preserved in _unit_price_full for round-trip on reload.
+    const clean = dataItems.map(it => {
+      const canonical = getCanonicalUnitPrice(it);
+      const effective = petitsFraisOn ? canonical : Math.max(0, canonical - getCannettesPerUnit(it));
+      const qty = Number(it.qty) || 1;
+      return {
+        ...it,
+        qty,
+        unit_price:        effective,
+        _unit_price_full:  canonical,
+        total:             qty * effective,
+        description:       buildDescription(it),
+      };
+    });
     const installAmtNum = parseFloat(installCost) || 0;
     if (installAmtNum > 0) {
       clean.push({
@@ -1484,6 +1543,7 @@ export default function DevisEditor({ job, quote, onSaved }) {
                     onChange={updateItem}
                     onDelete={deleteItem}
                     onToggleBC={toggleItemBC}
+                    petitsFrais={petitsFraisOn}
                   />
                 ))}
               </div>
