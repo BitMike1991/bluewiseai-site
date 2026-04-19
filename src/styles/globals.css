@@ -23,6 +23,26 @@ html {
   /* iOS: prevent auto-enlarging landscape text */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Kill pull-to-refresh on iOS Safari — must be on html, body alone is
+     ignored by Safari in many cases. */
+  overscroll-behavior-y: none;
+}
+
+/* On the authenticated /platform app shell we lock root scrolling so iOS
+   Safari's pull-to-refresh can't fire (it only disables PTR when the root
+   scroller is fully inert). DashboardLayout toggles these classes on mount.
+   Inner scrolling is handled by <main className="overflow-y-auto"> + the
+   DevisEditor pane, so content remains fully accessible. */
+html.platform-app {
+  height: 100%;
+  overflow: hidden;
+}
+body.platform-app {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  position: fixed;
+  overscroll-behavior: none;
 }
 
 body {
@@ -34,7 +54,8 @@ body {
   overflow-x: hidden;
   /* iOS: cleaner tap feedback than the default translucent gray flash */
   -webkit-tap-highlight-color: transparent;
-  /* Prevent pull-to-refresh / over-scroll bounce inside the app shell */
+  /* Redundant with html but harmless, and some Android browsers only
+     respect it on body. */
   overscroll-behavior-y: none;
 }
 

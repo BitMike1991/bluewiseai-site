@@ -20,6 +20,19 @@ export default function DashboardLayout({ children }) {
   const [userInfo, setUserInfo] = useState({ email: null, customerName: null });
   const [suspended, setSuspended] = useState(false);
 
+  // Lock the document scroll to the main app shell — without this the root
+  // page scroller stays active on iOS Safari and pull-to-refresh fires even
+  // though overscroll-behavior is set. Scoped to /platform pages only so the
+  // marketing site keeps its normal document scroll.
+  useEffect(() => {
+    document.documentElement.classList.add('platform-app');
+    document.body.classList.add('platform-app');
+    return () => {
+      document.documentElement.classList.remove('platform-app');
+      document.body.classList.remove('platform-app');
+    };
+  }, []);
+
   useEffect(() => {
     async function loadUser() {
       try {
