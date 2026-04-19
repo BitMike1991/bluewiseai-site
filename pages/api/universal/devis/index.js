@@ -431,11 +431,11 @@ export default async function handler(req, res) {
         if (!cust || !cust.contract_api_key || api_key !== cust.contract_api_key) {
           // Last resort: allow if api_key matches any known valid key
           if (!validKeys.includes(api_key)) {
-            return res.status(401).json({ error: 'Unauthorized', debug_has_key: !!api_key, debug_key_len: (api_key || '').length });
+            return res.status(401).json({ error: 'Unauthorized' });
           }
         }
       } else {
-        return res.status(401).json({ error: 'Unauthorized', debug_has_key: !!api_key });
+        return res.status(401).json({ error: 'Unauthorized' });
       }
     }
 

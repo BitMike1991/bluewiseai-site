@@ -5,7 +5,34 @@
 import { getSupabaseServerClient } from '../../../../lib/supabaseServer';
 import { applyCorsHeaders } from '../../../../lib/universal-api-auth';
 
-const MAX_SIGNATURE_BYTES = 500 * 1024; // 500 KB
+const MAX_SIGNATURE_BYTES = 500 * 1024;       // 500 KB — signature PNG
+const MAX_SIGNED_HTML_BYTES = 1.5 * 1024 * 1024; // 1.5 MB — rendered contract with embedded image
+
+// Per-contract sign attempt tracker (wrong phone gate).
+// Keyed by contract_number. 5 attempts per hour max.
+const signAttempts = new Map();
+const SIGN_MAX_ATTEMPTS = 5;
+const SIGN_WINDOW_MS = 60 * 60 * 1000;
+
+function recordSignAttempt(contractNumber) {
+  const now = Date.now();
+  const list = (signAttempts.get(contractNumber) || []).filter(ts => now - ts < SIGN_WINDOW_MS);
+  list.push(now);
+  signAttempts.set(contractNumber, list);
+  return list.length;
+}
+
+function isSignAttemptLimited(contractNumber) {
+  const now = Date.now();
+  const list = (signAttempts.get(contractNumber) || []).filter(ts => now - ts < SIGN_WINDOW_MS);
+  return list.length >= SIGN_MAX_ATTEMPTS;
+}
+
+function normalizeLast4(phone) {
+  if (!phone) return '';
+  const digits = String(phone).replace(/\D/g, '');
+  return digits.slice(-4);
+}
 
 export default async function handler(req, res) {
   if (applyCorsHeaders(req, res, { methods: ['POST', 'OPTIONS'] })) return;
@@ -17,7 +44,14 @@ export default async function handler(req, res) {
   const supabase = getSupabaseServerClient();
 
   try {
-    const { contract_number, signer_name, signer_email, signature_image, signed_html } = req.body || {};
+    const {
+      contract_number,
+      signer_name,
+      signer_email,
+      signature_image,
+      signed_html,
+      client_phone_last4,
+    } = req.body || {};
 
     // ── 1. Input validation ──────────────────────────────────────────────────
     if (!contract_number || !signer_name || !signature_image) {
@@ -35,6 +69,18 @@ export default async function handler(req, res) {
     const signatureBuffer = Buffer.from(base64Data, 'base64');
     if (signatureBuffer.length > MAX_SIGNATURE_BYTES) {
       return res.status(400).json({ error: 'signature_image exceeds 500KB limit' });
+    }
+
+    // Cap signed_html to prevent DoS + stored-XSS payload growth
+    if (signed_html && typeof signed_html === 'string' && signed_html.length > MAX_SIGNED_HTML_BYTES) {
+      return res.status(413).json({ error: 'signed_html exceeds 1.5MB limit' });
+    }
+
+    // Per-contract attempt rate limit (protects phone gate from brute force)
+    if (isSignAttemptLimited(contract_number)) {
+      return res.status(429).json({
+        error: 'Trop de tentatives. Attendez une heure ou contactez votre entrepreneur.'
+      });
     }
 
     const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
@@ -83,6 +129,31 @@ export default async function handler(req, res) {
       return res.status(409).json({
         error: `Le contrat a un statut non signable: ${contract.signature_status}`
       });
+    }
+
+    // ── 4b. Phone gate — soft enforcement (backward-compatible).
+    // If the client supplies `client_phone_last4`, validate it against the
+    // phone we have on file. Reject on mismatch. If the client omits the
+    // field, skip the check (legacy contracts sent before this gate existed
+    // don't have the input in their embedded form). New contracts include
+    // the phone input in the template → the field will be present.
+    if (client_phone_last4 != null && String(client_phone_last4).trim() !== '') {
+      const { data: jobRow } = await supabase
+        .from('jobs')
+        .select('client_phone')
+        .eq('id', jobId)
+        .eq('customer_id', customerId)
+        .maybeSingle();
+      const expected = normalizeLast4(jobRow?.client_phone);
+      const supplied = normalizeLast4(client_phone_last4);
+      if (expected && expected.length === 4 && supplied !== expected) {
+        const n = recordSignAttempt(contract_number);
+        console.warn('[contrat/sign] phone gate failed', { contract_number, attempt: n, ip });
+        return res.status(401).json({
+          error: 'Vérification téléphone échouée. Entrez les 4 derniers chiffres du numéro fourni lors du devis.',
+          attempts_remaining: Math.max(0, SIGN_MAX_ATTEMPTS - n),
+        });
+      }
     }
 
     // ── 5. Upload signed HTML to Supabase Storage ─────────────────────────────
