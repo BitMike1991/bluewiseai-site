@@ -51,12 +51,18 @@ export default async function handler(req, res) {
       ? Number(latestQuote.total_ttc || 0)
       : subtotal + tps + tvq;
 
-    // Estimated supplier cost from the quote's line items (_cost × qty).
+    // Estimated supplier cost from the quote's line items (_supplier_cost || _cost × qty).
+    // Field naming is historically inconsistent across codepaths:
+    //   - Dispatcher (apply-dispatch.js) and backfill scripts write `_supplier_cost`
+    //   - Legacy apply-supplier-pricing writes `_cost` for standard-matched items and
+    //     `_supplier_cost` for hardcoded items
+    //   - Hardcoded matches in the legacy route also write `_cost`
+    // Accept either; fall back to 0 if both are absent.
     // This is Jérémy's PROJECTED material cost for margin forecasting — NOT a real expense
     // until he actually pays the supplier invoice (which he logs manually).
     const lineItems = Array.isArray(latestQuote?.line_items) ? latestQuote.line_items : [];
     const estimatedMaterialCost = lineItems.reduce((sum, li) => {
-      const cost = Number(li._cost || 0);
+      const cost = Number(li._supplier_cost ?? li._cost ?? 0);
       const qty = Number(li.qty || 1);
       return sum + cost * qty;
     }, 0);

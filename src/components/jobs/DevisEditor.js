@@ -45,9 +45,12 @@ function buildDescription(item) {
 }
 
 // Per-item fee breakdown using stored metadata (set after supplier upload)
+// Field naming varies across codepaths: dispatcher writes `_supplier_cost`, legacy
+// matched path writes `_cost`. Same story for list price (_supplier_list_price vs
+// _list_price). Accept either.
 function computeItemBreakdown(item) {
-  const listPrice  = Number(item._list_price) || 0;
-  const cost       = Number(item._cost) || 0;
+  const listPrice  = Number(item._supplier_list_price ?? item._list_price ?? 0);
+  const cost       = Number(item._supplier_cost ?? item._cost ?? 0);
   const w = parseFloat(item.dimensions?.width) || 0;
   const h = parseFloat(item.dimensions?.height) || 0;
   const perimeter  = 2 * (w + h);
@@ -187,7 +190,7 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC }) {
   const total = (Number(item.qty) || 0) * (Number(item.unit_price) || 0);
   // Show breakdown button whenever item has ANY pricing signal OR dimensions
   // (dimensions alone allow us to compute perimeter-based fees)
-  const hasBreakdown = !!(item._cost || item._list_price || item.unit_price || (item.dimensions?.width && item.dimensions?.height));
+  const hasBreakdown = !!(item._supplier_cost || item._cost || item._supplier_list_price || item._list_price || item.unit_price || (item.dimensions?.width && item.dimensions?.height));
 
   // Generate SVG sketch for this item
   const sketchSvg = itemSketchSvg(item);
@@ -696,36 +699,30 @@ export default function DevisEditor({ job, quote, onSaved }) {
   const { lineSubtotal, install: installAmt, overhead, gaz, container, subtotal, tax_gst, tax_qst, total_ttc } =
     computeTotals(dataItems, installCost, { container: containerOn });
 
-  // Compute internal expenses — must include ALL real costs Jérémy pays
+  // Projected internal expenses.
+  // RULE (from Mikael): overhead (200$), gaz (100$), urethane/moulure/calking per-item
+  // fees are CLIENT CHARGES to cover potential costs — they are NOT Jérémy's real cash-out.
+  // Jérémy logs his real gas / cannettes / overhead manually when the receipts hit.
+  // Only supplier material cost, sous-traitance (if toggled), and employees count here.
   const totalPerimeter = dataItems.reduce((s, it) => {
     const w = parseFloat(it.dimensions?.width) || 0;
     const h = parseFloat(it.dimensions?.height) || 0;
     return s + 2 * (w + h);
   }, 0);
-  // 1. Material cost from supplier (cost per item × qty) — biggest expense
+  // 1. Supplier material cost — projection of what Jérémy will pay the fournisseur
   const materialCost = dataItems.reduce((s, it) => {
-    const c = Number(it._cost) || Number(it._supplier_cost) || 0;
+    const c = Number(it._supplier_cost) || Number(it._cost) || 0;
     const q = Number(it.qty) || 1;
     return s + c * q;
   }, 0);
-  // 2. Supply fees per item (urethane + moulure + calking) — real cash out
-  const supplyFeesCost = dataItems.reduce((s, it) => {
-    const q = Number(it.qty) || 1;
-    const u = Number(it._urethane) || 0;
-    const m = Number(it._moulure)  || 0;
-    const c = Number(it._calking)  || 0;
-    return s + (u + m + c) * q;
-  }, 0);
-  // 3. Fixed per-job costs Jérémy actually pays
-  const fixedCosts = overhead + gaz;
-  // 4. Optional sous-traitance (if toggle ON, Jérémy pays $1.50/po)
+  // 2. Optional sous-traitance ($1.50/po of total perimeter if toggle ON)
   const sousTrCost = sousTrOpen ? totalPerimeter * 1.5 : 0;
-  // 5. Optional employees
+  // 3. Optional employees (rate × hours each)
   const employeesCost = employees.reduce((s, emp) => {
     return s + (parseFloat(emp.rate) || 0) * (parseFloat(emp.hours) || 0);
   }, 0);
-  const totalExpenses = materialCost + supplyFeesCost + fixedCosts + sousTrCost + employeesCost;
-  const margeRevenue = subtotal;  // client-facing subtotal (pre-tax)
+  const totalExpenses = materialCost + sousTrCost + employeesCost;
+  const margeRevenue = total_ttc;  // TTC client — what Jérémy receives gross
   const margeBrute = margeRevenue - totalExpenses;
   const margePct = margeRevenue > 0 ? (margeBrute / margeRevenue * 100) : 0;
 
@@ -1453,18 +1450,8 @@ export default function DevisEditor({ job, quote, onSaved }) {
             {/* Marge brute summary — detailed breakdown */}
             <div className="pt-3 border-t border-amber-500/20 space-y-1 text-[11px]">
               <div className="flex justify-between">
-                <span className="text-d-muted">Coût matériel fournisseur</span>
+                <span className="text-d-muted">Coût matériel fournisseur (projeté)</span>
                 <span className="text-rose-400/80 font-mono">{fmtQC(materialCost)}</span>
-              </div>
-              {supplyFeesCost > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-d-muted">Urethane + moulure + calking</span>
-                  <span className="text-rose-400/80 font-mono">{fmtQC(supplyFeesCost)}</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-d-muted">Overhead + gaz</span>
-                <span className="text-rose-400/80 font-mono">{fmtQC(fixedCosts)}</span>
               </div>
               {sousTrCost > 0 && (
                 <div className="flex justify-between">
