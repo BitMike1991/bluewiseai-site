@@ -14,6 +14,7 @@ import { generatePurQuoteHtml } from '../../../../lib/quote-templates/pur.js';
 import { mergeConfig } from '../../../../lib/quote-config.js';
 import { checkRateLimit } from '../../../../lib/security';
 import { applyCorsHeaders } from '../../../../lib/universal-api-auth';
+import { sanitizeProjectDescription } from '../../../../lib/devis/specs.js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -74,7 +75,7 @@ export default async function handler(req, res) {
     client_phone: job?.client_phone || '',
     client_email: job?.client_email || '',
     client_address: clientAddress,
-    project_description: job?.project_description || '',
+    project_description: sanitizeProjectDescription(job?.project_description),
     line_items: quote.line_items || [],
     subtotal: Number(quote.subtotal),
     tax_gst: Number(quote.tax_gst),

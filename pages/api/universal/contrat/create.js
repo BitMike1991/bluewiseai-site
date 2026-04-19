@@ -7,6 +7,7 @@ import crypto from 'crypto';
 import { getSupabaseServerClient } from '../../../../lib/supabaseServer';
 import { generatePurContractHtml } from '../../../../lib/contract-templates/pur.js';
 import { applyCorsHeaders } from '../../../../lib/universal-api-auth';
+import { sanitizeProjectDescription } from '../../../../lib/devis/specs.js';
 
 const supabase = getSupabaseServerClient();
 
@@ -964,7 +965,7 @@ export default async function handler(req, res) {
         client_email: job?.client_email || '',
         client_address: job?.address || job?.client_address || '',
         client_city: null,
-        project_description: job?.project_description || '',
+        project_description: sanitizeProjectDescription(job?.project_description),
         line_items: items,
         meta: quoteRow.meta || {},  // carries complexity_pct, discount_*, etc.
         subtotal: sub,
