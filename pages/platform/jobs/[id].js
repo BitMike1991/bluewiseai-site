@@ -707,71 +707,248 @@ function TabContrat({ contracts }) {
 
 // ── Tab: Paiements ────────────────────────────────────────────────────────────
 
-function TabPaiements({ payments, quoteAmount }) {
-  const totalFacture = parseFloat(quoteAmount || 0) * 1.14975; // TTC estimate
+function TabPaiements({ payments, quoteAmount, jobId, onPaymentAdded, finances }) {
+  // Prefer the authoritative TTC from finances (which reads live quote totals).
+  // Fall back to quote_amount * 1.14975 only if finances isn't loaded.
+  const totalFacture = Number(finances?.ttc ?? (parseFloat(quoteAmount || 0) * 1.14975));
   const totalRecu = (payments || [])
     .filter((p) => p.status === 'paid' || p.status === 'succeeded')
     .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
   const balance = totalFacture - totalRecu;
 
-  if (!payments || payments.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed border-d-border/60 p-8 text-center">
-        <CreditCard size={28} className="mx-auto mb-3 text-d-muted/40" />
-        <p className="text-sm text-d-muted">Aucun paiement enregistré</p>
-      </div>
-    );
-  }
+  const [addOpen, setAddOpen] = useState(false);
 
   return (
     <div className="space-y-2">
-      {payments.map((p) => (
-        <div
-          key={p.id}
-          className="flex items-center justify-between px-4 py-3 rounded-xl border border-d-border bg-d-surface/30"
+      {/* Add payment button */}
+      <div className="flex justify-end mb-2">
+        <button
+          type="button"
+          onClick={() => setAddOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-d-primary/50 bg-d-primary/10 text-d-primary hover:bg-d-primary/20 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/50"
         >
-          <div>
-            <p className="text-sm text-d-text">
-              {(p.payment_type || 'paiement').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-            </p>
-            <p className="text-xs text-d-muted">{p.paid_at ? formatDate(p.paid_at) : formatDate(p.created_at)}</p>
-          </div>
-          <div className="text-right">
-            <p className={`text-sm font-medium ${
-              p.status === 'paid' || p.status === 'succeeded' ? 'text-emerald-400' : 'text-amber-500'
-            }`}>
-              {formatCurrencyQC(p.amount)}
-            </p>
-            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${
-              p.status === 'paid' || p.status === 'succeeded'
-                ? 'bg-emerald-500/15 text-emerald-500 border-emerald-500/40'
-                : 'bg-amber-500/15 text-amber-500 border-amber-500/40'
-            }`}>
-              {(p.status || 'en attente').replace(/\b\w/g, (c) => c.toUpperCase())}
-            </span>
-          </div>
-        </div>
-      ))}
-
-      {/* Totals row */}
-      <div className="rounded-xl border border-d-border px-4 py-3 bg-d-surface/60 mt-2">
-        <div className="grid grid-cols-3 gap-3 text-xs">
-          <div>
-            <p className="text-d-muted mb-0.5">Total reçu</p>
-            <p className="text-emerald-400 font-semibold">{formatCurrencyQC(totalRecu)}</p>
-          </div>
-          <div>
-            <p className="text-d-muted mb-0.5">Total facturé</p>
-            <p className="text-d-text font-semibold">{formatCurrencyQC(totalFacture)}</p>
-          </div>
-          <div>
-            <p className="text-d-muted mb-0.5">Balance</p>
-            <p className={`font-semibold ${balance <= 0 ? 'text-emerald-400' : 'text-amber-500'}`}>
-              {balance <= 0 ? 'Soldé' : formatCurrencyQC(balance)}
-            </p>
-          </div>
-        </div>
+          <CreditCard size={12} /> + Ajouter un paiement
+        </button>
       </div>
+
+      {addOpen && (
+        <AddPaymentModal
+          jobId={jobId}
+          suggestedDepositAmount={Math.round(totalFacture * 0.35 * 100) / 100}
+          onClose={() => setAddOpen(false)}
+          onSaved={() => { setAddOpen(false); onPaymentAdded && onPaymentAdded(); }}
+        />
+      )}
+
+      {(!payments || payments.length === 0) ? (
+        <div className="rounded-xl border border-dashed border-d-border/60 p-8 text-center">
+          <CreditCard size={28} className="mx-auto mb-3 text-d-muted/40" />
+          <p className="text-sm text-d-muted">Aucun paiement enregistré</p>
+          <p className="text-[11px] text-d-muted/60 mt-1">Utilise « + Ajouter un paiement » pour logger cash, chèque ou Interac confirmé manuellement.</p>
+        </div>
+      ) : (
+        <>
+          {payments.map((p) => (
+            <div
+              key={p.id}
+              className="flex items-center justify-between px-4 py-3 rounded-xl border border-d-border bg-d-surface/30"
+            >
+              <div>
+                <p className="text-sm text-d-text">
+                  {(p.payment_type || 'paiement').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                  {p.method && (
+                    <span className="ml-2 text-[10px] uppercase tracking-wider text-d-muted">
+                      · {p.method}
+                    </span>
+                  )}
+                </p>
+                <p className="text-xs text-d-muted">{p.paid_at ? formatDate(p.paid_at) : formatDate(p.created_at)}</p>
+              </div>
+              <div className="text-right">
+                <p className={`text-sm font-medium ${
+                  p.status === 'paid' || p.status === 'succeeded' ? 'text-emerald-400' : 'text-amber-500'
+                }`}>
+                  {formatCurrencyQC(p.amount)}
+                </p>
+                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${
+                  p.status === 'paid' || p.status === 'succeeded'
+                    ? 'bg-emerald-500/15 text-emerald-500 border-emerald-500/40'
+                    : 'bg-amber-500/15 text-amber-500 border-amber-500/40'
+                }`}>
+                  {(p.status || 'en attente').replace(/\b\w/g, (c) => c.toUpperCase())}
+                </span>
+              </div>
+            </div>
+          ))}
+
+          {/* Totals row */}
+          <div className="rounded-xl border border-d-border px-4 py-3 bg-d-surface/60 mt-2">
+            <div className="grid grid-cols-3 gap-3 text-xs">
+              <div>
+                <p className="text-d-muted mb-0.5">Total reçu</p>
+                <p className="text-emerald-400 font-semibold">{formatCurrencyQC(totalRecu)}</p>
+              </div>
+              <div>
+                <p className="text-d-muted mb-0.5">Total facturé</p>
+                <p className="text-d-text font-semibold">{formatCurrencyQC(totalFacture)}</p>
+              </div>
+              <div>
+                <p className="text-d-muted mb-0.5">Balance</p>
+                <p className={`font-semibold ${balance <= 0 ? 'text-emerald-400' : 'text-amber-500'}`}>
+                  {balance <= 0 ? 'Soldé' : formatCurrencyQC(balance)}
+                </p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function AddPaymentModal({ jobId, suggestedDepositAmount, onClose, onSaved }) {
+  const [amount, setAmount] = useState(suggestedDepositAmount ? String(suggestedDepositAmount) : '');
+  const [method, setMethod] = useState('interac');
+  const [paymentType, setPaymentType] = useState('deposit');
+  const [referenceNumber, setReferenceNumber] = useState('');
+  const [note, setNote] = useState('');
+  const [paidAt, setPaidAt] = useState(new Date().toISOString().slice(0, 10));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError(null);
+    const amt = parseFloat(amount);
+    if (!Number.isFinite(amt) || amt <= 0) {
+      setError('Montant invalide');
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          job_id: jobId,
+          amount: amt,
+          method,
+          payment_type: paymentType,
+          reference_number: referenceNumber.trim() || undefined,
+          paid_at: paidAt ? new Date(paidAt).toISOString() : undefined,
+          note: note.trim() || undefined,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+      onSaved();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      <form
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={handleSubmit}
+        className="bg-d-bg border border-d-border rounded-2xl shadow-2xl w-full max-w-sm p-6"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-d-text">Ajouter un paiement</h2>
+          <button type="button" onClick={onClose} aria-label="Fermer" className="text-d-muted hover:text-d-text">
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-3 mb-5">
+          <div>
+            <label className="block text-xs text-d-muted mb-1.5">Montant ($)</label>
+            <input
+              type="number" step="0.01" min="0"
+              value={amount} onChange={(e) => setAmount(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm text-d-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/50"
+              required
+              autoFocus
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-d-muted mb-1.5">Méthode</label>
+              <select
+                value={method} onChange={(e) => setMethod(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm text-d-text"
+              >
+                <option value="interac">Interac</option>
+                <option value="cash">Cash</option>
+                <option value="cheque">Chèque</option>
+                <option value="wire">Virement</option>
+                <option value="stripe">Stripe</option>
+                <option value="other">Autre</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-d-muted mb-1.5">Type</label>
+              <select
+                value={paymentType} onChange={(e) => setPaymentType(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm text-d-text"
+              >
+                <option value="deposit">Acompte (dépôt)</option>
+                <option value="balance">Balance finale</option>
+                <option value="partial">Paiement partiel</option>
+                <option value="installment">Versement</option>
+                <option value="refund">Remboursement</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-d-muted mb-1.5"># de référence (optionnel)</label>
+            <input
+              type="text"
+              value={referenceNumber} onChange={(e) => setReferenceNumber(e.target.value)}
+              placeholder="Ex: Interac ref, # chèque"
+              className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm text-d-text placeholder:text-d-muted/40"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-d-muted mb-1.5">Date du paiement</label>
+            <input
+              type="date"
+              value={paidAt} onChange={(e) => setPaidAt(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm text-d-text"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-d-muted mb-1.5">Note (optionnel)</label>
+            <textarea
+              rows={2} value={note} onChange={(e) => setNote(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm text-d-text placeholder:text-d-muted/40"
+            />
+          </div>
+          {error && (
+            <p className="text-[11px] text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
+              {error}
+            </p>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            type="button" onClick={onClose}
+            className="flex-1 px-4 py-2 rounded-xl border border-d-border text-sm text-d-muted hover:text-d-text transition"
+          >
+            Annuler
+          </button>
+          <button
+            type="submit" disabled={saving}
+            className="flex-1 px-4 py-2 rounded-xl bg-d-primary text-white text-sm font-semibold hover:opacity-90 transition disabled:opacity-50"
+          >
+            {saving ? 'Enregistrement...' : 'Enregistrer'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -1232,7 +1409,15 @@ export default function JobDetailPage() {
         return <TabContrat contracts={contracts} />;
 
       case 'paiements':
-        return <TabPaiements payments={payments} quoteAmount={quoteAmount} />;
+        return (
+          <TabPaiements
+            payments={payments}
+            quoteAmount={quoteAmount}
+            jobId={job.id}
+            finances={finances}
+            onPaymentAdded={() => { loadJob(); loadFinances(); }}
+          />
+        );
 
       case 'finances':
         return <TabFinances finances={finances} quoteAmount={quoteAmount} />;
