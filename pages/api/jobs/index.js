@@ -1,9 +1,16 @@
 // pages/api/jobs/index.js
 import { getAuthContext } from "../../../lib/supabaseServer";
+import { mergeConfig } from "../../../lib/quote-config.js";
+
+const ALLOWED_METHODS = ["GET", "POST"];
+
+function generateJobId(prefix) {
+  return (prefix || 'BW') + '-' + Math.floor(100000 + Math.random() * 900000);
+}
 
 export default async function handler(req, res) {
-  if (req.method !== "GET") {
-    res.setHeader("Allow", ["GET"]);
+  if (!ALLOWED_METHODS.includes(req.method)) {
+    res.setHeader("Allow", ALLOWED_METHODS);
     return res.status(405).json({ error: "Method not allowed" });
   }
 
@@ -12,6 +19,109 @@ export default async function handler(req, res) {
   if (!user) return res.status(401).json({ error: "Not authenticated" });
   if (!customerId)
     return res.status(403).json({ error: "No customer mapping for this user" });
+
+  // ─── POST: create a new job, optionally prefilled from a lead ───
+  if (req.method === "POST") {
+    try {
+      const { lead_id = null, client_name = '', client_phone = '', client_email = '', client_address = null, project_description = null, project_type = null } = req.body || {};
+
+      // Pull lead info if lead_id provided, to prefill client fields
+      let lead = null;
+      if (lead_id) {
+        const { data: leadRow } = await supabase
+          .from("leads")
+          .select("id, name, first_name, last_name, phone, email, address, city, project_type, source")
+          .eq("customer_id", customerId)
+          .eq("id", lead_id)
+          .maybeSingle();
+        lead = leadRow || null;
+      }
+
+      // Customer quote_config for prefix
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("quote_config")
+        .eq("id", customerId)
+        .maybeSingle();
+      const config = mergeConfig(customer?.quote_config);
+      const prefix = config.quote?.prefix || 'BW';
+
+      const effectiveName =
+        client_name
+        || lead?.name
+        || [lead?.first_name, lead?.last_name].filter(Boolean).join(' ').trim()
+        || '';
+      const effectivePhone = client_phone || lead?.phone || '';
+      const effectiveEmail = client_email || lead?.email || '';
+      // Address: accept object or build from lead's address + city
+      const effectiveAddress = client_address
+        ?? (lead
+          ? { street: lead.address || '', city: lead.city || '', province: 'QC', postal_code: '' }
+          : null);
+      const effectiveProjectType = project_type || lead?.project_type || null;
+
+      const job_id = generateJobId(prefix);
+      const nowIso = new Date().toISOString();
+
+      const { data: newJob, error: jobErr } = await supabase
+        .from("jobs")
+        .insert({
+          job_id,
+          customer_id: customerId,
+          lead_id: lead?.id || null,
+          client_name:    effectiveName || null,
+          client_phone:   effectivePhone || null,
+          client_email:   effectiveEmail || null,
+          client_address: effectiveAddress,
+          project_type:   effectiveProjectType,
+          project_description,
+          status: 'draft',
+          intake_source: lead?.source || 'manual',
+          quote_amount: 0,
+          payment_terms: config.payment_schedule || null,
+          created_at: nowIso,
+          updated_at: nowIso,
+        })
+        .select("id, job_id")
+        .single();
+
+      if (jobErr) {
+        console.error("[api/jobs POST] insert error", jobErr);
+        return res.status(500).json({ error: "Erreur création projet" });
+      }
+
+      // Create an empty draft quote so the Devis tab is immediately usable.
+      const { data: newQuote } = await supabase
+        .from("quotes")
+        .insert({
+          customer_id: customerId,
+          job_id: newJob.id,
+          quote_number: job_id,
+          version: 1,
+          status: 'draft',
+          line_items: [],
+          subtotal: 0,
+          tax_gst: 0,
+          tax_qst: 0,
+          total_ttc: 0,
+          valid_until: new Date(Date.now() + ((config.quote?.valid_days || 15) * 86400000)).toISOString().split('T')[0],
+          meta: { created_via: lead_id ? 'lead_button' : 'new_project_button' },
+          created_at: nowIso,
+          updated_at: nowIso,
+        })
+        .select("id")
+        .single();
+
+      return res.status(201).json({
+        id: newJob.id,
+        job_id: newJob.job_id,
+        quote_id: newQuote?.id || null,
+      });
+    } catch (err) {
+      console.error("[api/jobs POST] Error:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
 
   const { checkRateLimit } = await import("../../../lib/security");
   if (checkRateLimit(req, res, `read:${customerId}`, 120)) return;

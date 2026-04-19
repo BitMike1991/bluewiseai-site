@@ -365,6 +365,7 @@ export default function JobsPage() {
   const [page, setPage]             = useState(1);
   const [sort, setSort]             = useState({ field: 'updated_at', dir: 'desc' });
   const [view, setView]             = useState('list'); // set properly on mount
+  const [creatingNew, setCreatingNew] = useState(false);
 
   // Restore view preference from localStorage after mount
   useEffect(() => {
@@ -525,14 +526,31 @@ export default function JobsPage() {
             </button>
           </div>
 
-          {/* New project button — disabled P8 */}
+          {/* New project button */}
           <button
             type="button"
-            disabled
-            title="Nouveau projet — disponible dans P10"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium bg-d-primary/30 text-d-primary/50 cursor-not-allowed border border-d-primary/20"
+            disabled={creatingNew}
+            onClick={async () => {
+              if (creatingNew) return;
+              setCreatingNew(true);
+              try {
+                const res = await fetch('/api/jobs', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({}),
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur création');
+                router.push(`/platform/jobs/${json.id}`);
+              } catch (err) {
+                alert(`Impossible de créer le projet : ${err.message}`);
+                setCreatingNew(false);
+              }
+            }}
+            title="Créer un nouveau projet vide"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium bg-d-primary text-white hover:bg-d-primary/90 disabled:opacity-60 disabled:cursor-wait transition border border-d-primary/60"
           >
-            + Nouveau projet
+            {creatingNew ? 'Création...' : '+ Nouveau projet'}
           </button>
         </div>
       </div>
