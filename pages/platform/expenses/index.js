@@ -172,6 +172,39 @@ function AddExpenseModal({ jobs, onClose, onSaved }) {
   const [receiptUrl, setReceiptUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [extracting, setExtracting] = useState(false);
+  const [extractMeta, setExtractMeta] = useState(null); // { confidence } after auto-fill
+
+  async function handleAutoFill() {
+    if (!receiptUrl) { setError('Ajoute d\'abord une photo de reçu'); return; }
+    setError(null);
+    setExtracting(true);
+    setExtractMeta(null);
+    try {
+      const res = await fetch('/api/expenses/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image_url: receiptUrl }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || `Erreur ${res.status}`);
+      // Pre-fill empty fields only (don't overwrite what Jer already typed)
+      if (!total          && json.total          != null) setTotal(String(json.total));
+      if (!vendor         && json.vendor)                  setVendor(json.vendor);
+      if (!invoiceNumber  && json.invoice_number)          setInvoiceNumber(json.invoice_number);
+      if (!description    && json.description_guess)       setDescription(json.description_guess);
+      if (json.paid_at && /^\d{4}-\d{2}-\d{2}$/.test(json.paid_at)) setPaidAt(json.paid_at);
+      if (json.category_guess) {
+        const safe = ['materiel_fournisseur','gaz_carburant','outillage','sous_traitance','repas','telecom','logiciel','bureau','assurance','essence','overhead','autre'];
+        if (safe.includes(json.category_guess)) setCategory(json.category_guess);
+      }
+      setExtractMeta({ confidence: json.confidence });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setExtracting(false);
+    }
+  }
 
   const totalNum = parseFloat(total) || 0;
   const htBase   = totalNum / 1.14975;
@@ -320,15 +353,35 @@ function AddExpenseModal({ jobs, onClose, onSaved }) {
           </div>
 
           <div>
-            <label className="block text-xs text-d-muted mb-1">Reçu / facture (photo ou PDF)</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs text-d-muted">Reçu / facture (photo)</label>
+              {receiptUrl && !/\.pdf(\?.*)?$/i.test(receiptUrl) && (
+                <button
+                  type="button"
+                  onClick={handleAutoFill}
+                  disabled={extracting}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold bg-d-primary/15 text-d-primary border border-d-primary/30 hover:bg-d-primary/25 disabled:opacity-50 transition"
+                >
+                  {extracting ? <Loader2 size={10} className="animate-spin" /> : '✨'}
+                  {extracting ? 'Extraction…' : 'Auto-remplir'}
+                </button>
+              )}
+            </div>
             <MediaPicker
               value={receiptUrl}
-              onChange={setReceiptUrl}
+              onChange={(url) => { setReceiptUrl(url); setExtractMeta(null); }}
               bucket="receipts"
               context="expense"
               label="Prendre / ajouter"
               accept="image/*,application/pdf"
             />
+            {extractMeta && (
+              <p className={`mt-1 text-[10px] ${extractMeta.confidence >= 0.7 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {extractMeta.confidence >= 0.7
+                  ? `✓ Champs remplis (confiance ${Math.round(extractMeta.confidence * 100)}%) — vérifie avant d'enregistrer.`
+                  : `⚠️ Extraction incertaine (${Math.round(extractMeta.confidence * 100)}%) — relis tous les champs.`}
+              </p>
+            )}
           </div>
 
           {error && (
