@@ -935,11 +935,17 @@ export default function DevisEditor({ job, quote, onSaved }) {
   const promoActive   = promoEligible && promoEnabled;
   const promoRebate   = promoActive ? computePromoDoorRebate() : 0;
 
-  // Auto-enable the first time the quote becomes eligible (unless Jérémy toggled off)
+  // Auto-enable the first time the quote becomes eligible (unless Jérémy
+  // toggled off). Mark dirty so the autosave persists meta.promo_enabled —
+  // without this the template render read the DB meta (still undefined) and
+  // shipped the client PDF without the promo even though the editor showed it.
   useEffect(() => {
     const meta = quote?.meta || {};
-    if (meta.promo_enabled === false) return;        // respect explicit opt-out
-    if (promoEligible && !promoEnabled) setPromoEnabled(true);
+    if (meta.promo_enabled === false) return;
+    if (promoEligible && !promoEnabled) {
+      setPromoEnabled(true);
+      markDirty();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [promoEligible]);
 
