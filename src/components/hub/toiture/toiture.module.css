@@ -1,0 +1,287 @@
+/* PÜR Hub v2 — Toiture Calculator (light theme matching calc-toiture.html) */
+
+.page {
+  display: flex;
+  gap: 24px;
+  min-height: calc(100vh - 80px);
+  min-height: calc(100dvh - 80px);
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #FFFFFF;
+  border-radius: 8px;
+  padding: 28px 32px;
+  color: #2A2C35;
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stepContent {
+  flex: 1;
+}
+
+.navRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: #2A2C35;
+  color: #FFFFFF;
+  border-radius: 8px;
+  padding: 20px;
+  position: sticky;
+  top: 24px;
+  align-self: flex-start;
+}
+
+.sidebarTitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  margin-bottom: 16px;
+}
+
+.sidebarRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 12px;
+}
+
+.sidebarBold {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+}
+
+.sidebarHighlight {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.sidebarDivider {
+  height: 1px;
+  background: rgba(233, 239, 231, 0.1);
+  margin: 8px 0;
+}
+
+.sidebarMargin {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 24px;
+  font-weight: 800;
+  padding: 12px 0;
+}
+
+@media (max-width: 900px) {
+  .page { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    position: static;
+    order: -1;
+  }
+  .main { padding: 20px 16px; }
+}
+
+/* ── Form fields ── */
+.formGrid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.formGrid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+@media (max-width: 767px) {
+  .formGrid2 { grid-template-columns: 1fr; }
+  .formGrid3 { grid-template-columns: 1fr; }
+}
+
+.formSection { margin-bottom: 20px; }
+
+.formLabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #2A2C35;
+  opacity: 0.55;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.formLabel::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  background: #2A2C35;
+}
+
+/* ── Selector cards ── */
+.selectorRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.selectorCard {
+  padding: 10px 18px;
+  background: #FFFFFF;
+  border: 2px solid #e5e7eb;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #2A2C35;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  transition: all 0.12s;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.selectorCard:hover { border-color: #3A3D47; }
+.selectorCard:focus-visible { outline: 2px solid #E9EFE7; outline-offset: 2px; border-radius: inherit; }
+
+.selectorCardActive {
+  background: #2A2C35;
+  color: #FFFFFF;
+  border-color: #2A2C35;
+}
+
+/* ── Qty table ── */
+.qtyTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.qtyTable th,
+.qtyTable td {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.qtyTable th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.qtyInput {
+  width: 70px;
+  padding: 6px 10px;
+  background: #FFFFFF;
+  border: 1px solid #e5e7eb;
+  border-radius: 3px;
+  color: #2A2C35;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  text-align: center;
+}
+
+.qtyStepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+.qtyStepBtn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid #e5e7eb;
+  color: #2A2C35;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.qtyStepBtn:hover { background: #F5F7F4; }
+.qtyStepBtn:focus-visible { outline: 2px solid #E9EFE7; outline-offset: 2px; border-radius: inherit; }
+
+/* Worker rates */
+.workerRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.workerLabel {
+  font-size: 12px;
+  min-width: 90px;
+  color: #2A2C35;
+}
+
+/* ── Review ── */
+.reviewSection {
+  margin-bottom: 20px;
+}
+
+.reviewTitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 10px;
+}
+
+.reviewRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.reviewRowBold {
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.reviewDivider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 8px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page *,
+  .page *::before,
+  .page *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -2,6 +2,7 @@
 // P8 — Pipeline list view for Jobs / Projets
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import DashboardLayout from '../../../src/components/dashboard/DashboardLayout';
 import { getAvatarColor, getInitial } from '../../../src/lib/dashboardUtils';
 import { SkeletonListRow } from '../../../src/components/ui/Skeleton';
@@ -525,16 +526,14 @@ export default function JobsPage() {
             </button>
           </div>
 
-          {/* New project button — opens the PUR Hub commande tool to build the devis */}
-          <a
-            href="https://hub.purconstruction.com/hub/commande"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Ouvrir l'outil commande du hub PUR pour créer un nouveau devis"
+          {/* New project button — opens the internal hub commande tool */}
+          <Link
+            href="/hub"
+            title="Ouvrir l'outil commande pour créer un nouveau devis"
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium bg-d-primary text-white hover:bg-d-primary/90 transition border border-d-primary/60"
           >
             + Nouveau projet
-          </a>
+          </Link>
         </div>
       </div>
 

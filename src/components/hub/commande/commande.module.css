@@ -1,0 +1,364 @@
+/* PÜR Hub v2 — Commande Builder
+   Matches the original commande-royalty.html light-theme design.
+   Builder = white bg, navy text, sage accents.
+*/
+
+.page {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: calc(100vh - 80px);
+  min-height: calc(100dvh - 80px);
+}
+
+.builder {
+  padding: 28px 32px 120px;
+  background: #FFFFFF;
+  border-right: 1px solid #e5e7eb;
+  overflow-y: auto;
+  color: #2A2C35;
+}
+
+.preview {
+  background: #F5F7F4;
+  overflow-y: auto;
+  max-height: calc(100vh - 80px);
+  max-height: calc(100dvh - 80px);
+  position: sticky;
+  top: 0;
+  padding: 24px;
+}
+
+/* ── Section ── */
+.section {
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #2A2C35;
+  opacity: 0.55;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sectionTitle::before {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 2px;
+  background: #2A2C35;
+}
+
+/* ── Supplier ── */
+.supplierSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.supplierToggle {
+  display: flex;
+  gap: 0;
+  background: #2A2C35;
+  border-radius: 3px;
+  padding: 3px;
+}
+
+.supplierBtn {
+  background: transparent;
+  color: #FFFFFF;
+  border: none;
+  padding: 10px 18px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 44px;
+}
+
+.supplierBtnSm {
+  padding: 7px 14px;
+  font-size: 10px;
+  color: #2A2C35;
+  min-height: 40px;
+}
+
+.supplierBtnActive {
+  background: #FFFFFF;
+  color: #2A2C35;
+}
+
+.supplierBtn:not(.supplierBtnActive):hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.supplierBtn:focus-visible {
+  outline: 2px solid #E9EFE7;
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+.supplierBtnSm.supplierBtnActive {
+  background: #2A2C35;
+  color: #FFFFFF;
+}
+
+.supplierBtnSm:not(.supplierBtnActive):hover {
+  background: #F2F5F0;
+}
+
+.supplierBtnSm:focus-visible {
+  outline: 2px solid #E9EFE7;
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+.itemSupplierBox {
+  background: linear-gradient(135deg, #F2F5F0, #E9EFE7);
+  border: 1px solid #D8E0D4;
+  border-left: 4px solid #2A2C35;
+  border-radius: 4px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.itemSupplierLabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #2A2C35;
+}
+
+.itemSupplierToggle {
+  display: flex;
+  gap: 0;
+  background: #FFFFFF;
+  border-radius: 3px;
+  padding: 3px;
+  border: 1px solid #e5e7eb;
+}
+
+/* ── Project Info ── */
+.projectInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Grid rows ── */
+.gridRow2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.gridRow3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* ── Config cards ── */
+.configCard {
+  background: #FFFFFF;
+  border: 2px solid #e5e7eb;
+  border-radius: 5px;
+  padding: 12px 8px 10px;
+  cursor: pointer;
+  transition: all 0.12s;
+  text-align: center;
+  color: #2A2C35;
+  font-family: inherit;
+  min-height: 44px;
+}
+
+.configCard:hover {
+  border-color: #3A3D47;
+}
+
+.configCard:focus-visible {
+  outline: 2px solid #E9EFE7;
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+.configCardActive {
+  border-color: #2A2C35;
+  background: #F2F5F0;
+  box-shadow: 0 3px 8px rgba(42, 44, 53, 0.1);
+}
+
+.configSvg {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  margin-bottom: 8px;
+}
+
+.configCode {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #2A2C35;
+}
+
+.configNotation {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: #6b7280;
+  margin-top: 2px;
+  letter-spacing: 0.05em;
+}
+
+.configDims {
+  font-size: 9px;
+  color: #6b7280;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid #e5e7eb;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.4;
+}
+
+/* ── Dimensions ── */
+.dimensionSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dimOk {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 6px 10px;
+  border-radius: 3px;
+  margin-top: 6px;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.dimError {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 6px 10px;
+  border-radius: 3px;
+  margin-top: 6px;
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.qtyField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabelInline {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #2A2C35;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.qtyStepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #FFFFFF;
+}
+
+.qtyBtn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #2A2C35;
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+
+.qtyBtn:hover {
+  background: #F5F7F4;
+}
+
+.qtyBtn:focus-visible {
+  outline: 2px solid #E9EFE7;
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+.qtyValue {
+  flex: 1;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: #2A2C35;
+  min-width: 40px;
+}
+
+/* ── Options ── */
+.optionsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Add button ── */
+.addBtnRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 2px solid #E9EFE7;
+}
+
+/* ── Mobile ── */
+@media (max-width: 767px) {
+  .page {
+    display: flex;
+    flex-direction: column;
+  }
+  .builder {
+    padding: 20px 16px 100px;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .preview {
+    position: static;
+    max-height: none;
+    padding: 16px;
+  }
+  .gridRow2 { grid-template-columns: 1fr; }
+  .gridRow3 { grid-template-columns: 1fr; }
+  .supplierToggle { flex-wrap: wrap; }
+  .supplierBtn { flex: 1; min-width: 80px; text-align: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page *,
+  .page *::before,
+  .page *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -1018,7 +1018,7 @@ export default function LeadDetailPage() {
 
                 {showDevisButton && id && (
                   <a
-                    href={`https://hub.purconstruction.com/hub/commande?prefill=${id}`}
+                    href={`/hub?prefill=${id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Créer un devis pour ce lead dans le hub PUR"
@@ -1288,7 +1288,7 @@ export default function LeadDetailPage() {
           </button>
           {showDevisButton && id && (
             <a
-              href={`https://hub.purconstruction.com/hub/commande?prefill=${id}`}
+              href={`/hub?prefill=${id}`}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Créer un devis pour ce lead dans le hub PUR"

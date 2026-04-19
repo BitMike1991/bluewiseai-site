@@ -1,0 +1,372 @@
+/* PÜR Hub v2 — Layout
+   Design tokens scoped to .shell to stay CSS-module-pure.
+   Global tokens already in globals.css @theme block.
+*/
+
+/* ── Shell ── */
+.shell {
+  /* Tokens scoped to hub */
+  --hub-navy: #2A2C35;
+  --hub-navy-light: #3A3D47;
+  --hub-navy-dark: #1C1E25;
+  --hub-sage: #E9EFE7;
+  --hub-sage-dark: #D8E0D4;
+  --hub-sage-light: #F2F5F0;
+  --hub-ice: #F5F7F4;
+  --hub-pure: #FFFFFF;
+  --hub-green: #16a34a;
+  --hub-yellow: #eab308;
+  --hub-red: #dc2626;
+  --hub-blue: #2563eb;
+  --hub-font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --hub-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --hub-radius-btn: 6px;
+  --hub-radius-card: 10px;
+  --hub-radius-panel: 14px;
+  --hub-sidebar-w: 64px;
+  --hub-sidebar-w-expanded: 240px;
+  --z-topbar: 10;
+  --z-sidebar: 20;
+  --z-tabbar: 30;
+  --z-modal: 50;
+
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--hub-navy-dark);
+  font-family: var(--hub-font-body);
+  color: var(--hub-sage);
+}
+
+/* ── Sidebar (desktop / iPad landscape) ── */
+.sidebar {
+  width: var(--hub-sidebar-w);
+  background: var(--hub-navy);
+  border-right: 1px solid rgba(233, 239, 231, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  gap: 4px;
+  flex-shrink: 0;
+  transition: width 0.2s ease;
+  overflow: hidden;
+  position: relative;
+  z-index: var(--z-sidebar);
+}
+
+.sidebarExpanded {
+  width: var(--hub-sidebar-w-expanded);
+  align-items: stretch;
+  padding: 16px 12px;
+}
+
+.sidebarLogo {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.sidebarExpandedLogo {
+  width: auto;
+  height: 28px;
+  margin-bottom: 20px;
+  align-self: center;
+}
+
+.sidebarToggle {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--hub-sage);
+  opacity: 0.4;
+  cursor: pointer;
+  border-radius: var(--hub-radius-btn);
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.sidebarToggle:hover {
+  opacity: 0.7;
+  background: rgba(233, 239, 231, 0.06);
+}
+
+.sidebarToggle:focus-visible {
+  outline: 2px solid var(--hub-sage);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* ── Nav Items ── */
+.navItem {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--hub-sage);
+  opacity: 0.5;
+  cursor: pointer;
+  border-radius: var(--hub-radius-btn);
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.navItem:hover {
+  opacity: 0.8;
+  background: rgba(233, 239, 231, 0.06);
+}
+
+.navItem:focus-visible {
+  outline: 2px solid var(--hub-sage);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+.navItemActive {
+  opacity: 1;
+  background: rgba(233, 239, 231, 0.1);
+}
+
+.navItemExpanded {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0 12px;
+  gap: 12px;
+}
+
+.navItemLabel {
+  font-family: var(--hub-font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.navItemBadge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 18px;
+  height: 18px;
+  background: var(--hub-green);
+  color: var(--hub-pure);
+  font-family: var(--hub-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.navItemExpandedBadge {
+  position: static;
+  margin-left: auto;
+}
+
+/* Sub-items (catalogs) */
+.navGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navSubItem {
+  composes: navItem;
+  width: 36px;
+  height: 36px;
+  font-size: 14px;
+  opacity: 0.35;
+}
+
+.navSubItem:hover {
+  opacity: 0.7;
+}
+
+.navSubItem:focus-visible {
+  outline: 2px solid var(--hub-sage);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+.navSubItemActive {
+  opacity: 0.9;
+  background: rgba(233, 239, 231, 0.08);
+}
+
+.navSubItemExpanded {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0 12px 0 40px;
+  gap: 10px;
+  height: 36px;
+}
+
+.navSubItemLabel {
+  font-family: var(--hub-font-body);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
+/* ── Content ── */
+.content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.contentInner {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px;
+  -webkit-overflow-scrolling: touch;
+  background: var(--hub-ice);
+}
+
+/* ── Loading (inside <main>, replaces old standalone full-screen div) ── */
+.mainLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 200px;
+  color: #E9EFE7;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  opacity: 0.5;
+}
+
+/* ── Placeholder page ── */
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  gap: 12px;
+}
+
+.placeholderIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.3;
+}
+
+.placeholderTitle {
+  font-family: var(--hub-font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--hub-pure);
+  letter-spacing: -0.02em;
+}
+
+.placeholderSub {
+  font-size: 13px;
+  opacity: 0.4;
+}
+
+/* ── Bottom Tab Bar (portrait / mobile) ── */
+.tabBar {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .sidebar {
+    display: none;
+  }
+
+  .tabBar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: var(--hub-navy);
+    border-top: 1px solid rgba(233, 239, 231, 0.06);
+    z-index: var(--z-tabbar);
+    padding: 0 8px;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    align-items: center;
+    justify-content: space-around;
+  }
+
+  .tabItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 56px;
+    height: 52px;
+    background: none;
+    border: none;
+    color: var(--hub-sage);
+    opacity: 0.4;
+    cursor: pointer;
+    position: relative;
+    padding: 0;
+  }
+
+  .tabItem:hover {
+    opacity: 0.7;
+  }
+
+  .tabItem:focus-visible {
+    outline: 2px solid var(--hub-sage);
+    outline-offset: 2px;
+    border-radius: inherit;
+  }
+
+  .tabItemActive {
+    opacity: 1;
+  }
+
+  .tabItemIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tabItemLabel {
+    font-family: var(--hub-font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .shell {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0));
+  }
+
+  .contentInner {
+    padding: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell *,
+  .shell *::before,
+  .shell *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

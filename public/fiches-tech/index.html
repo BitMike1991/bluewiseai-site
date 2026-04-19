@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiches Techniques — PÜR Construction</title>
+<meta name="description" content="Référence technique interne — Portes, fenêtres et portes patio. Dimensions, configurations et garanties.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#2A2C35">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Fiches Techniques — PÜR Construction">
+<meta property="og:description" content="Référence technique interne — Portes, fenêtres et portes patio. Dimensions, configurations et garanties.">
+<meta property="og:url" content="https://purconstruction.com/fiches-tech/">
+<meta property="og:image" content="https://purconstruction.com/images/og-pur-logo.png">
+<meta property="og:locale" content="fr_CA">
+<meta property="og:site_name" content="PÜR Construction">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Fiches Techniques — PÜR Construction">
+<meta name="twitter:description" content="Référence technique interne — Portes, fenêtres et portes patio.">
+<meta name="twitter:image" content="https://purconstruction.com/images/og-pur-logo.png">
+
+<link rel="icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;background:#1a1c23;color:#2A2C35}
+
+  /* PAGE — Letter 8.5x11 */
+  .page{width:8.5in;height:11in;margin:0 auto 20px;background:#fff;position:relative;overflow:hidden;page-break-after:always;display:flex;flex-direction:column}
+
+  /* COVER */
+  .cover{background:#2A2C35;color:#fff;justify-content:center;align-items:center;text-align:center;padding:60px}
+  .cover-logo{height:120px;margin-bottom:40px}
+  .cover-line{width:80px;height:3px;background:#E9EFE7;margin:0 auto 30px}
+  .cover-label{font-size:14px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:#E9EFE7;margin-bottom:20px}
+  .cover-title{font-size:56px;font-weight:900;line-height:1;letter-spacing:-.03em;margin-bottom:24px}
+  .cover-title span{color:#E9EFE7;display:block}
+  .cover-sub{font-size:18px;font-weight:300;opacity:.7;max-width:480px;line-height:1.6;margin-bottom:40px}
+  .cover-warn{font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;background:#E9EFE7;color:#2A2C35;padding:10px 24px;border-radius:6px;display:inline-block;margin-top:20px}
+  .cover-list{display:grid;grid-template-columns:1fr 1fr;gap:8px 30px;max-width:520px;margin:30px auto 0;text-align:left;font-size:11px;opacity:.6}
+  .cover-list span{padding:4px 0;border-bottom:1px solid rgba(233,239,231,.15)}
+
+  /* FICHE HEADER */
+  .fh{background:#2A2C35;color:#fff;padding:20px 32px;display:flex;justify-content:space-between;align-items:center}
+  .fh-l{display:flex;flex-direction:column;gap:2px}
+  .fh-cat{font-size:9px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:#E9EFE7;opacity:.7}
+  .fh-title{font-size:24px;font-weight:900;letter-spacing:-.02em;line-height:1.05}
+  .fh-sub{font-size:11px;font-weight:400;opacity:.5;margin-top:2px}
+  .fh-r{text-align:right}
+  .fh-num{font-size:11px;font-weight:700;background:#E9EFE7;color:#2A2C35;padding:5px 11px;border-radius:4px;letter-spacing:.05em}
+  .fh-side{font-size:8px;opacity:.5;margin-top:6px;letter-spacing:.1em;text-transform:uppercase}
+
+  /* CONTENT */
+  .fc{flex:1;display:flex;flex-direction:column;padding:20px 32px;overflow:hidden}
+
+  /* HERO PHOTO */
+  .hero{height:240px;border-radius:8px;overflow:hidden;background:#f0f0ec;margin-bottom:18px;position:relative}
+  .hero img{width:100%;height:100%;object-fit:cover}
+  .hero.contain img{object-fit:contain;background:#f5f5f0}
+  .hero-cap{position:absolute;bottom:10px;left:14px;background:rgba(42,44,53,.85);color:#fff;font-size:9px;font-weight:600;padding:5px 11px;border-radius:4px;letter-spacing:.08em;text-transform:uppercase;backdrop-filter:blur(4px)}
+
+  /* SECTIONS */
+  .sec{margin-bottom:14px}
+  .sec-h{font-size:9px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#2A2C35;opacity:.5;margin-bottom:7px;border-bottom:1px solid rgba(42,44,53,.1);padding-bottom:4px}
+  .ds{font-size:10px;line-height:1.55;color:#2A2C35;opacity:.85;margin-bottom:6px}
+
+  /* SPEC GRID */
+  .sg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:6px}
+  .sg-c{background:#f5f5f0;padding:11px;border-radius:5px;text-align:center}
+  .sg-l{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin-bottom:3px}
+  .sg-v{font-size:18px;font-weight:900;color:#2A2C35;line-height:1}
+  .sg-s{font-size:8px;opacity:.5;margin-top:3px}
+
+  /* SPEC TABLE */
+  .st{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:6px}
+  .st th{background:#2A2C35;color:#fff;text-align:left;padding:7px 10px;font-weight:700;font-size:8px;letter-spacing:.1em;text-transform:uppercase}
+  .st td{padding:6px 10px;border-bottom:1px solid #f0f0ec}
+  .st tr:last-child td{border-bottom:none}
+  .st td:first-child{font-weight:600}
+  .st td:last-child{text-align:right;color:#2A2C35}
+  .st .grp{background:#E9EFE7;color:#2A2C35;font-weight:800;font-size:9px;letter-spacing:.08em;text-transform:uppercase}
+
+  /* DIM TABLE */
+  .dt{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+  .dt-c{background:#f5f5f0;padding:9px 12px;border-radius:5px}
+  .dt-l{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin-bottom:4px}
+  .dt-v{font-size:11px;font-weight:700;color:#2A2C35;line-height:1.4}
+
+  /* CHECKLIST */
+  .cl{display:grid;grid-template-columns:1fr 1fr;gap:3px 18px;font-size:9.5px;line-height:1.5}
+  .cl li{list-style:none;padding-left:14px;position:relative;color:#2A2C35;opacity:.85}
+  .cl li::before{content:"✓";position:absolute;left:0;color:#2A2C35;font-weight:900;font-size:10px}
+
+  /* COLOR DOTS */
+  .cdr{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+  .cd{display:flex;align-items:center;gap:5px;font-size:9px}
+  .cd-d{width:14px;height:14px;border-radius:50%;border:1px solid rgba(42,44,53,.2)}
+
+  /* WARRANTY MINI */
+  .wm{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:5px}
+  .wm-c{background:#2A2C35;color:#fff;padding:8px 6px;border-radius:4px;text-align:center}
+  .wm-v{font-size:14px;font-weight:900;line-height:1}
+  .wm-l{font-size:7px;opacity:.6;margin-top:3px;letter-spacing:.05em;text-transform:uppercase}
+
+  /* FOOTER */
+  .ff{background:#E9EFE7;padding:11px 32px;display:flex;justify-content:space-between;align-items:center;font-size:9px;color:#2A2C35}
+  .ff-l{font-weight:800;letter-spacing:.05em}
+  .ff-r{opacity:.6}
+
+  /* TWO COLUMN */
+  .tc{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .tc-l, .tc-r{display:flex;flex-direction:column}
+
+  /* CALLOUT */
+  .co{background:#E9EFE7;border-left:3px solid #2A2C35;padding:8px 12px;font-size:9px;line-height:1.5;color:#2A2C35;border-radius:0 4px 4px 0;margin-bottom:8px}
+  .co b{display:block;font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+
+  /* PRINT */
+  @media print{
+    body{margin:0;background:#fff}
+    .page{margin:0;box-shadow:none}
+    @page{size:letter;margin:0}
+  }
+
+  /* SCREEN PREVIEW */
+  @media (max-width:9in){
+    .page{width:100%;height:auto;min-height:100vh}
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- COVER -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page cover">
+  <img src="/images/pur-logo-rbq-white.png" alt="PÜR Construction" class="cover-logo">
+  <div class="cover-line"></div>
+  <div class="cover-label">Référence interne · 2026</div>
+  <div class="cover-title">FICHES<span>TECHNIQUES</span></div>
+  <div class="cover-sub">Toutes les dimensions, configurations et garanties pour soumissionner sur place avec confiance.</div>
+  <div class="cover-list">
+    <span>01 — Porte patio Odyssée</span>
+    <span>02 — Belle-Vue Prima</span>
+    <span>03 — Belle-Vue Prestige</span>
+    <span>04 — Fenêtre à battant</span>
+    <span>05 — Fenêtre à auvent</span>
+    <span>06 — Coulissante</span>
+    <span>07 — Guillotine</span>
+    <span>08 — Bay Bow & Panoramique</span>
+    <span>09 — Porte d'entrée acier R16</span>
+  </div>
+  <div class="cover-warn">Usage interne — Ne pas remettre au client</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 01 — PORTE PATIO ODYSSÉE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="odyssee">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Porte patio · Économique</div>
+      <div class="fh-title">ODYSSÉE</div>
+      <div class="fh-sub">Portes Standard · 100% PVC · Fabriqué au Québec</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 01</div>
+      <div class="fh-side">Recto</div>
+    </div>
+  </div>
+  <div class="fc">
+    <div class="hero contain"><img src="/catalog-patio/odyssee.jpg" alt="Odyssée"><div class="hero-cap">Odyssée 2 panneaux · Blanc</div></div>
+
+    <div class="sec">
+      <div class="sec-h">Caractéristiques</div>
+      <ul class="cl">
+        <li>Cadre 100% PVC — ne pourrit pas</li>
+        <li>Verre Low-E avec gaz argon</li>
+        <li>Roulement à billes tandem</li>
+        <li>Triple coupe-froid haute performance</li>
+        <li>Cadre bois jointé 1 3/16" épaisseur</li>
+        <li>Profondeurs: 5 1/2", 6 5/8", 7 1/4"</li>
+        <li>Renforts d'acier galvanisé calibre 16</li>
+        <li>Moustiquaire alu + fibre de verre</li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Performance énergétique</div>
+      <div class="sg">
+        <div class="sg-c"><div class="sg-l">Low-E Argon</div><div class="sg-v">RE 36</div><div class="sg-s">U 1.65 · R 3.45</div></div>
+        <div class="sg-c" style="background:#E9EFE7"><div class="sg-l">Low-E PLUS Argon</div><div class="sg-v">RE 40</div><div class="sg-s">U 1.48 · R 3.85</div></div>
+        <div class="sg-c"><div class="sg-l">ENERGY STAR</div><div class="sg-v">✓</div><div class="sg-s">Min RE 34</div></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Couleurs & Poignées</div>
+      <div class="cdr">
+        <div class="cd"><div class="cd-d" style="background:#fff"></div>Blanc 141</div>
+        <div class="cd"><div class="cd-d" style="background:#f5f0e0"></div>Blanc crème 136</div>
+        <div class="cd"><div class="cd-d" style="background:linear-gradient(45deg,#666,#222)"></div>Couleur sur mesure</div>
+      </div>
+      <div class="ds" style="margin-top:6px">Poignée standard mortaise · Option Euro nickel/bronze/chrome/laiton</div>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">(450) 990-1564 · purconstruction.com</span></div>
+</div>
+
+<!-- 01 VERSO -->
+<div class="page">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Porte patio · Dimensions</div>
+      <div class="fh-title">ODYSSÉE</div>
+      <div class="fh-sub">Configurations standards · Largeur × hauteur</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 01</div>
+      <div class="fh-side">Verso</div>
+    </div>
+  </div>
+  <div class="fc">
+    <table class="st">
+      <tr class="grp"><td colspan="3">2 PANNEAUX — XO / OX</td></tr>
+      <tr><td>4' 10"</td><td>1483 mm</td><td>58 3/8"</td></tr>
+      <tr><td>5'</td><td>1505 mm</td><td>59 1/4"</td></tr>
+      <tr><td>6'</td><td>1784 mm</td><td>70 1/4"</td></tr>
+      <tr><td>7'</td><td>2115 mm</td><td>83 1/4"</td></tr>
+      <tr><td>8'</td><td>2391 mm</td><td>94 1/8"</td></tr>
+    </table>
+
+    <div class="tc">
+      <table class="st">
+        <tr class="grp"><td colspan="2">3 PANNEAUX — XOO / XOX / OOX</td></tr>
+        <tr><td>8'</td><td>87 9/16"</td></tr>
+        <tr><td>9'</td><td>104 1/16"</td></tr>
+        <tr><td>10'</td><td>123 9/16"</td></tr>
+        <tr><td>12'</td><td>139 7/8"</td></tr>
+      </table>
+      <table class="st">
+        <tr class="grp"><td colspan="2">3 PANNEAUX — OXO</td></tr>
+        <tr><td>8'</td><td>88 15/16"</td></tr>
+        <tr><td>9'</td><td>105 7/16"</td></tr>
+        <tr><td>10'</td><td>124 15/16"</td></tr>
+        <tr><td>12'</td><td>141 1/4"</td></tr>
+      </table>
+    </div>
+
+    <div class="tc">
+      <table class="st">
+        <tr class="grp"><td colspan="2">4 PANNEAUX — OXXO</td></tr>
+        <tr><td>10'</td><td>116 1/16"</td></tr>
+        <tr><td>12'</td><td>138 1/16"</td></tr>
+      </table>
+      <table class="st">
+        <tr class="grp"><td colspan="2">HAUTEURS STANDARDS</td></tr>
+        <tr><td>6' *</td><td>71 11/16"</td></tr>
+        <tr><td>6' 8"</td><td>79 1/2"</td></tr>
+        <tr><td>6' 10"</td><td>81"</td></tr>
+        <tr><td>8'</td><td>95 11/16"</td></tr>
+      </table>
+    </div>
+
+    <div class="co"><b>Note dimensions</b>* Hauteur 6' (71 11/16") seulement pour portes de 5', 6' et 9'. Dimensions non standards aussi disponibles. X = ouvrant · O = fixe.</div>
+
+    <div class="sec">
+      <div class="sec-h">Garanties</div>
+      <div class="wm">
+        <div class="wm-c"><div class="wm-v">20 ans</div><div class="wm-l">Buée verre scellé</div></div>
+        <div class="wm-c"><div class="wm-v">10 ans</div><div class="wm-l">PVC + bris verre</div></div>
+        <div class="wm-c"><div class="wm-v">1 an</div><div class="wm-l">Pièces</div></div>
+        <div class="wm-c" style="background:#E9EFE7;color:#2A2C35"><div class="wm-v">5 ans</div><div class="wm-l">Installation PÜR</div></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Options en supplément</div>
+      <ul class="cl">
+        <li>Serrure à clé</li>
+        <li>Verres teintés bronze/gris</li>
+        <li>Croisillons (Géorgien, rectangulaire, mince)</li>
+        <li>Faux barrotins 7/8" ou 2"</li>
+        <li>Extension cadre intérieur jusqu'à 13 3/4"</li>
+        <li>Moulure brique PVC ou bois recouvert</li>
+        <li>Extension/recouvrement seuil aluminium</li>
+        <li>Impostes et volets latéraux</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">RBQ 5827-6668-01 · Membre ACQ</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 02 — BELLE-VUE PRIMA -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="prima">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Porte patio · Premium PVC</div>
+      <div class="fh-title">BELLE-VUE PRIMA</div>
+      <div class="fh-sub">Portes Standard · Poignée niveau 40 incluse</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 02</div>
+      <div class="fh-side">Recto</div>
+    </div>
+  </div>
+  <div class="fc">
+    <div class="hero contain"><img src="/catalog-patio/bellevue-prima.jpg" alt="Belle-Vue Prima"><div class="hero-cap">Belle-Vue Prima · Blanc</div></div>
+
+    <div class="sec">
+      <div class="sec-h">Caractéristiques</div>
+      <ul class="cl">
+        <li>Poignée ergonomique niveau 40 incluse</li>
+        <li>Verre Low-E Plus avec gaz argon</li>
+        <li>Roulement à billes tandem</li>
+        <li>Triple coupe-froid haute performance</li>
+        <li>Verrouillage 1 ou 2 points</li>
+        <li>Cadre bois jointé 1 3/16"</li>
+        <li>Profondeurs 5 1/2", 6 5/8", 7 1/4"</li>
+        <li>Une des plus sécuritaires en Amérique du Nord</li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Performance énergétique</div>
+      <div class="sg">
+        <div class="sg-c" style="background:#E9EFE7"><div class="sg-l">Low-E PLUS Argon</div><div class="sg-v">RE 37</div><div class="sg-s">U 1.48 · R 3.85</div></div>
+        <div class="sg-c"><div class="sg-l">Triple vitrage*</div><div class="sg-v">RE 37</div><div class="sg-s">U 1.25 · R 4.5</div></div>
+        <div class="sg-c"><div class="sg-l">ENERGY STAR</div><div class="sg-v">✓</div><div class="sg-s">Min RE 34</div></div>
+      </div>
+      <div class="ds" style="font-size:8px;opacity:.6">* Option triple Low-E avec 2× gaz argon</div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Options exclusives Prima</div>
+      <ul class="cl">
+        <li>Stores Eclipse intégrés (entre vitres)</li>
+        <li>Triple vitrage super efficace</li>
+        <li>Verre laminé (insonorisation)</li>
+        <li>Poignée Euro ou Contemporaine</li>
+        <li>Verres teintés bronze/gris</li>
+        <li>Couleur sur mesure</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">(450) 990-1564 · purconstruction.com</span></div>
+</div>
+
+<!-- 02 VERSO -->
+<div class="page">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Porte patio · Dimensions</div>
+      <div class="fh-title">BELLE-VUE PRIMA</div>
+      <div class="fh-sub">Configurations standards · Largeur × hauteur</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 02</div>
+      <div class="fh-side">Verso</div>
+    </div>
+  </div>
+  <div class="fc">
+    <table class="st">
+      <tr class="grp"><td colspan="3">2 PANNEAUX — XO / OX</td></tr>
+      <tr><td>5' *</td><td>1505 mm</td><td>59 1/4"</td></tr>
+      <tr><td>6' *</td><td>1784 mm</td><td>70 1/4"</td></tr>
+      <tr><td>7'</td><td>2115 mm</td><td>83 1/4"</td></tr>
+      <tr><td>8'</td><td>2391 mm</td><td>94 1/8"</td></tr>
+    </table>
+
+    <div class="tc">
+      <table class="st">
+        <tr class="grp"><td colspan="2">3 PANNEAUX — XOO/XOX/OOX</td></tr>
+        <tr><td>8' *</td><td>86"</td></tr>
+        <tr><td>9' *</td><td>102 1/2"</td></tr>
+        <tr><td>10'</td><td>122"</td></tr>
+        <tr><td>12'</td><td>138 5/16"</td></tr>
+      </table>
+      <table class="st">
+        <tr class="grp"><td colspan="2">3 PANNEAUX — OXO</td></tr>
+        <tr><td>8' *</td><td>90"</td></tr>
+        <tr><td>9' *</td><td>106 1/2"</td></tr>
+        <tr><td>10'</td><td>126"</td></tr>
+        <tr><td>12'</td><td>142 5/16"</td></tr>
+      </table>
+    </div>
+
+    <div class="tc">
+      <table class="st">
+        <tr class="grp"><td colspan="2">4 PANNEAUX — OXXO</td></tr>
+        <tr><td>10' *</td><td>116 1/16"</td></tr>
+        <tr><td>12' *</td><td>138 1/16"</td></tr>
+      </table>
+      <table class="st">
+        <tr class="grp"><td colspan="2">HAUTEURS STANDARDS</td></tr>
+        <tr><td>6' 8" *</td><td>79 1/2"</td></tr>
+        <tr><td>6' 10" †</td><td>81"</td></tr>
+        <tr><td>8'</td><td>95 11/16"</td></tr>
+      </table>
+    </div>
+
+    <div class="co"><b>Notes stores Eclipse</b>* Offert avec stores Eclipse Prima et Prestige · † Offert seulement avec Prima · XOX non offert avec stores Eclipse · 6'10" exclusif Prima.</div>
+
+    <div class="sec">
+      <div class="sec-h">Garanties</div>
+      <div class="wm">
+        <div class="wm-c"><div class="wm-v">20 ans</div><div class="wm-l">Buée + PVC</div></div>
+        <div class="wm-c"><div class="wm-v">10 ans</div><div class="wm-l">Pièces + bris</div></div>
+        <div class="wm-c"><div class="wm-v">10 ans</div><div class="wm-l">Stores Eclipse</div></div>
+        <div class="wm-c" style="background:#E9EFE7;color:#2A2C35"><div class="wm-v">5 ans</div><div class="wm-l">Installation PÜR</div></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Levante — Mur de verre (Option Prima/Prestige)</div>
+      <div class="ds">Levier vers le haut → verrouille et scelle. Levier vers le bas → soulève et glisse sans friction. Idéale pour grandes ouvertures spectaculaires.</div>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">RBQ 5827-6668-01 · Membre ACQ</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 03 — BELLE-VUE PRESTIGE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="prestige">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Porte patio · Hybride haut de gamme</div>
+      <div class="fh-title">BELLE-VUE PRESTIGE</div>
+      <div class="fh-sub">PVC intérieur + Aluminium extérieur · 4 couleurs</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 03</div>
+      <div class="fh-side">Recto</div>
+    </div>
+  </div>
+  <div class="fc">
+    <div class="hero contain"><img src="/catalog-patio/bellevue-prestige.jpg" alt="Belle-Vue Prestige"><div class="hero-cap">Belle-Vue Prestige · Aluminium noir</div></div>
+
+    <div class="sec">
+      <div class="sec-h">Caractéristiques</div>
+      <ul class="cl">
+        <li>Extrusions d'aluminium extérieur</li>
+        <li>PVC à faible entretien intérieur</li>
+        <li>Design élégant volets de 3 1/2"</li>
+        <li>Verre Low-E avec gaz argon</li>
+        <li>Roulement à billes tandem</li>
+        <li>Poignée ergonomique niveau 40</li>
+        <li>Seuil aluminium anodisé</li>
+        <li>Cache-rainure sur glissière de tête</li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Performance énergétique</div>
+      <div class="sg">
+        <div class="sg-c" style="background:#E9EFE7"><div class="sg-l">Low-E PLUS Argon</div><div class="sg-v">RE 34</div><div class="sg-s">U 1.59 · R 3.57</div></div>
+        <div class="sg-c"><div class="sg-l">Triple vitrage*</div><div class="sg-v">RE 35</div><div class="sg-s">U 1.36 · R 4.2</div></div>
+        <div class="sg-c"><div class="sg-l">ENERGY STAR</div><div class="sg-v">✓</div><div class="sg-s">Limite Min</div></div>
+      </div>
+      <div class="ds" style="font-size:8px;opacity:.6">* Option triple Low-E avec 2× gaz argon</div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Couleurs aluminium extérieur (en stock)</div>
+      <div class="cdr">
+        <div class="cd"><div class="cd-d" style="background:#1a1a1a"></div>Noir</div>
+        <div class="cd"><div class="cd-d" style="background:#3d2817"></div>Brun commercial</div>
+        <div class="cd"><div class="cd-d" style="background:#fff"></div>Blanc</div>
+        <div class="cd"><div class="cd-d" style="background:#c0c0c0"></div>Anodisé clair</div>
+      </div>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">(450) 990-1564 · purconstruction.com</span></div>
+</div>
+
+<!-- 03 VERSO -->
+<div class="page">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Porte patio · Dimensions</div>
+      <div class="fh-title">BELLE-VUE PRESTIGE</div>
+      <div class="fh-sub">Mêmes dimensions que Prima · Largeur × hauteur</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 03</div>
+      <div class="fh-side">Verso</div>
+    </div>
+  </div>
+  <div class="fc">
+    <table class="st">
+      <tr class="grp"><td colspan="3">2 PANNEAUX — XO / OX</td></tr>
+      <tr><td>5' *</td><td>1505 mm</td><td>59 1/4"</td></tr>
+      <tr><td>6' *</td><td>1784 mm</td><td>70 1/4"</td></tr>
+      <tr><td>7'</td><td>2115 mm</td><td>83 1/4"</td></tr>
+      <tr><td>8'</td><td>2391 mm</td><td>94 1/8"</td></tr>
+    </table>
+
+    <div class="tc">
+      <table class="st">
+        <tr class="grp"><td colspan="2">3 PANNEAUX — XOO/OOX</td></tr>
+        <tr><td>8' *</td><td>86"</td></tr>
+        <tr><td>9' *</td><td>102 1/2"</td></tr>
+        <tr><td>10'</td><td>122"</td></tr>
+        <tr><td>12'</td><td>138 5/16"</td></tr>
+      </table>
+      <table class="st">
+        <tr class="grp"><td colspan="2">3 PANNEAUX — OXO</td></tr>
+        <tr><td>8' *</td><td>90"</td></tr>
+        <tr><td>9' *</td><td>106 1/2"</td></tr>
+        <tr><td>10'</td><td>126"</td></tr>
+        <tr><td>12'</td><td>142 5/16"</td></tr>
+      </table>
+    </div>
+
+    <div class="tc">
+      <table class="st">
+        <tr class="grp"><td colspan="2">4 PANNEAUX — OXXO</td></tr>
+        <tr><td>10' *</td><td>116 1/16"</td></tr>
+        <tr><td>12' *</td><td>138 1/16"</td></tr>
+      </table>
+      <table class="st">
+        <tr class="grp"><td colspan="2">HAUTEURS STANDARDS</td></tr>
+        <tr><td>6' 8" *</td><td>79 1/2"</td></tr>
+        <tr><td>8'</td><td>95 11/16"</td></tr>
+      </table>
+    </div>
+
+    <div class="co"><b>Différence vs Prima</b>Prestige = aluminium extérieur en 4 couleurs en stock. Prima = PVC blanc/crème ou peint. Prestige n'a PAS l'option 6'10". Stores Eclipse et triple vitrage offerts sur les deux.</div>
+
+    <div class="sec">
+      <div class="sec-h">Garanties</div>
+      <div class="wm">
+        <div class="wm-c"><div class="wm-v">20 ans</div><div class="wm-l">Buée + PVC</div></div>
+        <div class="wm-c"><div class="wm-v">10 ans</div><div class="wm-l">Pièces + bris</div></div>
+        <div class="wm-c"><div class="wm-v">10 ans</div><div class="wm-l">Stores Eclipse</div></div>
+        <div class="wm-c" style="background:#E9EFE7;color:#2A2C35"><div class="wm-v">5 ans</div><div class="wm-l">Installation PÜR</div></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Stores Eclipse intégrés</div>
+      <div class="ds">Stores entre les vitres — opacité totale ou vue dégagée d'une simple pression. Levez/abaissez et ouvrez/fermez sans jamais nettoyer. Garantie 10 ans sur le mécanisme.</div>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">RBQ 5827-6668-01 · Membre ACQ</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 04 — FENÊTRE À BATTANT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="battant">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Fenêtre · Modèle #1 au Québec</div>
+      <div class="fh-title">FENÊTRE À BATTANT</div>
+      <div class="fh-sub">Royalty · PVC ou Hybride aluminium · ENERGY STAR</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 04</div>
+      <div class="fh-side">Recto</div>
+    </div>
+  </div>
+  <div class="fc">
+    <div class="hero contain"><img src="/catalog-fenetres/battant.jpg" alt="Fenêtre à battant"><div class="hero-cap">Battant · 2 panneaux · Hybride noir</div></div>
+
+    <div class="sec">
+      <div class="sec-h">Caractéristiques</div>
+      <ul class="cl">
+        <li>Profilés cadre uPVC 5 5/8" haute performance</li>
+        <li>Triple coupe-froid étanchéité maximale</li>
+        <li>Thermos énergétique 7/8" Low-E Argon</li>
+        <li>Verrous multipoint norme effraction F20</li>
+        <li>Mécanismes acier peinture cuite</li>
+        <li>Pièces d'attache acier inoxydable</li>
+        <li>Ouverture 90° → nettoyage facile intérieur</li>
+        <li>Ouverture vers l'extérieur, ventilation max</li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Performance — Norme CAN/CSA A440-00</div>
+      <table class="st">
+        <tr><th>Étanchéité air</th><th>Étanch. eau</th><th>Vent</th><th>Effraction</th><th>Zone ENERGY STAR</th></tr>
+        <tr><td>A3</td><td>B7</td><td>C5</td><td>F20</td><td>1, 2</td></tr>
+      </table>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Matériaux & Options thermos</div>
+      <div class="cl">
+        <li>uPVC (économique)</li>
+        <li>Hybride uPVC + aluminium</li>
+        <li>Thermos triple (battant + auvent)</li>
+        <li>Thermos laminé (insonorisation)</li>
+        <li>Thermos givré ou gluechip</li>
+        <li>Carrelages: Géorgien 5/8"-1", rectangulaire 5/16", tubulaire 1/4"</li>
+      </div>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">(450) 990-1564 · purconstruction.com</span></div>
+</div>
+
+<!-- 04 VERSO -->
+<div class="page">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Fenêtre à battant · Configurations</div>
+      <div class="fh-title">FENÊTRE À BATTANT</div>
+      <div class="fh-sub">Largeur × hauteur · Codes Royalty</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 04</div>
+      <div class="fh-side">Verso</div>
+    </div>
+  </div>
+  <div class="fc">
+    <table class="st">
+      <tr><th>Code</th><th>Configuration</th><th>Min</th><th>Max</th></tr>
+      <tr><td>BS1 (G)</td><td>1 panneau (G ou D)</td><td>15" × 15"</td><td>38" × 78"</td></tr>
+      <tr><td>BS2 (GF)</td><td>2 panneaux: ouvrant + fixe</td><td>29" × 15"</td><td>76" × 78"</td></tr>
+      <tr><td>BS2L (GF)</td><td>2 panneaux: ouvrant + fixe (large)</td><td>43" × 15"</td><td>108" × 78"</td></tr>
+      <tr><td>BS3 (GFD)</td><td>3 panneaux: ouvrant-fixe-ouvrant</td><td>43" × 15"</td><td>114" × 78"</td></tr>
+      <tr><td>BS3L (GFD)</td><td>3 panneaux: ouvrant-fixe-ouvrant (L)</td><td>54" × 15"</td><td>160" × 78"</td></tr>
+      <tr><td>BS4 (GFFD)</td><td>4 panneaux: O-F-F-O</td><td>57" × 15"</td><td>152" × 78"</td></tr>
+      <tr><td>BSS (GFFFD)</td><td>5 panneaux + fixes</td><td>75" × 15"</td><td>190" × 78"</td></tr>
+    </table>
+
+    <div class="co"><b>Note technique</b>Configurations toujours montrées de l'extérieur. Volets opérants ouvrent à 90° pour nettoyage facile depuis l'intérieur. Barrotin en option entre les panneaux.</div>
+
+    <div class="sec">
+      <div class="sec-h">Couleurs cadre</div>
+      <div class="cdr">
+        <div class="cd"><div class="cd-d" style="background:#fff"></div>Blanc</div>
+        <div class="cd"><div class="cd-d" style="background:#1a1a1a"></div>Noir</div>
+        <div class="cd"><div class="cd-d" style="background:#c0c0c0"></div>Anodisé</div>
+        <div class="cd"><div class="cd-d" style="background:#36454F"></div>Charbon</div>
+        <div class="cd"><div class="cd-d" style="background:#3d2817"></div>Brun commercial</div>
+        <div class="cd"><div class="cd-d" style="background:linear-gradient(45deg,#666,#222)"></div>Sur mesure</div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Garanties</div>
+      <div class="wm">
+        <div class="wm-c"><div class="wm-v">20 ans</div><div class="wm-l">Thermos fuites</div></div>
+        <div class="wm-c"><div class="wm-v">À vie</div><div class="wm-l">PVC + alu</div></div>
+        <div class="wm-c"><div class="wm-v">7 ans</div><div class="wm-l">Installation</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">RBQ 5827-6668-01 · Membre ACQ</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 05 — FENÊTRE À AUVENT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="auvent">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Fenêtre · Sous-sol & espaces compacts</div>
+      <div class="fh-title">FENÊTRE À AUVENT</div>
+      <div class="fh-sub">Royalty · Ventilation sous la pluie · ENERGY STAR</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 05</div>
+      <div class="fh-side">Recto</div>
+    </div>
+  </div>
+  <div class="fc">
+    <div class="hero contain"><img src="/catalog-fenetres/auvent.jpg" alt="Fenêtre à auvent"><div class="hero-cap">Auvent · Hybride noir</div></div>
+
+    <div class="sec">
+      <div class="sec-h">Caractéristiques</div>
+      <ul class="cl">
+        <li>Profilés cadre uPVC 5 5/8" haute performance</li>
+        <li>Triple coupe-froid haute étanchéité</li>
+        <li>Thermos 7/8" Low-E Argon</li>
+        <li>Verrous multipoint F20</li>
+        <li>Ouverture par le haut → ventile sous la pluie</li>
+        <li>Idéale au-dessus comptoir ou en sous-sol</li>
+        <li>Mécanismes acier inoxydable</li>
+        <li>Plus grande ouverture qu'une coulissante</li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Performance — Norme CAN/CSA A440-00</div>
+      <table class="st">
+        <tr><th>Étanchéité air</th><th>Étanch. eau</th><th>Vent</th><th>Effraction</th><th>Zone ENERGY STAR</th></tr>
+        <tr><td>A3</td><td>B7</td><td>C3</td><td>F20</td><td>1, 2</td></tr>
+      </table>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Matériaux & Thermos</div>
+      <ul class="cl">
+        <li>uPVC ou Hybride uPVC + aluminium</li>
+        <li>Thermos triple (auvent compatible)</li>
+        <li>Thermos laminé pour insonorisation</li>
+        <li>Givré ou gluechip pour intimité</li>
+        <li>Carrelages géorgien, rectangulaire, mince</li>
+        <li>Couleurs grilles: blanc, noir, laiton, argent, étain</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">(450) 990-1564 · purconstruction.com</span></div>
+</div>
+
+<!-- 05 VERSO -->
+<div class="page">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Fenêtre à auvent · Configurations</div>
+      <div class="fh-title">FENÊTRE À AUVENT</div>
+      <div class="fh-sub">Largeur × hauteur · Codes Royalty</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 05</div>
+      <div class="fh-side">Verso</div>
+    </div>
+  </div>
+  <div class="fc">
+    <table class="st">
+      <tr><th>Code</th><th>Configuration</th><th>Min</th><th>Max</th></tr>
+      <tr><td>A1</td><td>1 panneau auvent</td><td>15" × 15"</td><td>60" × 42"</td></tr>
+      <tr><td>A1CFD</td><td>Auvent + fixe à droite</td><td>15" × 29"</td><td>60" × 80"</td></tr>
+      <tr><td>A1CFB</td><td>Auvent + fixe en bas</td><td>15" × 29"</td><td>60" × 80"</td></tr>
+      <tr><td>A1CF2/3</td><td>Auvent + 2 ou 3 fixes</td><td>15" × 29"</td><td>60" × 120"</td></tr>
+      <tr><td>A2</td><td>2 panneaux auvent côte à côte</td><td>29" × 15"</td><td>120" × 42"</td></tr>
+      <tr><td>A3</td><td>3 panneaux auvent côte à côte</td><td>43" × 15"</td><td>180" × 42"</td></tr>
+    </table>
+
+    <div class="co"><b>Note technique</b>Configurations toujours montrées de l'extérieur. Idéal pour le sous-sol où l'espace vertical est limité — offre une plus grande ouverture qu'une coulissante avec une meilleure protection contre la pluie.</div>
+
+    <div class="sec">
+      <div class="sec-h">Cas d'usage typiques</div>
+      <ul class="cl">
+        <li>Sous-sol (CNB conformité aération)</li>
+        <li>Au-dessus comptoir cuisine</li>
+        <li>Salle de bain (intimité + ventilation)</li>
+        <li>Garage et atelier</li>
+        <li>Combiné fixe + auvent en grande ouverture</li>
+        <li>Au-dessus battants pour décoration</li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Garanties</div>
+      <div class="wm">
+        <div class="wm-c"><div class="wm-v">20 ans</div><div class="wm-l">Thermos fuites</div></div>
+        <div class="wm-c"><div class="wm-v">À vie</div><div class="wm-l">PVC + alu</div></div>
+        <div class="wm-c"><div class="wm-v">7 ans</div><div class="wm-l">Installation</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">RBQ 5827-6668-01 · Membre ACQ</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 06 — COULISSANTE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="coulissante">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Fenêtre · Économique horizontale</div>
+      <div class="fh-title">FENÊTRE COULISSANTE</div>
+      <div class="fh-sub">Royalty · Glissement horizontal · ENERGY STAR</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 06</div>
+      <div class="fh-side">Recto</div>
+    </div>
+  </div>
+  <div class="fc">
+    <div class="hero contain"><img src="/catalog-fenetres/coulissante.jpg" alt="Fenêtre coulissante"><div class="hero-cap">Coulissante · 2 panneaux · Blanc</div></div>
+
+    <div class="sec">
+      <div class="sec-h">Caractéristiques</div>
+      <ul class="cl">
+        <li>Roulettes en acier inoxydable sans friction</li>
+        <li>Profilés cadre uPVC 5 5/8" haute performance</li>
+        <li>Double coupe-froid étanchéité</li>
+        <li>Thermos 7/8" Low-E Argon</li>
+        <li>Verrous automatiques (norme effraction)</li>
+        <li>Mécanisme haute sécurité</li>
+        <li>Disponible simple ou double coulissante</li>
+        <li>Idéal pour espaces restreints</li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Performance — Norme CAN/CSA A440-00</div>
+      <table class="st">
+        <tr><th>Étanchéité air</th><th>Étanch. eau</th><th>Vent</th><th>Effraction</th><th>Zone ENERGY STAR</th></tr>
+        <tr><td>A3</td><td>B4</td><td>C3</td><td>F20</td><td>1, 2</td></tr>
+      </table>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Matériaux & Options</div>
+      <ul class="cl">
+        <li>uPVC ou Hybride uPVC + aluminium</li>
+        <li>Thermos laminé (insonorisation)</li>
+        <li>Givré ou gluechip pour intimité</li>
+        <li>Carrelages géorgien, rectangulaire, mince</li>
+        <li>Choix de couleurs grilles</li>
+        <li>Cadre blanc ou couleur sur mesure</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">(450) 990-1564 · purconstruction.com</span></div>
+</div>
+
+<!-- 06 VERSO -->
+<div class="page">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Fenêtre coulissante · Configurations</div>
+      <div class="fh-title">FENÊTRE COULISSANTE</div>
+      <div class="fh-sub">Largeur × hauteur · Codes Royalty</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 06</div>
+      <div class="fh-side">Verso</div>
+    </div>
+  </div>
+  <div class="fc">
+    <table class="st">
+      <tr><th>Code</th><th>Configuration</th><th>Min</th><th>Max</th></tr>
+      <tr><td>C2</td><td>2 panneaux — 1 ouvrant + 1 fixe</td><td>29" × 18"</td><td>68" × 60"</td></tr>
+      <tr><td>CD2</td><td>2 panneaux — double coulissante</td><td>29" × 18"</td><td>68" × 60"</td></tr>
+      <tr><td>C3</td><td>3 panneaux — fixe + ouvrant + fixe</td><td>42" × 18"</td><td>95" × 60"</td></tr>
+      <tr><td>C3L</td><td>3 panneaux — large</td><td>42" × 18"</td><td>124" × 60"</td></tr>
+    </table>
+
+    <div class="co"><b>Différence vs Battant</b>La coulissante est plus économique mais offre moins d'étanchéité (B4 vs B7 sur eau). Idéale quand l'espace ne permet pas une ouverture vers l'extérieur (terrasse, balcon, allée étroite).</div>
+
+    <div class="sec">
+      <div class="sec-h">Quand recommander la coulissante</div>
+      <ul class="cl">
+        <li>Espace extérieur restreint (balcon, allée)</li>
+        <li>Budget plus serré</li>
+        <li>Ouverture latérale demandée</li>
+        <li>Remplacement d'une coulissante existante</li>
+        <li>Combinaison avec porte patio (matching)</li>
+        <li>Chambres avec mobilier près de la fenêtre</li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Garanties</div>
+      <div class="wm">
+        <div class="wm-c"><div class="wm-v">20 ans</div><div class="wm-l">Thermos fuites</div></div>
+        <div class="wm-c"><div class="wm-v">À vie</div><div class="wm-l">PVC + alu</div></div>
+        <div class="wm-c"><div class="wm-v">7 ans</div><div class="wm-l">Installation</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">RBQ 5827-6668-01 · Membre ACQ</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 07 — GUILLOTINE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="guillotine">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Fenêtre · Classique verticale</div>
+      <div class="fh-title">FENÊTRE À GUILLOTINE</div>
+      <div class="fh-sub">Royalty · Simple ou double · ENERGY STAR</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 07</div>
+      <div class="fh-side">Recto</div>
+    </div>
+  </div>
+  <div class="fc">
+    <div class="hero contain"><img src="/catalog-fenetres/guillotine.jpg" alt="Fenêtre à guillotine"><div class="hero-cap">Guillotine · Hybride noir</div></div>
+
+    <div class="sec">
+      <div class="sec-h">Caractéristiques</div>
+      <ul class="cl">
+        <li>Système ressorts force constante</li>
+        <li>Ouverture à la position désirée</li>
+        <li>Verrous automatiques (norme effraction)</li>
+        <li>Profilés cadre uPVC 5 5/8"</li>
+        <li>Double coupe-froid étanchéité</li>
+        <li>Thermos 7/8" Low-E Argon</li>
+        <li>Pivot-patins → bascule pour nettoyage</li>
+        <li>Ressorts lubrifiés silencieux longue durée</li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Performance — Norme CAN/CSA A440-00</div>
+      <table class="st">
+        <tr><th>Étanchéité air</th><th>Étanch. eau</th><th>Vent</th><th>Effraction</th><th>Zone ENERGY STAR</th></tr>
+        <tr><td>A3</td><td>B4</td><td>C4</td><td>F20</td><td>1, 2</td></tr>
+      </table>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Style architectural</div>
+      <ul class="cl">
+        <li>Préserve l'aspect classique</li>
+        <li>Touche rustique sur maison moderne</li>
+        <li>Disponible simple guillotine (1 ouvrant)</li>
+        <li>Disponible double guillotine (2 ouvrants)</li>
+        <li>Carrelages typiques pour effet colonial</li>
+        <li>Bascule vers l'intérieur pour nettoyage facile</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">(450) 990-1564 · purconstruction.com</span></div>
+</div>
+
+<!-- 07 VERSO -->
+<div class="page">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Fenêtre à guillotine · Configurations</div>
+      <div class="fh-title">FENÊTRE À GUILLOTINE</div>
+      <div class="fh-sub">Largeur × hauteur · Codes Royalty</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 07</div>
+      <div class="fh-side">Verso</div>
+    </div>
+  </div>
+  <div class="fc">
+    <table class="st">
+      <tr class="grp"><td colspan="4">SIMPLE GUILLOTINE (1 ouvrant)</td></tr>
+      <tr><th>Code</th><th>Configuration</th><th>Min</th><th>Max</th></tr>
+      <tr><td>G1</td><td>1 panneau guillotine</td><td>17" × 28"</td><td>44" × 74"</td></tr>
+      <tr><td>G2</td><td>2 panneaux guillotine</td><td>34" × 28"</td><td>88" × 74"</td></tr>
+      <tr><td>G3L</td><td>3 panneaux guillotine (large)</td><td>39" × 28"</td><td>137" × 74"</td></tr>
+    </table>
+
+    <table class="st">
+      <tr class="grp"><td colspan="4">DOUBLE GUILLOTINE (2 ouvrants)</td></tr>
+      <tr><th>Code</th><th>Configuration</th><th>Min</th><th>Max</th></tr>
+      <tr><td>GD1</td><td>1 panneau double guillotine</td><td>17" × 28"</td><td>44" × 74"</td></tr>
+      <tr><td>GD2</td><td>2 panneaux double guillotine</td><td>34" × 28"</td><td>88" × 74"</td></tr>
+      <tr><td>GD3L</td><td>3 panneaux double guillotine</td><td>39" × 28"</td><td>137" × 74"</td></tr>
+    </table>
+
+    <div class="co"><b>Simple vs Double</b>Simple guillotine = volet du bas glisse, le haut est fixe. Double guillotine = les deux volets glissent. Double = meilleure ventilation (haut + bas) et nettoyage des deux volets par basculement.</div>
+
+    <div class="sec">
+      <div class="sec-h">Garanties</div>
+      <div class="wm">
+        <div class="wm-c"><div class="wm-v">20 ans</div><div class="wm-l">Thermos fuites</div></div>
+        <div class="wm-c"><div class="wm-v">À vie</div><div class="wm-l">PVC + alu</div></div>
+        <div class="wm-c"><div class="wm-v">7 ans</div><div class="wm-l">Installation</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">RBQ 5827-6668-01 · Membre ACQ</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 08 — BAY BOW & PANORAMIQUE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="baybow">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Fenêtre · Architectural & grand format</div>
+      <div class="fh-title">BAY BOW & PANORAMIQUE</div>
+      <div class="fh-sub">Royalty · Sur mesure · Maximise la lumière</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 08</div>
+      <div class="fh-side">Recto</div>
+    </div>
+  </div>
+  <div class="fc">
+    <div class="hero contain"><img src="/catalog-fenetres/baie.jpg" alt="Bay Bow"><div class="hero-cap">Bay 3 panneaux angulés</div></div>
+
+    <div class="sec">
+      <div class="sec-h">Bay vs Bow</div>
+      <table class="st">
+        <tr><th>Type</th><th>Panneaux</th><th>Forme</th><th>Style</th></tr>
+        <tr><td>BAY</td><td>3 panneaux</td><td>Angulés (30°/45°)</td><td>Moderne</td></tr>
+        <tr><td>BOW</td><td>4 à 5+ panneaux</td><td>Courbés (arc doux)</td><td>Classique</td></tr>
+        <tr><td>PANORAMIQUE FIXE</td><td>1 grand panneau</td><td>Plat fixe</td><td>Contemporain</td></tr>
+      </table>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Caractéristiques communes</div>
+      <ul class="cl">
+        <li>Sur mesure — dimensions illimitées</li>
+        <li>Panneau central fixe pour vue dégagée</li>
+        <li>Latéraux: battant ou guillotine ouvrants</li>
+        <li>Thermos 7/8" Low-E Argon</li>
+        <li>uPVC ou Hybride uPVC + aluminium</li>
+        <li>ENERGY STAR certifié</li>
+        <li>Maximise lumière naturelle</li>
+        <li>Crée espace banquette/lecture</li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Configurations standards Bay Bow</div>
+      <ul class="cl">
+        <li>Bay 3 panneaux — battants latéraux</li>
+        <li>Bay 3 panneaux — guillotines latérales</li>
+        <li>Bow 4 panneaux — angles 10°</li>
+        <li>Bow 5 panneaux — courbure douce</li>
+        <li>Combinaison fixe + ouvrants sur mesure</li>
+        <li>Toit en cuivre, bardeaux ou EPDM offert</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">(450) 990-1564 · purconstruction.com</span></div>
+</div>
+
+<!-- 08 VERSO -->
+<div class="page">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Bay Bow & Panoramique · Notes terrain</div>
+      <div class="fh-title">BAY BOW & PANORAMIQUE</div>
+      <div class="fh-sub">Considérations soumission</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 08</div>
+      <div class="fh-side">Verso</div>
+    </div>
+  </div>
+  <div class="fc">
+    <div class="sec">
+      <div class="sec-h">Mesures à prendre sur place</div>
+      <ul class="cl">
+        <li>Largeur extérieure mur à mur</li>
+        <li>Hauteur ouverture brute</li>
+        <li>Profondeur saillie souhaitée (8-24")</li>
+        <li>Type de toit existant (si remplacement)</li>
+        <li>Charge structure (Bay/Bow = lourd)</li>
+        <li>Renfort jambages requis?</li>
+        <li>Photo intérieur + extérieur</li>
+        <li>Vérifier servitude (saillie en cours arrière)</li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Architecturales — Formes disponibles</div>
+      <ul class="cl">
+        <li>Demi-lune, cercle, éclipse</li>
+        <li>Anse de panier, arc-en-ciel</li>
+        <li>Hexagone, trapèze, losange</li>
+        <li>Rectangle, carré, sur mesure</li>
+        <li>Compatible tous les modèles</li>
+        <li>Toujours fixes (non ouvrantes)</li>
+      </ul>
+    </div>
+
+    <div class="co"><b>Considérations prix</b>Bay Bow = installation complexe (renforcement structure, toit, finition intérieure banquette). Compter 2-3× le prix d'une fenêtre régulière équivalente. Panoramique fixe = beaucoup moins cher car aucune mécanique d'ouverture.</div>
+
+    <div class="sec">
+      <div class="sec-h">Performance — Norme CAN/CSA A440-00</div>
+      <table class="st">
+        <tr><th>Composant</th><th>Air</th><th>Eau</th><th>Vent</th><th>Effraction</th></tr>
+        <tr><td>Panneau fixe</td><td>A3</td><td>B7</td><td>C5</td><td>F20</td></tr>
+        <tr><td>Latéraux battants</td><td>A3</td><td>B7</td><td>C5</td><td>F20</td></tr>
+        <tr><td>Latéraux guillotines</td><td>A3</td><td>B4</td><td>C4</td><td>F20</td></tr>
+      </table>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Garanties</div>
+      <div class="wm">
+        <div class="wm-c"><div class="wm-v">20 ans</div><div class="wm-l">Thermos fuites</div></div>
+        <div class="wm-c"><div class="wm-v">À vie</div><div class="wm-l">PVC + alu</div></div>
+        <div class="wm-c"><div class="wm-v">7 ans</div><div class="wm-l">Installation</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">RBQ 5827-6668-01 · Membre ACQ</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 09 — PORTE D'ENTRÉE ACIER R16 -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="porte-entree">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Porte d'entrée · Acier isolé R16</div>
+      <div class="fh-title">PORTE D'ENTRÉE</div>
+      <div class="fh-sub">Royalty · ENERGY STAR · Acier R16 + cadre alu extrudé</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 09</div>
+      <div class="fh-side">Recto</div>
+    </div>
+  </div>
+  <div class="fc">
+    <div class="hero contain"><img src="/catalog-promo/cosmo-black.jpg" alt="Porte d'entrée"><div class="hero-cap">Porte d'entrée acier · Noir</div></div>
+
+    <div class="sec">
+      <div class="sec-h">Caractéristiques</div>
+      <ul class="cl">
+        <li>Panneau R16 acier usiné CNC</li>
+        <li>Isolation polyuréthane haute densité</li>
+        <li>Triple coupe-froid (vs double standard)</li>
+        <li>Cadre intérieur recouvert aluminium extrudé</li>
+        <li>Adaptateur alu retient le recouvrement</li>
+        <li>Pentures à roulement à billes</li>
+        <li>Préparation serrure en usine</li>
+        <li>Cadre porte pin jointé vissé</li>
+        <li>Moulure retenue 1 1/2" alu extrudé</li>
+        <li>Balai de porte certifié ENERGY STAR</li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Performance & sécurité</div>
+      <div class="sg">
+        <div class="sg-c" style="background:#E9EFE7"><div class="sg-l">Isolation</div><div class="sg-v">R16</div><div class="sg-s">Acier CNC</div></div>
+        <div class="sg-c"><div class="sg-l">Coupe-froid</div><div class="sg-v">Triple</div><div class="sg-s">vs double std</div></div>
+        <div class="sg-c"><div class="sg-l">ENERGY STAR</div><div class="sg-v">✓</div><div class="sg-s">Toutes zones CA</div></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Options de poignées (Dorex / Baldwin)</div>
+      <ul class="cl">
+        <li>Poignée standard avec serrure simple</li>
+        <li>Poignée avec verrou multipoint (3 points)</li>
+        <li>Finitions: nickel, bronze, chrome, laiton</li>
+        <li>Grade commercial Baldwin disponible</li>
+        <li>Préparation usine = installation parfaite</li>
+        <li>Vitraux et accessoires sur mesure</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">(450) 990-1564 · purconstruction.com</span></div>
+</div>
+
+<!-- 09 VERSO -->
+<div class="page">
+  <div class="fh">
+    <div class="fh-l">
+      <div class="fh-cat">Porte d'entrée · Garanties & options</div>
+      <div class="fh-title">PORTE D'ENTRÉE</div>
+      <div class="fh-sub">Garanties complètes et options de soumission</div>
+    </div>
+    <div class="fh-r">
+      <div class="fh-num">FICHE 09</div>
+      <div class="fh-side">Verso</div>
+    </div>
+  </div>
+  <div class="fc">
+    <div class="sec">
+      <div class="sec-h">Garanties</div>
+      <table class="st">
+        <tr><th>Composant</th><th>Durée</th><th>Couvre</th></tr>
+        <tr><td>Portes (panneau acier)</td><td>20 ans</td><td>Défauts fabrication</td></tr>
+        <tr><td>Fini acier blanc N700/N600/N900</td><td>20 ans</td><td>Décollement</td></tr>
+        <tr><td>Thermos (vitraux)</td><td>10 ans</td><td>Buée + fuite gaz</td></tr>
+        <tr><td>Sérigraphies vitraux</td><td>5 ans</td><td>Décoloration</td></tr>
+        <tr><td>Serrures multipoint</td><td>10 ans</td><td>Mécanisme</td></tr>
+        <tr><td>Peinture acier</td><td>10 ans</td><td>Excl. PVC peinturé</td></tr>
+        <tr><td>Balais porte non peinturé</td><td>1 an</td><td>Usure</td></tr>
+        <tr><td>Installation PÜR</td><td>7 ans</td><td>Étanchéité + ajustement</td></tr>
+      </table>
+    </div>
+
+    <div class="co"><b>Note peinture</b>Garantie 10 ans EXCLUT toute pièce de PVC peinturée (cadre, moulure, etc). Pour PVC, garantie à vie limitée mais sans peinture. Si client veut couleur sur PVC → expliquer la limite de garantie.</div>
+
+    <div class="sec">
+      <div class="sec-h">Mesures à prendre — Soumission</div>
+      <ul class="cl">
+        <li>Largeur ouverture brute (jambage à jambage)</li>
+        <li>Hauteur ouverture brute (seuil au linteau)</li>
+        <li>Épaisseur du mur (5 1/2" / 6 5/8" / 7 1/4")</li>
+        <li>Direction d'ouverture (G ou D, dehors/dedans)</li>
+        <li>Type seuil existant + état</li>
+        <li>Volet latéral et/ou imposte requis?</li>
+        <li>Vitrage demandé (oui/non + style)</li>
+        <li>Photo recto-verso de la porte actuelle</li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Cross-sell après visite</div>
+      <ul class="cl">
+        <li>Si porte vieille → fenêtres pareilles?</li>
+        <li>Si vitrage = vieux thermos → vérifier les autres</li>
+        <li>Mentionner promo: porte gratuite avec 8+ fenêtres</li>
+        <li>Coffrage extérieur abîmé → revêtement?</li>
+        <li>Toiture visible vieille → soumission combo</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ff"><span class="ff-l">PÜR Construction</span><span class="ff-r">RBQ 5827-6668-01 · Membre ACQ</span></div>
+</div>
+
+</body>
+</html>

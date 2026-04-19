@@ -1,0 +1,194 @@
+/* PÜR Hub v2 — Fiches Techniques */
+
+.fiches { display: flex; flex-direction: column; gap: 24px; }
+
+.title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.section { display: flex; flex-direction: column; gap: 8px; }
+
+.sectionTitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(233, 239, 231, 0.1);
+}
+
+.fiche {
+  background: #2A2C35;
+  border: 1px solid rgba(233, 239, 231, 0.06);
+  border-radius: 8px;
+  padding: 14px 18px;
+}
+
+.ficheHeader { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+
+.ficheName {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.ficheEn { font-size: 11px; opacity: 0.4; }
+
+.ficheDesc { font-size: 11px; opacity: 0.5; line-height: 1.5; margin: 0; }
+
+.specGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 16px;
+  font-size: 11px;
+  opacity: 0.6;
+  margin-top: 8px;
+}
+
+.configTable {
+  margin-top: 10px;
+  overflow-x: auto;
+}
+
+.configTable table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.configTable th,
+.configTable td {
+  padding: 5px 8px;
+  text-align: left;
+  border-bottom: 1px solid rgba(233, 239, 231, 0.06);
+}
+
+.configTable th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.35;
+}
+
+/* ── Fiches Chooser ── */
+.chooser {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  gap: 16px;
+}
+
+.chooserTitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 800;
+  color: #2A2C35;
+  letter-spacing: -0.02em;
+}
+
+.chooserSub {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.chooserGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 700px;
+}
+
+@media (max-width: 600px) {
+  .chooserGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 400px) {
+  .chooserGrid { grid-template-columns: 1fr; }
+}
+
+.chooserCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 12px;
+  background: #FFFFFF;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  color: #2A2C35;
+  font-family: inherit;
+  min-height: 44px;
+}
+
+.chooserCard:hover {
+  border-color: #2A2C35;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(42, 44, 53, 0.1);
+}
+
+.chooserCard:focus-visible {
+  outline: 2px solid #E9EFE7;
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+.chooserIcon { display: flex; align-items: center; justify-content: center; }
+.chooserName {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+}
+.chooserDesc {
+  font-size: 10px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.backBtn {
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 8px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #2A2C35;
+  cursor: pointer;
+  margin-bottom: 12px;
+  min-height: 44px;
+  transition: all 0.12s;
+}
+
+.backBtn:hover {
+  background: #F5F7F4;
+  border-color: #2A2C35;
+}
+
+.backBtn:focus-visible {
+  outline: 2px solid #E9EFE7;
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fiches *,
+  .fiches *::before,
+  .fiches *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
