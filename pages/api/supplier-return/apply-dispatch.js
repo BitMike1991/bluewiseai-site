@@ -251,6 +251,20 @@ export default async function handler(req, res) {
       continue;
     }
 
+    // Sync the denormalized jobs.quote_amount so the /platform/jobs list view
+    // and /api/jobs/[id]/finances don't drift until the next DevisEditor save.
+    // Mirrors apply-supplier-pricing.js:318 pattern.
+    if (quote.job_id) {
+      const { error: jobSyncErr } = await supabase
+        .from('jobs')
+        .update({ quote_amount: totals.subtotal, updated_at: nowIso })
+        .eq('id', quote.job_id)
+        .eq('customer_id', customerId);
+      if (jobSyncErr) {
+        console.warn('[apply-dispatch] jobs.quote_amount sync failed (non-fatal)', jobSyncErr);
+      }
+    }
+
     // DO NOT auto-flip job.status. "awaiting_client_approval" means client received
     // the devis — which is a separate action from pricing being applied.
     // Jérémy clicks "Envoyer au client" later to actually send + flip status.
