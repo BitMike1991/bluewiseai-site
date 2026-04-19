@@ -75,18 +75,31 @@ function computeItemBreakdown(item) {
 
 function computeTotals(items, installCost, opts = {}) {
   const install = parseFloat(installCost) || 0;
-  const lineSubtotal = (items || []).reduce(
+  // "Petits frais" master toggle (default ON = charge client):
+  //   - overhead (200$) and gaz (100$) line-items
+  //   - cannettes: per-item urethane + moulure + calking that were already
+  //     baked into each unit_price via the pricing formula
+  // When OFF: overhead + gaz skipped, AND each item's stored _urethane/
+  // _moulure/_calking×qty is subtracted from the sum — Jérémy absorbs
+  // all the small fees for this particular job.
+  const petitsFrais = opts.petitsFrais !== false; // default true
+  const rawLineSubtotal = (items || []).reduce(
     (s, it) => s + (Number(it.qty) || 0) * (Number(it.unit_price) || 0),
     0
   );
-  const overhead  = 200;
-  const gaz       = 100;
+  const cannetteCredit = petitsFrais ? 0 : (items || []).reduce((s, it) => {
+    const q = Number(it.qty) || 1;
+    return s + q * (Number(it._urethane || 0) + Number(it._moulure || 0) + Number(it._calking || 0));
+  }, 0);
+  const lineSubtotal = rawLineSubtotal - cannetteCredit;
+  const overhead  = petitsFrais ? 200 : 0;
+  const gaz       = petitsFrais ? 100 : 0;
   const container = opts.container ? 175 : 0;
   const subtotal  = lineSubtotal + install + overhead + gaz + container;
   const tax_gst   = subtotal * 0.05;
   const tax_qst   = subtotal * 0.09975;
   const total_ttc = subtotal + tax_gst + tax_qst;
-  return { lineSubtotal, install, overhead, gaz, container, subtotal, tax_gst, tax_qst, total_ttc };
+  return { lineSubtotal, rawLineSubtotal, cannetteCredit, install, overhead, gaz, container, subtotal, tax_gst, tax_qst, total_ttc, petitsFrais };
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
@@ -730,6 +743,12 @@ export default function DevisEditor({ job, quote, onSaved }) {
 
   // Project fees toggles
   const [containerOn,     setContainerOn]     = useState(!!(quote?.meta?.container_option));
+  // "Petits frais" master toggle — default true (charge client). When Jérémy
+  // deems the job small/loyalty/goodwill, he can absorb: skips overhead 200 +
+  // gaz 100 + per-item cannette fees (urethane/moulure/calking).
+  const [petitsFraisOn, setPetitsFraisOn] = useState(
+    quote?.meta?.petits_frais_on === undefined ? true : !!quote.meta.petits_frais_on
+  );
   const [sousTrOpen,      setSousTrOpen]      = useState(!!(quote?.meta?.sous_traitance_option));
   const [employees,       setEmployees]       = useState(
     Array.isArray(quote?.meta?.employees) ? quote.meta.employees : []
@@ -795,7 +814,7 @@ export default function DevisEditor({ job, quote, onSaved }) {
     it => !(it.description || '').toLowerCase().startsWith('installation')
   );
   const { lineSubtotal, install: installAmt, overhead, gaz, container, subtotal: rawSubtotal, tax_gst: rawTps, tax_qst: rawTvq, total_ttc: rawTtc } =
-    computeTotals(dataItems, installCost, { container: containerOn });
+    computeTotals(dataItems, installCost, { container: containerOn, petitsFrais: petitsFraisOn });
 
   // Promo: "porte simple offerte" when the quote has 9+ openings and contains a porte simple.
   // Auto-initialize on first eligibility if meta didn't explicitly say no.
@@ -902,6 +921,7 @@ export default function DevisEditor({ job, quote, onSaved }) {
               employees,
               promo_enabled:        promoActive,
               promo_rebate:         promoRebate,
+              petits_frais_on:      petitsFraisOn,
             },
           }),
         }),
@@ -922,7 +942,7 @@ export default function DevisEditor({ job, quote, onSaved }) {
       setSaving(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientName, clientPhone, clientEmail, clientAddress, jobStatus, items, installCost, notes, priceDisplayMode, containerOn, sousTrOpen, employees, promoActive, promoRebate, subtotal, tax_gst, tax_qst, total_ttc, job.id, quote.id, onSaved]);
+  }, [clientName, clientPhone, clientEmail, clientAddress, jobStatus, items, installCost, notes, priceDisplayMode, containerOn, petitsFraisOn, sousTrOpen, employees, promoActive, promoRebate, subtotal, tax_gst, tax_qst, total_ttc, job.id, quote.id, onSaved]);
 
   // Ctrl+S keyboard shortcut
   useEffect(() => {
@@ -1440,14 +1460,32 @@ export default function DevisEditor({ job, quote, onSaved }) {
           {/* ── FRAIS PROJET ── */}
           <section className="rounded-xl border border-d-border bg-d-surface/30 p-4">
             <p className="text-[10px] font-semibold text-d-muted uppercase tracking-wider mb-3">Frais projet</p>
+
+            {/* Master "petits frais" toggle — overhead + gaz + cannettes */}
+            <div className="mb-2 pb-2 border-b border-d-border/40">
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={petitsFraisOn}
+                  onChange={e => { setPetitsFraisOn(e.target.checked); markDirty(); }}
+                  aria-label="Inclure les petits frais"
+                  className="mt-0.5 w-3.5 h-3.5 rounded accent-d-primary"
+                />
+                <div>
+                  <div className="text-[11px] font-semibold text-d-text">Inclure les petits frais</div>
+                  <div className="text-[10px] text-d-muted">Overhead 200 $ + gaz 100 $ + cannettes (urethane/moulure/calking) par item. Décoché = Jer absorbe pour ce devis.</div>
+                </div>
+              </label>
+            </div>
+
             <div className="space-y-2 text-xs">
               <div className="flex justify-between items-center py-1 border-b border-d-border/30">
-                <span className="text-d-muted">Overhead fixe</span>
-                <span className="text-d-text font-mono">{fmtQC(200)}</span>
+                <span className={petitsFraisOn ? 'text-d-muted' : 'text-d-muted/40'}>Overhead fixe</span>
+                <span className={`font-mono ${petitsFraisOn ? 'text-d-text' : 'text-d-muted/40 line-through'}`}>{fmtQC(200)}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-d-border/30">
-                <span className="text-d-muted">Gaz / visite</span>
-                <span className="text-d-text font-mono">{fmtQC(100)}</span>
+                <span className={petitsFraisOn ? 'text-d-muted' : 'text-d-muted/40'}>Gaz / visite</span>
+                <span className={`font-mono ${petitsFraisOn ? 'text-d-text' : 'text-d-muted/40 line-through'}`}>{fmtQC(100)}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-d-border/30">
                 <label className="flex items-center gap-2 cursor-pointer">

@@ -213,9 +213,15 @@ export default async function handler(req, res) {
     const promoActive       = promoEligible && existingPromoFlag !== false;
     const promoRebate       = promoActive ? computePromoDoorRebate(pricingParams) : 0;
 
+    // Preserve the "petits frais" opt-out Jérémy may have set in the editor
+    // (default true = charge client). When false, overhead + gaz + cannettes
+    // are absorbed.
+    const petitsFrais = quote.meta?.petits_frais_on !== false;
+
     // Recompute totals (with rebate if promo is active)
     const totals = computeProjectTotals(lineItems, pricingParams, {
       container:   !!(quote.meta?.container_option),
+      petitsFrais,
       promoRebate,
     });
 
@@ -241,6 +247,7 @@ export default async function handler(req, res) {
           supplier_return_applied_at: nowIso,
           promo_enabled:             promoActive,
           promo_rebate:              promoRebate,
+          petits_frais_on:           petitsFrais,
         },
       })
       .eq('id', quoteId)
