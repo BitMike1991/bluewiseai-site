@@ -7,15 +7,19 @@ import {
   LayoutDashboard, Users, Briefcase, Inbox, Phone, Calendar,
   Target, CheckSquare, DollarSign, CreditCard, Settings, BarChart2,
   X, ChevronsUpDown, PanelLeftClose, PanelLeft,
-  ShoppingCart, BookOpen, FileText, Layers,
+  ShoppingCart, BookOpen, FileText, Layers, Receipt, Package,
 } from "lucide-react";
 
-// Hub tool definitions — stub pages only until P11
+// Hub tool definitions. After the P11 migration, `/hub` is the devis creator
+// (PUR's old "commande" tool — builds soumissions + saves a draft job+quote
+// to the CRM). The batch Bons de Commande tool lives at `/hub/commande/*` and
+// is surfaced separately via the `bc` key when a tenant enables it.
 const HUB_TOOL_DEFS = {
-  commande: { label: "Commande fournisseur", href: "/hub/commande", icon: ShoppingCart },
-  toiture: { label: "Calculateur toiture", href: "/hub/toiture", icon: Layers },
-  catalogues: { label: "Catalogues", href: "/hub/catalogues", icon: BookOpen },
-  fiches: { label: "Fiches techniques", href: "/hub/fiches", icon: FileText },
+  commande:   { label: "Nouveau devis",      href: "/hub",            icon: Receipt },
+  toiture:    { label: "Calculateur toiture",href: "/hub/toiture",    icon: Layers },
+  catalogues: { label: "Catalogues",         href: "/hub/catalogues", icon: BookOpen },
+  fiches:     { label: "Fiches techniques",  href: "/hub/fiches",     icon: FileText },
+  bc:         { label: "Bons de commande",   href: "/hub/commande",   icon: Package },
 };
 
 const NAV_SECTIONS = [
@@ -209,7 +213,11 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
                 {enabledHubTools.map((toolId) => {
                   const def = HUB_TOOL_DEFS[toolId];
                   if (!def) return null;
-                  const isActive = router.pathname === def.href || router.pathname.startsWith(def.href + "/");
+                  // /hub root matches exactly only; subpaths match exact or prefix.
+                  // Prevents "Nouveau devis" from staying active when on /hub/toiture.
+                  const isActive = def.href === "/hub"
+                    ? router.pathname === "/hub" || router.pathname === "/hub/[[...slug]]"
+                    : router.pathname === def.href || router.pathname.startsWith(def.href + "/");
                   const Icon = def.icon;
                   return (
                     <NavLink

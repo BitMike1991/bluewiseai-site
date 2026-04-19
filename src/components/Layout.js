@@ -49,11 +49,14 @@ export default function Layout({ children }) {
 
   const isDarkPage = isMainDarkPage || isPillarsPage;
 
-    // 🔵 NEW: platform/dashboard pages use their own layout
+    // 🔵 NEW: platform / hub / client-facing /q pages use their own layout
   const isPlatformPage = pathname.startsWith("/platform");
-  const is404 = pathname === "/404";
+  const isHubPage      = pathname.startsWith("/hub");
+  const isPublicQuote  = pathname.startsWith("/q/");
+  const isPublicDoc    = pathname.startsWith("/d/");
+  const is404          = pathname === "/404";
 
-  if (isPlatformPage || is404) {
+  if (isPlatformPage || isHubPage || isPublicQuote || isPublicDoc || is404) {
     return <>{children}</>;
   }
 

@@ -8,19 +8,17 @@
 // Auth: client-side probe to /api/hub-check. If 401/403, redirect to
 // the platform login page with a return URL so the user lands back here.
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { ClipboardList, Home, Package, AppWindow, DoorOpen, Layers, Tag, FileText, Receipt } from 'lucide-react';
-import HubSidebar from '@/components/hub/HubSidebar';
-import HubTabBar from '@/components/hub/HubTabBar';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import CommandePage from '@/components/hub/commande/CommandePage';
 import ToiturePage from '@/components/hub/toiture/ToiturePage';
 import DevisPage from '@/components/hub/devis/DevisPage';
 import CatalogEmbed from '@/components/hub/catalogs/CatalogEmbed';
 import CatalogChooser from '@/components/hub/catalogs/CatalogChooser';
 import FichesChooser from '@/components/hub/fiches/FichesChooser';
-import s from '@/styles/hub.module.css';
 
 function EmbedFenetres()   { return <CatalogEmbed src="/catalog-fenetres/index.html"   title="Catalogue Fenêtres" />; }
 function EmbedPatio()      { return <CatalogEmbed src="/catalog-patio/index.html"      title="Catalogue Patio" />; }
@@ -44,8 +42,7 @@ const TOOLS = {
 
 export default function HubPage() {
   const router = useRouter();
-  const [isAuthed, setIsAuthed]             = useState(null);
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(null);
 
   const slugArray = router.query.slug || [];
   const activeTool = slugArray.join('/');
@@ -67,53 +64,29 @@ export default function HubPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const navigate = useCallback((slug) => {
-    const path = slug ? `/hub/${slug}` : '/hub';
-    router.push(path, undefined, { shallow: true });
-  }, [router]);
-
   const tool = TOOLS[activeTool] || TOOLS[''];
   const ToolComponent = tool.component;
 
   return (
     <>
       <Head>
-        <title>{`${tool.title} — PÜR Hub`}</title>
+        <title>{`${tool.title} — Hub`}</title>
         <meta name="robots" content="noindex, nofollow" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-        <meta name="theme-color" content="#1C1E25" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
       </Head>
 
-      <div className={s.shell}>
-        <HubSidebar
-          activeTool={activeTool}
-          onNavigate={navigate}
-          expanded={sidebarExpanded}
-          onToggle={() => setSidebarExpanded(!sidebarExpanded)}
-        />
-
-        <main className={s.content}>
-          <div className={s.contentInner}>
-            {isAuthed === null && (
-              <div className={s.mainLoading}>Chargement…</div>
-            )}
-            {isAuthed === false && (
-              <div className={s.mainLoading}>Redirection…</div>
-            )}
-            {isAuthed === true && (
-              <ToolComponent tool={tool} />
-            )}
-          </div>
-        </main>
-
-        <HubTabBar activeTool={activeTool} onNavigate={navigate} />
-      </div>
+      <DashboardLayout title={tool.title}>
+        <div className="max-w-[1400px] mx-auto px-3 md:px-6 py-4">
+          {isAuthed === null && (
+            <div className="text-sm text-d-muted py-8 text-center animate-pulse">Chargement…</div>
+          )}
+          {isAuthed === false && (
+            <div className="text-sm text-d-muted py-8 text-center">Redirection…</div>
+          )}
+          {isAuthed === true && (
+            <ToolComponent tool={tool} />
+          )}
+        </div>
+      </DashboardLayout>
     </>
   );
 }
