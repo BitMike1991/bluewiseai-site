@@ -160,7 +160,7 @@ export default function CalendarPage() {
                       <div className="hidden sm:block space-y-0.5">
                         {(cell.events || []).slice(0, 3).map((e) => (
                           <div key={e.id} className="rounded bg-blue-500/20 px-1 py-0.5 text-[11px] text-blue-300 truncate">
-                            {e.allDay ? "" : new Date(e.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + " "}{e.title}
+                            {e.allDay ? "" : new Date(e.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "America/Toronto" }) + " "}{e.title}
                           </div>
                         ))}
                         {(cell.tasks || []).slice(0, 2).map((t) => (
@@ -232,8 +232,8 @@ export default function CalendarPage() {
                       {!e.allDay && (
                         <p className="mt-1 text-[11px] text-blue-300 flex items-center gap-1">
                           <Clock className="w-2.5 h-2.5" />
-                          {new Date(e.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          {e.end && ` - ${new Date(e.end).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
+                          {new Date(e.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "America/Toronto" })}
+                          {e.end && ` - ${new Date(e.end).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "America/Toronto" })}`}
                         </p>
                       )}
                       {e.location && (
