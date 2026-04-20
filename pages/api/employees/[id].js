@@ -8,10 +8,14 @@
 import { getAuthContext } from '../../../lib/supabaseServer';
 import { encryptSin, isValidSinFormat } from '../../../lib/payroll/sin-crypto';
 
+// sin_encrypted is INTENTIONALLY OMITTED — raw ciphertext from the client
+// bypasses Luhn validation and lets any authenticated caller overwrite the
+// stored NAS with arbitrary bytes. Only sin_plain is accepted and is
+// server-encrypted via encryptSin() below. (Audit F-001, 2026-04-20.)
 const PATCHABLE = new Set([
   'first_name', 'last_name', 'role', 'hourly_rate', 'status',
   'phone', 'email', 'hire_date', 'end_date', 'notes',
-  'td1_federal', 'tp1015_qc', 'sin_encrypted',
+  'td1_federal', 'tp1015_qc',
 ]);
 
 export default async function handler(req, res) {
