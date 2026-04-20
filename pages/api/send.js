@@ -1,4 +1,5 @@
 // pages/api/send.js
+import DOMPurify from "isomorphic-dompurify";
 import { getAuthContext } from "../../lib/supabaseServer";
 import { sendSmsTelnyx } from "../../lib/providers/telnyx";
 import { sendEmailMailgun } from "../../lib/providers/mailgun";
@@ -62,16 +63,17 @@ export default async function handler(req, res) {
 
   const subjectText = normStr(subject);
   if (subjectText && subjectText.length > 500) return res.status(400).json({ error: "subject exceeds maximum length" });
-  // Sanitize HTML: strip dangerous tags/attributes to prevent phishing via platform
+  // Sanitize HTML via DOM-based sanitizer (F-013 — regex sanitization is
+  // bypassable via SVG events, unquoted handlers, nested tags, data: URIs,
+  // Unicode obfuscation). isomorphic-dompurify parses to DOM and removes
+  // every dangerous construct.
   let htmlText = null;
   if (isNonEmptyString(html)) {
-    htmlText = String(html)
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-      .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, "")
-      .replace(/<object[^>]*>[\s\S]*?<\/object>/gi, "")
-      .replace(/<embed[^>]*>[\s\S]*?<\/embed>/gi, "")
-      .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, "")
-      .replace(/javascript:/gi, "");
+    htmlText = DOMPurify.sanitize(String(html), {
+      USE_PROFILES: { html: true },
+      FORBID_TAGS: ["script", "iframe", "object", "embed", "form", "input", "button"],
+      FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "formaction"],
+    });
   }
 
   if (channel === "email" && !subjectText) {
