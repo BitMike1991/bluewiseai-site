@@ -6,11 +6,8 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '../../../src/components/dashboard/DashboardLayout';
 import { Loader2, HandCoins } from 'lucide-react';
+import { fmtMoney } from '../../../lib/formatters';
 
-function fmtMoney(n) {
-  const num = Number(n) || 0;
-  return num.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
-}
 function fmtDate(iso) {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('fr-CA', { year: 'numeric', month: 'short', day: 'numeric' });

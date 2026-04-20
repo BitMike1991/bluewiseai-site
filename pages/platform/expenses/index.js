@@ -10,11 +10,8 @@ import { useRouter } from 'next/router';
 import DashboardLayout from '../../../src/components/dashboard/DashboardLayout';
 import AddExpenseModal, { EXPENSE_CATEGORY_LABELS } from '../../../src/components/expenses/AddExpenseModal';
 import { Plus, Receipt, Loader2 } from 'lucide-react';
+import { fmtMoney } from '../../../lib/formatters';
 
-function fmtMoney(n) {
-  const num = Number(n) || 0;
-  return num.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
-}
 function fmtDate(iso) {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('fr-CA', { year: 'numeric', month: 'short', day: 'numeric' });

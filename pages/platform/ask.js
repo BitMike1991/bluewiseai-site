@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Send, Loader, Check, X, Edit2, Mic, Clock, Star, Sparkles, MessageSquare, Mail, ListTodo, Phone, ChevronRight, ExternalLink, ChevronDown } from "lucide-react";
 import DashboardLayout from "../../src/components/dashboard/DashboardLayout";
 import ContextPanel from "../../src/components/brain/ContextPanel";
+import { fmtMoneyCompact } from "../../lib/formatters";
 
 // -----------------------------
 // Small UI utilities (kept from v1)
@@ -566,10 +567,7 @@ function ToolResultCard({ toolName, result, onLeadAction, onLeadNavigate }) {
       if (typeof n === "number") return n.toLocaleString("en-CA");
       return String(n);
     };
-    const fmtMoney = (n) => {
-      if (!n) return "$0";
-      return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(n);
-    };
+    const fmtMoney = fmtMoneyCompact;
     const trendBadge = (val) => {
       if (val == null) return null;
       const positive = val >= 0;

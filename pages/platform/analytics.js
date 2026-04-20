@@ -15,10 +15,7 @@ const RANGES = [
   { value: "all", label: "All time" },
 ];
 
-function fmt(n) {
-  if (n == null) return "$0";
-  return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(n);
-}
+import { fmtMoneyCompact as fmt } from "../../lib/formatters";
 
 function fmtCompact(n) {
   if (n == null) return "$0";

@@ -8,6 +8,7 @@ import { useBranding } from "../../../src/components/dashboard/BrandingContext";
 import { getBrandingStyles, getStatusBadgeStyle } from "../../../src/components/dashboard/brandingUtils";
 import { useToast } from "../../../src/components/ui/ToastContext";
 import { Pencil, Trash2, X, Check, Sparkles, MessageCircle, Info, ListTodo, Phone, Mail, FileText } from "lucide-react";
+import { fmtMoneyOrDash } from "../../../lib/formatters";
 
 function formatDate(dateString) {
   if (!dateString) return "\u2014";
@@ -1167,7 +1168,7 @@ export default function LeadDetailPage() {
                           </span>
                           {job.quote_amount && (
                             <p className="text-[10px] text-d-text0 mt-0.5">
-                              {new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(job.quote_amount)}
+                              {fmtMoneyOrDash(job.quote_amount)}
                             </p>
                           )}
                         </div>

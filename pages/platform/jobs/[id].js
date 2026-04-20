@@ -31,14 +31,10 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
+import { fmtMoney, fmtMoneyOrDash as formatCurrencyQC } from '../../../lib/formatters';
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatCurrencyQC(amount) {
-  if (amount == null || amount === '') return '\u2014';
-  const num = parseFloat(amount);
-  if (isNaN(num)) return '\u2014';
-  return num.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '\u00a0$';
-}
 
 function formatDate(dateStr) {
   if (!dateStr) return '\u2014';
@@ -477,10 +473,7 @@ function TabCommande({ commandeDraft, jobId, onPricingApplied }) {
               <div className="flex justify-between border-t border-emerald-500/20 pt-1 mt-1">
                 <span className="text-d-muted">Total TTC</span>
                 <span className="text-d-text font-semibold">
-                  {Number(uploadResult.total_ttc).toLocaleString('fr-CA', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}&nbsp;$
+                  {fmtMoney(uploadResult.total_ttc)}
                 </span>
               </div>
             </div>

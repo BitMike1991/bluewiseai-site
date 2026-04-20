@@ -4,11 +4,8 @@ import DashboardLayout from "../../src/components/dashboard/DashboardLayout";
 import { useBranding } from "../../src/components/dashboard/BrandingContext";
 import { getBrandingStyles } from "../../src/components/dashboard/brandingUtils";
 import { CreditCard, CheckCircle, AlertTriangle, Clock, RefreshCw, Ban, DollarSign, ChevronDown } from "lucide-react";
+import { fmtMoneyOrDash as fmt } from "../../lib/formatters";
 
-function fmt(n) {
-  if (n == null) return "\u2014";
-  return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(n);
-}
 
 function fmtDate(d) {
   if (!d) return "\u2014";

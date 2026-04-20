@@ -27,14 +27,10 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
+import { fmtMoneyOrDash as formatCurrencyQC } from '../../../lib/formatters';
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatCurrencyQC(amount) {
-  if (amount == null || amount === '') return '\u2014';
-  const num = parseFloat(amount);
-  if (isNaN(num)) return '\u2014';
-  return num.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '\u00a0$';
-}
 
 function relativeTime(dateStr) {
   if (!dateStr) return '\u2014';

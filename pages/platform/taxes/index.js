@@ -5,11 +5,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '../../../src/components/dashboard/DashboardLayout';
 import { Download, Loader2, Receipt } from 'lucide-react';
+import { fmtMoney as fmt } from '../../../lib/formatters';
 
-function fmt(n) {
-  const num = Number(n) || 0;
-  return num.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
-}
 
 function isoDate(d) { return d.toISOString().slice(0, 10); }
 

@@ -17,14 +17,11 @@ const PieChart = dynamic(() => import("recharts").then(m => m.PieChart), { ssr: 
 const Pie = dynamic(() => import("recharts").then(m => m.Pie), { ssr: false });
 const Cell = dynamic(() => import("recharts").then(m => m.Cell), { ssr: false });
 
+import { fmtMoneyOrDash as fmt } from "../../../lib/formatters";
+
 // First color = tenant primary, rest = semantic categorical
 function getPieColors(primary) {
   return [primary || "#6c63ff", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
-}
-
-function fmt(n) {
-  if (n == null) return "\u2014";
-  return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(n);
 }
 
 function fmtDate(d) {
