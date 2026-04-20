@@ -486,7 +486,7 @@ function CallRow({ call }) {
         {leadId ? (
           <Link
             href={`/platform/leads/${leadId}`}
-            className="text-d-primary underline-offset-2 hover:text-d-primary hover:underline"
+            className="inline-flex items-center min-h-[44px] text-d-primary underline-offset-2 hover:text-d-primary hover:underline"
           >
             View lead
           </Link>

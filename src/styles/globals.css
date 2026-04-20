@@ -43,6 +43,13 @@ body.platform-app {
   overflow: hidden;
   position: fixed;
   overscroll-behavior: none;
+  /* iOS notch / home-indicator safe area. The app shell is position:fixed
+     100% × 100% — without these insets the TopNav hides behind the Dynamic
+     Island and the bottom of the kanban disappears behind the home bar. */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 body {

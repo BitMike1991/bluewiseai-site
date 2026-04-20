@@ -49,12 +49,12 @@ function AddLeadModal({ open, onClose, onCreated }) {
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-lg rounded-2xl border border-d-border bg-d-bg shadow-2xl shadow-black/60">
-          <div className="flex items-center justify-between border-b border-d-border px-5 py-4">
+        <div className="w-full max-w-lg max-h-[90vh] flex flex-col rounded-2xl border border-d-border bg-d-bg shadow-2xl shadow-black/60">
+          <div className="flex items-center justify-between border-b border-d-border px-5 py-4 flex-shrink-0">
             <h2 className="text-sm font-semibold text-d-text">Add Lead</h2>
             <button onClick={onClose} className="text-d-muted hover:text-d-text"><X className="h-4 w-4" /></button>
           </div>
-          <form onSubmit={handleSubmit} className="px-5 py-4 space-y-3">
+          <form onSubmit={handleSubmit} className="px-5 py-4 space-y-3 overflow-y-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-[11px] font-semibold text-d-muted mb-1">Name</label>
