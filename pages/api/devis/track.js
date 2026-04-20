@@ -12,6 +12,7 @@
  */
 
 import { sbSelect, sbInsert, sbUpdate } from '../../../lib/supabase-server.js';
+import { checkRateLimit } from '../../../lib/security.js';
 
 const VALID_EVENTS = ['opened', 'heartbeat', 'accept_clicked', 'tier_viewed'];
 
@@ -21,6 +22,13 @@ export default async function handler(req, res) {
     console.error('[devis/track] Missing SUPABASE_SERVICE_ROLE_KEY');
     return res.status(500).json({ error: 'Missing service key' });
   }
+
+  // F-015 — public endpoint writes DB per request. Per-IP rate limit
+  // prevents flood → Supabase row churn + Slack webhook abuse. Heartbeat
+  // events were already capped at 20/quote but opened/accept_clicked/
+  // tier_viewed were uncapped.
+  const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
+  if (checkRateLimit(req, res, `track:${ip}`, 60)) return;
 
   const { quote_number, event, scroll_pct, elapsed_seconds, referrer } = req.body || {};
 

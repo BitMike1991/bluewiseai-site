@@ -23,7 +23,8 @@ export default async function handler(req, res) {
 
     // Pagination
     const page = Number.parseInt(req.query.page ?? "1", 10) || 1;
-    const pageSize = Number.parseInt(req.query.pageSize ?? "25", 10) || 25;
+    // F-014 — cap at 100 to match other tenant routes (leads/index.js).
+    const pageSize = Math.min(Number.parseInt(req.query.pageSize ?? "25", 10) || 25, 100);
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
