@@ -49,6 +49,13 @@ export default async function handler(req, res) {
       });
     }
 
+    // F-007 — contract_number is interpolated into a PostgREST OR filter
+    // below. Strict format check keeps commas / `.eq.` / etc. out so no
+    // additional predicates can be appended by a caller.
+    if (typeof contract_number !== 'string' || !/^[A-Z]{2,10}-C-[0-9a-fA-F]{8,32}$/i.test(contract_number)) {
+      return res.status(400).json({ error: 'contract_number format invalide' });
+    }
+
     // Validate signature_image is base64 PNG
     const base64Data = signature_image.replace(/^data:image\/png;base64,/, '');
     if (base64Data === signature_image && !signature_image.match(/^[A-Za-z0-9+/]+=*$/)) {
@@ -74,11 +81,16 @@ export default async function handler(req, res) {
     const signedAt = new Date().toISOString();
 
     // ── 2. Look up contract — try storage_path pattern since table has no contract_number column
+    //
+    // F-007 — previously used `.or(\`storage_path.eq.${storagePath},...\`)` which
+    // allowed filter injection when contract_number contained commas or filter
+    // ops. `.in(col, [array])` is parameterized — the regex above keeps the
+    // shape clean as a second layer of defense.
     const storagePath = contract_number.replace('-C-', '-contrat-') + '.html';
     const { data: contract, error: contractLookupErr } = await supabase
       .from('contracts')
       .select('id, job_id, customer_id, signature_status, storage_path, storage_bucket, created_at')
-      .or(`storage_path.eq.${storagePath},storage_path.eq.${contract_number}`)
+      .in('storage_path', [storagePath, contract_number])
       .maybeSingle();
 
     if (contractLookupErr) {
