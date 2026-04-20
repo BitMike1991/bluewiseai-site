@@ -350,11 +350,42 @@ function TabApercu({ job, events, lead, payments }) {
 
 // ── Tab: Commande ─────────────────────────────────────────────────────────────
 
-function TabCommande({ commandeDraft, jobId, onPricingApplied }) {
+// Parse "24 1/2" / "24.5" / "69,5" → numeric inches for rollup math.
+function parseFracInches(s) {
+  if (s == null || s === '') return 0;
+  const str = String(s).trim().replace(/["″]/g, '');
+  if (/^\d+(\.\d+)?$/.test(str)) return parseFloat(str);
+  if (/^\d+,\d+$/.test(str)) return parseFloat(str.replace(',', '.'));
+  const m = str.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+  if (m) return parseInt(m[1], 10) + parseInt(m[2], 10) / parseInt(m[3], 10);
+  const f = str.match(/^(\d+)\s*\/\s*(\d+)$/);
+  if (f) return parseInt(f[1], 10) / parseInt(f[2], 10);
+  return parseFloat(str.replace(',', '.')) || 0;
+}
+
+function TabCommande({ commandeDraft, quote, jobId, onPricingApplied }) {
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null); // { matched, unmatched, partial_matches, total_ttc }
   const [uploadError, setUploadError] = useState(null);
   const [dragOver, setDragOver] = useState(false);
+
+  // Project-scoped BCs (linked via item_refs.job_id). Sent orders + returns
+  // applied so Jérémy sees "BC-2026-0004 · envoyé · reçu" at a glance.
+  const [projectBcs, setProjectBcs] = useState(null);
+  useEffect(() => {
+    if (!jobId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/bons-de-commande/list?job_id=${jobId}`);
+        const json = await res.json();
+        if (!cancelled) setProjectBcs(Array.isArray(json?.bcs) ? json.bcs : []);
+      } catch {
+        if (!cancelled) setProjectBcs([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [jobId, uploadResult]); // reload after a supplier return upload
 
   async function handleFile(file) {
     if (!file) return;
@@ -405,41 +436,194 @@ function TabCommande({ commandeDraft, jobId, onPricingApplied }) {
     e.target.value = '';
   }
 
-  const commandeSection = commandeDraft ? (
-    <div className="rounded-xl border border-d-border p-4 mb-4">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-sm font-semibold text-d-text">Commande fournisseur</p>
-        <span className="text-xs text-d-muted">MAJ {relativeTime(commandeDraft.updated_at)}</span>
-      </div>
-      <div className="space-y-2 text-xs">
-        {commandeDraft.supplier && (
-          <div className="flex justify-between">
-            <span className="text-d-muted">Fournisseur</span>
-            <span className="text-d-text">{commandeDraft.supplier}</span>
-          </div>
-        )}
-        {commandeDraft.items_count != null && (
-          <div className="flex justify-between">
-            <span className="text-d-muted">Articles</span>
-            <span className="text-d-text">{commandeDraft.items_count}</span>
-          </div>
-        )}
-        <div className="flex justify-between">
-          <span className="text-d-muted">Statut</span>
-          <span className="text-d-text capitalize">{commandeDraft.status || 'brouillon'}</span>
-        </div>
-      </div>
-    </div>
-  ) : (
-    <div className="rounded-xl border border-dashed border-d-border/60 p-4 text-center mb-4">
-      <Package size={20} className="mx-auto mb-2 text-d-muted/40" />
-      <p className="text-xs text-d-muted">Aucune commande liée — utilisez le hub PUR pour en créer une.</p>
-    </div>
+  // ── Items à commander — derived from the latest quote ──────────────────────
+  // Excludes the install line + items already sent on a supplier BC
+  // (_bc_sent_at stamped). Keeps items awaiting dispatch so Jérémy sees the
+  // shopping list in one glance.
+  const quoteItemsRaw = Array.isArray(quote?.line_items)
+    ? quote.line_items
+    : (quote?.line_items ? [] : []);
+  const orderItems = quoteItemsRaw.filter(it => {
+    const isInstall = (it?.description || '').toLowerCase().startsWith('installation')
+      || (it?.type || '').toLowerCase().includes('installation');
+    return !isInstall && !it?._bc_sent_at;
+  });
+
+  // ── Petits matériaux rollup — ALWAYS ceil per Mikael rule ──────────────────
+  // Uréthane: 1 cannette couvre 150 po linéaires → ceil(Σ perim × qty / 150)
+  // Calking:  1 tube couvre 120 po linéaires     → ceil(Σ perim × qty / 120)
+  // Moulure:  standard 8 pi = 96 po par pièce    → ceil(Σ perim × qty / 96)
+  // Multiplies perimeter by qty so an item "3× 48×36" counts 3 perimeters.
+  const totalPerimeter = orderItems.reduce((s, it) => {
+    const w = parseFracInches(it?.dimensions?.width);
+    const h = parseFracInches(it?.dimensions?.height);
+    const q = Number(it?.qty) || 0;
+    return s + 2 * (w + h) * q;
+  }, 0);
+  const urethaneCans = Math.ceil((totalPerimeter || 0) / 150);
+  const calkingTubes = Math.ceil((totalPerimeter || 0) / 120);
+  const mouluresPieces8ft = Math.ceil((totalPerimeter || 0) / 96);
+  const totalPerimeterFeet = totalPerimeter > 0 ? (totalPerimeter / 12) : 0;
+
+  // ── Derived suppliers on this project ──────────────────────────────────────
+  const supplierSet = new Set(
+    orderItems.map(it => (it?._supplier || it?.supplier || '').toString().trim().toLowerCase()).filter(Boolean)
   );
+  const supplierLabel = supplierSet.size === 0
+    ? '—'
+    : (supplierSet.size === 1 ? Array.from(supplierSet)[0] : 'multiples');
+
+  // ── BC list: separate sent (awaiting return) from received ─────────────────
+  const bcs = Array.isArray(projectBcs) ? projectBcs : [];
+  const bcSent     = bcs.filter(b => b.status === 'sent');
+  const bcReceived = bcs.filter(b => b.status === 'received');
+  const bcDraft    = bcs.filter(b => b.status === 'draft');
+
+  function fmtDateShort(iso) {
+    if (!iso) return '';
+    try {
+      return new Date(iso).toLocaleDateString('fr-CA', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch { return ''; }
+  }
 
   return (
     <div className="space-y-4">
-      {commandeSection}
+      {/* Items à commander */}
+      <section className="rounded-xl border border-d-border p-4">
+        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <div>
+            <p className="text-sm font-semibold text-d-text">Items à commander au fournisseur</p>
+            <p className="text-[11px] text-d-muted mt-0.5">
+              {orderItems.length} article{orderItems.length > 1 ? 's' : ''} · fournisseur : <span className="capitalize">{supplierLabel}</span>
+            </p>
+          </div>
+          {totalPerimeter > 0 && (
+            <span className="text-[11px] font-mono text-d-muted">
+              {totalPerimeter.toFixed(0)}&quot; linéaires ({totalPerimeterFeet.toFixed(1)} pi)
+            </span>
+          )}
+        </div>
+
+        {!quote ? (
+          <div className="py-3 text-center text-xs text-d-muted/70 italic">
+            Chargement du devis…
+          </div>
+        ) : orderItems.length === 0 ? (
+          <div className="py-3 text-center text-xs text-d-muted/70 italic">
+            Aucun item à commander — soit le devis est vide, soit tout a déjà été envoyé.
+          </div>
+        ) : (
+          <ul className="divide-y divide-d-border/40 -mx-4">
+            {orderItems.map((it, i) => {
+              const w = it?.dimensions?.width;
+              const h = it?.dimensions?.height;
+              const dims = (w && h) ? `${w}" × ${h}"` : '';
+              const qty = Number(it?.qty) || 1;
+              const queued = !!it?._queued_for_bc;
+              return (
+                <li key={it?.sku || `item-${i}`} className="px-4 py-2 flex items-center gap-3">
+                  <span className="inline-block w-12 text-[10px] font-mono font-semibold text-d-primary truncate" title={it?.sku || ''}>
+                    {it?.sku || String(i + 1).padStart(2, '0')}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-d-text truncate">
+                      {it?.type || it?.description || 'Item'}
+                      {it?.model ? <span className="ml-1.5 text-d-muted">{it.model}</span> : null}
+                      {it?.ouvrant ? <span className="ml-1.5 text-d-muted font-mono">{it.ouvrant}</span> : null}
+                    </div>
+                    {dims && <div className="text-[10px] font-mono text-d-muted/70 mt-0.5">{dims}</div>}
+                  </div>
+                  <span className="text-[11px] font-mono text-d-muted whitespace-nowrap">× {qty}</span>
+                  {queued && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold uppercase tracking-wider">
+                      Au BC
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      {/* Petits matériaux (arrondi à la hausse) */}
+      <section className="rounded-xl border border-d-border p-4">
+        <p className="text-sm font-semibold text-d-text">Petits matériaux à acheter</p>
+        <p className="text-[11px] text-d-muted mt-0.5 mb-3">
+          Basé sur {totalPerimeter.toFixed(0)}&quot; de périmètre total · toutes les quantités sont arrondies à la hausse.
+        </p>
+        {totalPerimeter <= 0 ? (
+          <div className="py-3 text-center text-xs text-d-muted/70 italic">
+            Ajoute des items avec des dimensions pour voir la liste.
+          </div>
+        ) : (
+          <ul className="space-y-2 text-xs">
+            <li className="flex items-center justify-between py-1.5 border-b border-d-border/30">
+              <span className="text-d-text">Uréthane (cannettes)</span>
+              <span className="font-mono text-d-muted">
+                <span className="text-d-text font-semibold">{urethaneCans}</span>
+                <span className="text-d-muted/60 ml-2">({totalPerimeter.toFixed(0)}&quot; ÷ 150 ↑)</span>
+              </span>
+            </li>
+            <li className="flex items-center justify-between py-1.5 border-b border-d-border/30">
+              <span className="text-d-text">Calking (tubes)</span>
+              <span className="font-mono text-d-muted">
+                <span className="text-d-text font-semibold">{calkingTubes}</span>
+                <span className="text-d-muted/60 ml-2">({totalPerimeter.toFixed(0)}&quot; ÷ 120 ↑)</span>
+              </span>
+            </li>
+            <li className="flex items-center justify-between py-1.5">
+              <span className="text-d-text">Moulure ext. (pièces 8 pi)</span>
+              <span className="font-mono text-d-muted">
+                <span className="text-d-text font-semibold">{mouluresPieces8ft}</span>
+                <span className="text-d-muted/60 ml-2">({totalPerimeter.toFixed(0)}&quot; ÷ 96 ↑)</span>
+              </span>
+            </li>
+          </ul>
+        )}
+      </section>
+
+      {/* Bons de commande liés à ce projet */}
+      <section className="rounded-xl border border-d-border p-4">
+        <p className="text-sm font-semibold text-d-text">Bons de commande de ce projet</p>
+        <p className="text-[11px] text-d-muted mt-0.5 mb-3">
+          Chaque BC envoyé au fournisseur + le retour reçu apparaîtront ici.
+        </p>
+        {projectBcs === null ? (
+          <div className="py-3 text-center text-xs text-d-muted/60 italic animate-pulse">Chargement…</div>
+        ) : bcs.length === 0 ? (
+          <div className="py-3 text-center text-xs text-d-muted/70 italic">
+            Aucun bon de commande n&apos;inclut encore d&apos;items de ce projet.
+          </div>
+        ) : (
+          <ul className="space-y-1.5">
+            {[...bcSent, ...bcReceived, ...bcDraft].map(bc => {
+              const itemCountLabel = bc.item_count_for_job != null
+                ? `${bc.item_count_for_job}/${bc.item_count} items`
+                : `${bc.item_count} items`;
+              return (
+                <li key={bc.id} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-d-surface/30 border border-d-border/50">
+                  <span className="font-mono text-xs font-semibold text-d-text truncate flex-shrink-0">{bc.bc_number}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded capitalize font-semibold flex-shrink-0"
+                        style={{
+                          background: bc.status === 'received' ? 'rgba(16,185,129,0.12)' : bc.status === 'sent' ? 'rgba(245,158,11,0.12)' : 'rgba(148,163,184,0.12)',
+                          color: bc.status === 'received' ? '#34d399' : bc.status === 'sent' ? '#fbbf24' : '#94a3b8',
+                          border: `1px solid ${bc.status === 'received' ? 'rgba(16,185,129,0.3)' : bc.status === 'sent' ? 'rgba(245,158,11,0.3)' : 'rgba(148,163,184,0.3)'}`,
+                        }}
+                  >
+                    {bc.status === 'received' ? 'Reçu' : bc.status === 'sent' ? 'Envoyé' : 'Brouillon'}
+                  </span>
+                  <span className="text-[10px] text-d-muted capitalize flex-shrink-0">{bc.supplier}</span>
+                  <span className="text-[10px] text-d-muted flex-shrink-0">{itemCountLabel}</span>
+                  {bc.sent_at && <span className="text-[10px] text-d-muted/70 ml-auto flex-shrink-0">envoyé {fmtDateShort(bc.sent_at)}</span>}
+                  {bc.received_at && <span className="text-[10px] text-emerald-400/80 flex-shrink-0">· reçu {fmtDateShort(bc.received_at)}</span>}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
 
       {/* Supplier soumission upload */}
       <div className="rounded-xl border border-d-border p-4">
@@ -1450,11 +1634,23 @@ export default function JobDetailPage() {
       case 'apercu':
         return <TabApercu job={job} events={events} lead={lead} payments={payments} />;
 
-      case 'commande':
+      case 'commande': {
+        // Grab the latest non-superseded quote so the Commande tab can show
+        // the actual items-to-order list + petits matériaux rollup. devis
+        // tab may not have loaded yet when Commande is opened first — kick
+        // the load from here so Jérémy doesn't have to click Devis first.
+        const devisQuotesForCmd = tabData.devis;
+        if (devisQuotesForCmd === undefined) {
+          loadTabData('devis');
+        }
+        const latestQuoteForCmd = Array.isArray(devisQuotesForCmd)
+          ? (devisQuotesForCmd.find(q => q.status !== 'superseded') || devisQuotesForCmd[0] || null)
+          : null;
         return tabLoading.commande
           ? <div className="py-8 text-center text-xs text-d-muted animate-pulse">Chargement...</div>
           : <TabCommande
               commandeDraft={tabData.commande ?? null}
+              quote={latestQuoteForCmd}
               jobId={job.id}
               onPricingApplied={() => {
                 // Reload job base data + finances + devis tab after pricing applied
@@ -1463,6 +1659,7 @@ export default function JobDetailPage() {
                 setTabData((prev) => ({ ...prev, devis: undefined }));
               }}
             />;
+      }
 
       case 'devis': {
         if (tabLoading.devis) {
