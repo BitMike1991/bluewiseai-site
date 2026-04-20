@@ -313,17 +313,6 @@ export default function SuccessPage({
               <CopyButton text={interacEmail} />
             </div>
             <div style={{
-              background: '#fef9c3', border: '1px solid #fde047',
-              borderRadius: 8, padding: '10px 14px', marginBottom: 14
-            }}>
-              <p style={{ fontSize: 12, color: '#713f12', fontWeight: 600, marginBottom: 2 }}>
-                Question de sécurité
-              </p>
-              <p style={{ fontSize: 12, color: '#854d0e' }}>
-                Jérémy vous enverra la question et la réponse par SMS.
-              </p>
-            </div>
-            <div style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               padding: '10px 0', borderTop: '1px solid #e5e7eb'
             }}>
@@ -385,18 +374,27 @@ export default function SuccessPage({
             </a>
           </div>
 
-          {/* DOWNLOAD / PRINT */}
+          {/* DOWNLOAD — pulls the actual signed contract HTML from Supabase
+              Storage (via /api/contrat/[token]/download) instead of printing
+              this confirmation page. Client gets the full signed contract
+              with their signature + Jérémy's already embedded. */}
           <div style={{ marginTop: 16, textAlign: 'center' }} className="no-print">
-            <button
-              onClick={() => window.print()}
+            <a
+              href={`/api/contrat/${encodeURIComponent(quoteNumber)}/download`}
               style={{
+                display: 'block',
                 padding: '14px 28px', fontSize: 14, fontWeight: 700,
-                background: NAVY, color: 'white', border: 'none',
-                borderRadius: 8, cursor: 'pointer', width: '100%',
+                background: NAVY, color: 'white',
+                borderRadius: 8, textDecoration: 'none', width: '100%',
+                boxSizing: 'border-box',
               }}
             >
-              Télécharger le contrat (PDF)
-            </button>
+              Télécharger mon contrat signé
+            </a>
+            <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 8 }}>
+              Fichier HTML — ouvrez-le dans votre navigateur et utilisez
+              « Imprimer → Enregistrer en PDF » si vous souhaitez un PDF.
+            </p>
           </div>
 
           {/* FOOTER */}

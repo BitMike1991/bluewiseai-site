@@ -7,6 +7,11 @@ import { applyCorsHeaders } from '../../../../lib/universal-api-auth';
 import { alertJeremy } from '../../../../lib/notifications/jeremy-alert';
 import { createAutoTasks } from '../../../../lib/tasks/auto';
 import { checkRateLimitDb } from '../../../../lib/security';
+import { sendSmsTelnyx } from '../../../../lib/providers/telnyx';
+import { sendEmailGmail } from '../../../../lib/providers/gmail';
+import { sendEmailMailgun } from '../../../../lib/providers/mailgun';
+import { encryptToken } from '../../../../lib/tokenEncryption';
+import { buildContractSignedEmail, buildContractSignedSms } from '../../../../lib/email-templates/contract-signed';
 
 const MAX_SIGNATURE_BYTES = 500 * 1024;       // 500 KB — signature PNG
 const MAX_SIGNED_HTML_BYTES = 1.5 * 1024 * 1024; // 1.5 MB — rendered contract with embedded image
@@ -317,6 +322,188 @@ export default async function handler(req, res) {
       });
     } catch (e) {
       console.error('n8n webhook error:', e);
+    }
+
+    // ── 10b. Direct client notification — SMS + email with download link ─────
+    // First-party side effect so client delivery doesn't depend on the n8n
+    // webhook being healthy. Errors are logged but never fail the response
+    // (signature has already been persisted, stale notifications are retryable
+    // downstream). SP's old flow emitted the same pair via n8n only, which
+    // made "did the client get it?" a four-system debug.
+    try {
+      const [{ data: quoteForLink }, { data: customerRow }] = await Promise.all([
+        supabase
+          .from('quotes')
+          .select('quote_number')
+          .eq('job_id', jobId)
+          .eq('customer_id', customerId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('customers')
+          .select('domain, business_name, quote_config, telnyx_sms_number, interac_email')
+          .eq('id', customerId)
+          .maybeSingle(),
+      ]);
+
+      const quoteNumber = quoteForLink?.quote_number || null;
+      const domain = customerRow?.domain || 'bluewiseai.com';
+      const branding = customerRow?.quote_config?.branding || { business_name: customerRow?.business_name || 'BlueWise' };
+      const interacEmail =
+        customerRow?.quote_config?.contract?.interac_email
+        || customerRow?.interac_email
+        || branding.email
+        || '';
+      const paymentSchedule = customerRow?.quote_config?.payment_schedule || [];
+      const schedulePct = Number(paymentSchedule?.[0]?.percentage) || depositPct || 35;
+
+      // Prefer the quote_number token (public /q/[token]/success path) for the
+      // download link since it's the canonical surface the client already has.
+      // Fall back to the contract storage public URL when no quote_number is
+      // available (legacy / direct contract create).
+      const downloadUrl = quoteNumber
+        ? `https://${domain}/api/contrat/${encodeURIComponent(quoteNumber)}/download`
+        : (signatureUrl || '');
+
+      const clientEmailAddr = (jobData?.client_email || signer_email || '').trim();
+      const clientPhoneAddr = (jobData?.client_phone || '').trim();
+
+      // ── Email (Gmail OAuth → Mailgun fallback) ─────────────────────────────
+      if (clientEmailAddr && downloadUrl) {
+        const { subject, html, text } = buildContractSignedEmail({
+          clientName: jobData?.client_name || signer_name,
+          contractNumber: contract_number,
+          depositAmount,
+          depositPct: schedulePct,
+          downloadUrl,
+          interacEmail,
+          businessPhone: branding.phone,
+          branding,
+        });
+
+        const { data: oauthRow } = await supabase
+          .from('customer_email_oauth')
+          .select('id, provider, access_token, refresh_token, token_expiry, email_address, status')
+          .eq('customer_id', customerId)
+          .eq('status', 'active')
+          .eq('provider', 'gmail')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        let sent = null;
+        let provider = null;
+
+        if (oauthRow?.email_address) {
+          provider = 'gmail';
+          const from = `${branding.business_name || 'BlueWise'} <${oauthRow.email_address}>`;
+          sent = await sendEmailGmail(
+            { to: clientEmailAddr, from, subject, body: text, html },
+            oauthRow,
+            async (newAccessToken, newExpiry) => {
+              try {
+                await supabase
+                  .from('customer_email_oauth')
+                  .update({
+                    access_token: encryptToken(newAccessToken),
+                    token_expiry: newExpiry,
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq('id', oauthRow.id);
+              } catch (e) {
+                console.warn('[contrat/sign] oauth token update failed', e?.message);
+              }
+            }
+          );
+        }
+
+        if (!sent || !sent.success) {
+          const mgFrom = process.env.MAILGUN_FROM
+            || (process.env.MAILGUN_DOMAIN ? `${branding.business_name || 'BlueWise'} <noreply@${process.env.MAILGUN_DOMAIN}>` : '');
+          if (mgFrom) {
+            const prevErr = sent?.error;
+            provider = 'mailgun';
+            sent = await sendEmailMailgun({
+              to: clientEmailAddr,
+              from: mgFrom,
+              subject,
+              body: text,
+              html,
+            });
+            if (!sent.success && prevErr) sent.error = `gmail:${prevErr} | mailgun:${sent.error}`;
+          }
+        }
+
+        try {
+          await supabase.from('messages').insert({
+            customer_id: customerId,
+            lead_id: jobData?.lead_id || null,
+            direction: 'outbound',
+            channel: 'email',
+            message_type: 'email',
+            subject,
+            body: text,
+            provider,
+            provider_message_id: sent?.provider_message_id || null,
+            status: sent?.success ? 'sent' : 'failed',
+            error: sent?.success ? null : (sent?.error || null),
+            to_address: clientEmailAddr,
+            from_address: provider === 'gmail' ? oauthRow?.email_address : process.env.MAILGUN_FROM,
+            meta: {
+              contract_signed: true,
+              contract_number,
+              download_url: downloadUrl,
+            },
+          });
+        } catch (e) {
+          console.warn('[contrat/sign] messages log (email) failed', e?.message);
+        }
+      }
+
+      // ── SMS via Telnyx ─────────────────────────────────────────────────────
+      if (clientPhoneAddr && downloadUrl && customerRow?.telnyx_sms_number) {
+        const smsBody = buildContractSignedSms({
+          clientName: jobData?.client_name || signer_name,
+          businessName: branding.business_name,
+          downloadUrl,
+          depositAmount,
+        });
+
+        const r = await sendSmsTelnyx({
+          to: clientPhoneAddr,
+          from: customerRow.telnyx_sms_number,
+          body: smsBody,
+        });
+
+        try {
+          await supabase.from('messages').insert({
+            customer_id: customerId,
+            lead_id: jobData?.lead_id || null,
+            direction: 'outbound',
+            channel: 'sms',
+            message_type: 'sms',
+            body: smsBody,
+            provider: 'telnyx',
+            provider_message_id: r.provider_message_id || null,
+            status: r.success ? 'sent' : 'failed',
+            error: r.success ? null : (r.error || null),
+            to_address: clientPhoneAddr,
+            from_address: customerRow.telnyx_sms_number,
+            meta: {
+              contract_signed: true,
+              contract_number,
+              download_url: downloadUrl,
+            },
+          });
+        } catch (e) {
+          console.warn('[contrat/sign] messages log (sms) failed', e?.message);
+        }
+      }
+    } catch (notifyErr) {
+      // Never fail the sign request on notification errors — signature row
+      // already persisted, client can still download from /q/[token]/success.
+      console.error('[contrat/sign] client notification error:', notifyErr);
     }
 
     // Alert Jérémy directly (fire-and-forget)
