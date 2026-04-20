@@ -11,6 +11,7 @@
 import { getAuthContext, getSupabaseServerClient } from '../../../lib/supabaseServer';
 import { encryptToken } from '../../../lib/tokenEncryption';
 import { sendEmailGmail } from '../../../lib/providers/gmail';
+import { buildEmailSignatureHtml, PUR_SIGNATURE_DEFAULTS } from '../../../lib/email-templates/signature';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -53,37 +54,68 @@ export default async function handler(req, res) {
     .eq('id', customerId)
     .maybeSingle();
 
-  const businessName =
-    customer?.quote_config?.branding?.business_name
-    || customer?.business_name
-    || 'BlueWise';
+  const branding = customer?.quote_config?.branding || {};
+  const signature = customer?.quote_config?.email_signature || null;
+  const businessName = branding.business_name || customer?.business_name || 'BlueWise';
+  const primary = branding.primary_color || '#2A2C35';
 
   const from = `${businessName} <${row.email_address}>`;
-  const subject = `Test Gmail OAuth — ${new Date().toISOString()}`;
+  const subject = `Test d'envoi — ${businessName}`;
+  const sentLabel = new Date().toLocaleString('fr-CA');
   const text = [
     'Ceci est un envoi de test via Gmail OAuth.',
     '',
+    `Compagnie: ${businessName}`,
     `Customer ID: ${customerId}`,
-    `From (OAuth account): ${row.email_address}`,
-    `Sent at: ${new Date().toISOString()}`,
+    `From: ${row.email_address}`,
+    `Envoyé à: ${sentLabel}`,
     '',
     'Si tu reçois ce courriel, la pipeline Gmail fonctionne de bout en bout.',
   ].join('\n');
-  const html = `
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:520px;padding:24px;color:#111827;">
-      <h2 style="margin:0 0 12px;font-size:18px;">Gmail OAuth — test d'envoi</h2>
-      <p style="font-size:14px;line-height:1.55;color:#374151;">
-        Ceci est un envoi de test via la pipeline Gmail OAuth de BlueWise.
-      </p>
-      <ul style="font-size:13px;color:#374151;line-height:1.8;">
-        <li><strong>Customer&nbsp;ID:</strong> ${customerId}</li>
-        <li><strong>From:</strong> ${row.email_address}</li>
-        <li><strong>Envoyé à:</strong> ${new Date().toLocaleString('fr-CA')}</li>
-      </ul>
-      <p style="font-size:13px;color:#10b981;margin-top:16px;">
-        ✓ Si tu lis ce message, le pipeline marche de bout en bout.
-      </p>
-    </div>`;
+  const signatureHtml = buildEmailSignatureHtml({
+    branding,
+    signature,
+    defaults: PUR_SIGNATURE_DEFAULTS,
+  });
+  const html = `<!doctype html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>${subject}</title>
+</head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#111827;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+        <tr><td style="padding:28px 32px 20px;background:${primary};color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.01em;">
+          ${businessName}
+        </td></tr>
+        <tr><td style="padding:28px 32px 8px;">
+          <div style="display:inline-block;padding:4px 12px;background:#ecfdf5;color:#047857;border:1px solid #10b981;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">
+            ✓ Courriel test
+          </div>
+          <p style="margin:18px 0 14px;font-size:16px;">Bonjour,</p>
+          <p style="margin:0 0 18px;font-size:15px;line-height:1.55;color:#374151;">
+            Ceci confirme que la pipeline Gmail OAuth de <strong>${businessName}</strong> fonctionne de bout en bout. Les emails envoyés depuis la plateforme vont arriver aux clients avec ce même rendu.
+          </p>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:#f9fafb;border-radius:8px;margin:0 0 20px;width:100%;">
+            <tr><td style="padding:14px 16px;font-size:12px;color:#6b7280;line-height:1.7;">
+              <strong>De:</strong> ${row.email_address}<br/>
+              <strong>Envoyé à:</strong> ${sentLabel}<br/>
+              <strong>Customer ID:</strong> ${customerId}
+            </td></tr>
+          </table>
+          ${signatureHtml}
+        </td></tr>
+        <tr><td style="padding:20px 32px;background:#f9fafb;color:#9ca3af;font-size:11px;text-align:center;border-top:1px solid #e5e7eb;">
+          Courriel test — pipeline Gmail OAuth vérifiée.
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
 
   const sent = await sendEmailGmail(
     { to, from, subject, body: text, html },

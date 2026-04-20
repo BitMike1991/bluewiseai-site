@@ -380,6 +380,7 @@ export default async function handler(req, res) {
           interacEmail,
           businessPhone: branding.phone,
           branding,
+          signature: customerRow?.quote_config?.email_signature || null,
         });
 
         const { data: oauthRow } = await supabase

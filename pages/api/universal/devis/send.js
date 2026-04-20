@@ -162,6 +162,7 @@ export default async function handler(req, res) {
         acceptanceUrl,
         validDays,
         branding,
+        signature: customer.quote_config?.email_signature || null,
       });
 
       // Try Gmail OAuth first

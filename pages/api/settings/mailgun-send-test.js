@@ -8,8 +8,9 @@
 //
 // Response: { success, provider, message_id?, error?, raw?, env: {domain, region, from, api_key_len} }
 
-import { getAuthContext } from '../../../lib/supabaseServer';
+import { getAuthContext, getSupabaseServerClient } from '../../../lib/supabaseServer';
 import { sendEmailMailgun } from '../../../lib/providers/mailgun';
+import { buildEmailSignatureHtml, PUR_SIGNATURE_DEFAULTS } from '../../../lib/email-templates/signature';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -17,11 +18,23 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { user } = await getAuthContext(req, res);
+  const { user, customerId } = await getAuthContext(req, res);
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
 
   const to = (req.query.to ? String(req.query.to) : user.email || '').trim();
   if (!to) return res.status(400).json({ error: 'No recipient — pass ?to=email@example.com' });
+
+  // Pull branding + signature so the test email looks like a production email.
+  const admin = getSupabaseServerClient();
+  const { data: customer } = customerId
+    ? await admin.from('customers').select('business_name, quote_config').eq('id', customerId).maybeSingle()
+    : { data: null };
+  const branding  = customer?.quote_config?.branding || {};
+  const signature = customer?.quote_config?.email_signature || null;
+  const businessName = branding.business_name || customer?.business_name || 'BlueWise';
+  const primary = branding.primary_color || '#2A2C35';
+  const sentLabel = new Date().toLocaleString('fr-CA');
+  const signatureHtml = buildEmailSignatureHtml({ branding, signature, defaults: PUR_SIGNATURE_DEFAULTS });
 
   const env = {
     domain:     process.env.MAILGUN_DOMAIN || null,
@@ -33,33 +46,58 @@ export default async function handler(req, res) {
     api_key_len: process.env.MAILGUN_API_KEY ? process.env.MAILGUN_API_KEY.length : 0,
   };
 
-  const subject = `Test Mailgun — ${new Date().toISOString()}`;
+  const subject = `Test Mailgun — ${businessName}`;
   const text = [
     'Ceci est un envoi de test via Mailgun.',
     '',
+    `Compagnie: ${businessName}`,
     `Domain: ${env.domain || '(missing MAILGUN_DOMAIN)'}`,
     `Region: ${env.region}`,
     `From:   ${env.from || '(derived from MAILGUN_DOMAIN)'}`,
-    `Sent at: ${new Date().toISOString()}`,
+    `Sent at: ${sentLabel}`,
     '',
     'Si tu reçois ce courriel, le pipeline Mailgun fonctionne.',
   ].join('\n');
-  const html = `
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:520px;padding:24px;color:#111827;">
-      <h2 style="margin:0 0 12px;font-size:18px;">Mailgun — test d'envoi</h2>
-      <p style="font-size:14px;line-height:1.55;color:#374151;">
-        Ceci est un envoi de test via la pipeline Mailgun de BlueWise.
-      </p>
-      <ul style="font-size:13px;color:#374151;line-height:1.8;">
-        <li><strong>Domain:</strong> ${env.domain || '(missing)'}</li>
-        <li><strong>Region:</strong> ${env.region}</li>
-        <li><strong>From:</strong> ${env.from || '(derived from domain)'}</li>
-        <li><strong>Envoyé à:</strong> ${new Date().toLocaleString('fr-CA')}</li>
-      </ul>
-      <p style="font-size:13px;color:#10b981;margin-top:16px;">
-        ✓ Si tu lis ce message, le pipeline Mailgun fonctionne.
-      </p>
-    </div>`;
+  const html = `<!doctype html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>${subject}</title>
+</head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#111827;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+        <tr><td style="padding:28px 32px 20px;background:${primary};color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.01em;">
+          ${businessName}
+        </td></tr>
+        <tr><td style="padding:28px 32px 8px;">
+          <div style="display:inline-block;padding:4px 12px;background:#ecfdf5;color:#047857;border:1px solid #10b981;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">
+            ✓ Courriel test — Mailgun
+          </div>
+          <p style="margin:18px 0 14px;font-size:16px;">Bonjour,</p>
+          <p style="margin:0 0 18px;font-size:15px;line-height:1.55;color:#374151;">
+            Ceci confirme que la pipeline <strong>Mailgun</strong> fonctionne.
+          </p>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:#f9fafb;border-radius:8px;margin:0 0 20px;width:100%;">
+            <tr><td style="padding:14px 16px;font-size:12px;color:#6b7280;line-height:1.7;">
+              <strong>Domain:</strong> ${env.domain || '(missing)'}<br/>
+              <strong>Region:</strong> ${env.region}<br/>
+              <strong>From:</strong> ${env.from || '(derived from domain)'}<br/>
+              <strong>Envoyé à:</strong> ${sentLabel}
+            </td></tr>
+          </table>
+          ${signatureHtml}
+        </td></tr>
+        <tr><td style="padding:20px 32px;background:#f9fafb;color:#9ca3af;font-size:11px;text-align:center;border-top:1px solid #e5e7eb;">
+          Courriel test — pipeline Mailgun vérifiée.
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
 
   const sent = await sendEmailMailgun({
     to,
