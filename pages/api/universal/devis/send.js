@@ -177,9 +177,14 @@ export default async function handler(req, res) {
 
       let sent = null;
       let provider = null;
+      // Captured for messages.meta so diagnostics never lose the Gmail
+      // reason when the Mailgun fallback rescues the send.
+      let gmailAttempted = false;
+      let gmailError = null;
 
       if (oauthRow?.email_address) {
         provider = 'gmail';
+        gmailAttempted = true;
         const from = `${branding.business_name || 'BlueWise'} <${oauthRow.email_address}>`;
         sent = await sendEmailGmail(
           { to: emailTo, from, subject, body: text, html },
@@ -199,6 +204,7 @@ export default async function handler(req, res) {
             }
           }
         );
+        if (!sent?.success) gmailError = sent?.error || 'unknown gmail error';
       }
 
       // Fallback to Mailgun on Gmail failure OR no OAuth configured
@@ -239,7 +245,13 @@ export default async function handler(req, res) {
           error: sent?.success ? null : (sent?.error || null),
           to_address: emailTo,
           from_address: provider === 'gmail' ? oauthRow?.email_address : process.env.MAILGUN_FROM,
-          meta: { devis_sent: true, quote_id: quote.id, quote_number: qNum },
+          meta: {
+            devis_sent: true,
+            quote_id: quote.id,
+            quote_number: qNum,
+            gmail_attempted: gmailAttempted,
+            gmail_error: gmailError,
+          },
         });
       } catch (e) {
         console.warn('[devis/send] messages log email failed', e?.message);
