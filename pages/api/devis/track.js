@@ -27,7 +27,11 @@ export default async function handler(req, res) {
   // prevents flood → Supabase row churn + Slack webhook abuse. Heartbeat
   // events were already capped at 20/quote but opened/accept_clicked/
   // tier_viewed were uncapped.
-  const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
+  const ip = (
+    req.headers['x-forwarded-for'] ||
+    req.headers['x-real-ip'] ||
+    ''
+  ).split(',')[0].trim() || 'unknown';
   if (checkRateLimit(req, res, `track:${ip}`, 60)) return;
 
   const { quote_number, event, scroll_pct, elapsed_seconds, referrer } = req.body || {};
@@ -35,12 +39,6 @@ export default async function handler(req, res) {
   if (!quote_number || !event || !VALID_EVENTS.includes(event)) {
     return res.status(400).json({ error: 'Bad request — quote_number and valid event required' });
   }
-
-  const ip = (
-    req.headers['x-forwarded-for'] ||
-    req.headers['x-real-ip'] ||
-    ''
-  ).split(',')[0].trim() || 'unknown';
   const userAgent = (req.headers['user-agent'] || '').slice(0, 500);
 
   // Resolve customer_id + job_id from quote_number — NEVER trust client for these
