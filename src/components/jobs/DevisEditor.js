@@ -1345,18 +1345,29 @@ export default function DevisEditor({ job, quote, onSaved }) {
   // fees are CLIENT CHARGES to cover potential costs — they are NOT Jérémy's real cash-out.
   // Jérémy logs his real gas / cannettes / overhead manually when the receipts hit.
   // Only supplier material cost, sous-traitance (if toggled), and employees count here.
+  // Total perimeter across ALL content items (install excluded via dataItems
+  // filter earlier). Each item contributes its own perimeter × qty, so an
+  // item entered as "3× 48×36" counts 3 perimeters — matching what Jérémy's
+  // sous-traitant actually installs on site. Promo items (porte gratuite)
+  // contribute their real perimeter too — the rebate is a client-side
+  // credit, the installer still has to install the unit. Per Mikael rule
+  // F-018: qty=0 contributes zero everywhere (not defaulted to 1).
   const totalPerimeter = dataItems.reduce((s, it) => {
     const w = parseFloat(it.dimensions?.width) || 0;
     const h = parseFloat(it.dimensions?.height) || 0;
-    return s + 2 * (w + h);
+    const q = Number(it.qty) || 0;
+    return s + 2 * (w + h) * q;
   }, 0);
-  // 1. Supplier material cost — projection of what Jérémy will pay the fournisseur
+  // 1. Supplier material cost — projection of what Jérémy will pay the fournisseur.
+  // Symmetric with revenue side (F-018): qty=0 contributes zero cost.
   const materialCost = dataItems.reduce((s, it) => {
     const c = Number(it._supplier_cost) || Number(it._cost) || 0;
-    const q = Number(it.qty) || 1;
+    const q = Number(it.qty) || 0;
     return s + c * q;
   }, 0);
-  // 2. Optional sous-traitance ($1.50/po of total perimeter if toggle ON)
+  // 2. Optional sous-traitance ($1.50/po of total perimeter if toggle ON).
+  // totalPerimeter already multiplies each item's perimeter by its qty above,
+  // so an x4 order pays the sous-traitant for 4 installs, not 1.
   const sousTrCost = sousTrOpen ? totalPerimeter * 1.5 : 0;
   // 3. Optional employees (rate × hours each)
   const employeesCost = employees.reduce((s, emp) => {
@@ -1646,6 +1657,49 @@ export default function DevisEditor({ job, quote, onSaved }) {
       // Non-fatal — item state is updated in UI, will persist on next full save
     }
   }
+
+  // Batch-queue or batch-unqueue every content item for the next bon de
+  // commande in a single PATCH — saves Jérémy from clicking the cart icon
+  // once per item on a 15-window project. Items already dispatched to a
+  // sent BC (_bc_sent_at) are left alone so we never try to edit a locked
+  // supplier order.
+  async function setAllItemsBC(next) {
+    const eligible = (i) => !dataItems[i]?._bc_sent_at;
+    markDirty();
+    setItems(prev => prev.map(it => {
+      // Only touch items that survive the dataItems filter AND aren't locked.
+      const stillContent = !(it.description || '').toLowerCase().startsWith('installation');
+      if (!stillContent) return it;
+      if (it._bc_sent_at) return it;
+      return { ...it, _queued_for_bc: next };
+    }));
+
+    // Persist same mask the setItems above uses so the next pending-BC query
+    // sees the updated queue right away without waiting for the 3s autosave.
+    const saveItems = buildSaveItems().map((it, i) => {
+      if (!eligible(i)) return it;
+      return { ...it, _queued_for_bc: next };
+    });
+    try {
+      await fetch(`/api/quotes/${quote.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ line_items: saveItems }),
+      });
+    } catch {
+      /* non-fatal — UI state reflects intent, autosave will catch up */
+    }
+  }
+
+  // Queue stats used by the Articles section header buttons to decide what to
+  // show (all-in, clear-all, or both) without mass-re-selecting locked items.
+  const bcQueueStats = dataItems.reduce((acc, it) => {
+    if (it._bc_sent_at) { acc.locked += 1; return acc; }
+    acc.eligible += 1;
+    if (it._queued_for_bc) acc.queued += 1;
+    else acc.unqueued += 1;
+    return acc;
+  }, { eligible: 0, queued: 0, unqueued: 0, locked: 0 });
 
   function addEmployee() {
     markDirty();
@@ -1956,18 +2010,47 @@ export default function DevisEditor({ job, quote, onSaved }) {
 
           {/* ITEMS */}
           <section className="rounded-xl border border-d-border bg-d-surface/30 p-4">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
               <p className="text-[10px] font-semibold text-d-muted uppercase tracking-wider">
                 Articles ({dataItems.length})
+                {bcQueueStats.queued > 0 && (
+                  <span className="ml-2 text-emerald-400/80 font-mono normal-case tracking-normal">
+                    · {bcQueueStats.queued} au BC
+                  </span>
+                )}
               </p>
-              <button
-                type="button"
-                onClick={addItem}
-                aria-label="Ajouter un article"
-                className="flex items-center gap-1 px-2.5 py-1 rounded-xl border border-d-primary/40 text-d-primary text-xs hover:bg-d-primary/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/50"
-              >
-                <Plus size={12} /> Ajouter
-              </button>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {bcQueueStats.unqueued > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setAllItemsBC(true)}
+                    aria-label="Ajouter tous les articles au prochain bon de commande"
+                    title={`Ajoute ${bcQueueStats.unqueued} article${bcQueueStats.unqueued > 1 ? 's' : ''} au BC`}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-xl border border-emerald-500/40 text-emerald-400 text-xs hover:bg-emerald-500/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+                  >
+                    <CheckCircle2 size={12} /> Tout au BC
+                  </button>
+                )}
+                {bcQueueStats.queued > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setAllItemsBC(false)}
+                    aria-label="Retirer tous les articles du prochain bon de commande"
+                    title={`Retire ${bcQueueStats.queued} article${bcQueueStats.queued > 1 ? 's' : ''} du BC`}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-xl border border-d-border text-d-muted text-xs hover:border-rose-500/40 hover:text-rose-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50"
+                  >
+                    <X size={12} /> Retirer du BC
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={addItem}
+                  aria-label="Ajouter un article"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-xl border border-d-primary/40 text-d-primary text-xs hover:bg-d-primary/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/50"
+                >
+                  <Plus size={12} /> Ajouter
+                </button>
+              </div>
             </div>
 
             {dataItems.length === 0 ? (

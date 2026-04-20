@@ -42,7 +42,9 @@ export const INITIAL_STATE = {
     frame_depth: '1_1_4',
     door_model: '',
     swing: 'gauche',
-    color_ext: 'Noir',
+    // Rule locked 2026-04-20: Blanc default everywhere (ext + int). Noir was
+    // a legacy default that Jérémy had to override every time.
+    color_ext: 'Blanc',
     color_int: 'Blanc',
     moulding: 'contemporaine',
     handle: 'fournis_client',
@@ -270,7 +272,7 @@ export default function commandeReducer(state, action) {
         form.frame_thickness = item.frame_thickness || '';
         form.door_model = item.door_model || '';
         form.swing = item.swing || 'gauche';
-        form.color_ext = item.color_ext || 'Noir';
+        form.color_ext = item.color_ext || 'Blanc';
         form.color_int = item.color_int || 'Blanc';
         form.moulding = item.moulding || 'contemporaine';
         form.handle = item.handle || 'fournis_client';
@@ -281,7 +283,7 @@ export default function commandeReducer(state, action) {
       } else if (item.category === 'patio_door') {
         form.frame = item.frame || '';
         form.frame_thickness = item.frame_thickness || '';
-        form.color_ext = item.color_ext || '';
+        form.color_ext = item.color_ext || 'Blanc';
         form.color_int = item.color_int || 'Blanc';
         form.glass_type = item.glass_type || 'double';
         form.blinds = item.blinds || 'none';
