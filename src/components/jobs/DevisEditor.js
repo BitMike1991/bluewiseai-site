@@ -121,9 +121,15 @@ function computeTotals(items, installCost, opts = {}) {
   // Use computeItemBreakdown so items without stored _urethane/_moulure/_calking
   // (manually-added lines that never hit apply-supplier-pricing) still get the
   // credit via the perimeter fallback — matches what the UI displays per-item.
+  // F-018 — previously used `Number(it.qty) || 1` here while the revenue
+  // side above used `|| 0`. When qty=0 the revenue side contributed $0
+  // but this side still counted ~$45/window in cannettes, understating
+  // subtotal. Now items with non-positive qty contribute nothing to
+  // either side.
   const cannetteCredit = petitsFrais ? 0 : (items || []).reduce((s, it) => {
+    const q = Number(it.qty);
+    if (!Number.isFinite(q) || q <= 0) return s;
     const bd = computeItemBreakdown(it);
-    const q = Number(it.qty) || 1;
     return s + q * (bd.urethane + bd.moulure + bd.calking);
   }, 0);
   const lineSubtotal = rawLineSubtotal - cannetteCredit;
