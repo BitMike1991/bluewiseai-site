@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from '../../../lib/supabaseServer';
+import { getAuthContext, getSupabaseServerClient } from '../../../lib/supabaseServer';
 import crypto from 'crypto';
 
 const TENANT_SLUG = 'bw-demo';
@@ -15,6 +15,12 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // F-002 — route was previously unauthenticated. Any caller could insert
+  // rows under a hardcoded customer_id=1 via the service_role client.
+  const { user, customerId } = await getAuthContext(req, res);
+  if (!user) return res.status(401).json({ error: 'Not authenticated' });
+  if (!customerId) return res.status(403).json({ error: 'No customer mapping' });
 
   try {
     const body = req.body || {};
@@ -34,7 +40,7 @@ export default async function handler(req, res) {
     const row = {
       token,
       tenant_slug: TENANT_SLUG,
-      customer_id: 1, // BlueWise
+      customer_id: customerId,
       client_name: client.name,
       client_phone: client.phone,
       client_email: client.email || null,
@@ -59,7 +65,7 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error('roof-quote create error:', error);
-      return res.status(500).json({ error: 'Database error', detail: error.message });
+      return res.status(500).json({ error: 'Database error' });
     }
 
     const base = process.env.PUBLIC_SITE_URL || 'https://bluewiseai.com';
@@ -72,6 +78,6 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error('roof-quote/create error:', err);
-    return res.status(500).json({ error: 'Internal error', detail: String(err.message || err) });
+    return res.status(500).json({ error: 'Internal error' });
   }
 }
