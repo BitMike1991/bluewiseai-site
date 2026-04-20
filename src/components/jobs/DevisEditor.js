@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { STATUS_META, STATUS_ORDER } from '../../../lib/status-config';
 import { itemSketchSvg } from '../../../lib/quote-templates/pur.js';
+import { computeClientPriceFromCost, DEFAULT_PRICING } from '../../../lib/devis/pricing';
 import {
   PROMO_QTY_THRESHOLD,
   computePromoDoorRebate,
@@ -776,6 +777,62 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais 
               />
             </div>
           </div>
+
+          {/* Cost fournisseur — when Jérémy types it, the formula auto-derives
+              unit_price = cost × 1.20 + perim × $3 + urethane + moulure + calking
+              (min $400). Stores canonical (with cannettes) in _unit_price_full
+              so the petits-frais toggle still subtracts correctly on render. */}
+          {(() => {
+            const costVal = item._cost ?? item._supplier_cost ?? '';
+            const hasCost = Number(costVal) > 0;
+            function applyCostFormula(nextCost) {
+              const costNum = Number(nextCost);
+              const priced = computeClientPriceFromCost(item, costNum, DEFAULT_PRICING);
+              const patch = {
+                ...item,
+                _cost: costNum > 0 ? costNum : null,
+              };
+              if (costNum > 0 && priced.clientUnit > 0) {
+                // Canonical unit_price = with cannettes baked in. _unit_price_full
+                // tracks the canonical so reload + petits-frais toggle round-trip.
+                patch.unit_price        = priced.clientUnit;
+                patch._unit_price_full  = priced.clientUnit;
+                patch._perimeter        = priced._perimeter;
+                patch._urethane         = priced._urethane;
+                patch._moulure          = priced._moulure;
+                patch._calking          = priced._calking;
+              }
+              onChange(index, patch);
+            }
+            return (
+              <div>
+                <label className="block text-[10px] text-d-muted mb-1">
+                  Cost fournisseur ($)
+                  <span className="ml-1 text-d-muted/60 font-normal">
+                    (applique auto 20% + 3&nbsp;$/po + petits frais)
+                  </span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="0.01"
+                    value={costVal === '' ? '' : Number(costVal).toFixed(2)}
+                    onChange={e => applyCostFormula(e.target.value)}
+                    placeholder="0.00"
+                    aria-label="Cost fournisseur"
+                    className="w-32 min-h-[36px] sm:min-h-0 px-2 py-1.5 sm:py-1 rounded-lg border border-d-border bg-d-surface text-sm text-d-text text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+                  />
+                  {hasCost && (
+                    <span className="text-[10px] text-d-muted/60">
+                      Prix unitaire auto&nbsp;: {fmtQC(Number(item.unit_price) || 0)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Matériau + couleurs — toggle-friendly pickers, applied per item */}
           {(() => {
