@@ -1095,7 +1095,7 @@ export default function AskPage() {
 
   return (
     <DashboardLayout title="Command Center">
-      <div className="flex h-[calc(100vh-64px)]">
+      <div className="flex h-[calc(100dvh-64px)]">
         {/* Main chat area */}
         <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}

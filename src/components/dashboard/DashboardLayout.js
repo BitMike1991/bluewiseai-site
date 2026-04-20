@@ -125,7 +125,7 @@ function DashboardShell({ sidebarOpen, closeSidebar, toggleSidebar, handleLogout
 
   return (
     <div
-      className="flex h-screen"
+      className="flex h-[100dvh]"
       style={{
         backgroundColor: branding.dashboard_bg || "#0a0a12",
         color: branding.text_primary || "#f0f0f5",

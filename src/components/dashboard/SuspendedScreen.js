@@ -12,7 +12,7 @@ export default function SuspendedScreen() {
   const companyName = branding.company_name || "BlueWise AI";
 
   return (
-    <div className="flex h-screen bg-d-bg text-d-text items-center justify-center p-6">
+    <div className="flex h-[100dvh] bg-d-bg text-d-text items-center justify-center p-6">
       <div className="max-w-lg w-full text-center space-y-8">
         {/* Warning icon */}
         <div className="flex justify-center">

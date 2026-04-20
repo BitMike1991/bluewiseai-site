@@ -124,7 +124,7 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
       <aside
         className={`
           fixed md:static inset-y-0 left-0 z-50
-          ${sidebarWidth} h-screen flex flex-col
+          ${sidebarWidth} h-[100dvh] flex flex-col
           transform transition-all duration-200 ease-in-out
           ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}

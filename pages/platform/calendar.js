@@ -214,7 +214,7 @@ export default function CalendarPage() {
                   </div>
                 </div>
 
-                <div className="p-3 space-y-2 overflow-y-auto max-h-[60vh] md:max-h-[calc(100vh-300px)]">
+                <div className="p-3 space-y-2 overflow-y-auto max-h-[60dvh] md:max-h-[calc(100dvh-300px)]">
                   {(selectedDayData.events || []).length === 0 && (selectedDayData.tasks || []).length === 0 && (
                     <p className="text-xs text-d-muted/50 text-center py-8">Nothing scheduled</p>
                   )}

@@ -455,7 +455,7 @@ export default function InboxPage() {
 
   return (
     <DashboardLayout title="Inbox">
-      <div className="h-[calc(100vh-120px)] -mx-4 md:-mx-6 -my-4 md:-my-6 flex overflow-hidden">
+      <div className="h-[calc(100dvh-120px)] -mx-4 md:-mx-6 -my-4 md:-my-6 flex overflow-hidden">
         {/* Left pane: conversation list */}
         <div className={`w-full md:w-[380px] md:min-w-[320px] md:max-w-[420px] shrink-0 border-r border-d-border flex flex-col ${mobileThread ? "hidden md:flex" : "flex"}`}>
           <ConversationList

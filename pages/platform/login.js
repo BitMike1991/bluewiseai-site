@@ -95,7 +95,7 @@ export default function PlatformLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-[#05070D] text-white flex items-center justify-center p-6">
+    <div className="min-h-[100dvh] bg-[#05070D] text-white flex items-center justify-center p-6">
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 shadow-[0_0_30px_rgba(0,200,255,0.12)] p-6">
         <div className="mb-6">
           <div className="text-2xl font-semibold tracking-tight">
