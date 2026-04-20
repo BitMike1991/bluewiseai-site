@@ -433,7 +433,7 @@ export default async function handler(req, res) {
 
     const { data: quotes, error: qErr } = await supabase
       .from('quotes')
-      .select('id, job_id, quote_number, line_items, customer_id')
+      .select('id, job_id, quote_number, project_ref, line_items, customer_id')
       .in('id', quoteIds)
       .eq('customer_id', customerId); // TENANT GUARD
 
@@ -529,14 +529,15 @@ export default async function handler(req, res) {
     const { data: bcRow, error: insertErr } = await supabase
       .from('bons_de_commande')
       .insert({
-        customer_id:  customerId,
+        customer_id:          customerId,
         bc_number,
         supplier,
-        status:       'draft',
-        item_refs:    resolvedRefs,
-        html_content: html,
-        created_at:   new Date().toISOString(),
-        updated_at:   new Date().toISOString(),
+        status:               'draft',
+        item_refs:            resolvedRefs,
+        html_content:         html,
+        created_by_user_id:   user?.id || null,
+        created_at:           new Date().toISOString(),
+        updated_at:           new Date().toISOString(),
       })
       .select()
       .single();

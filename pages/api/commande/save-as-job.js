@@ -14,7 +14,7 @@
  */
 
 import crypto from 'crypto';
-import { sbInsert, sbSelect, sbUpdate } from '@/lib/supabase-server';
+import { sbInsert, sbSelect, sbUpdate, sbRpc } from '@/lib/supabase-server';
 import { getAuthContext } from '../../../lib/supabaseServer';
 
 // PUR Construction. This endpoint is gated to session users whose customer_id
@@ -388,11 +388,26 @@ export default async function handler(req, res) {
     const newJobDbId = newJob.id;
     const quoteNumber = generateQuoteNumber();
 
+    // Atomic claim of the next sequential project_ref for this tenant.
+    // Fallback to null if the RPC fails — devis still functions without it,
+    // the column is nullable and project_ref can be backfilled later.
+    let projectRef = null;
+    try {
+      projectRef = await sbRpc('claim_next_project_ref', {
+        p_customer_id: CUSTOMER_ID,
+        p_prefix: 'PUR',
+      });
+    } catch (err) {
+      console.warn('[save-as-job] claim_next_project_ref failed:', err.message);
+    }
+
     // ── CREATE quote with null prices (awaiting_supplier) ──
     await sbInsert('quotes', {
       customer_id: CUSTOMER_ID,
       job_id: newJobDbId,
       quote_number: quoteNumber,
+      project_ref: projectRef,
+      created_by_user_id: user.id,
       version: 1,
       status: 'awaiting_supplier',
       line_items: lineItems,

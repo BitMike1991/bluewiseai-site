@@ -960,6 +960,9 @@ export default async function handler(req, res) {
 
       contractData = {
         job_db_id: job?.id || null,
+        // Surface the human project_ref (PUR-0042) so the contract header
+        // can show it alongside the contract_number.
+        project_ref: quoteRow.project_ref || null,
         client_name: job?.client_name || quoteRow.client_name || '',
         client_phone: job?.client_phone || '',
         client_email: job?.client_email || '',

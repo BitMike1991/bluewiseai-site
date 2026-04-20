@@ -125,7 +125,7 @@ export default async function handler(req, res) {
       fetchQuotes
         ? supabase
             .from("quotes")
-            .select("id, job_id, customer_id, quote_number, version, line_items, subtotal, tax_gst, tax_qst, total_ttc, status, valid_until, notes, storage_path, created_at, updated_at")
+            .select("id, job_id, customer_id, quote_number, project_ref, created_by_user_id, version, line_items, subtotal, tax_gst, tax_qst, total_ttc, status, valid_until, notes, storage_path, created_at, updated_at, meta")
             .eq("job_id", job.id)
             .eq("customer_id", customerId)
             .order("version", { ascending: false })

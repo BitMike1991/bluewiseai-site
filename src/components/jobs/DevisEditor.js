@@ -435,15 +435,13 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais 
           />
         )}
 
-        {/* Item identity */}
+        {/* Item identity — positional number only. Per-item SKU stored in
+            item.sku for internal supplier reference but not rendered (Mikael
+            S163: the devis-level project_ref is the visible reference, not
+            per-item SKU). */}
         <div className="flex-1 min-w-0">
-          <div className="font-mono text-[10px] font-semibold text-d-muted mb-0.5 flex items-center gap-1.5">
-            <span>Item #{index + 1}</span>
-            {item.sku && (
-              <span className="px-1 py-0.5 rounded bg-d-primary/10 border border-d-primary/30 text-d-primary tracking-wide">
-                {item.sku}
-              </span>
-            )}
+          <div className="font-mono text-[10px] font-semibold text-d-muted mb-0.5">
+            Item #{index + 1}
           </div>
           <div className="text-xs font-semibold text-d-text break-words leading-tight">
             {typeLabel}{modelLabel}
@@ -1778,8 +1776,16 @@ export default function DevisEditor({ job, quote, onSaved }) {
 
       {/* ── Top action bar ── */}
       <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-        {/* Left: status + dirty badge */}
+        {/* Left: project ref + status + dirty badge */}
         <div className="flex items-center gap-2 flex-wrap">
+          {quote?.project_ref && (
+            <span
+              className="font-mono text-[11px] font-bold tracking-wider px-2 py-1 rounded-lg bg-d-primary/10 border border-d-primary/40 text-d-primary"
+              title="Référence projet (séquentielle par tenant)"
+            >
+              {quote.project_ref}
+            </span>
+          )}
           <StatusSelector
             value={jobStatus}
             onChange={v => { setJobStatus(v); markDirty(); }}

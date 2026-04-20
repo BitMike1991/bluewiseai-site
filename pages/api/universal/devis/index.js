@@ -542,6 +542,19 @@ export default async function handler(req, res) {
         .eq('id', existingQuotes[0].id);
     }
 
+    // 2c. Claim a sequential project_ref for this tenant (atomic RPC).
+    // Null fallback is fine — column is nullable, backfill can run later.
+    let projectRef = null;
+    try {
+      const { data: claimed, error: rpcErr } = await supabase.rpc('claim_next_project_ref', {
+        p_customer_id: customer_id,
+        p_prefix: config.quote.prefix || 'BW',
+      });
+      if (!rpcErr && typeof claimed === 'string') projectRef = claimed;
+    } catch (err) {
+      console.warn('[devis/create] claim_next_project_ref failed:', err?.message);
+    }
+
     // 3. Insert quote record (html stored in meta.html — no dedicated html_content column)
     const { data: quoteRow, error: quoteErr } = await supabase
       .from('quotes')
@@ -549,6 +562,7 @@ export default async function handler(req, res) {
         job_id: jobDbId,
         customer_id,
         quote_number,
+        project_ref: projectRef,
         version,
         line_items: processedItems,
         subtotal,
