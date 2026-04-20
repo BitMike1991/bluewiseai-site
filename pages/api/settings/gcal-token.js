@@ -2,6 +2,7 @@
 // Returns a fresh Google Calendar access token for a given customer_id.
 // Called by n8n tools handler to get per-customer calendar access.
 // Secured by service role key in Authorization header.
+import crypto from "crypto";
 import { getSupabaseServerClient } from "../../../lib/supabaseServer";
 import { decryptToken } from "../../../lib/tokenEncryption";
 
@@ -10,16 +11,27 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Verify service role key (n8n calls this with the Supabase service key)
+  // F-012 — verify service role key with timing-safe compare after Bearer
+  // prefix parse. Previously used `.includes()` which (a) was substring
+  // match (any header containing the key as substring passed) and (b) was
+  // not constant-time.
   const auth = req.headers.authorization || "";
-  const expectedKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!auth.includes(expectedKey)) {
+  const m = auth.match(/^Bearer\s+(.+)$/);
+  const expectedKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!m || !expectedKey) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const provided = Buffer.from(m[1]);
+  const expected = Buffer.from(expectedKey);
+  if (provided.length !== expected.length || !crypto.timingSafeEqual(provided, expected)) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const { customer_id } = req.body || {};
-  if (!customer_id) {
-    return res.status(400).json({ error: "Missing customer_id" });
+  // F-012 — customer_id must be a positive integer. Previously accepted
+  // any truthy value, including arbitrary strings.
+  const customer_id = Number(req.body?.customer_id);
+  if (!Number.isInteger(customer_id) || customer_id <= 0) {
+    return res.status(400).json({ error: "customer_id must be a positive integer" });
   }
 
   const admin = getSupabaseServerClient();
