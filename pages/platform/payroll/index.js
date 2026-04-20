@@ -9,11 +9,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import DashboardLayout from '../../../src/components/dashboard/DashboardLayout';
 import { Plus, Loader2, Users, Clock, Trash2, Archive, Calculator, AlertTriangle } from 'lucide-react';
+import { fmtMoney, fmtHours } from '../../../lib/formatters';
 
-function fmtMoney(n) {
-  const num = Number(n) || 0;
-  return num.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
-}
 function fmtDate(iso) {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('fr-CA', { year: '2-digit', month: 'short', day: 'numeric' });
@@ -120,7 +117,7 @@ export default function PayrollPage() {
 
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           <StatCard label="Employés actifs" value={activeEmployees.length} icon={<Users size={14} />} />
-          <StatCard label={`Heures (${from} → ${to})`} value={totals.hours} icon={<Clock size={14} />} suffix="h" />
+          <StatCard label={`Heures (${from} → ${to})`} value={`${fmtHours(totals.hours)}\u00a0h`} icon={<Clock size={14} />} />
           <StatCard label="Brut à payer" value={fmtMoney(totals.gross)} tone="emerald" />
         </div>
 
@@ -255,7 +252,7 @@ export default function PayrollPage() {
                             <td className="px-3 py-2 text-d-text">{fmtDate(e.work_date)}</td>
                             <td className="px-3 py-2 text-d-text">{e.employee_name || emp?.full_name || '—'}</td>
                             <td className="px-3 py-2 text-d-muted">{job ? `${job.job_id}` : '—'}</td>
-                            <td className="px-3 py-2 text-right font-mono text-d-text">{Number(e.hours).toFixed(2)}</td>
+                            <td className="px-3 py-2 text-right font-mono text-d-text">{fmtHours(e.hours)}</td>
                             <td className="px-3 py-2 text-right font-mono text-d-muted">{fmtMoney(e.hourly_rate)}</td>
                             <td className="px-3 py-2 text-right font-mono text-d-text">{fmtMoney(e.gross)}</td>
                             <td className="px-3 py-2 text-right font-mono text-d-muted/70">{e.net_pay != null ? fmtMoney(e.net_pay) : '—'}</td>
@@ -278,7 +275,7 @@ export default function PayrollPage() {
                     <tfoot className="border-t border-d-border bg-d-surface/40 text-[11px]">
                       <tr>
                         <td colSpan={3} className="px-3 py-2 text-d-muted font-semibold">Total</td>
-                        <td className="px-3 py-2 text-right font-mono text-d-text">{totals.hours.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right font-mono text-d-text">{fmtHours(totals.hours)}</td>
                         <td className="px-3 py-2"></td>
                         <td className="px-3 py-2 text-right font-mono text-emerald-400">{fmtMoney(totals.gross)}</td>
                         <td colSpan={2}></td>
@@ -745,7 +742,7 @@ function PayRunModal({ employees, defaultFrom, defaultTo, onClose, onCommitted }
                     {preview.rows.map((r) => (
                       <tr key={r.employee_id} className="border-b border-d-border/40 last:border-0">
                         <td className="px-3 py-2 text-d-text">{r.employee_name}</td>
-                        <td className="px-3 py-2 text-right font-mono">{r.hours.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right font-mono">{fmtHours(r.hours)}</td>
                         <td className="px-3 py-2 text-right font-mono text-d-text">{fmtMoney(r.gross)}</td>
                         <td className="px-3 py-2 text-right font-mono text-rose-400/80">{fmtMoney(r.deductions.rrq)}</td>
                         <td className="px-3 py-2 text-right font-mono text-rose-400/80">{fmtMoney(r.deductions.ei)}</td>
