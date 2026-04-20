@@ -9,6 +9,7 @@ import StatusBadge from '../../../src/components/jobs/StatusBadge';
 import DevisEditor from '../../../src/components/jobs/DevisEditor';
 import MediaPicker from '../../../src/components/ui/MediaPicker';
 import AddExpenseModal from '../../../src/components/expenses/AddExpenseModal';
+import { sanitizeProjectDescription } from '../../../lib/devis/specs';
 import { getStatusMeta, STATUS_ORDER } from '../../../lib/status-config';
 import {
   ChevronLeft,
@@ -200,12 +201,12 @@ function SummaryCards({ job, payments, finances }) {
             {job.project_type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
           </p>
         )}
-        {job.project_description && (
-          <p className="text-xs text-d-muted line-clamp-3">{job.project_description}</p>
-        )}
-        {!job.project_type && !job.project_description && (
-          <p className="text-xs text-d-muted italic">Aucune description</p>
-        )}
+        {(() => {
+          const cleaned = sanitizeProjectDescription(job.project_description);
+          if (cleaned) return <p className="text-xs text-d-muted line-clamp-3">{cleaned}</p>;
+          if (!job.project_type) return <p className="text-xs text-d-muted italic">Aucune description</p>;
+          return null;
+        })()}
         {job.start_date && (
           <p className="text-xs text-d-muted mt-1.5">
             Début prévu : <span className="text-d-text">{formatShortDate(job.start_date)}</span>

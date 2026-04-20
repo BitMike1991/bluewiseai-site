@@ -321,7 +321,7 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais 
           <div className="font-mono text-[10px] font-semibold text-d-muted mb-0.5">
             Item #{index + 1}
           </div>
-          <div className="text-xs font-semibold text-d-text truncate">
+          <div className="text-xs font-semibold text-d-text break-words leading-tight">
             {typeLabel}{modelLabel}
             {item.ouvrant && (
               <span className="ml-1.5 inline-block px-1.5 py-0.5 rounded bg-[#E9EFE7] text-[9px] font-mono font-bold text-[#2A2C35]">
@@ -390,8 +390,9 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais 
         </div>
       </div>
 
-      {/* Inline qty/price summary — always visible */}
-      <div className="flex items-center gap-2 px-3 pb-2.5">
+      {/* Inline qty/price summary — always visible. flex-wrap so nothing
+          gets cut on narrow screens; total + Détail drop to a second row. */}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 px-3 pb-2.5">
         <label className="flex items-center gap-1.5 text-xs text-d-muted">
           Qté
           <input
@@ -402,7 +403,7 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais 
             value={item.qty ?? 1}
             onChange={e => update('qty', e.target.value)}
             aria-label={`Quantité article ${index + 1}`}
-            className="w-16 sm:w-14 min-h-[36px] sm:min-h-0 px-2 py-1.5 sm:py-0.5 rounded-lg border border-d-border bg-d-surface text-d-text text-sm sm:text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+            className="w-14 min-h-[36px] sm:min-h-0 px-2 py-1.5 sm:py-0.5 rounded-lg border border-d-border bg-d-surface text-d-text text-base sm:text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
           />
         </label>
         <label className="flex items-center gap-1.5 text-xs text-d-muted">
@@ -415,21 +416,20 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais 
             value={Number(effectiveUnit.toFixed(2))}
             onChange={e => {
               const entered = Number(e.target.value) || 0;
-              // Reverse: store canonical = effective + cannettes (if toggle OFF).
               const canonicalNew = petitsFrais ? entered : entered + cannettesPerUnit;
               onChange(index, { ...item, unit_price: canonicalNew, _unit_price_full: canonicalNew });
             }}
             aria-label={`Prix unitaire article ${index + 1}`}
-            className="w-24 sm:w-20 min-h-[36px] sm:min-h-0 px-2 py-1.5 sm:py-0.5 rounded-lg border border-d-border bg-d-surface text-d-text text-sm sm:text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+            className="w-20 min-h-[36px] sm:min-h-0 px-2 py-1.5 sm:py-0.5 rounded-lg border border-d-border bg-d-surface text-d-text text-base sm:text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
           />
         </label>
-        <span className="text-xs font-semibold text-d-text ml-auto">{fmtQC(total)}</span>
+        <span className="text-xs font-semibold text-d-text ml-auto whitespace-nowrap">= {fmtQC(total)}</span>
         {hasBreakdown && (
           <button
             type="button"
             onClick={() => setShowCalc(v => !v)}
             aria-label="Voir le détail du calcul de prix"
-            className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border border-d-primary/40 bg-d-primary/10 text-d-primary hover:bg-d-primary/20 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/60"
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border border-d-primary/40 bg-d-primary/10 text-d-primary hover:bg-d-primary/20 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/60 whitespace-nowrap"
           >
             <Info size={12} aria-hidden="true" />
             {showCalc ? 'Masquer' : 'Détail'}
