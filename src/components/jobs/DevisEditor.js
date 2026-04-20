@@ -35,7 +35,16 @@ import WindowConfigSVG from '../hub/commande/svg/WindowConfigSVG';
 import MediaPicker from '../ui/MediaPicker';
 import PatioDoorSVG   from '../hub/commande/svg/PatioDoorSVG';
 import EntryDoorSVG   from '../hub/commande/svg/EntryDoorSVG';
-import { WINDOW_COLORS } from '../../../lib/royalty-catalog.js';
+// Single source of truth for type / model / color choices — same module the
+// commande hub reads from. Mikael's rule 2026-04-20: never pull directly from
+// royalty-catalog here; go through the hub catalog accessor so Devis editor
+// and Commande tool always show identical options.
+import {
+  WINDOW_COLORS,
+  getWindowTypes,
+  getEntryDoorStyles,
+  getPatioConfigs,
+} from '../../../lib/hub/catalog-data.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -201,16 +210,84 @@ function StatusSelector({ value, onChange }) {
 
 // ── Line item row ─────────────────────────────────────────────────────────────
 
-const WINDOW_TYPES = [
-  'Fenêtre coulissante',
-  'Fenêtre à battant',
-  'Porte-fenêtre',
-  "Porte d'entrée",
-  'Porte patio',
-  'Porte simple',
-  'Fenêtre fixe',
-  'Autre',
+// Flat type list rendered in the Type dropdown — mirrors the Commande hub's
+// TypePicker (windows + entry doors + patio) so Jérémy picks the same choice
+// in either flow. Each entry carries the metadata the rich SVG renderer
+// needs on the other side (_category, _window_type or _entry_door_style).
+const DEVIS_TYPE_OPTIONS = [
+  // Fenêtres — Royalty WINDOW_TYPES keys
+  { label: 'Fenêtre à battant',    category: 'window',     window_type: 'battant'     },
+  { label: 'Fenêtre à auvent',     category: 'window',     window_type: 'auvent'      },
+  { label: 'Fenêtre à guillotine', category: 'window',     window_type: 'guillotine'  },
+  { label: 'Fenêtre coulissante',  category: 'window',     window_type: 'coulissante' },
+  { label: 'Fenêtre fixe',         category: 'window',     window_type: 'fixe'        },
+  { label: 'Fenêtre en baie',      category: 'window',     window_type: 'baie'        },
+  { label: 'Fenêtre en arc',       category: 'window',     window_type: 'arc'         },
+  // Portes d'entrée — Royalty ENTRY_DOOR_STYLES keys
+  { label: 'Porte simple',                    category: 'entry_door', entry_door_style: 'single'                 },
+  { label: 'Porte + 1 latéral G',             category: 'entry_door', entry_door_style: 'single_1side'           },
+  { label: 'Porte + 1 latéral D',             category: 'entry_door', entry_door_style: 'single_1side_R'         },
+  { label: 'Porte + 2 latéraux',              category: 'entry_door', entry_door_style: 'single_2sides'          },
+  { label: '2 portes + poteau fixe',          category: 'entry_door', entry_door_style: 'double_post'            },
+  { label: '2 portes + astragale',            category: 'entry_door', entry_door_style: 'double_astragal'        },
+  { label: 'Porte + latéral G + astragale',   category: 'entry_door', entry_door_style: 'single_side_astragal'   },
+  { label: 'Porte + astragale + latéral D',   category: 'entry_door', entry_door_style: 'single_side_astragal_R' },
+  // Patio — single family, configurations live in PATIO_CONFIGS_PSTD
+  { label: 'Porte patio',          category: 'patio_door'  },
+  // Escape hatch for legacy / one-off items
+  { label: 'Autre',                category: 'other'       },
 ];
+
+function findTypeOption(item) {
+  if (!item) return null;
+  if (item._category && (item._window_type || item._entry_door_style || item._category === 'patio_door')) {
+    return DEVIS_TYPE_OPTIONS.find(o =>
+      o.category === item._category &&
+      o.window_type === item._window_type &&
+      o.entry_door_style === item._entry_door_style
+    ) || null;
+  }
+  if (item.type) {
+    return DEVIS_TYPE_OPTIONS.find(o => o.label === item.type) || null;
+  }
+  return null;
+}
+
+/**
+ * Return the configuration list for the Model dropdown based on the item's
+ * resolved category. Configurations are read from the hub catalog accessor
+ * (same source the commande tool uses) so codes and variant labels match 1:1.
+ */
+function getModelConfigs(item) {
+  const opt = findTypeOption(item);
+  if (!opt) return [];
+  if (opt.category === 'window') {
+    const types = getWindowTypes('royalty');
+    const t = types?.[opt.window_type];
+    return (t?.configurations || []).map(cfg => ({
+      code: cfg.code,
+      label: `${cfg.code}${cfg.variant ? ` — ${cfg.variant}` : cfg.notation ? ` · ${cfg.notation}` : ''}`,
+      cfg,
+    }));
+  }
+  if (opt.category === 'entry_door') {
+    const styles = getEntryDoorStyles();
+    const style = styles?.[opt.entry_door_style];
+    return (style?.slabs || []).map(slab => ({
+      code: `${style.code}-${slab.slab_w}`,
+      label: `${style.code}-${slab.slab_w} — slab ${slab.slab_w}" · cadre 1¼ ${slab.frame_1_1_4}" / 1½ ${slab.frame_1_1_2}"`,
+      cfg: { ...slab, code: `${style.code}-${slab.slab_w}`, style },
+    }));
+  }
+  if (opt.category === 'patio_door') {
+    return getPatioConfigs().map(cfg => ({
+      code: cfg.code,
+      label: `${cfg.code} — ${cfg.panels.length} volets · ${cfg.min.w}–${cfg.max.w}"`,
+      cfg,
+    }));
+  }
+  return [];
+}
 
 // Material options available on every item. Hybride = uPVC interior + aluminium exterior.
 const MATERIAL_OPTIONS = [
@@ -546,32 +623,122 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais 
       {/* Expanded detail */}
       {expanded && (
         <div className="border-t border-d-border/50 px-3 py-3 space-y-2.5">
-          {/* Type */}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-[10px] text-d-muted mb-1">Type</label>
-              <select
-                value={item.type || ''}
-                onChange={e => update('type', e.target.value)}
-                aria-label="Type de fenêtre"
-                className="w-full px-2 py-1.5 rounded-lg border border-d-border bg-d-surface text-xs text-d-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
-              >
-                <option value="">— Choisir —</option>
-                {WINDOW_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[10px] text-d-muted mb-1">Modèle</label>
-              <input
-                type="text"
-                value={item.model || ''}
-                onChange={e => update('model', e.target.value)}
-                placeholder="ex: C2G XO"
-                aria-label="Modèle"
-                className="w-full px-2 py-1.5 rounded-lg border border-d-border bg-d-surface text-xs text-d-text placeholder:text-d-muted/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
-              />
-            </div>
-          </div>
+          {/* Type + Modèle — both driven by the hub catalog accessor so the
+              choices exactly mirror the Commande tool. Type sets category +
+              metadata; Model populates _config / ouvrant and the rich SVG. */}
+          {(() => {
+            const typeOpt = findTypeOption(item);
+            const configs = getModelConfigs(item);
+
+            function handleTypeChange(label) {
+              const opt = DEVIS_TYPE_OPTIONS.find(o => o.label === label);
+              if (!opt) {
+                onChange(index, { ...item, type: label });
+                return;
+              }
+              // Clear stale config-specific metadata when the parent type
+              // changes — otherwise an old _config tied to the previous
+              // window_type would still drive the SVG renderer.
+              onChange(index, {
+                ...item,
+                type: opt.label,
+                _category: opt.category,
+                _window_type: opt.window_type || null,
+                _entry_door_style: opt.entry_door_style || null,
+                _config: null,
+                model: '',
+                ouvrant: '',
+              });
+            }
+
+            function handleModelChange(code) {
+              const choice = configs.find(c => c.code === code);
+              if (!choice) {
+                onChange(index, { ...item, model: code });
+                return;
+              }
+              const cfg = choice.cfg;
+              const patch = {
+                ...item,
+                model: choice.code,
+              };
+              if (item._category === 'window' || typeOpt?.category === 'window') {
+                patch._config = {
+                  panels: cfg.panels,
+                  widthRatios: cfg.widthRatios || null,
+                  heightRatios: cfg.heightRatios || null,
+                  vertical: cfg.vertical || false,
+                  max: cfg.max,
+                  variant: cfg.variant || null,
+                  mode: cfg.mode || null,
+                };
+                patch.ouvrant = cfg.notation || '';
+              } else if (item._category === 'entry_door' || typeOpt?.category === 'entry_door') {
+                patch._config = { slab: cfg, style: cfg.style };
+                patch.ouvrant = '';
+              } else if (item._category === 'patio_door' || typeOpt?.category === 'patio_door') {
+                patch._config = {
+                  panels: cfg.panels,
+                  max: cfg.max,
+                };
+                patch.ouvrant = cfg.panels?.join('') || '';
+              }
+              onChange(index, patch);
+            }
+
+            return (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] text-d-muted mb-1">Type</label>
+                  <select
+                    value={typeOpt?.label || item.type || ''}
+                    onChange={e => handleTypeChange(e.target.value)}
+                    aria-label="Type"
+                    className="w-full px-2 py-1.5 rounded-lg border border-d-border bg-d-surface text-xs text-d-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+                  >
+                    <option value="">— Choisir —</option>
+                    {DEVIS_TYPE_OPTIONS.map(o => (
+                      <option key={o.label} value={o.label}>{o.label}</option>
+                    ))}
+                    {/* Legacy value: keep the item's existing type visible
+                        even if it doesn't match a known option (e.g. items
+                        imported from handwritten papers). */}
+                    {item.type && !DEVIS_TYPE_OPTIONS.some(o => o.label === item.type) && (
+                      <option value={item.type}>{item.type} (legacy)</option>
+                    )}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-d-muted mb-1">Modèle</label>
+                  {configs.length > 0 ? (
+                    <select
+                      value={item.model || ''}
+                      onChange={e => handleModelChange(e.target.value)}
+                      aria-label="Modèle"
+                      className="w-full px-2 py-1.5 rounded-lg border border-d-border bg-d-surface text-xs text-d-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+                    >
+                      <option value="">— Choisir —</option>
+                      {configs.map(c => (
+                        <option key={c.code} value={c.code}>{c.label}</option>
+                      ))}
+                      {item.model && !configs.some(c => c.code === item.model) && (
+                        <option value={item.model}>{item.model} (legacy)</option>
+                      )}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={item.model || ''}
+                      onChange={e => update('model', e.target.value)}
+                      placeholder={typeOpt?.category === 'other' ? 'Texte libre' : 'ex: C2G XO'}
+                      aria-label="Modèle"
+                      className="w-full px-2 py-1.5 rounded-lg border border-d-border bg-d-surface text-xs text-d-text placeholder:text-d-muted/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+                    />
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Ouvrant + Dimensions */}
           <div className="grid grid-cols-3 gap-2">
