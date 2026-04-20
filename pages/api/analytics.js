@@ -68,8 +68,11 @@ export default async function handler(req, res) {
   }
 
   const { supabase, customerId, user, error: authError } = await getAuthContext(req, res);
-  if (!user) return res.status(401).json({ error: "Not authenticated", debug: authError?.message });
-  if (!customerId) return res.status(403).json({ error: "No customer mapping", debug: { userId: user.id } });
+  // F-016 — gate debug output on NODE_ENV to avoid leaking Supabase error
+  // messages and internal user UUIDs to the client in production.
+  const isDev = process.env.NODE_ENV !== 'production';
+  if (!user) return res.status(401).json({ error: "Not authenticated", ...(isDev && { debug: authError?.message }) });
+  if (!customerId) return res.status(403).json({ error: "No customer mapping", ...(isDev && { debug: { userId: user.id } }) });
 
   const { checkRateLimit } = await import("../../lib/security");
   if (checkRateLimit(req, res, `read:${customerId}`, 120)) return;
@@ -754,6 +757,6 @@ export default async function handler(req, res) {
     return res.status(200).json(result);
   } catch (err) {
     console.error("[api/analytics] Error:", err?.message, err?.stack);
-    return res.status(500).json({ error: "Internal server error", debug: err?.message });
+    return res.status(500).json({ error: "Internal server error", ...(process.env.NODE_ENV !== 'production' && { debug: err?.message }) });
   }
 }
