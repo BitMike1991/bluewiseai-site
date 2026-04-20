@@ -1812,15 +1812,21 @@ export default function DevisEditor({ job, quote, onSaved }) {
         <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />
       )}
 
-      {/* Item builder modal — full commande-flow replica */}
-      <ItemBuilderModal
-        open={builderOpen}
-        mode={builderMode}
-        initial={builderMode === 'edit' && builderItemIdx >= 0 ? dataItems[builderItemIdx] : null}
-        supplier="royalty"
-        onSave={handleBuilderSave}
-        onClose={() => setBuilderOpen(false)}
-      />
+      {/* Item builder modal — full commande-flow replica. Conditionally
+          mounted (not just hidden) so each open gets a fresh useReducer
+          seed from the current `initial` prop. Without this the modal
+          stays mounted across open/close cycles and reseeding only works
+          for the very first item opened. */}
+      {builderOpen && (
+        <ItemBuilderModal
+          open={builderOpen}
+          mode={builderMode}
+          initial={builderMode === 'edit' && builderItemIdx >= 0 ? dataItems[builderItemIdx] : null}
+          supplier="royalty"
+          onSave={handleBuilderSave}
+          onClose={() => setBuilderOpen(false)}
+        />
+      )}
 
       {/* Send modal */}
       {showSend && (

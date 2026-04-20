@@ -113,17 +113,15 @@ const STEP_LABELS = {
 };
 
 export default function ItemBuilderModal({ open, mode = 'new', initial = null, supplier = 'royalty', onSave, onClose }) {
+  // Seed computed once on mount (parent conditionally renders the modal
+  // so each open is a fresh mount → useReducer re-seeds correctly from
+  // the current `initial` prop). Don't dispatch RESTORE_STATE after
+  // mount — that reducer action only restores supplier/project/items
+  // and would WIPE the builder fields (category, window_type, config,
+  // form) we just seeded.
   const seed = useMemo(() => seedStateFromItem(initial, supplier), [initial, supplier]);
   const [state, dispatch] = useReducer(commandeReducer, seed);
   const [error, setError] = useState(null);
-
-  // Re-seed when reopened with a different initial item.
-  useEffect(() => {
-    if (!open) return;
-    dispatch({ type: A.RESTORE_STATE, payload: seed });
-    setError(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initial]);
 
   // ESC to close
   useEffect(() => {
