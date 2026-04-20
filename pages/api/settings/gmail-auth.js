@@ -3,6 +3,7 @@
 // DELETE → revokes and removes OAuth tokens
 import { getAuthContext, getSupabaseServerClient } from "../../../lib/supabaseServer";
 import { createSignedState } from "../../../lib/oauthState";
+import { decryptToken } from "../../../lib/tokenEncryption";
 
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.modify",
@@ -55,14 +56,25 @@ export default async function handler(req, res) {
       .eq("customer_id", customerId)
       .single();
 
-    if (oauth?.access_token) {
+    // F-004 — tokens are stored as AES-256-GCM ciphertext (see
+    // gmail-callback.js:87). We must decrypt before sending to Google's
+    // revoke endpoint, otherwise Google returns invalid_token and the
+    // grant stays live even after the DB row is nulled below.
+    const accessPlain  = oauth?.access_token  ? decryptToken(oauth.access_token)  : null;
+    const refreshPlain = oauth?.refresh_token ? decryptToken(oauth.refresh_token) : null;
+
+    for (const [label, token] of [["access", accessPlain], ["refresh", refreshPlain]]) {
+      if (!token) continue;
       try {
-        await fetch(
-          `https://oauth2.googleapis.com/revoke?token=${oauth.access_token}`,
-          { method: "POST" }
+        const r = await fetch(
+          `https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(token)}`,
+          { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" } }
         );
+        if (r.status !== 200) {
+          console.warn(`[gmail-revoke] ${label} non-200 status:`, r.status);
+        }
       } catch (e) {
-        // Best effort revoke
+        console.warn(`[gmail-revoke] ${label} error:`, e?.message);
       }
     }
 
