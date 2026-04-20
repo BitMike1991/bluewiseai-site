@@ -29,10 +29,15 @@ export default function WindowConfigSVG({ type, config, width = 100, height = 75
       return <PanelHung key={i} mode={config.mode} x={x} y={pad} w={panelW} h={innerH} />;
     });
   } else if (type === 'coulissante') {
-    const panelW = innerW / count;
-    content = panels.map((p, i) => (
-      <PanelSliding key={i} type={p} x={pad + i * panelW} y={pad} w={panelW} h={innerH} />
-    ));
+    const ratios = config.widthRatios || panels.map(() => 1);
+    const totalR = ratios.reduce((a, b) => a + b, 0);
+    let x = pad;
+    content = panels.map((p, i) => {
+      const panelW = innerW * (ratios[i] / totalR);
+      const el = <PanelSliding key={i} type={p} x={x} y={pad} w={panelW} h={innerH} />;
+      x += panelW;
+      return el;
+    });
   } else if (type === 'battant' || type === 'fixe') {
     const ratios = config.widthRatios || panels.map(() => 1);
     const totalR = ratios.reduce((a, b) => a + b, 0);
