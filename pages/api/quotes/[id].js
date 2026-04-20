@@ -2,6 +2,16 @@
 // PATCH /api/quotes/:id — multi-tenant safe quote update
 import { getAuthContext } from '../../../lib/supabaseServer';
 
+// F-017 — whitelist the status values a client can set via PATCH. Derived
+// from usage across the codebase (pages/q/[token].js, pages/platform/jobs,
+// lib/brain/runners/analytics). 'superseded' stays on the list because
+// legitimate server flows (supplier-return/apply-dispatch) need to set it,
+// and a tenant forcing their own quote to superseded only affects their
+// own finance rollup, not cross-tenant.
+const VALID_QUOTE_STATUSES = new Set([
+  'draft', 'sent', 'ready', 'accepted', 'declined', 'expired', 'superseded',
+]);
+
 export default async function handler(req, res) {
   if (req.method !== 'PATCH') {
     res.setHeader('Allow', ['PATCH']);
@@ -46,7 +56,12 @@ export default async function handler(req, res) {
     if (line_items !== undefined) updates.line_items = line_items;
     if (notes !== undefined) updates.notes = notes;
     if (valid_until !== undefined) updates.valid_until = valid_until;
-    if (status !== undefined) updates.status = status;
+    if (status !== undefined) {
+      if (!VALID_QUOTE_STATUSES.has(status)) {
+        return res.status(400).json({ error: 'status invalide' });
+      }
+      updates.status = status;
+    }
     // meta: merge with existing to preserve acceptance_url and other fields
     if (meta !== undefined) {
       updates.meta = { ...(existing.meta || {}), ...meta };
