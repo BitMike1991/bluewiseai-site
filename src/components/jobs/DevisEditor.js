@@ -35,6 +35,7 @@ import WindowConfigSVG from '../hub/commande/svg/WindowConfigSVG';
 import MediaPicker from '../ui/MediaPicker';
 import PatioDoorSVG   from '../hub/commande/svg/PatioDoorSVG';
 import EntryDoorSVG   from '../hub/commande/svg/EntryDoorSVG';
+import { WINDOW_COLORS } from '../../../lib/royalty-catalog.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -211,6 +212,40 @@ const WINDOW_TYPES = [
   'Autre',
 ];
 
+// Material options available on every item. Hybride = uPVC interior + aluminium exterior.
+const MATERIAL_OPTIONS = [
+  { id: 'upvc',    label: 'uPVC' },
+  { id: 'hybride', label: 'Hybride' },
+];
+
+// Color palette depends on material (see lib/royalty-catalog.js WINDOW_COLORS).
+// uPVC → white only. Hybride → full palette (blanc, noir, anodisé, charbon,
+// brun commercial, sur mesure).
+function getColorOptions(material) {
+  const palette = material === 'hybride' ? WINDOW_COLORS.standard_hybride : WINDOW_COLORS.standard_upvc;
+  return palette || [{ id: 'blanc', name: 'Blanc', hex: '#FFFFFF' }];
+}
+
+// Zero-pad a 1-based index to "01", "02", …
+function padSku(n) { return 'SKU-' + String(n).padStart(2, '0'); }
+
+/**
+ * Ensure every item has a sku. Assigns SKU-NN in order of position for any
+ * item without one, leaving existing SKUs intact so references don't drift.
+ */
+function ensureItemSkus(items) {
+  const used = new Set(items.map(it => it?.sku).filter(Boolean));
+  let next = 1;
+  return items.map(it => {
+    if (it?.sku) return it;
+    while (used.has(padSku(next))) next += 1;
+    const sku = padSku(next);
+    used.add(sku);
+    next += 1;
+    return { ...it, sku };
+  });
+}
+
 /**
  * Returns true if this item is a "porte simple" (entry door + optional side lites).
  * Used to show the "Nombre de side lites" dropdown.
@@ -324,8 +359,13 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais 
 
         {/* Item identity */}
         <div className="flex-1 min-w-0">
-          <div className="font-mono text-[10px] font-semibold text-d-muted mb-0.5">
-            Item #{index + 1}
+          <div className="font-mono text-[10px] font-semibold text-d-muted mb-0.5 flex items-center gap-1.5">
+            <span>Item #{index + 1}</span>
+            {item.sku && (
+              <span className="px-1 py-0.5 rounded bg-d-primary/10 border border-d-primary/30 text-d-primary tracking-wide">
+                {item.sku}
+              </span>
+            )}
           </div>
           <div className="text-xs font-semibold text-d-text break-words leading-tight">
             {typeLabel}{modelLabel}
@@ -570,6 +610,100 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais 
             </div>
           </div>
 
+          {/* Matériau + couleurs — toggle-friendly pickers, applied per item */}
+          {(() => {
+            const material = item.material || 'upvc';
+            const colors = getColorOptions(material);
+            const colorsMatch = item.colors_match !== false;
+            const colorExt = item.color_ext || colors[0].id;
+            const colorInt = colorsMatch ? colorExt : (item.color_int || colorExt);
+            function setMaterial(next) {
+              const palette = getColorOptions(next);
+              const allowed = palette.map(c => c.id);
+              const ext = allowed.includes(item.color_ext) ? item.color_ext : palette[0].id;
+              const int = item.colors_match !== false
+                ? ext
+                : (allowed.includes(item.color_int) ? item.color_int : ext);
+              onChange(index, { ...item, material: next, color_ext: ext, color_int: int });
+            }
+            function setColorExt(val) {
+              const next = { ...item, color_ext: val };
+              if (item.colors_match !== false) next.color_int = val;
+              onChange(index, next);
+            }
+            return (
+              <>
+                <div>
+                  <label className="block text-[10px] text-d-muted mb-1">Matériau</label>
+                  <div className="flex gap-1 p-1 rounded-lg bg-d-bg border border-d-border w-fit">
+                    {MATERIAL_OPTIONS.map(m => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setMaterial(m.id)}
+                        aria-pressed={material === m.id}
+                        aria-label={`Matériau ${m.label}`}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/50 ${
+                          material === m.id
+                            ? 'bg-d-primary text-white shadow-sm'
+                            : 'text-d-muted hover:text-d-text'
+                        }`}
+                      >
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] text-d-muted mb-1">Couleur ext.</label>
+                    <select
+                      value={colorExt}
+                      onChange={e => setColorExt(e.target.value)}
+                      aria-label="Couleur extérieure"
+                      className="w-full px-2 py-1.5 rounded-lg border border-d-border bg-d-surface text-xs text-d-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+                    >
+                      {colors.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-d-muted mb-1">
+                      Couleur int.
+                      {material === 'upvc' && (
+                        <span className="ml-1 text-d-muted/60 font-normal">(uPVC blanc seul)</span>
+                      )}
+                    </label>
+                    <select
+                      value={colorInt}
+                      onChange={e => onChange(index, { ...item, color_int: e.target.value, colors_match: false })}
+                      disabled={colorsMatch || material === 'upvc'}
+                      aria-label="Couleur intérieure"
+                      className="w-full px-2 py-1.5 rounded-lg border border-d-border bg-d-surface text-xs text-d-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60 disabled:opacity-50"
+                    >
+                      {colors.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+                {material === 'hybride' && (
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={colorsMatch}
+                      onChange={e => onChange(index, {
+                        ...item,
+                        colors_match: e.target.checked,
+                        color_int: e.target.checked ? colorExt : (item.color_int || colorExt),
+                      })}
+                      aria-label="Même couleur intérieure que extérieure"
+                      className="rounded border-d-border focus-visible:ring-1 focus-visible:ring-d-primary/60"
+                    />
+                    <span className="text-[10px] text-d-muted">Intérieur identique à l&apos;extérieur</span>
+                  </label>
+                )}
+              </>
+            );
+          })()}
+
           {/* Specs */}
           <div>
             <label className="block text-[10px] text-d-muted mb-1">Spécifications (optionnel)</label>
@@ -577,7 +711,7 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais 
               value={item.specs || ''}
               onChange={e => update('specs', e.target.value)}
               rows={2}
-              placeholder="Couleur, argon, low-e, etc."
+              placeholder="Argon, low-e, moustiquaire, etc."
               aria-label="Spécifications"
               className="w-full px-2 py-1.5 rounded-lg border border-d-border bg-d-surface text-xs text-d-text placeholder:text-d-muted/40 resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
             />
@@ -1011,10 +1145,14 @@ export default function DevisEditor({ job, quote, onSaved }) {
 
   // All line items to save = content items + install item if > 0
   function buildSaveItems() {
+    // Ensure every content item carries a stable SKU before persisting. New
+    // items seed their own SKU in addItem; this backfills legacy rows that
+    // predate the feature.
+    const withSkus = ensureItemSkus(dataItems);
     // Persist EFFECTIVE unit_price (toggle-adjusted) so the client-facing
     // templates (devis + contract) show the right per-item prices. Canonical
     // price is preserved in _unit_price_full for round-trip on reload.
-    const clean = dataItems.map(it => {
+    const clean = withSkus.map(it => {
       const canonical = getCanonicalUnitPrice(it);
       const effective = petitsFraisOn ? canonical : Math.max(0, canonical - getCannettesPerUnit(it));
       const qty = Number(it.qty) || 1;
@@ -1210,9 +1348,13 @@ export default function DevisEditor({ job, quote, onSaved }) {
   function addItem() {
     markDirty();
     setItems(prev => {
+      const used = new Set(prev.map(it => it?.sku).filter(Boolean));
+      let seq = prev.length + 1;
+      while (used.has(padSku(seq))) seq += 1;
       const next = [
         ...prev,
         {
+          sku:          padSku(seq),
           description:  '',
           qty:          1,
           unit_price:   0,
@@ -1222,6 +1364,10 @@ export default function DevisEditor({ job, quote, onSaved }) {
           ouvrant:      '',
           dimensions:   { width: '', height: '' },
           specs:        '',
+          material:     'upvc',
+          color_ext:    'blanc',
+          color_int:    'blanc',
+          colors_match: true,
         },
       ];
       setJustAddedIdx(next.length - 1);
