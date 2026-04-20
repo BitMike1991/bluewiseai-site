@@ -22,6 +22,7 @@ import {
   Info,
   Users,
   AlertTriangle,
+  Settings2,
 } from 'lucide-react';
 import { STATUS_META, STATUS_ORDER } from '../../../lib/status-config';
 import { itemSketchSvg } from '../../../lib/quote-templates/pur.js';
@@ -36,6 +37,7 @@ import WindowConfigSVG from '../hub/commande/svg/WindowConfigSVG';
 import MediaPicker from '../ui/MediaPicker';
 import PatioDoorSVG   from '../hub/commande/svg/PatioDoorSVG';
 import EntryDoorSVG   from '../hub/commande/svg/EntryDoorSVG';
+import ItemBuilderModal from './ItemBuilderModal';
 // Single source of truth for type / model / color choices — same module the
 // commande hub reads from. Mikael's rule 2026-04-20: never pull directly from
 // royalty-catalog here; go through the hub catalog accessor so Devis editor
@@ -359,7 +361,7 @@ function showEnergyStarBadge(item) {
   return isPvcFenetre(item);
 }
 
-function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais = true, startExpanded = false }) {
+function LineItemRow({ item, index, onChange, onDelete, onToggleBC, onOpenFullEdit, petitsFrais = true, startExpanded = false }) {
   const [expanded, setExpanded] = useState(startExpanded);
   const [showCalc, setShowCalc] = useState(false);
   const auto = buildDescription(item);
@@ -475,8 +477,20 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais 
           )}
         </div>
 
-        {/* Expand + BC queue + delete — min 44×44 touch targets on mobile */}
+        {/* Configure (full commande-flow modal) + Expand + BC queue + delete
+            — min 44×44 touch targets on mobile */}
         <div className="flex items-start gap-0.5 sm:gap-1.5 flex-shrink-0 -mr-1 sm:mr-0">
+          {onOpenFullEdit && (
+            <button
+              type="button"
+              onClick={() => onOpenFullEdit(index)}
+              aria-label="Configurer l'article (configurateur complet)"
+              title="Configurer complètement (modèle, options, dimensions)"
+              className="text-d-primary hover:text-d-text transition focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60 rounded p-2.5 sm:p-0.5 -m-1 sm:m-0"
+            >
+              <Settings2 size={15} />
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setExpanded(v => !v)}
@@ -1269,6 +1283,12 @@ export default function DevisEditor({ job, quote, onSaved }) {
   const [justAddedIdx, setJustAddedIdx] = useState(-1);
   const itemsListRef = useRef(null);
 
+  // ItemBuilderModal state — drives the full commande-flow replica.
+  // Mode 'new' opens with blank state; 'edit' rehydrates from the item at editItemIdx.
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const [builderMode, setBuilderMode] = useState('new');
+  const [builderItemIdx, setBuilderItemIdx] = useState(-1);
+
   // Mark dirty on any field change
   function markDirty() {
     setDirty(true);
@@ -1578,6 +1598,58 @@ export default function DevisEditor({ job, quote, onSaved }) {
     }
   }
 
+  // Launch the full commande-flow modal for a brand-new item. Mikael rule
+  // 2026-04-20: adding/editing from DevisEditor must use the SAME picker
+  // (category → type → config → options → dimensions) as the commande hub
+  // so every option + SVG renders identically everywhere.
+  function openItemBuilderForNew() {
+    setBuilderMode('new');
+    setBuilderItemIdx(-1);
+    setBuilderOpen(true);
+  }
+  function openItemBuilderForEdit(idx) {
+    setBuilderMode('edit');
+    setBuilderItemIdx(idx);
+    setBuilderOpen(true);
+  }
+
+  function handleBuilderSave(builtItem) {
+    markDirty();
+    setItems(prev => {
+      // In edit mode, replace in place. In new mode, append + assign SKU.
+      if (builderMode === 'edit' && builderItemIdx >= 0) {
+        const next = prev.map((it, i) => {
+          if (i !== builderItemIdx) return it;
+          return { ...it, ...builtItem, sku: it.sku || builtItem.sku };
+        });
+        setJustAddedIdx(builderItemIdx);
+        return next;
+      }
+      // New: assign next SKU-NN + append
+      const used = new Set(prev.map(it => it?.sku).filter(Boolean));
+      let seq = prev.length + 1;
+      while (used.has(padSku(seq))) seq += 1;
+      const next = [...prev, { sku: padSku(seq), ...builtItem }];
+      setJustAddedIdx(next.length - 1);
+      return next;
+    });
+    setBuilderOpen(false);
+    requestAnimationFrame(() => {
+      const list = itemsListRef.current;
+      if (!list) return;
+      const rows = list.children;
+      const target = builderMode === 'edit' && builderItemIdx >= 0 ? rows[builderItemIdx] : list.lastElementChild;
+      if (target && typeof target.scrollIntoView === 'function') {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+    setTimeout(() => setJustAddedIdx(-1), 1800);
+  }
+
+  // Legacy blank-seed add — kept as a fallback entry point for free-text
+  // items ("Autre" category) that don't fit the commande flow. Not wired
+  // to any button by default now that the modal is the primary path; the
+  // legacy expanded-row editor still edits these fine.
   function addItem() {
     markDirty();
     setItems(prev => {
@@ -1592,27 +1664,15 @@ export default function DevisEditor({ job, quote, onSaved }) {
           qty:          1,
           unit_price:   0,
           total:        0,
-          type:         'Fenêtre coulissante',
+          type:         'Autre',
           model:        '',
           ouvrant:      '',
           dimensions:   { width: '', height: '' },
           specs:        '',
-          material:     'upvc',
-          color_ext:    'blanc',
-          color_int:    'blanc',
-          colors_match: true,
         },
       ];
       setJustAddedIdx(next.length - 1);
       return next;
-    });
-    requestAnimationFrame(() => {
-      const list = itemsListRef.current;
-      if (!list) return;
-      const last = list.lastElementChild;
-      if (last && typeof last.scrollIntoView === 'function') {
-        last.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
     });
     setTimeout(() => setJustAddedIdx(-1), 1800);
   }
@@ -1751,6 +1811,16 @@ export default function DevisEditor({ job, quote, onSaved }) {
       {toast && (
         <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />
       )}
+
+      {/* Item builder modal — full commande-flow replica */}
+      <ItemBuilderModal
+        open={builderOpen}
+        mode={builderMode}
+        initial={builderMode === 'edit' && builderItemIdx >= 0 ? dataItems[builderItemIdx] : null}
+        supplier="royalty"
+        onSave={handleBuilderSave}
+        onClose={() => setBuilderOpen(false)}
+      />
 
       {/* Send modal */}
       {showSend && (
@@ -2050,11 +2120,11 @@ export default function DevisEditor({ job, quote, onSaved }) {
                 )}
                 <button
                   type="button"
-                  onClick={addItem}
-                  aria-label="Ajouter un article"
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-xl border border-d-primary/40 text-d-primary text-xs hover:bg-d-primary/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/50"
+                  onClick={openItemBuilderForNew}
+                  aria-label="Ajouter un article via le configurateur complet"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-d-primary/90 text-white text-xs font-semibold hover:bg-d-primary transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/50"
                 >
-                  <Plus size={12} /> Ajouter
+                  <Plus size={12} /> Ajouter un article
                 </button>
               </div>
             </div>
@@ -2076,6 +2146,7 @@ export default function DevisEditor({ job, quote, onSaved }) {
                       onChange={updateItem}
                       onDelete={deleteItem}
                       onToggleBC={toggleItemBC}
+                      onOpenFullEdit={openItemBuilderForEdit}
                       petitsFrais={petitsFraisOn}
                       startExpanded={i === justAddedIdx}
                     />
