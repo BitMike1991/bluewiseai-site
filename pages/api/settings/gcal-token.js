@@ -11,17 +11,19 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // F-012 — verify service role key with timing-safe compare after Bearer
-  // prefix parse. Previously used `.includes()` which (a) was substring
-  // match (any header containing the key as substring passed) and (b) was
-  // not constant-time.
-  const auth = req.headers.authorization || "";
-  const m = auth.match(/^Bearer\s+(.+)$/);
+  // F-012 — verify service role key with timing-safe compare. Previously
+  // used `.includes()` which (a) was substring match (any header containing
+  // the key as substring passed) and (b) was not constant-time.
+  //
+  // Accepts either `Bearer <key>` (new) or raw `<key>` (legacy n8n workflows).
+  const authHeader = req.headers.authorization || "";
+  const m = authHeader.match(/^Bearer\s+(.+)$/);
+  const providedKey = m ? m[1] : authHeader;
   const expectedKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-  if (!m || !expectedKey) {
+  if (!providedKey || !expectedKey) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-  const provided = Buffer.from(m[1]);
+  const provided = Buffer.from(providedKey);
   const expected = Buffer.from(expectedKey);
   if (provided.length !== expected.length || !crypto.timingSafeEqual(provided, expected)) {
     return res.status(401).json({ error: "Unauthorized" });
