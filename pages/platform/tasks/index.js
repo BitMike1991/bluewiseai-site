@@ -174,10 +174,10 @@ function KanbanColumn({ board, tasks, isDragOver, onDragOver, onDragLeave, onDro
 
   // Fix 3: board-specific empty state text
   const emptyText = board.id === "fire"
-    ? "What kills the business if you skip it?"
+    ? "Qu'est-ce qui tue l'affaire si tu skip?"
     : board.id === "done"
-    ? "No completed tasks yet"
-    : "Drop tasks here";
+    ? "Aucune tâche terminée"
+    : "Dépose des tâches ici";
 
   return (
     <div
@@ -294,7 +294,7 @@ function TaskCard({ task, onDragStart, onDragEnd, onEdit, onComplete }) {
       {task.board !== "done" && (
         <button
           onClick={(e) => { e.stopPropagation(); onComplete(); }}
-          className="mt-2 w-full rounded-md border border-d-border/60 py-1 text-[10px] text-d-muted hover:border-emerald-500/50 hover:text-emerald-400 transition opacity-0 group-hover:opacity-100"
+          className="mt-2 w-full rounded-md border border-d-border/60 py-1 text-[10px] text-d-muted hover:border-emerald-500/50 hover:text-emerald-400 transition opacity-100 md:opacity-0 md:group-hover:opacity-100"
         >
           Mark Done
         </button>
