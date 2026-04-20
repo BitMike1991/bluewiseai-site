@@ -3,6 +3,7 @@
 // DELETE → revokes and removes OAuth tokens
 import { getAuthContext, getSupabaseServerClient } from "../../../lib/supabaseServer";
 import { createSignedState } from "../../../lib/oauthState";
+import { decryptToken } from "../../../lib/tokenEncryption";
 
 const SCOPES = [
   "https://graph.microsoft.com/Mail.ReadWrite",
@@ -47,6 +48,38 @@ export default async function handler(req, res) {
 
     if (req.method === "DELETE") {
       const admin = getSupabaseServerClient();
+
+      // F-005 — previously the DB row was nulled without calling Microsoft's
+      // revoke endpoint, so the refresh_token (≤90d lifetime on work accounts)
+      // stayed valid. Decrypt-then-revoke at Microsoft before nulling the row.
+      const { data: oauth } = await admin
+        .from("customer_email_oauth")
+        .select("access_token, refresh_token")
+        .eq("customer_id", customerId)
+        .eq("provider", "outlook")
+        .maybeSingle();
+
+      const refreshPlain = oauth?.refresh_token ? decryptToken(oauth.refresh_token) : null;
+      if (refreshPlain) {
+        try {
+          const r = await fetch(
+            "https://login.microsoftonline.com/common/oauth2/v2.0/logout",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams({
+                client_id: process.env.MICROSOFT_CLIENT_ID || "",
+                refresh_token: refreshPlain,
+              }),
+            }
+          );
+          if (r.status !== 200 && r.status !== 204) {
+            console.warn("[outlook-revoke] non-2xx status:", r.status);
+          }
+        } catch (e) {
+          console.warn("[outlook-revoke] error:", e?.message);
+        }
+      }
 
       const { error } = await admin
         .from("customer_email_oauth")
