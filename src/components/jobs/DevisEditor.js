@@ -246,8 +246,8 @@ function showEnergyStarBadge(item) {
   return isPvcFenetre(item);
 }
 
-function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais = true }) {
-  const [expanded, setExpanded] = useState(false);
+function LineItemRow({ item, index, onChange, onDelete, onToggleBC, petitsFrais = true, startExpanded = false }) {
+  const [expanded, setExpanded] = useState(startExpanded);
   const [showCalc, setShowCalc] = useState(false);
   const auto = buildDescription(item);
   // Internal state stores the canonical unit_price (with cannettes). What Jérémy
@@ -907,6 +907,12 @@ export default function DevisEditor({ job, quote, onSaved }) {
   // latest value without being a dep.
   const autoSavingRef = useRef(false);
 
+  // Tracks the item that was just added via the Ajouter button so we can
+  // scroll it into view + flash-ring — otherwise it appears below the
+  // overflow-y-auto fold and Jérémy doesn't see anything happen.
+  const [justAddedIdx, setJustAddedIdx] = useState(-1);
+  const itemsListRef = useRef(null);
+
   // Mark dirty on any field change
   function markDirty() {
     setDirty(true);
@@ -1203,20 +1209,33 @@ export default function DevisEditor({ job, quote, onSaved }) {
 
   function addItem() {
     markDirty();
-    setItems(prev => [
-      ...prev,
-      {
-        description:  '',
-        qty:          1,
-        unit_price:   0,
-        total:        0,
-        type:         'Fenêtre coulissante',
-        model:        '',
-        ouvrant:      '',
-        dimensions:   { width: '', height: '' },
-        specs:        '',
-      },
-    ]);
+    setItems(prev => {
+      const next = [
+        ...prev,
+        {
+          description:  '',
+          qty:          1,
+          unit_price:   0,
+          total:        0,
+          type:         'Fenêtre coulissante',
+          model:        '',
+          ouvrant:      '',
+          dimensions:   { width: '', height: '' },
+          specs:        '',
+        },
+      ];
+      setJustAddedIdx(next.length - 1);
+      return next;
+    });
+    requestAnimationFrame(() => {
+      const list = itemsListRef.current;
+      if (!list) return;
+      const last = list.lastElementChild;
+      if (last && typeof last.scrollIntoView === 'function') {
+        last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+    setTimeout(() => setJustAddedIdx(-1), 1800);
   }
 
   function updateItem(index, updated) {
@@ -1586,17 +1605,22 @@ export default function DevisEditor({ job, quote, onSaved }) {
                 Aucun article — cliquez « Ajouter » pour commencer.
               </p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2" ref={itemsListRef}>
                 {dataItems.map((item, i) => (
-                  <LineItemRow
+                  <div
                     key={i}
-                    item={item}
-                    index={i}
-                    onChange={updateItem}
-                    onDelete={deleteItem}
-                    onToggleBC={toggleItemBC}
-                    petitsFrais={petitsFraisOn}
-                  />
+                    className={i === justAddedIdx ? 'rounded-xl ring-2 ring-d-primary/70 animate-pulse' : ''}
+                  >
+                    <LineItemRow
+                      item={item}
+                      index={i}
+                      onChange={updateItem}
+                      onDelete={deleteItem}
+                      onToggleBC={toggleItemBC}
+                      petitsFrais={petitsFraisOn}
+                      startExpanded={i === justAddedIdx}
+                    />
+                  </div>
                 ))}
               </div>
             )}
