@@ -49,45 +49,74 @@ export default async function handler(req, res) {
       return res.status(200).json({ bc, html_source: 'snapshot' });
     }
 
-    // Default: re-render with the latest template using the current line_items.
-    // If anything fails (missing quote, deleted job, etc), fall back to the
-    // stored snapshot so the viewer never breaks.
+    // ALWAYS re-render with the latest template + current line_items. If
+    // anything goes wrong, surface the error in the HTML itself so we never
+    // silently revert to the stale snapshot (Mikael 2026-04-21: "marche
+    // pas calisse les specs apparaisse pas").
+    let renderTrace = { step: 'init' };
     try {
+      renderTrace.step = 'assemble';
       const { projects, totalItems, totalQty } = await assembleProjectsFromItemRefs(
         supabase, customerId, bc.item_refs || []
       );
-      if (projects.length > 0) {
-        const { data: tenant } = await supabase
-          .from('customers')
-          .select('business_name, quote_config')
-          .eq('id', customerId)
-          .maybeSingle();
-        const cfg = tenant?.quote_config || {};
-        const businessName  = cfg.branding?.business_name || tenant?.business_name || 'Entreprise';
-        const authorizedRep = cfg.contract?.authorized_rep
-          || cfg.email_signature?.name
-          || null;
-        const fresh = buildBcHtml({
-          bc_number: bc.bc_number,
-          supplier: bc.supplier,
-          date: bc.created_at || new Date().toISOString(),
-          projects,
-          totalItems,
-          totalQty,
-          businessName,
-          authorizedRep,
-          hideSupplierName: true,
-        });
-        return res.status(200).json({
-          bc: { ...bc, html_content: fresh },
-          html_source: 'rerendered',
-        });
-      }
-    } catch (rerErr) {
-      console.warn('[bc/[id]] rerender failed, falling back to snapshot:', rerErr?.message);
-    }
+      renderTrace.projects_count = projects.length;
+      renderTrace.total_items = totalItems;
 
-    return res.status(200).json({ bc, html_source: 'snapshot_fallback' });
+      renderTrace.step = 'tenant';
+      const { data: tenant } = await supabase
+        .from('customers')
+        .select('business_name, quote_config')
+        .eq('id', customerId)
+        .maybeSingle();
+      const cfg = tenant?.quote_config || {};
+      const businessName  = cfg.branding?.business_name || tenant?.business_name || 'Entreprise';
+      const authorizedRep = cfg.contract?.authorized_rep
+        || cfg.email_signature?.name
+        || null;
+
+      renderTrace.step = 'build';
+      const fresh = buildBcHtml({
+        bc_number: bc.bc_number,
+        supplier: bc.supplier,
+        date: bc.created_at || new Date().toISOString(),
+        projects,
+        totalItems,
+        totalQty,
+        businessName,
+        authorizedRep,
+        hideSupplierName: true,
+      });
+
+      // Inject a marker comment so we can SEE in DevTools that this rendered
+      // copy came from the server-side rerender path (not the stored snapshot
+      // and not a service-worker cached response).
+      const stamped = fresh.replace(
+        '<head>',
+        `<head><!-- BC_RENDERER=fresh build=${Date.now()} projects=${projects.length} items=${totalItems} -->`
+      );
+
+      return res.status(200).json({
+        bc: { ...bc, html_content: stamped },
+        html_source: 'rerendered',
+        debug: renderTrace,
+      });
+    } catch (rerErr) {
+      console.error('[bc/[id]] rerender FAILED at step', renderTrace.step, '-', rerErr?.message, rerErr?.stack);
+      // Surface the error visibly instead of falling back to stale snapshot.
+      const errHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- BC_RENDERER=ERROR step=${renderTrace.step} --></head><body style="font-family:sans-serif;padding:40px;background:#fff8f8;color:#7a1a1a;">
+<h1>Erreur de rendu BDC</h1>
+<p><strong>Étape :</strong> ${renderTrace.step}</p>
+<p><strong>Erreur :</strong> ${String(rerErr?.message || rerErr).replace(/[<>&]/g, '?')}</p>
+<p>Trace : ${JSON.stringify(renderTrace).replace(/[<>&]/g, '?')}</p>
+<p>Le BDC stocké est intact ; visiter <code>?cached=1</code> pour voir le snapshot original.</p>
+</body></html>`;
+      return res.status(200).json({
+        bc: { ...bc, html_content: errHtml },
+        html_source: 'render_error',
+        debug: renderTrace,
+        error_message: rerErr?.message,
+      });
+    }
   } catch (err) {
     console.error('[bc/[id]] error:', err);
     return res.status(500).json({ error: 'Server error' });
