@@ -6,6 +6,7 @@
 import { getAuthContext, getSupabaseServerClient } from "../../../lib/supabaseServer";
 import { getQboClient } from "../../../lib/qbo/client";
 import { mapQuoteToQboInvoice, QuoteMappingError } from "../../../lib/qbo/invoiceMapper";
+import { getTaxMappings } from "../../../lib/qbo/taxMappings";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -74,12 +75,27 @@ export default async function handler(req, res) {
       }
     }
 
+    // P02 — resolve tenant tax mappings and require `both` (TPS+TVQ combined)
+    // when the quote carries any tax. NEVER push a taxable invoice without a
+    // mapping — block early so the books stay clean.
+    const taxMappings = await getTaxMappings(customerId);
+    const hasTax = Number(quote.tax_gst || 0) + Number(quote.tax_qst || 0) > 0;
+    if (hasTax && !taxMappings.both?.id) {
+      return res.status(412).json({
+        error: "QBO tax mapping missing",
+        details: "POST /api/qbo/taxes/auto-seed first, or set the 'both' (TPS+TVQ) mapping at /api/settings/qbo/taxes",
+        bw_tax_gst: Number(quote.tax_gst),
+        bw_tax_qst: Number(quote.tax_qst),
+      });
+    }
+
     // Map quote → QBO invoice payload. Risk-1 guard lives inside the mapper.
     let mapped;
     try {
       mapped = mapQuoteToQboInvoice(quote, {
         customerRefValue: resolvedCustomerRef,
-        // gstRateRef/qstRateRef intentionally omitted — P02 wires real codes.
+        combinedTaxCodeId: taxMappings.both?.id || null,
+        exemptTaxCodeId:   taxMappings.exempt?.id || null,
       });
     } catch (e) {
       if (e instanceof QuoteMappingError) {
