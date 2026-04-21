@@ -24,9 +24,9 @@ import {
 const TOOL_ID = 'commande';
 
 const SUPPLIER_META = {
-  royalty:   { label: 'Royalty Fenestration', color: '#3b82f6', bg: '#eff6ff' },
-  touchette:  { label: 'Touchette',            color: '#8b5cf6', bg: '#f5f3ff' },
-  other:      { label: 'Autre fournisseur',    color: '#6b7280', bg: '#f9fafb' },
+  royalty:   { label: 'Royalty', color: '#3b82f6', bg: '#eff6ff' },
+  touchette: { label: 'Touchette', color: '#8b5cf6', bg: '#f5f3ff' },
+  other:     { label: 'Autre',    color: '#6b7280', bg: '#f9fafb' },
 };
 
 const STATUS_META = {
@@ -109,12 +109,12 @@ function SendModal({ bc, onClose, onSent }) {
 
         <div className="space-y-3">
           <div>
-            <label className="block text-xs text-d-muted mb-1.5">Email fournisseur *</label>
+            <label className="block text-xs text-d-muted mb-1.5">Email destinataire *</label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="commandes@fournisseur.com"
+              placeholder="commandes@destinataire.com"
               autoFocus
               className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm text-d-text placeholder:text-d-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/50"
             />
@@ -158,7 +158,7 @@ function SendModal({ bc, onClose, onSent }) {
   );
 }
 
-// ── Retour Fournisseur section ────────────────────────────────────────────────
+// ── Retour soumission section ─────────────────────────────────────────────────
 
 function RetourFournisseur({ bc, bcId, onReceived }) {
   const [uploading,   setUploading]   = useState(false);
@@ -216,7 +216,7 @@ function RetourFournisseur({ bc, bcId, onReceived }) {
       <div className="mt-6 rounded-xl border border-d-border bg-d-surface/30 p-5">
         <div className="flex items-center gap-2 mb-3">
           <CheckCircle2 size={16} className="text-emerald-400" />
-          <h2 className="text-sm font-semibold text-d-text">Retour fournisseur</h2>
+          <h2 className="text-sm font-semibold text-d-text">Retour soumission</h2>
         </div>
         <p className="text-xs text-d-muted">
           Soumission déjà traitée le{' '}
@@ -241,7 +241,7 @@ function RetourFournisseur({ bc, bcId, onReceived }) {
       <div className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5">
         <div className="flex items-center gap-2 mb-4">
           <CheckCircle2 size={16} className="text-emerald-400" />
-          <h2 className="text-sm font-semibold text-d-text">Retour fournisseur traité</h2>
+          <h2 className="text-sm font-semibold text-d-text">Soumission traitée</h2>
         </div>
 
         {/* Top-level stats */}
@@ -265,7 +265,7 @@ function RetourFournisseur({ bc, bcId, onReceived }) {
             </p>
           </div>
           <div className="rounded-lg bg-d-surface/60 border border-d-border/50 px-3 py-2">
-            <p className="text-[10px] text-d-muted mb-0.5">Escompte fournisseur</p>
+            <p className="text-[10px] text-d-muted mb-0.5">Escompte</p>
             <p className="text-sm font-bold text-d-text">{result.escompte_pct || 0}%</p>
           </div>
         </div>
@@ -357,7 +357,7 @@ function RetourFournisseur({ bc, bcId, onReceived }) {
     <div className="mt-6 rounded-xl border border-d-border p-5">
       <div className="flex items-center gap-2 mb-1">
         <Upload size={15} className="text-d-muted" />
-        <h2 className="text-sm font-semibold text-d-text">Retour fournisseur</h2>
+        <h2 className="text-sm font-semibold text-d-text">Retour soumission</h2>
       </div>
       <p className="text-xs text-d-muted mb-4">
         Téléverse la soumission PDF de Royalty pour distribuer les prix à tous les devis de ce BC.
@@ -383,14 +383,14 @@ function RetourFournisseur({ bc, bcId, onReceived }) {
         {uploading ? (
           <>
             <Loader2 size={28} className="text-d-primary animate-spin" />
-            <p className="text-sm text-d-text font-medium">Analyse du PDF fournisseur...</p>
+            <p className="text-sm text-d-text font-medium">Analyse du PDF...</p>
             <p className="text-xs text-d-muted">Correspondance des articles en cours</p>
           </>
         ) : (
           <>
             <Upload size={28} className="text-d-muted/60" />
             <div className="text-center">
-              <p className="text-sm text-d-text font-medium">Glisser la soumission fournisseur ici</p>
+              <p className="text-sm text-d-text font-medium">Glisser la soumission PDF ici</p>
               <p className="text-xs text-d-muted mt-0.5">ou cliquer pour choisir un PDF · max 10 MB</p>
             </div>
           </>
@@ -525,7 +525,7 @@ export default function BcDetailPage() {
                 onClick={() => setShowSend(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-d-primary text-white text-xs font-semibold hover:opacity-90 transition"
               >
-                <Send size={13} /> Envoyer au fournisseur
+                <Send size={13} /> Envoyer
               </button>
             )}
             {bc.status === 'sent' && (
@@ -546,7 +546,7 @@ export default function BcDetailPage() {
             <div className="font-mono text-sm font-bold text-d-text">{bc.bc_number}</div>
           </div>
           <div>
-            <div className="text-[10px] text-d-muted uppercase tracking-wider">Fournisseur</div>
+            <div className="text-[10px] text-d-muted uppercase tracking-wider">Source</div>
             <span
               className="inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full"
               style={{ backgroundColor: supplierMeta.bg, color: supplierMeta.color }}
@@ -636,7 +636,7 @@ export default function BcDetailPage() {
           </div>
         )}
 
-        {/* Retour fournisseur */}
+        {/* Retour soumission */}
         <RetourFournisseur
           bc={bc}
           bcId={id}

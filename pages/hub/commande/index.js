@@ -37,7 +37,7 @@ const TOOL_ID = 'commande';
 const SUPPLIER_META = {
   royalty:   { label: 'Royalty Fenestration', color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe' },
   touchette:  { label: 'Touchette',            color: '#8b5cf6', bg: '#f5f3ff', border: '#ddd6fe' },
-  other:      { label: 'Autre fournisseur',    color: '#6b7280', bg: '#f9fafb', border: '#e5e7eb' },
+  other:      { label: 'Autre',    color: '#6b7280', bg: '#f9fafb', border: '#e5e7eb' },
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -138,12 +138,12 @@ function SendModal({ bc, onClose, onSent }) {
 
         <div className="space-y-3">
           <div>
-            <label className="block text-xs text-d-muted mb-1.5">Email fournisseur *</label>
+            <label className="block text-xs text-d-muted mb-1.5">Email destinataire *</label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="commandes@fournisseur.com"
+              placeholder="commandes@destinataire.com"
               autoFocus
               className="w-full px-3 py-2 rounded-xl border border-d-border bg-d-surface text-sm text-d-text placeholder:text-d-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/50"
             />
@@ -659,9 +659,9 @@ function SupplierDispatcher({ onApplySuccess }) {
             <Zap size={16} className="text-d-primary" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-d-text">Dispatcher une soumission fournisseur</h2>
+            <h2 className="text-sm font-semibold text-d-text">Dispatcher une soumission</h2>
             <p className="text-xs text-d-muted mt-0.5">
-              Upload le PDF — on matche automatiquement à tous tes devis en attente de prix fournisseur.
+              Upload le PDF — on matche automatiquement à tous tes devis en attente de prix.
             </p>
           </div>
         </div>
@@ -1063,7 +1063,7 @@ export default function CommandePage() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-d-text">Bons de commande</h1>
-              <p className="text-xs text-d-muted mt-0.5">Items en attente de commande fournisseur</p>
+              <p className="text-xs text-d-muted mt-0.5">Items en attente de commande</p>
             </div>
           </div>
           {tab === 'pending' && (
@@ -1082,7 +1082,7 @@ export default function CommandePage() {
             <CheckCircle2 size={18} className="text-emerald-400 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <span className="text-sm font-semibold text-d-text">{generatedBc.bc_number} généré</span>
-              <span className="ml-2 text-xs text-d-muted">prêt à envoyer au fournisseur</span>
+              <span className="ml-2 text-xs text-d-muted">prêt à envoyer</span>
             </div>
             <div className="flex gap-2 flex-shrink-0">
               <Link
@@ -1148,8 +1148,8 @@ export default function CommandePage() {
                   <div className="mb-5 flex items-center gap-3 px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10">
                     <AlertTriangle size={16} className="text-amber-400 flex-shrink-0" />
                     <p className="text-xs text-amber-300">
-                      <span className="font-semibold">{pendingData.noSupplierCount} item{pendingData.noSupplierCount > 1 ? 's' : ''} sans fournisseur attribué</span>
-                      {' '}— assigne le fournisseur via l&apos;éditeur devis pour les inclure ici.
+                      <span className="font-semibold">{pendingData.noSupplierCount} item{pendingData.noSupplierCount > 1 ? 's' : ''} sans source attribuée</span>
+                      {' '}— assigne la source via l&apos;éditeur devis pour les inclure ici.
                     </p>
                   </div>
                 )}
