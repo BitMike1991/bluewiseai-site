@@ -101,38 +101,23 @@ export default async function handler(req, res) {
 
     const AUTO_SOURCES = new Set(["soumission_fournisseur", "supplier_return_global"]);
     const expenses = (rawExpenses || []).filter(e => !AUTO_SOURCES.has(e.source));
-
-    // expenses.total is TTC (includes TPS+TVQ paid on input). Margin math
-    // MUST use the HT portion (expenses.subtotal) because:
-    //   - PUR is TPS/TVQ-registered → input taxes are recovered via ITC,
-    //     so they net to zero real cost for the business.
-    //   - Revenue side already uses subtotal (HT). Mixing HT vs TTC = bug.
-    // Fallback for legacy/imported expenses without subtotal: use total
-    // (treat as fully tax-exempt purchase).
-    function expenseHt(e) {
-      const sub = Number(e.subtotal || 0);
-      return sub > 0 ? sub : Number(e.total || 0);
-    }
-    const totalExpenses = expenses.reduce((s, e) => s + Number(e.total || 0), 0);          // TTC, for display
-    const totalExpensesHt = expenses.reduce((s, e) => s + expenseHt(e), 0);                 // HT, for margin
-    const totalExpensesTaxRecoverable = totalExpenses - totalExpensesHt;                    // ITC
+    const totalExpenses = expenses.reduce((s, e) => s + Number(e.total || 0), 0);
 
     const balanceRemaining = Math.max(0, ttc - totalPaid);
 
-    // Margin math uses HT (subtotal) on BOTH sides — revenue + cost.
-    // Taxes are passthrough to Revenu Québec on the revenue side AND
-    // recovered via ITC on the cost side. Using TTC anywhere over-states
-    // margin loss by ~15% on every job (Jérémy 2026-04-21).
+    // Margin math uses HT (subtotal), NOT TTC — taxes are passthrough to Revenu
+    // Québec, not Jérémy's revenue. Using TTC would over-state margin % by
+    // ~15% on every job.
     //
     // Projected margin: what Jérémy will net if he pays estimated material cost
-    // + logged expenses HT, against the full client HT. Shown during quote/contract phase.
-    const marginProjected = subtotal - estimatedMaterialCost - totalExpensesHt;
+    // + logged expenses, against the full client HT. Shown during quote/contract phase.
+    const marginProjected = subtotal - estimatedMaterialCost - totalExpenses;
     const marginProjectedPct = subtotal > 0 ? Math.round((marginProjected / subtotal) * 100) : 0;
 
     // Realized margin: actual HT received (payment TTC × subtotal/TTC ratio)
-    // minus logged expenses HT. Accurate once money starts flowing.
+    // minus logged expenses. Accurate once money starts flowing.
     const totalPaidHt = ttc > 0 ? totalPaid * (subtotal / ttc) : totalPaid;
-    const marginRealized = totalPaidHt - totalExpensesHt;
+    const marginRealized = totalPaidHt - totalExpenses;
     const marginRealizedPct = totalPaidHt > 0 ? Math.round((marginRealized / totalPaidHt) * 100) : 0;
 
     // Default "margin" field = projected (what Jérémy cares about in quote phase).
@@ -180,9 +165,7 @@ export default async function handler(req, res) {
       })),
       totalPaid,
       pendingAmount,
-      totalExpenses,                                                    // TTC (display)
-      totalExpensesHt: Math.round(totalExpensesHt * 100) / 100,        // HT (margin source of truth)
-      totalExpensesTaxRecoverable: Math.round(totalExpensesTaxRecoverable * 100) / 100, // ITC à récupérer
+      totalExpenses,
       balanceRemaining: Math.round(balanceRemaining * 100) / 100,
       margin: Math.round(margin * 100) / 100,
       marginPct,
