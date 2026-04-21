@@ -448,9 +448,17 @@ export default function BcDetailPage() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    fetch(`/api/bons-de-commande/${id}`)
+    // Cache-bust on the URL + send no-store header so we always re-render
+    // with the latest template (BDC HTML is regenerated server-side on
+    // every load — see /api/bons-de-commande/[id]/index.js).
+    fetch(`/api/bons-de-commande/${id}?_=${Date.now()}`, { cache: 'no-store' })
       .then(r => r.json())
-      .then(j => { setBc(j.bc || null); setLoading(false); })
+      .then(j => {
+        setBc(j.bc || null);
+        // Force a fresh iframe mount so srcDoc is re-parsed with new HTML.
+        setIframeKey(Date.now());
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, [id]);
 

@@ -20,6 +20,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'GET only' });
   }
 
+  // Always bypass browser + Vercel edge cache — the rerender pipeline below
+  // reads current line_items / config / template every time, so a cached
+  // JSON response would defeat the point.
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   const { supabase, customerId, user } = await getAuthContext(req, res);
   if (!user)       return res.status(401).json({ error: 'Not authenticated' });
   if (!customerId) return res.status(403).json({ error: 'No customer mapping' });
