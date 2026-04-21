@@ -30,17 +30,26 @@ export default function DimensionInputs({ state, dispatch }) {
 
     if (!min || !max) return { w: null, h: null };
 
+    // Tolerance for catalog max comparisons. Mikael 2026-04-21: PUR's
+    // patio doors really do extend 1/16" past the listed max in the
+    // catalog (manufacturer spec rounds in their favor) — flagging
+    // "trop grand" stops Jeremy from entering real doors. 1/16 = 0.0625
+    // is also pure rounding noise on any other category, so we apply it
+    // uniformly. If a future config needs a stricter limit, set
+    // `state.config.tolerance = 0` on it.
+    const TOL = state.config.tolerance ?? (1 / 16);
+
     let wResult = null;
     if (!isNaN(w)) {
-      if (w < min.w) wResult = { ok: false, msg: `Trop petit — min ${min.w}"` };
-      else if (w > max.w) wResult = { ok: false, msg: `Trop grand — max ${max.w}"` };
+      if (w < min.w - TOL) wResult = { ok: false, msg: `Trop petit — min ${min.w}"` };
+      else if (w > max.w + TOL) wResult = { ok: false, msg: `Trop grand — max ${max.w}"` };
       else wResult = { ok: true, msg: `OK (${min.w}"–${max.w}")` };
     }
 
     let hResult = null;
     if (!isNaN(h)) {
-      if (h < min.h) hResult = { ok: false, msg: `Trop petit — min ${min.h}"` };
-      else if (h > max.h) hResult = { ok: false, msg: `Trop grand — max ${max.h}"` };
+      if (h < min.h - TOL) hResult = { ok: false, msg: `Trop petit — min ${min.h}"` };
+      else if (h > max.h + TOL) hResult = { ok: false, msg: `Trop grand — max ${max.h}"` };
       else hResult = { ok: true, msg: `OK (${min.h}"–${max.h}")` };
     }
 
