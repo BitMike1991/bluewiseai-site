@@ -105,15 +105,19 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: "QBO returned no Invoice.Id", raw: qboResp });
     }
 
-    // Verify cent-level parity (safety net for P01 before P02 real tax-code mapping lands).
-    const totalOk = Math.abs(Number(qboInvoice.TotalAmt || 0) - mapped.checksum.total) < 0.02;
+    // Verify cent-level parity. When taxes are omitted (P01 scope), compare
+    // against `subtotal` (BW pre-tax); once P02 wires TxnTaxDetail, compare
+    // against `total` (BW with taxes). QBO's TotalAmt = sum(Line.Amount) + TxnTax.
+    const hasTxnTax = Boolean(mapped.payload.TxnTaxDetail);
+    const target = hasTxnTax ? mapped.checksum.total : mapped.checksum.subtotal;
+    const totalOk = Math.abs(Number(qboInvoice.TotalAmt || 0) - target) < 0.02;
 
     await admin
       .from("quotes")
       .update({
         qbo_invoice_id: String(qboInvoice.Id),
         qbo_synced_at: new Date().toISOString(),
-        qbo_last_error: totalOk ? null : `Checksum mismatch: QBO=${qboInvoice.TotalAmt} BW=${mapped.checksum.total}`,
+        qbo_last_error: totalOk ? null : `Checksum mismatch: QBO=${qboInvoice.TotalAmt} BW_target=${target} (taxes ${hasTxnTax ? "included" : "omitted — P01 scope"})`,
         updated_at: new Date().toISOString(),
       })
       .eq("id", quote.id);
@@ -123,7 +127,9 @@ export default async function handler(req, res) {
       qbo_invoice_id: String(qboInvoice.Id),
       qbo_doc_number: qboInvoice.DocNumber || null,
       qbo_total: qboInvoice.TotalAmt,
+      bw_subtotal: mapped.checksum.subtotal,
       bw_total: mapped.checksum.total,
+      compared_against: hasTxnTax ? "total_ttc" : "subtotal",
       checksum_match: totalOk,
     });
   } catch (err) {
