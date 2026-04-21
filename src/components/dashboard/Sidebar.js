@@ -8,7 +8,7 @@ import {
   Target, CheckSquare, DollarSign, CreditCard, Settings, BarChart2,
   X, ChevronsUpDown, PanelLeftClose, PanelLeft,
   ShoppingCart, BookOpen, FileText, Layers, Receipt, Package,
-  Wallet, HandCoins, Clock,
+  Wallet, HandCoins, Clock, Trash2,
 } from "lucide-react";
 
 // Hub tool definitions. After the P11 migration, `/hub` is the devis creator
@@ -51,6 +51,7 @@ const NAV_SECTIONS = [
   {
     label: "Account",
     items: [
+      { key: "trash", href: "/platform/corbeille", label: "Corbeille", icon: Trash2 },
       { key: "billing", href: "/platform/billing", label: "Billing", icon: CreditCard },
       { key: "settings", href: "/platform/settings", label: "Settings", icon: Settings },
     ],

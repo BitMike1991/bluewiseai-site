@@ -1,5 +1,6 @@
 // pages/api/jobs/[id].js
 import { getAuthContext } from "../../../lib/supabaseServer";
+import { logDeletion } from "../../../lib/deletionAudit";
 
 export default async function handler(req, res) {
   const allowed = ["GET", "PATCH", "DELETE"];
@@ -23,9 +24,19 @@ export default async function handler(req, res) {
   // project from the platform UI.
   if (req.method === "DELETE") {
     try {
+      const { data: snap } = await supabase
+        .from("jobs")
+        .select("job_id, client_name, project_type, quote_amount, status")
+        .eq("id", id).eq("customer_id", customerId).maybeSingle();
+      const label = snap?.client_name || snap?.job_id || `Project #${id}`;
+
       const { data, error: delError } = await supabase
         .from("jobs")
-        .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .update({
+          deleted_at: new Date().toISOString(),
+          deleted_by_user_id: user.id,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", id)
         .eq("customer_id", customerId)
         .is("deleted_at", null)
@@ -36,6 +47,16 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: "Failed to delete project" });
       }
       if (!data) return res.status(404).json({ error: "Project not found or already deleted" });
+
+      await logDeletion({
+        customerId,
+        entityType: "job",
+        entityId: Number(id),
+        entityLabel: label,
+        user,
+        payload: snap || {},
+      });
+
       return res.status(200).json({ success: true, deleted: data.id });
     } catch (err) {
       console.error("[api/jobs/[id]] DELETE error", err);

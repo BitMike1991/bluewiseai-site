@@ -1,6 +1,7 @@
 // pages/api/leads/[id].js
 import { getAuthContext, getSupabaseServerClient } from "../../../lib/supabaseServer";
 import { isDivisionAllowedForUser } from "../../../lib/divisions";
+import { logDeletion } from "../../../lib/deletionAudit";
 
 // --- helpers to clean HTML emails into readable text ---
 function decodeHtmlEntities(str) {
@@ -81,9 +82,21 @@ export default async function handler(req, res) {
   // lead disappears from the list/detail UI (filtered by deleted_at IS NULL).
   if (req.method === "DELETE") {
     try {
+      // Snapshot the label before delete so the audit row is human-readable
+      // even if the lead's name gets edited later.
+      const { data: snap } = await supabase
+        .from("leads")
+        .select("name, first_name, email, phone")
+        .eq("id", leadId).eq("customer_id", customerId).maybeSingle();
+      const label = snap?.name || snap?.first_name || snap?.email || snap?.phone || `Lead #${leadId}`;
+
       const { data, error: delError } = await supabase
         .from("leads")
-        .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .update({
+          deleted_at: new Date().toISOString(),
+          deleted_by_user_id: user.id,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", leadId)
         .eq("customer_id", customerId)
         .is("deleted_at", null)
@@ -94,10 +107,16 @@ export default async function handler(req, res) {
         console.error("[api/leads/[id]] soft-delete error", delError);
         return res.status(500).json({ error: "Failed to delete lead" });
       }
+      if (!data) return res.status(404).json({ error: "Lead not found or already deleted" });
 
-      if (!data) {
-        return res.status(404).json({ error: "Lead not found or already deleted" });
-      }
+      await logDeletion({
+        customerId,
+        entityType: "lead",
+        entityId: leadId,
+        entityLabel: label,
+        user,
+        payload: snap || {},
+      });
 
       return res.status(200).json({ success: true, deleted: data.id });
     } catch (err) {
