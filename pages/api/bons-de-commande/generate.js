@@ -4,8 +4,9 @@
 // Creates a BC row, assigns bc_number, renders HTML, updates items.
 // Multi-tenant: all refs validated against session customer_id.
 
-import { getAuthContext } from '../../../lib/supabaseServer';
+import { getAuthContext, getSupabaseServerClient } from '../../../lib/supabaseServer';
 import { itemSketchSvg } from '../../../lib/quote-templates/pur.js';
+import { resolveDivisionId } from '../../../lib/divisions';
 
 const NAVY = '#2A2C35';
 const SAGE = '#5A7A5A';
@@ -409,7 +410,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'POST only' });
   }
 
-  const { supabase, customerId, user } = await getAuthContext(req, res);
+  const { supabase, customerId, user, role, divisionId } = await getAuthContext(req, res);
   if (!user)       return res.status(401).json({ error: 'Not authenticated' });
   if (!customerId) return res.status(403).json({ error: 'No customer mapping' });
 
@@ -525,11 +526,26 @@ export default async function handler(req, res) {
       totalQty,
     });
 
+    // Resolve division_id — BC inherits from the first referenced job.
+    // All items on a given BC come from one session, so they share a division
+    // in practice. Edge case of mixed divisions is gated: scoped users cannot
+    // see jobs outside their division to begin with, so `resolvedRefs[0].job_id`
+    // always matches their scope.
+    const firstJobId = resolvedRefs[0]?.job_id || null;
+    const admin = getSupabaseServerClient();
+    const bcDivisionId = await resolveDivisionId(admin, {
+      customer_id: customerId,
+      role,
+      user_division_id: divisionId,
+      job_id: firstJobId,
+    });
+
     // Insert BC row (status=draft)
     const { data: bcRow, error: insertErr } = await supabase
       .from('bons_de_commande')
       .insert({
         customer_id:          customerId,
+        division_id:          bcDivisionId,
         bc_number,
         supplier,
         status:               'draft',

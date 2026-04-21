@@ -1,5 +1,6 @@
 // pages/api/leads/index.js
-import { getAuthContext } from "../../../lib/supabaseServer";
+import { getAuthContext, getSupabaseServerClient } from "../../../lib/supabaseServer";
+import { resolveDivisionId } from "../../../lib/divisions";
 
 export default async function handler(req, res) {
   if (req.method !== "GET" && req.method !== "POST") {
@@ -7,7 +8,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { supabase, customerId, user } = await getAuthContext(req, res);
+  const { supabase, customerId, user, role, divisionId } = await getAuthContext(req, res);
 
   if (!user) return res.status(401).json({ error: "Not authenticated" });
   if (!customerId)
@@ -29,8 +30,17 @@ export default async function handler(req, res) {
       const validStatuses = ["new", "active", "in_convo", "quoted", "won", "lost", "dead"];
       const leadStatus = status && validStatuses.includes(status) ? status : "new";
 
+      const admin = getSupabaseServerClient();
+      const resolvedDivisionId = await resolveDivisionId(admin, {
+        customer_id: customerId,
+        role,
+        user_division_id: divisionId,
+        explicit: req.body?.division_id ?? null,
+      });
+
       const insert = {
         customer_id: customerId,
+        division_id: resolvedDivisionId,
         name: name || null,
         phone: phone || null,
         email: email || null,

@@ -1,7 +1,8 @@
 // pages/api/jobs/index.js
 import crypto from "crypto";
-import { getAuthContext } from "../../../lib/supabaseServer";
+import { getAuthContext, getSupabaseServerClient } from "../../../lib/supabaseServer";
 import { mergeConfig } from "../../../lib/quote-config.js";
+import { resolveDivisionId } from "../../../lib/divisions";
 
 const ALLOWED_METHODS = ["GET", "POST"];
 
@@ -17,7 +18,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { supabase, customerId, user } = await getAuthContext(req, res);
+  const { supabase, customerId, user, role, divisionId } = await getAuthContext(req, res);
 
   if (!user) return res.status(401).json({ error: "Not authenticated" });
   if (!customerId)
@@ -26,7 +27,7 @@ export default async function handler(req, res) {
   // ─── POST: create a new job, optionally prefilled from a lead ───
   if (req.method === "POST") {
     try {
-      const { lead_id = null, client_name = '', client_phone = '', client_email = '', client_address = null, project_description = null, project_type = null } = req.body || {};
+      const { lead_id = null, client_name = '', client_phone = '', client_email = '', client_address = null, project_description = null, project_type = null, division_id: explicitDivisionId = null } = req.body || {};
 
       // Pull lead info if lead_id provided, to prefill client fields
       let lead = null;
@@ -66,11 +67,21 @@ export default async function handler(req, res) {
       const job_id = generateJobId(prefix);
       const nowIso = new Date().toISOString();
 
+      const admin = getSupabaseServerClient();
+      const resolvedDivisionId = await resolveDivisionId(admin, {
+        customer_id: customerId,
+        role,
+        user_division_id: divisionId,
+        lead_id: lead?.id || null,
+        explicit: explicitDivisionId,
+      });
+
       const { data: newJob, error: jobErr } = await supabase
         .from("jobs")
         .insert({
           job_id,
           customer_id: customerId,
+          division_id: resolvedDivisionId,
           lead_id: lead?.id || null,
           client_name:    effectiveName || null,
           client_phone:   effectivePhone || null,
@@ -94,10 +105,12 @@ export default async function handler(req, res) {
       }
 
       // Create an empty draft quote so the Devis tab is immediately usable.
+      // Inherits division from the job we just created.
       const { data: newQuote } = await supabase
         .from("quotes")
         .insert({
           customer_id: customerId,
+          division_id: resolvedDivisionId,
           job_id: newJob.id,
           quote_number: job_id,
           version: 1,

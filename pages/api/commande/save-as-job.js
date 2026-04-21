@@ -15,7 +15,8 @@
 
 import crypto from 'crypto';
 import { sbInsert, sbSelect, sbUpdate, sbRpc } from '@/lib/supabase-server';
-import { getAuthContext } from '../../../lib/supabaseServer';
+import { getAuthContext, getSupabaseServerClient } from '../../../lib/supabaseServer';
+import { resolveDivisionId } from '../../../lib/divisions';
 
 // PUR Construction. This endpoint is gated to session users whose customer_id
 // matches — enforcement happens in the handler. The constant keeps legacy
@@ -63,7 +64,7 @@ function extractLast10Digits(raw) {
  * - Non-destructive update: only fills NULL fields (preserves existing name/email).
  * - Returns { leadId, matched, leadName }.
  */
-async function findOrCreateLead(projectInfo, existingLeadId) {
+async function findOrCreateLead(projectInfo, existingLeadId, newLeadDivisionId = null) {
   const today = new Date().toISOString().slice(0, 10);
 
   // If prefill_lead_id supplied (from CRM deep-link), reuse without matching
@@ -112,6 +113,7 @@ async function findOrCreateLead(projectInfo, existingLeadId) {
   const normalizedPhone = normalizePhone(projectInfo.contact);
   const leadBody = {
     customer_id: CUSTOMER_ID,
+    division_id: newLeadDivisionId,
     name: String(projectInfo.client).trim(),
     phone: normalizedPhone,
     email: projectInfo.email || null,
@@ -226,7 +228,7 @@ export default async function handler(req, res) {
   }
 
   // Auth via Supabase SSR. This endpoint is PUR-specific (customer_id=9).
-  const { customerId, user } = await getAuthContext(req, res);
+  const { customerId, user, role, divisionId } = await getAuthContext(req, res);
   if (!user)       return res.status(401).json({ error: 'Non autorisé' });
   if (customerId !== CUSTOMER_ID) {
     return res.status(403).json({ error: 'Ce hub est réservé à PÜR Construction' });
@@ -296,13 +298,24 @@ export default async function handler(req, res) {
     const clientAddress = project.address ? { street: project.address } : null;
     const normalizedPhone = normalizePhone(project.contact);
 
+    // Resolve division_id for any new rows this flow creates.
+    // commande tool = fenêtres/portes flow, so a scoped fenêtres user stamps
+    // their own division; owner/admin gets the tenant's default (fenetres_portes).
+    const admin = getSupabaseServerClient();
+    const saveAsJobDivisionId = await resolveDivisionId(admin, {
+      customer_id: CUSTOMER_ID,
+      role,
+      user_division_id: divisionId,
+      lead_id: prefill_lead_id || null,
+    });
+
     // ── P-B: Find or create lead (phone match before new insert) ──
     let leadId = existingLeadId;
     let leadMatched = false;
     let leadName = null;
     if (!leadId) {
       try {
-        const result = await findOrCreateLead({ ...project }, prefill_lead_id || null);
+        const result = await findOrCreateLead({ ...project }, prefill_lead_id || null, saveAsJobDivisionId);
         leadId = result.leadId;
         leadMatched = result.matched;
         leadName = result.leadName;
@@ -368,6 +381,7 @@ export default async function handler(req, res) {
     // ── CREATE new job ──
     const newJob = await sbInsert('jobs', {
       customer_id: CUSTOMER_ID,
+      division_id: saveAsJobDivisionId,
       job_id: jobHumanId,
       client_name: String(project.client).trim(),
       client_phone: normalizedPhone || project.contact || null,
@@ -404,6 +418,7 @@ export default async function handler(req, res) {
     // ── CREATE quote with null prices (awaiting_supplier) ──
     await sbInsert('quotes', {
       customer_id: CUSTOMER_ID,
+      division_id: saveAsJobDivisionId,
       job_id: newJobDbId,
       quote_number: quoteNumber,
       project_ref: projectRef,

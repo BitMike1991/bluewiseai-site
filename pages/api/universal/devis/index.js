@@ -6,6 +6,7 @@ import { getSupabaseServerClient } from '../../../../lib/supabaseServer';
 import { generatePurQuoteHtml } from '../../../../lib/quote-templates/pur.js';
 import { mergeConfig } from '../../../../lib/quote-config.js';
 import { applyCorsHeaders } from '../../../../lib/universal-api-auth';
+import { resolveDivisionId } from '../../../../lib/divisions';
 
 const supabase = getSupabaseServerClient();
 
@@ -496,11 +497,17 @@ export default async function handler(req, res) {
           await supabase.from('jobs').update({ lead_id }).eq('id', jobDbId).is('lead_id', null);
         }
       } else {
+        // Inherit division from linked lead if any, else tenant default.
+        const newJobDivisionId = await resolveDivisionId(supabase, {
+          customer_id,
+          lead_id: lead_id || null,
+        });
         const { data: newJob, error: jobErr } = await supabase
           .from('jobs')
           .insert({
             job_id: quote_number,
             customer_id,
+            division_id: newJobDivisionId,
             client_name,
             client_phone: client_phone || null,
             client_email: client_email || null,
@@ -555,12 +562,18 @@ export default async function handler(req, res) {
       console.warn('[devis/create] claim_next_project_ref failed:', err?.message);
     }
 
-    // 3. Insert quote record (html stored in meta.html — no dedicated html_content column)
+    // 3. Insert quote record — inherit division from the job we just wrote/fetched.
+    const quoteDivisionId = await resolveDivisionId(supabase, {
+      customer_id,
+      job_id: jobDbId,
+      lead_id: lead_id || null,
+    });
     const { data: quoteRow, error: quoteErr } = await supabase
       .from('quotes')
       .insert({
         job_id: jobDbId,
         customer_id,
+        division_id: quoteDivisionId,
         quote_number,
         project_ref: projectRef,
         version,
