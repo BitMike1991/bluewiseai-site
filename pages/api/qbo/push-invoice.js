@@ -53,11 +53,33 @@ export default async function handler(req, res) {
       return res.status(412).json({ error: "QBO not ready", details: e.message });
     }
 
+    // Resolve a real CustomerRef. Until P02/P03 wire the qbo_customers cache,
+    // we auto-pick the first customer in the realm so P01 round-trip works
+    // against any sandbox without manual seeding.
+    let resolvedCustomerRef = customer_ref_value;
+    if (!resolvedCustomerRef) {
+      try {
+        const q = await qbo.get(
+          `/company/${qbo.realmId}/query?minorversion=70&query=` +
+          encodeURIComponent("select Id, DisplayName from Customer maxresults 1")
+        );
+        resolvedCustomerRef = q?.QueryResponse?.Customer?.[0]?.Id;
+      } catch (e) {
+        return res.status(502).json({ error: "QBO Customer lookup failed", details: e.message });
+      }
+      if (!resolvedCustomerRef) {
+        return res.status(412).json({
+          error: "No QBO Customer in this realm — create one in QBO first or pass customer_ref_value",
+        });
+      }
+    }
+
     // Map quote → QBO invoice payload. Risk-1 guard lives inside the mapper.
     let mapped;
     try {
       mapped = mapQuoteToQboInvoice(quote, {
-        customerRefValue: customer_ref_value || "1", // P02 will resolve from qbo_customers cache
+        customerRefValue: resolvedCustomerRef,
+        // gstRateRef/qstRateRef intentionally omitted — P02 wires real codes.
       });
     } catch (e) {
       if (e instanceof QuoteMappingError) {
