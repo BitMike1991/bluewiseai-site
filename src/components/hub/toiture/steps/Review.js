@@ -1,13 +1,49 @@
+import { useState } from 'react';
 import { formatCAD, PITCH_RATES, MATERIALS } from '@/lib/hub/toiture-data';
 import s from '../toiture.module.css';
+import { Button } from '@/components/hub/ui';
 
 export default function Review({ state, result }) {
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [savedJob, setSavedJob] = useState(null);
+
   if (!result) {
     return (
       <p style={{ opacity: 0.4 }}>
         Pas assez de donn&eacute;es pour calculer. Remplir mesures + mat&eacute;riaux.
       </p>
     );
+  }
+
+  async function handleSaveAsJob() {
+    if (saving) return;
+    if (!state.client?.name || !state.client?.phone) {
+      setSaveError('Nom et t\u00e9l\u00e9phone du client requis.');
+      return;
+    }
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const res = await fetch('/api/toiture/save-as-job', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client: state.client,
+          measures: state.measures,
+          shingle_type: state.shingle_type,
+          result,
+          payload: state,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Erreur lors de la sauvegarde');
+      setSavedJob(json);
+    } catch (err) {
+      setSaveError(err.message || 'Erreur r\u00e9seau');
+    } finally {
+      setSaving(false);
+    }
   }
 
   const pitchLabel =
@@ -164,6 +200,44 @@ export default function Review({ state, result }) {
             &nbsp;({result.net_margin_pct?.toFixed(1)}&nbsp;%)
           </span>
         </div>
+      </div>
+
+      {/* ── CTA: enregistrer comme projet CRM ── */}
+      <div className={s.reviewSection} style={{ background: 'var(--bw-sage-light, #eef3ee)', padding: '16px', borderRadius: '12px' }}>
+        <div className={s.reviewTitle} style={{ marginBottom: 10 }}>Finaliser le devis</div>
+        {!savedJob ? (
+          <>
+            <p style={{ fontSize: 13, color: '#555', marginBottom: 12, lineHeight: 1.4 }}>
+              Cr&eacute;e le projet CRM (lead + job + devis client) pour pouvoir ensuite l'envoyer au client, g&eacute;n&eacute;rer le contrat, et suivre la signature + le paiement.
+            </p>
+            <Button onClick={handleSaveAsJob} disabled={saving}>
+              {saving ? 'Enregistrement\u2026' : 'Enregistrer comme projet'}
+            </Button>
+            {saveError && (
+              <p style={{ color: '#c00', fontSize: 12, marginTop: 10 }}>{saveError}</p>
+            )}
+          </>
+        ) : (
+          <>
+            <p style={{ fontSize: 13, color: '#1a5f1a', fontWeight: 600, marginBottom: 8 }}>
+              &#x2714; Projet cr&eacute;&eacute; : {savedJob.project_ref || savedJob.job_id_human}
+            </p>
+            <p style={{ fontSize: 12, color: '#444', marginBottom: 12 }}>
+              Lead {savedJob.lead_matched ? 'associ&eacute;' : 'nouveau'} &middot; Devis {savedJob.quote_number}
+            </p>
+            <a
+              href={savedJob.url}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'inline-block', padding: '8px 16px', background: 'var(--bw-navy, #2A2C35)',
+                color: '#fff', borderRadius: 8, textDecoration: 'none', fontSize: 13, fontWeight: 600,
+              }}
+            >
+              Ouvrir le projet dans le CRM &rarr;
+            </a>
+          </>
+        )}
       </div>
 
       {/* ── 5. Rabais comptant (conditionnel) ── */}

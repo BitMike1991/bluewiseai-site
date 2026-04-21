@@ -363,7 +363,165 @@ function parseFracInches(s) {
   return parseFloat(str.replace(',', '.')) || 0;
 }
 
+function TabCommandeToiture({ jobId, quote }) {
+  const [roofQuote, setRoofQuote] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showPrint, setShowPrint] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!jobId) { setLoading(false); return; }
+    (async () => {
+      try {
+        const res = await fetch(`/api/jobs/${jobId}/roof-quote`);
+        const json = await res.json();
+        if (!cancelled) setRoofQuote(json?.roof_quote || null);
+      } catch {
+        if (!cancelled) setRoofQuote(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [jobId]);
+
+  if (loading) {
+    return <div className="py-6 text-center text-xs text-d-muted/70 italic">Chargement…</div>;
+  }
+
+  const payload = roofQuote?.payload || {};
+  const result = payload.result || payload.stateRef?.result || payload;
+  const materialLines = Array.isArray(result?.material_lines) ? result.material_lines : [];
+  const feeLines = Array.isArray(result?.fee_lines) ? result.fee_lines : [];
+  const laborLine = result?.labor_line || null;
+  const surface = Number(roofQuote?.surface_sqft) || 0;
+  const pitch = roofQuote?.pitch_category || payload?.measures?.pitch_category || '—';
+  const shingle = roofQuote?.shingle_type || payload?.shingle_type || '—';
+
+  return (
+    <div className="space-y-4">
+      <section className="rounded-xl border border-d-border p-4">
+        <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+          <div>
+            <p className="text-sm font-semibold text-d-text">Liste de chargement — matin</p>
+            <p className="text-[11px] text-d-muted mt-0.5">
+              Checklist pour charger le camion avant de partir sur le chantier.
+              Les quantités sont déjà arrondies pour éviter de manquer.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowPrint((s) => !s)}
+            className="text-xs px-3 py-1.5 rounded-lg border border-d-border hover:border-d-primary/40 transition"
+          >
+            {showPrint ? 'Fermer la version imprimable' : 'Version imprimable / email'}
+          </button>
+        </div>
+        <div className="grid grid-cols-3 gap-2 mt-3 text-[11px]">
+          <div className="rounded-lg bg-d-border/10 px-2 py-1.5">
+            <div className="text-d-muted text-[9px] uppercase tracking-wider">Surface</div>
+            <div className="font-mono text-d-text">{surface ? `${surface} pi²` : '—'}</div>
+          </div>
+          <div className="rounded-lg bg-d-border/10 px-2 py-1.5">
+            <div className="text-d-muted text-[9px] uppercase tracking-wider">Pente</div>
+            <div className="font-mono text-d-text capitalize">{pitch}</div>
+          </div>
+          <div className="rounded-lg bg-d-border/10 px-2 py-1.5">
+            <div className="text-d-muted text-[9px] uppercase tracking-wider">Bardeaux</div>
+            <div className="font-mono text-d-text truncate">{shingle}</div>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-d-border p-4">
+        <p className="text-sm font-semibold text-d-text mb-2">Matériaux</p>
+        {materialLines.length === 0 ? (
+          <div className="py-3 text-center text-xs text-d-muted/70 italic">
+            Aucun matériau — le devis toiture n'a pas de ventilation détaillée.
+          </div>
+        ) : (
+          <ul className="divide-y divide-d-border/40 -mx-4">
+            {materialLines.map((line, i) => (
+              <li key={`mat-${i}`} className="px-4 py-2 flex items-center gap-3">
+                <input type="checkbox" className="accent-d-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs text-d-text truncate">{line.label || line.name || `Matériau ${i + 1}`}</div>
+                  {line.unit && (
+                    <div className="text-[10px] font-mono text-d-muted/70 mt-0.5">{line.unit}</div>
+                  )}
+                </div>
+                <span className="text-[11px] font-mono text-d-muted whitespace-nowrap">
+                  × {line.qty ?? line.quantity ?? '—'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {feeLines.length > 0 && (
+        <section className="rounded-xl border border-d-border p-4">
+          <p className="text-sm font-semibold text-d-text mb-2">Frais chantier</p>
+          <ul className="divide-y divide-d-border/40 -mx-4">
+            {feeLines.map((line, i) => (
+              <li key={`fee-${i}`} className="px-4 py-2 flex items-center gap-3">
+                <input type="checkbox" className="accent-d-primary shrink-0" />
+                <span className="text-xs text-d-text flex-1">{line.label || line.name || 'Frais'}</span>
+                <span className="text-[11px] font-mono text-d-muted">× {line.qty ?? 1}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {laborLine && (
+        <section className="rounded-xl border border-d-border p-4">
+          <p className="text-sm font-semibold text-d-text mb-1">Main-d'œuvre prévue</p>
+          <p className="text-xs text-d-muted">
+            {laborLine.crew_size ? `${laborLine.crew_size} ouvriers` : 'Équipe'}
+            {laborLine.days ? ` · ${laborLine.days} jour${laborLine.days > 1 ? 's' : ''}` : ''}
+            {laborLine.hours_per_day ? ` · ${laborLine.hours_per_day} h/jour` : ''}
+          </p>
+        </section>
+      )}
+
+      {showPrint && (
+        <section className="rounded-xl border border-d-border p-4 bg-white text-black print:bg-white">
+          <p className="text-sm font-bold mb-1">Chargement du camion — {roofQuote?.client_name || 'Client'}</p>
+          <p className="text-xs mb-3">
+            Surface {surface} pi² · Pente {pitch} · {shingle}
+          </p>
+          <p className="text-xs font-semibold mt-2">Matériaux</p>
+          <ul className="text-xs mt-1 space-y-1">
+            {materialLines.map((line, i) => (
+              <li key={`p-mat-${i}`}>☐ {line.label || line.name || `Matériau ${i + 1}`} — × {line.qty ?? '—'}</li>
+            ))}
+          </ul>
+          {feeLines.length > 0 && (
+            <>
+              <p className="text-xs font-semibold mt-2">Frais chantier</p>
+              <ul className="text-xs mt-1 space-y-1">
+                {feeLines.map((line, i) => (
+                  <li key={`p-fee-${i}`}>☐ {line.label || line.name} — × {line.qty ?? 1}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          <p className="text-[10px] text-gray-600 mt-4 italic">
+            Imprime cette page (Ctrl/Cmd+P) ou copie-colle dans un courriel vers l'entrepôt.
+          </p>
+        </section>
+      )}
+    </div>
+  );
+}
+
 function TabCommande({ commandeDraft, quote, jobId, onPricingApplied }) {
+  // Toiture jobs branch off to the morning-loading checklist view. Detected via
+  // the quote.meta.source flag stamped by /api/toiture/save-as-job.
+  if (quote?.meta?.source === 'toiture_calc') {
+    return <TabCommandeToiture jobId={jobId} quote={quote} />;
+  }
+
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null); // { matched, unmatched, partial_matches, total_ttc }
   const [uploadError, setUploadError] = useState(null);
