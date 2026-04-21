@@ -29,6 +29,23 @@ Transform the BW CRM from "devis + jobs tracker" into the **full command center*
 
 Every executor prompt below opens with: *"Read these SOPs before touching code."*
 
+## Baseline-locked facts (from P00 — DO NOT re-derive)
+
+Read `WAVE1-BASELINE.md` before any prompt. Three facts every downstream prompt must obey:
+
+- **TAX COLUMN NAMES DIVERGE.** `quotes.tax_gst` + `quotes.tax_qst` (money totals) vs. `expenses.tps` + `expenses.tvq` + `payments.tps` + `payments.tvq`. A developer referencing `row.tps` on a `quotes` row gets `undefined` → silent $0-tax invoice push. Every Wave-1 QBO mapper MUST name the source table in code + use the right column per table. Add a unit-test fixture for a $1000 PUR quote that asserts `quote.tax_gst + quote.tax_qst == qbo.TxnTaxDetail.TotalTax`.
+- **`payments` TABLE IS EMPTY IN BOTH TENANTS.** P04 Flinks matching cannot smoke-test against history. P04 verification path is forward-only (seed one synthetic payment + match the next live Interac), OR run the 6-rescue payments backfill explicitly before P04 starts. Decide in P04 prompt, do not silently fail the verify step.
+- **`customers.quote_config` IS NULL-CAPABLE.** P00 seeded a scaffold for cid=1 (`quote`/`branding`/`contract`/`promotions`/`review_request`/`payment_schedule` keys all present but empty). Every `quote_config.*` consumer MUST optional-chain (`?.`) and have a safe default. Never assume nested keys exist.
+
+## CoVe Tier 1.5 — Pre-merge checklist for every Wave-1 prompt
+
+- [ ] Read `WAVE1-BASELINE.md` and confirm the 3 facts above still hold.
+- [ ] Every new table has RLS ENABLE + at least one CREATE POLICY in the **same migration** (feedback_rls_enabled_zero_policies_traps).
+- [ ] Every `PLPGSQL` function has `SET search_path = public`.
+- [ ] Every new `customer_id`-bearing table has a partial index on `customer_id`.
+- [ ] `mcp__supabase__get_advisors` is run after migration; new warnings get resolved in the same PR.
+- [ ] Every new `/api/*` route goes through `getAuthContext` and filters by `customerId`.
+
 ---
 
 ## P00 — Bootstrap + vision lock
@@ -82,6 +99,8 @@ Every executor prompt below opens with: *"Read these SOPs before touching code."
 - NEVER store QBO tokens in plaintext — encrypt via `lib/tokenEncryption.js` like Gmail tokens.
 - NEVER call QBO without refresh check — tokens expire every hour.
 - NEVER push an invoice whose `customer_id` doesn't match the logged-in user's session tenant.
+- NEVER ship the push-invoice mapper without referencing the exact source column names — `quotes.subtotal`, `quotes.tax_gst`, `quotes.tax_qst`, `quotes.total_ttc`, `quotes.line_items` (jsonb). Use a typed adapter; never a generic `row.tps` style lookup.
+- NEVER run OAuth unless `QBO_CLIENT_ID`, `QBO_CLIENT_SECRET`, `QBO_REDIRECT_URI`, `QBO_ENVIRONMENT` env vars are present on Vercel + local `.env.local`. If any is missing, `/api/qbo/auth/start` must return a structured 500 with the missing var names (never silent).
 </constraints>
 
 <thinking_required>Before coding, trace the token refresh path on one diagram. If refresh fails, does `getQboClient` throw or retry silently? Decide + document.</thinking_required>
@@ -114,9 +133,11 @@ Every executor prompt below opens with: *"Read these SOPs before touching code."
 - NEVER round totals; pass numbers at 2 decimals only when QBO requires, else keep precision.
 - NEVER hardcode tax codes — always go through `qbo_tax_mappings`.
 - NEVER sync an invoice whose mapping is missing — block with a clear error.
+- NEVER reference `quote.tps` / `quote.tvq` — those columns DO NOT EXIST on `quotes`. Use `quote.tax_gst` + `quote.tax_qst`. Referencing `.tps` returns `undefined` and silently ships a $0-tax invoice. (Risk 1 from WAVE1-BASELINE.md.)
+- NEVER combine `quotes` and `expenses` in a single mapper without an adapter — their tax column names diverge (`tax_gst`/`tax_qst` vs `tps`/`tvq`).
 </constraints>
 
-<thinking_required>Step through one PUR invoice ($1000 HT + 5% TPS + 9.975% TVQ) end-to-end. Write the exact QBO payload. Verify BW total_ttc == QBO TotalAmt to the cent.</thinking_required>
+<thinking_required>Step through one PUR invoice ($1000 HT + 5% TPS + 9.975% TVQ) end-to-end. Write the exact QBO payload. Verify BW total_ttc == QBO TotalAmt to the cent. Then do the same for a PUR expense ($1000 HT + tps + tvq) and confirm the mapper reads `expenses.tps` — not `expenses.tax_gst`.</thinking_required>
 
 <output_format><delivery><mapping_proof>QBO payload for the $1000 example</mapping_proof></delivery></output_format>
 
@@ -166,9 +187,11 @@ Every executor prompt below opens with: *"Read these SOPs before touching code."
 - NEVER expose Flinks tokens to the client.
 - NEVER auto-match below 0.9 confidence — human review for edge cases.
 - NEVER match across divisions without owner/admin role.
+- NEVER run the smoke-test verification against an empty `payments` table (Risk 2 from WAVE1-BASELINE.md). As of P00, `payments` had 0 rows for cid=1 and cid=9. Decide BEFORE coding: (a) backfill the 6 PUR rescue payments (see `scripts/rescue-jeremy-6-quotes.mjs`) first, OR (b) seed one synthetic payment row and scope the verify step to that synthetic id. Document the decision at the top of `/api/flinks/sync`.
+- NEVER delete or re-key historical `payments` rows once backfilled — QBO reconciliation chains break.
 </constraints>
 
-<thinking_required>List the 4 reconciliation edge cases (double deposit, split transfer, reversed Interac, fee deduction). Decide matching behavior for each.</thinking_required>
+<thinking_required>List the 4 reconciliation edge cases (double deposit, split transfer, reversed Interac, fee deduction). Decide matching behavior for each. Also: state in writing which payments-backfill path you chose (a) or (b), and why.</thinking_required>
 
 <output_format><delivery><matched_example>1 real PUR pattern</matched_example><edge_cases>4 items resolved</edge_cases></delivery></output_format>
 
@@ -289,6 +312,8 @@ Every executor prompt below opens with: *"Read these SOPs before touching code."
 - NEVER send review requests on Sundays or outside 9-20h (Mikael's sms_timing rule).
 - NEVER resend on the same job (idempotent on `review_sent_at`).
 - NEVER send if `leads.do_not_contact = true`.
+- NEVER assume `customers.quote_config.review_request` exists without an optional-chain guard — for the BW tenant it may be a minimal scaffold with `enabled:false` (Risk 3 from WAVE1-BASELINE.md). If the object is missing or `enabled:false`, skip silently — do not throw.
+- NEVER send a Google review link for the BW tenant unless `quote_config.review_request.google_place_id` is set — BW has no physical location.
 </constraints>
 
 <output_format><delivery><template>bilingual SMS body</template><trigger>exact status transition</trigger></delivery></output_format>
