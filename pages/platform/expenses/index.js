@@ -9,7 +9,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '../../../src/components/dashboard/DashboardLayout';
 import AddExpenseModal, { EXPENSE_CATEGORY_LABELS } from '../../../src/components/expenses/AddExpenseModal';
-import { Plus, Receipt, Loader2 } from 'lucide-react';
+import QuickExpenseCapture from '../../../src/components/expenses/QuickExpenseCapture';
+import { Plus, Receipt, Loader2, Camera } from 'lucide-react';
 import { fmtMoney } from '../../../lib/formatters';
 
 function fmtDate(iso) {
@@ -26,6 +27,7 @@ export default function ExpensesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [showQuick, setShowQuick] = useState(false);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -56,13 +58,22 @@ export default function ExpensesPage() {
             <h1 className="text-lg font-semibold text-d-text">Dépenses</h1>
             <p className="text-xs text-d-muted">Factures, reçus, frais logés — avec TPS/TVQ auto-séparés pour la déclaration.</p>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowForm(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-d-primary text-white hover:opacity-90 transition"
-          >
-            <Plus size={14} /> Ajouter
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowQuick(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-d-primary text-white hover:opacity-90 transition"
+            >
+              <Camera size={14} /> Photo rapide
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowForm(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border border-d-border text-d-text hover:border-d-primary/40 transition"
+            >
+              <Plus size={14} /> Manuel
+            </button>
+          </div>
         </div>
 
         {showForm && (
@@ -70,6 +81,13 @@ export default function ExpensesPage() {
             jobs={jobs}
             onClose={() => setShowForm(false)}
             onSaved={() => { setShowForm(false); loadAll(); }}
+          />
+        )}
+
+        {showQuick && (
+          <QuickExpenseCapture
+            onClose={() => setShowQuick(false)}
+            onSaved={() => { loadAll(); }}
           />
         )}
 

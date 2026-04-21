@@ -9,6 +9,7 @@ import StatusBadge from '../../../src/components/jobs/StatusBadge';
 import DevisEditor from '../../../src/components/jobs/DevisEditor';
 import MediaPicker from '../../../src/components/ui/MediaPicker';
 import AddExpenseModal from '../../../src/components/expenses/AddExpenseModal';
+import QuickExpenseCapture from '../../../src/components/expenses/QuickExpenseCapture';
 import { sanitizeProjectDescription } from '../../../lib/devis/specs';
 import { getStatusMeta, STATUS_ORDER } from '../../../lib/status-config';
 import {
@@ -1346,6 +1347,7 @@ const EXPENSE_CATEGORY_LABELS = {
 
 function TabFinances({ finances, quoteAmount, jobId, jobLabel, onExpenseAdded }) {
   const [addOpen, setAddOpen] = useState(false);
+  const [quickOpen, setQuickOpen] = useState(false);
 
   if (!finances) {
     return (
@@ -1408,15 +1410,22 @@ function TabFinances({ finances, quoteAmount, jobId, jobLabel, onExpenseAdded })
         </div>
       </div>
 
-      {/* Add expense button — pre-links to this job */}
+      {/* Add expense buttons — pre-linked to this job */}
       {jobId && (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setQuickOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-d-primary text-white hover:opacity-90 transition"
+          >
+            📸 Photo rapide
+          </button>
           <button
             type="button"
             onClick={() => setAddOpen(true)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-rose-500/40 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40"
           >
-            <CreditCard size={12} /> + Ajouter une dépense
+            <CreditCard size={12} /> + Manuel
           </button>
         </div>
       )}
@@ -1428,6 +1437,15 @@ function TabFinances({ finances, quoteAmount, jobId, jobLabel, onExpenseAdded })
           presetJobLabel={jobLabel}
           onClose={() => setAddOpen(false)}
           onSaved={() => { setAddOpen(false); onExpenseAdded && onExpenseAdded(); }}
+        />
+      )}
+
+      {quickOpen && (
+        <QuickExpenseCapture
+          presetJobId={jobId}
+          presetJobLabel={jobLabel}
+          onClose={() => setQuickOpen(false)}
+          onSaved={() => { onExpenseAdded && onExpenseAdded(); }}
         />
       )}
 
