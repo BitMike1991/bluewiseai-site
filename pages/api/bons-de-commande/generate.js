@@ -7,9 +7,14 @@
 import { getAuthContext, getSupabaseServerClient } from '../../../lib/supabaseServer';
 import { itemSketchSvg } from '../../../lib/quote-templates/pur.js';
 import { resolveDivisionId } from '../../../lib/divisions';
+import { dedupeSpecs } from '../../../lib/devis/specs.js';
 
-const NAVY = '#2A2C35';
-const SAGE = '#5A7A5A';
+const NAVY    = '#2A2C35';
+const RED     = '#B73D3A';
+const PAPER   = '#FAFAF7';
+const RULE    = '#E5E2DA';
+const MUTED   = '#7B7565';
+const TEXT    = '#2A2C35';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -22,21 +27,69 @@ function fmtDate(d) {
   return dt.toLocaleDateString('fr-CA', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
-function buildItemLabel(item) {
-  const parts = [];
-  if (item.type)   parts.push(item.type);
-  if (item.model)  parts.push(item.model);
-  if (item.ouvrant) parts.push(item.ouvrant);
-  if (item.dimensions?.width && item.dimensions?.height) {
-    parts.push(`${item.dimensions.width}" × ${item.dimensions.height}"`);
-  }
-  return parts.join(' — ') || item.description || 'Article';
-}
-
 function supplierLabel(key) {
   if (key === 'royalty')   return 'Royalty Fenestration';
   if (key === 'touchette') return 'Touchette';
   return 'Autre fournisseur';
+}
+
+// ── Spec sanitizers ──────────────────────────────────────────────────────────
+// Mikael 2026-04-21: NEVER "coupe-froid" wording, NEVER duplicate Thermos lines.
+// Per memory rule feedback_thermos_wording.md: only "Thermos double 7/8″" or
+// "Thermos triple 1 1/4″" (with gas) is allowed.
+
+function stripCoupeFroid(s) {
+  if (!s) return s;
+  return String(s)
+    // "Triple coupe-froid (vs double standard)" → drop entirely
+    .replace(/\bTriple\s+coupe[-\s]?froid[^,·\n]*/gi, '')
+    // "double coupe-froid"   → "double"
+    .replace(/\b(double|triple)\s+coupe[-\s]?froid\b/gi, '$1')
+    // bare "coupe-froid" / "coupe froid" / "coupefroid"
+    .replace(/\bcoupe[-\s]?froid\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([·,])/g, '$1')
+    .trim();
+}
+
+function cleanSpecs(specsRaw) {
+  // Accept array or comma-separated string. Strip coupe-froid wording from
+  // each line BEFORE dedup (so two Thermos lines that only differ by
+  // "coupe-froid" get collapsed into one).
+  const list = Array.isArray(specsRaw)
+    ? specsRaw
+    : String(specsRaw || '').split(/\s*,\s*|\s+·\s+/);
+  const stripped = list
+    .map((s) => stripCoupeFroid(String(s || '').trim()))
+    .filter(Boolean);
+  return dedupeSpecs(stripped);
+}
+
+// ── Item categorisation (Fenêtres / Portes patio / Portes d'entrée) ──────────
+
+function categorizeItem(item) {
+  const t = String(item.type || item.description || '').toLowerCase();
+  if (t.includes('patio') || t.includes('porte-fenêtre') || t.includes('porte fenêtre')) {
+    return 'patio';
+  }
+  if (t.includes('porte')) return 'porte';
+  if (t.includes('fen') || t.includes('window')) return 'fenetre';
+  return 'autre';
+}
+
+const CATEGORY_LABELS = {
+  fenetre: 'Fenêtres',
+  porte:   'Portes d’entrée',
+  patio:   'Portes patio',
+  autre:   'Autres articles',
+};
+
+function groupByCategory(items) {
+  const groups = { fenetre: [], porte: [], patio: [], autre: [] };
+  for (const it of items) {
+    groups[categorizeItem(it)].push(it);
+  }
+  return groups;
 }
 
 // ── BC HTML Template (card-based layout, mobile-safe, print-clean) ───────────
@@ -44,385 +97,406 @@ function supplierLabel(key) {
 // the devis PUR look. No horizontal scroll on mobile Safari; each card has
 // `page-break-inside: avoid` so printing to PDF never splits a card mid-page.
 
+// ── BC HTML — Manufacturer-grade layout ──────────────────────────────────────
+// Mikael 2026-04-21 — modeled on PUR's reference fournisseur PDF
+// (commande-royalty.html). Two columns COMMANDITAIRE | PROJET·LIVRAISON,
+// items grouped by category (Fenêtres / Portes d'entrée / Portes patio),
+// numbered cards with model·ouvrant header + sketch + dedupe'd specs.
+// NEVER renders "coupe-froid" wording; NEVER renders duplicate Thermos lines.
+
 function renderItemCardBc(item, idx) {
-  const num = String(idx + 1).padStart(2, '0');
+  const num = String(idx).padStart(2, '0');
   const sketchSvg = itemSketchSvg(item);
-  const type = escHtml(item.type || '—');
-  const model = item.model ? `<span class="bc-item-model">${escHtml(item.model)}</span>` : '';
-  const ouvrant = item.ouvrant ? `<span class="bc-item-ouvrant">${escHtml(item.ouvrant)}</span>` : '';
+  const type = escHtml(item.type || item.description || '—');
+  const model = item.model ? escHtml(item.model) : '';
+  const ouvrant = item.ouvrant ? escHtml(item.ouvrant) : '';
+  const headerKey = [model, ouvrant].filter(Boolean).join(' · ');
   const dims = (item.dimensions?.width && item.dimensions?.height)
     ? `${escHtml(String(item.dimensions.width))}" × ${escHtml(String(item.dimensions.height))}"`
     : '';
-  const specsRaw = Array.isArray(item.specs) ? item.specs.join(' · ') : (item.specs || '');
-  // Split long spec strings on commas so each bullet wraps cleanly on mobile.
-  const specsParts = specsRaw
-    ? specsRaw.split(/\s*,\s*|\s+·\s+/).map(s => s.trim()).filter(Boolean)
-    : [];
-  const specsHtml = specsParts.length > 0
-    ? `<ul class="bc-item-specs">${specsParts.map(s => `<li>${escHtml(s)}</li>`).join('')}</ul>`
+  const specs = cleanSpecs(item.specs);
+  const specsHtml = specs.length > 0
+    ? `<ul class="bc-spec-list">${specs.map(s => `<li>${escHtml(s)}</li>`).join('')}</ul>`
     : '';
   const qty = Number(item.qty) || 1;
+  // Location pin (room / note) — small italic line under the specs, like
+  // "Évier" / "Cuisine" on the reference PDF. Falls back gracefully if
+  // the item has no room context.
+  const room = item.room || item._room || item.location || item.note || null;
+  const roomHtml = room
+    ? `<div class="bc-item-room"><span class="bc-pin">📍</span>${escHtml(room)}</div>`
+    : '';
 
   return `
-    <div class="bc-item-card">
+    <article class="bc-item">
       <div class="bc-item-num">${num}</div>
       ${qty > 1 ? `<div class="bc-item-qty">× ${qty}</div>` : ''}
       <div class="bc-item-sketch">
         ${sketchSvg}
         ${dims ? `<div class="bc-item-dims">${dims}</div>` : ''}
       </div>
-      <div class="bc-item-info">
-        <div class="bc-item-type">${type}${model}${ouvrant}</div>
+      <div class="bc-item-body">
+        ${headerKey ? `<div class="bc-item-key">${headerKey}</div>` : ''}
+        <div class="bc-item-type">${type}</div>
         ${specsHtml}
+        ${roomHtml}
       </div>
-    </div>`;
+    </article>`;
+}
+
+function renderCategoryBlock(label, items, startIdx) {
+  if (!items.length) return '';
+  const cards = items.map((it, i) => renderItemCardBc(it, startIdx + i + 1)).join('');
+  return `
+    <section class="bc-category">
+      <h3 class="bc-category-title">${escHtml(label)} <span class="bc-category-count">· ${items.length}</span></h3>
+      <div class="bc-category-items">${cards}</div>
+    </section>`;
 }
 
 function buildBcHtml({ bc_number, supplier, date, projects, totalItems, totalQty, businessName, authorizedRep, hideSupplierName }) {
-  const supplierName = hideSupplierName ? 'À compléter par le fournisseur' : supplierLabel(supplier);
-
-  const projectsHtml = projects.map(proj => {
-    const addrStr = proj.client_address
-      ? (typeof proj.client_address === 'string'
-          ? proj.client_address
-          : [proj.client_address.street, proj.client_address.city].filter(Boolean).join(', '))
-      : '';
-    const projHeader = `
-      <div class="bc-proj-header">
-        <div class="bc-proj-meta">
-          <span class="bc-proj-number">Projet ${escHtml(proj.job_number || proj.job_id || 'N/A')}</span>
-          <span class="bc-proj-client">${escHtml(proj.client_name || '—')}</span>
-          ${addrStr ? `<span class="bc-proj-addr">${escHtml(addrStr)}</span>` : ''}
-        </div>
-        <div class="bc-proj-count">${proj.items.length} article${proj.items.length > 1 ? 's' : ''}</div>
-      </div>`;
-
-    const itemsHtml = proj.items.map((entry, idx) => renderItemCardBc(entry.item, idx)).join('');
-
-    return `
-      <div class="bc-project-block">
-        ${projHeader}
-        <div class="bc-item-grid">${itemsHtml}</div>
-      </div>`;
+  void supplier; void hideSupplierName;
+  // Flatten all items across all projects into one list, then group by
+  // category. Each item carries its parent project's job_number/client.
+  const allItems = [];
+  for (const proj of projects) {
+    for (const entry of proj.items) {
+      allItems.push({
+        ...entry.item,
+        _project_label: proj.job_number || proj.job_id || 'N/A',
+        _project_client: proj.client_name || '',
+      });
+    }
+  }
+  const groups = groupByCategory(allItems);
+  const order = ['fenetre', 'porte', 'patio', 'autre'];
+  let runningIdx = 0;
+  const categoryHtml = order.map((key) => {
+    const items = groups[key];
+    if (!items.length) return '';
+    const block = renderCategoryBlock(CATEGORY_LABELS[key], items, runningIdx);
+    runningIdx += items.length;
+    return block;
   }).join('');
+
+  // Project · Livraison block — when multiple projects on one BDC, list
+  // the job numbers stacked. Client name is intentionally omitted (B2B
+  // confidentiality on outbound supplier docs — matches reference PDF
+  // showing "Client final : —").
+  const projectsList = projects.map((p) =>
+    `<div class="bc-proj-line">${escHtml(p.job_number || p.job_id || 'N/A')}</div>`
+  ).join('');
+
+  const businessLine1 = businessName || 'Entreprise';
+  const businessShort = businessLine1.split(/[\s&]/)[0] || 'Entreprise';
+  const repLine = authorizedRep ? escHtml(authorizedRep) : '';
 
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>BON DE COMMANDE ${escHtml(bc_number)}</title>
+<title>${escHtml(businessShort)} — Bon de commande fournisseur</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
-    font-family: 'Inter', system-ui, sans-serif;
-    background: #f8f9fa;
-    color: ${NAVY};
-    font-size: 13px;
-    line-height: 1.5;
+  :root {
+    --navy:  ${NAVY};
+    --red:   ${RED};
+    --paper: ${PAPER};
+    --rule:  ${RULE};
+    --muted: ${MUTED};
+    --text:  ${TEXT};
   }
 
-  .page {
-    max-width: 900px;
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--paper);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .bc-page {
+    max-width: 880px;
     margin: 0 auto;
     background: #fff;
+    padding: 56px 64px 64px;
     min-height: 100vh;
   }
 
-  /* Header */
-  .bc-header {
-    background: ${NAVY};
-    color: #fff;
-    padding: 32px 40px 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 16px;
-    flex-wrap: wrap;
+  /* Header — PÜR CONSTRUCTION (left) + DOCUMENT block (right) + red rule */
+  .bc-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 24px;
+    margin-bottom: 24px;
+    padding-top: 60px;
   }
-
-  .bc-brand { display: flex; flex-direction: column; gap: 6px; }
-  .bc-brand-name {
+  .bc-brand {
     font-family: 'JetBrains Mono', monospace;
-    font-weight: 700;
     font-size: 22px;
-    letter-spacing: -0.5px;
-    color: #fff;
-  }
-  .bc-brand-sub {
-    font-size: 11px;
-    color: rgba(255,255,255,0.55);
-    letter-spacing: 0.5px;
-  }
-
-  .bc-title-block { text-align: right; }
-  .bc-doc-type {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
     font-weight: 600;
-    letter-spacing: 2px;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: ${SAGE};
-    margin-bottom: 4px;
+    color: var(--navy);
   }
-  .bc-number {
+  .bc-doc {
+    text-align: right;
+  }
+  .bc-doc-label {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 20px;
-    font-weight: 700;
-    color: #fff;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.32em;
+    color: var(--muted);
+    margin-bottom: 6px;
   }
-  .bc-date {
+  .bc-doc-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    color: var(--navy);
+    text-transform: uppercase;
+  }
+  .bc-doc-num {
+    font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
-    color: rgba(255,255,255,0.6);
-    margin-top: 4px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .bc-rule {
+    height: 3px;
+    background: var(--red);
+    margin: 0 0 24px;
   }
 
-  /* Meta bar */
-  .bc-meta {
-    background: #f0f3ef;
-    border-bottom: 2px solid ${NAVY};
-    padding: 16px 40px;
+  /* Strip — ÉMIS LE / LIVRAISON SOUHAITÉE / PRIORITÉ */
+  .bc-strip {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 20px;
+    gap: 32px;
+    margin-bottom: 36px;
   }
-  .meta-block { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .meta-label {
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: ${SAGE};
-  }
-  .meta-value {
-    font-size: 13px;
-    font-weight: 600;
-    color: ${NAVY};
-    word-break: break-word;
-  }
-  .meta-value-sm {
-    font-size: 11px;
-    color: ${NAVY};
-  }
-
-  /* Summary strip */
-  .bc-summary {
+  .bc-strip-cell {
     display: flex;
-    gap: 24px;
-    padding: 12px 40px;
-    background: #fff;
-    border-bottom: 1px solid #e0e4df;
-    flex-wrap: wrap;
-  }
-  .summary-chip {
-    display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 6px;
-    font-size: 11px;
-    color: #666;
   }
-  .summary-chip strong {
+  .bc-strip-label {
     font-family: 'JetBrains Mono', monospace;
-    font-weight: 700;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .bc-strip-val {
     font-size: 14px;
-    color: ${NAVY};
+    font-weight: 500;
+    color: var(--text);
   }
 
-  /* Body */
-  .bc-body { padding: 24px 40px 40px; }
-
-  .bc-project-block {
-    margin-bottom: 32px;
-    border: 1px solid #dde2db;
-    border-radius: 10px;
-    overflow: hidden;
-    background: #fff;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-  .bc-proj-header {
-    background: #f0f3ef;
-    border-bottom: 1px solid #dde2db;
-    padding: 14px 18px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .bc-proj-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .bc-proj-number {
+  /* Section title (PROJET ET LIVRAISON / ARTICLES À FABRIQUER) */
+  .bc-section-title {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    font-weight: 700;
-    color: ${NAVY};
-  }
-  .bc-proj-client { font-size: 13px; font-weight: 600; color: ${NAVY}; }
-  .bc-proj-addr   { font-size: 11px; color: #666; }
-  .bc-proj-count  {
     font-size: 11px;
     font-weight: 600;
-    color: ${NAVY};
-    background: #e4ece4;
-    padding: 4px 12px;
-    border-radius: 20px;
-    white-space: nowrap;
+    letter-spacing: 0.24em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin: 32px 0 14px;
   }
 
-  /* Item card grid (matches devis layout) */
-  .bc-item-grid {
+  /* Cards — Commanditaire | Projet · Livraison */
+  .bc-cards {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    padding: 16px;
+    gap: 16px;
+  }
+  .bc-card {
+    border-left: 3px solid var(--red);
+    padding: 4px 0 4px 18px;
+  }
+  .bc-card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .bc-card-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 4px;
+  }
+  .bc-card p {
+    font-size: 12.5px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .bc-proj-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 4px;
+  }
+  .bc-proj-client {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
   }
 
-  .bc-item-card {
-    position: relative;
-    background: #fff;
-    border: 1px solid #dde2db;
-    border-radius: 8px;
-    padding: 18px 16px 14px;
+  /* Categories */
+  .bc-category {
+    margin-top: 24px;
+    break-inside: auto;
+  }
+  .bc-category-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--text);
+    padding-left: 12px;
+    border-left: 3px solid var(--navy);
+    margin: 18px 0 14px;
+  }
+  .bc-category-count {
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .bc-category-items {
     display: flex;
-    gap: 14px;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Item card */
+  .bc-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 132px 1fr;
+    gap: 24px;
+    padding: 18px 18px 14px;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: #fff;
     break-inside: avoid;
     page-break-inside: avoid;
   }
   .bc-item-num {
     position: absolute;
-    top: -10px;
+    top: 14px;
     left: 14px;
-    background: ${NAVY};
-    color: #fff;
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
-    font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 3px;
-    letter-spacing: 0.5px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: var(--muted);
   }
   .bc-item-qty {
     position: absolute;
     top: 14px;
     right: 14px;
-    background: #e4ece4;
-    color: ${NAVY};
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
-    font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 3px;
+    font-weight: 600;
+    color: var(--red);
+    background: #fdf3f2;
+    padding: 2px 8px;
+    border-radius: 999px;
   }
   .bc-item-sketch {
-    flex-shrink: 0;
-    width: 96px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    padding-top: 18px;
   }
   .bc-item-sketch svg {
     display: block;
-    background: #f7f9f7;
-    border: 1px solid #e0e4df;
-    border-radius: 3px;
-    max-width: 96px;
+    max-width: 100px;
+    max-height: 100px;
     height: auto;
   }
   .bc-item-dims {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: ${NAVY};
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text);
     text-align: center;
-    font-weight: 600;
     white-space: nowrap;
   }
-  .bc-item-info {
-    flex: 1;
+  .bc-item-body {
+    padding-top: 14px;
     min-width: 0;
   }
+  .bc-item-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
   .bc-item-type {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 700;
-    color: ${NAVY};
+    color: var(--navy);
     margin-bottom: 8px;
-    line-height: 1.3;
-    word-wrap: break-word;
+    line-height: 1.25;
   }
-  .bc-item-model {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    background: #e4ece4;
-    color: ${NAVY};
-    padding: 1px 6px;
-    border-radius: 3px;
-    margin-left: 6px;
-    font-weight: 700;
-  }
-  .bc-item-ouvrant {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    background: #f0f3ef;
-    color: ${NAVY};
-    padding: 1px 6px;
-    border-radius: 3px;
-    margin-left: 4px;
-    opacity: 0.8;
-  }
-  .bc-item-specs {
+  .bc-spec-list {
     list-style: none;
     padding: 0;
     margin: 0;
   }
-  .bc-item-specs li {
-    font-size: 11px;
-    color: #555;
-    line-height: 1.5;
-    padding-left: 10px;
-    position: relative;
+  .bc-spec-list li {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.55;
+    padding: 1px 0;
   }
-  .bc-item-specs li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 8px;
-    width: 4px;
-    height: 1px;
-    background: ${NAVY};
-    opacity: 0.4;
+  .bc-item-room {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--rule);
+    font-size: 12px;
+    font-style: italic;
+    color: var(--muted);
+  }
+  .bc-pin {
+    margin-right: 4px;
+    font-style: normal;
   }
 
   /* Footer */
-  .bc-footer {
-    margin: 0 40px;
-    padding: 16px 0;
-    border-top: 2px solid ${NAVY};
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  .bc-foot {
+    margin-top: 36px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 1fr auto;
     gap: 16px;
-    flex-wrap: wrap;
+    font-size: 11px;
+    color: var(--muted);
   }
-  .footer-totals { display: flex; gap: 24px; flex-wrap: wrap; }
-  .footer-total-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-  .footer-total-label {
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: #666;
+  .bc-foot-right {
+    text-align: right;
   }
-  .footer-total-val {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 18px;
-    font-weight: 700;
-    color: ${NAVY};
-  }
-  .footer-note { font-size: 10px; color: #888; text-align: right; max-width: 220px; }
+  .bc-foot-strong { color: var(--text); font-weight: 500; }
 
   /* Print FAB */
   .bc-print-fab {
@@ -430,75 +504,48 @@ function buildBcHtml({ bc_number, supplier, date, projects, totalItems, totalQty
     top: 16px;
     right: 16px;
     z-index: 10;
-    background: ${NAVY};
+    background: var(--navy);
     color: #fff;
     border: none;
-    padding: 10px 18px;
+    padding: 10px 16px;
     border-radius: 10px;
     cursor: pointer;
     font-family: inherit;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
   }
   .bc-print-fab:hover { opacity: 0.9; }
 
-  /* Mobile — single-column cards, no horizontal scroll on Safari */
+  /* Mobile */
   @media (max-width: 768px) {
-    .bc-header { padding: 24px 20px 20px; }
-    .bc-title-block { text-align: left; }
-    .bc-meta { padding: 14px 20px; grid-template-columns: 1fr; gap: 12px; }
-    .bc-summary { padding: 10px 20px; }
-    .bc-body { padding: 18px 14px 28px; }
-    .bc-proj-header { padding: 12px 14px; }
-    .bc-item-grid { grid-template-columns: 1fr; gap: 12px; padding: 12px; }
-    .bc-item-card { padding: 16px 14px 12px; gap: 12px; }
-    .bc-item-sketch { width: 84px; }
-    .bc-item-sketch svg { max-width: 84px; }
-    .bc-footer { padding: 14px 20px; margin: 0; flex-direction: column; align-items: flex-start; }
-    .footer-note { text-align: left; }
+    .bc-page { padding: 32px 18px 36px; }
+    .bc-head { padding-top: 24px; grid-template-columns: 1fr; }
+    .bc-doc { text-align: left; }
+    .bc-strip { grid-template-columns: 1fr 1fr; gap: 16px; }
+    .bc-cards { grid-template-columns: 1fr; }
+    .bc-item { grid-template-columns: 96px 1fr; gap: 14px; padding: 14px 12px 12px; }
+    .bc-item-sketch svg { max-width: 90px; max-height: 90px; }
   }
 
-  /* Print — Letter, ½ inch margins, every card stays whole.
-     Hardened 2026-04-21 (PUR-bug-9 — Mikael): items + sections still split
-     on Chrome/Safari despite break-inside:avoid because (a) project-block
-     was avoid-page so it tried to fit the whole project on one page and
-     ended up splitting cards instead, (b) item-card was display:flex which
-     Chrome/Safari split THROUGH the flex children. Fix:
-       1. project-block → break-inside:auto (allow breaks BETWEEN cards).
-       2. item-card → display:block in print + float-based sketch/info
-          layout so break rules actually apply (flex containers ignore them
-          on both engines historically).
-       3. Add !important to override the non-print display:flex.
-       4. Belt-and-suspenders: -webkit-column-break-inside for old Safari
-          + transform: translateZ(0) to force a paint layer so the break
-          engine sees the card as an atomic block. */
+  /* Print — Letter, every card stays whole.
+     - bc-item is display:grid in screen for clean alignment, BUT grid items
+       break unreliably on Chrome/Safari. Switch to block + float in print
+       so break-inside:avoid actually applies per item. */
   @media print {
-    @page { size: Letter; margin: 10mm; }
+    @page { size: Letter; margin: 12mm 14mm; }
     html, body { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .page { box-shadow: none; max-width: none; min-height: 0; }
+    .bc-page { box-shadow: none; max-width: none; padding: 0; min-height: 0; }
     .bc-print-fab { display: none !important; }
-    .bc-header, .bc-meta, .bc-summary, .bc-footer {
+    .bc-head, .bc-rule, .bc-strip, .bc-cards, .bc-foot {
       break-inside: avoid;
       page-break-inside: avoid;
     }
-    .bc-body { padding: 14px 16px; }
-    .bc-project-block {
-      break-inside: auto !important;
-      page-break-inside: auto !important;
-      margin-bottom: 14px;
-      border-radius: 0;
-    }
-    .bc-proj-header { break-after: avoid !important; page-break-after: avoid !important; }
-    .bc-item-grid {
-      display: block !important;
-      gap: 0;
-      padding: 10px;
-    }
-    .bc-item-card {
+    .bc-section-title, .bc-category-title { break-after: avoid; page-break-after: avoid; }
+    .bc-category { break-inside: auto; }
+    .bc-category-items { display: block !important; }
+
+    .bc-item {
       display: block !important;
       break-inside: avoid !important;
       page-break-inside: avoid !important;
@@ -508,91 +555,89 @@ function buildBcHtml({ bc_number, supplier, date, projects, totalItems, totalQty
       padding: 14px 14px 12px;
       overflow: hidden;
     }
-    .bc-item-card .bc-item-sketch {
+    .bc-item-sketch {
       float: left;
-      width: 96px;
-      margin-right: 14px;
+      width: 110px;
+      padding-top: 6px;
+      margin-right: 16px;
       margin-bottom: 4px;
     }
-    .bc-item-sketch svg { max-width: 88px; max-height: 88px; }
-    .bc-item-card .bc-item-info {
+    .bc-item-body {
       display: block;
       overflow: hidden;
+      padding-top: 4px;
     }
-    .bc-item-card::after {
+    .bc-item::after {
       content: "";
       display: block;
       clear: both;
     }
-    .bc-item-num { top: -8px; }
-    .bc-item-qty { top: 12px; right: 12px; }
+    .bc-item-num { top: 4px; left: 4px; }
+    .bc-item-qty { top: 4px; right: 4px; }
   }
 </style>
 </head>
 <body>
 <button class="bc-print-fab" onclick="window.print()" aria-label="Imprimer ce bon de commande">🖨️ Imprimer / PDF</button>
-<div class="page">
 
-  <header class="bc-header">
-    <div class="bc-brand">
-      <div class="bc-brand-name">${escHtml((businessName || 'BlueWise').split(/[\s&]/)[0] || 'BlueWise')}</div>
-      <div class="bc-brand-sub">${escHtml(businessName || '')}</div>
-    </div>
-    <div class="bc-title-block">
-      <div class="bc-doc-type">BON DE COMMANDE</div>
-      <div class="bc-number">${escHtml(bc_number)}</div>
-      <div class="bc-date">${escHtml(fmtDate(date))}</div>
+<main class="bc-page">
+
+  <header class="bc-head">
+    <div class="bc-brand">${escHtml(businessShort)} CONSTRUCTION</div>
+    <div class="bc-doc">
+      <div class="bc-doc-label">DOCUMENT</div>
+      <div class="bc-doc-title">BON DE COMMANDE</div>
+      <div class="bc-doc-num">${escHtml(bc_number)}</div>
     </div>
   </header>
+  <div class="bc-rule"></div>
 
-  <div class="bc-meta">
-    <div class="meta-block">
-      <span class="meta-label">Fournisseur</span>
-      <span class="meta-value">${escHtml(supplierName)}</span>
+  <div class="bc-strip">
+    <div class="bc-strip-cell">
+      <div class="bc-strip-label">Émis le</div>
+      <div class="bc-strip-val">${escHtml(fmtDate(date))}</div>
     </div>
-    <div class="meta-block">
-      <span class="meta-label">Commandé par</span>
-      <span class="meta-value">${escHtml(businessName || 'PÜR Construction & Rénovation')}</span>
-      ${authorizedRep ? `<span class="meta-value-sm">${escHtml(authorizedRep)}</span>` : ''}
+    <div class="bc-strip-cell">
+      <div class="bc-strip-label">Livraison souhaitée</div>
+      <div class="bc-strip-val">—</div>
     </div>
-    <div class="meta-block">
-      <span class="meta-label">Date d&apos;émission</span>
-      <span class="meta-value">${escHtml(fmtDate(date))}</span>
+    <div class="bc-strip-cell">
+      <div class="bc-strip-label">Priorité</div>
+      <div class="bc-strip-val">Standard</div>
     </div>
   </div>
 
-  <div class="bc-summary">
-    <div class="summary-chip">Projets: <strong>${projects.length}</strong></div>
-    <div class="summary-chip">Articles: <strong>${totalItems}</strong></div>
-    <div class="summary-chip">Quantité totale: <strong>${totalQty}</strong></div>
-  </div>
-
-  <div class="bc-body">
-    ${projectsHtml}
-  </div>
-
-  <footer class="bc-footer">
-    <div class="footer-totals">
-      <div class="footer-total-item">
-        <span class="footer-total-label">Projets</span>
-        <span class="footer-total-val">${projects.length}</span>
-      </div>
-      <div class="footer-total-item">
-        <span class="footer-total-label">Articles</span>
-        <span class="footer-total-val">${totalItems}</span>
-      </div>
-      <div class="footer-total-item">
-        <span class="footer-total-label">Qté totale</span>
-        <span class="footer-total-val">${totalQty}</span>
-      </div>
+  <h2 class="bc-section-title">Projet et livraison</h2>
+  <div class="bc-cards">
+    <div class="bc-card">
+      <div class="bc-card-label">Commanditaire</div>
+      <div class="bc-card-name">${escHtml(businessLine1)}</div>
+      <p>366 Rue du Lac-Légaré<br/>Saint-Colomban, QC J5K 2K4</p>
+      ${repLine ? `<p>Contact : ${repLine} · (514) 926-7669</p>` : `<p>(514) 926-7669</p>`}
+      <p>RBQ 5827-6668-01</p>
     </div>
-    <div class="footer-note">
-      Ce bon de commande est émis par ${escHtml(businessName || 'l\'entreprise')}.<br/>
-      Les prix fournisseurs sont confidentiels et ne figurent pas sur ce document.
+    <div class="bc-card">
+      <div class="bc-card-label">Projet · Livraison</div>
+      ${projectsList}
+      <div class="bc-proj-client">Client final : —</div>
+    </div>
+  </div>
+
+  <h2 class="bc-section-title">Articles à fabriquer · ${totalItems}</h2>
+  ${categoryHtml}
+
+  <footer class="bc-foot">
+    <div>
+      <span class="bc-foot-strong">${escHtml(businessLine1)}</span> · ${escHtml(bc_number)}<br/>
+      Commande directe
+    </div>
+    <div class="bc-foot-right">
+      <span class="bc-foot-strong">RBQ 5827-6668-01</span><br/>
+      Membre APCHQ
     </div>
   </footer>
 
-</div>
+</main>
 </body>
 </html>`;
 }
