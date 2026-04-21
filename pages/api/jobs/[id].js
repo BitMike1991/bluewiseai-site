@@ -2,7 +2,7 @@
 import { getAuthContext } from "../../../lib/supabaseServer";
 
 export default async function handler(req, res) {
-  const allowed = ["GET", "PATCH"];
+  const allowed = ["GET", "PATCH", "DELETE"];
   if (!allowed.includes(req.method)) {
     res.setHeader("Allow", allowed);
     return res.status(405).json({ error: "Method not allowed" });
@@ -16,6 +16,32 @@ export default async function handler(req, res) {
 
   const { id } = req.query;
   if (!id) return res.status(400).json({ error: "Missing job id" });
+
+  // ── DELETE: soft delete (sets jobs.deleted_at).
+  // Same pattern as leads — keeps every related row (quotes, contracts,
+  // payments, expenses, BCs, events, tasks) intact while removing the
+  // project from the platform UI.
+  if (req.method === "DELETE") {
+    try {
+      const { data, error: delError } = await supabase
+        .from("jobs")
+        .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .eq("id", id)
+        .eq("customer_id", customerId)
+        .is("deleted_at", null)
+        .select("id")
+        .single();
+      if (delError) {
+        console.error("[api/jobs/[id]] soft-delete error", delError);
+        return res.status(500).json({ error: "Failed to delete project" });
+      }
+      if (!data) return res.status(404).json({ error: "Project not found or already deleted" });
+      return res.status(200).json({ success: true, deleted: data.id });
+    } catch (err) {
+      console.error("[api/jobs/[id]] DELETE error", err);
+      return res.status(500).json({ error: "Failed to delete project" });
+    }
+  }
 
   // ── PATCH: update job fields (notes, status, client info) ──
   if (req.method === "PATCH") {
@@ -68,12 +94,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Fetch job
+    // Fetch job (soft-deleted projects hidden from detail view too)
     const { data: job, error: jobError } = await supabase
       .from("jobs")
       .select("*")
       .eq("customer_id", customerId)
       .eq("id", id)
+      .is("deleted_at", null)
       .single();
 
     if (jobError || !job) {

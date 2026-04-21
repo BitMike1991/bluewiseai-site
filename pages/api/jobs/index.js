@@ -184,7 +184,8 @@ export default async function handler(req, res) {
       `,
         { count: "exact" }
       )
-      .eq("customer_id", customerId);
+      .eq("customer_id", customerId)
+      .is("deleted_at", null);
 
     // Status filter: supports comma-separated multi-status e.g. ?status=draft,measuring
     if (status && status !== "all") {

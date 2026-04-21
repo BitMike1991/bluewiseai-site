@@ -25,6 +25,7 @@ import {
   ChevronRight,
   MoreHorizontal,
   ExternalLink,
+  Trash2,
 } from 'lucide-react';
 
 import { fmtMoneyOrDash as formatCurrencyQC } from '../../../lib/formatters';
@@ -155,14 +156,34 @@ function StatusMultiSelect({ selected, onChange }) {
 
 // ── Action menu ───────────────────────────────────────────────────────────────
 
-function JobActionMenu({ jobId, onNavigate }) {
+function JobActionMenu({ jobId, jobLabel, onNavigate, onDeleted }) {
   const [open, setOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete(e) {
+    e.stopPropagation();
+    setOpen(false);
+    if (!window.confirm(`Supprimer définitivement le projet « ${jobLabel || jobId} » ? Les devis, contrats, paiements et tâches restent dans la base mais le projet disparaît du CRM.`)) return;
+    setDeleting(true);
+    try {
+      const r = await fetch(`/api/jobs/${jobId}`, { method: 'DELETE' });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'Échec de la suppression');
+      if (onDeleted) onDeleted(jobId);
+    } catch (err) {
+      window.alert(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="relative">
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
-        className="p-1.5 rounded-lg hover:bg-d-border/40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/50"
+        disabled={deleting}
+        className="p-1.5 rounded-lg hover:bg-d-border/40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/50 disabled:opacity-50"
         aria-label="Actions pour ce projet"
         aria-expanded={open}
       >
@@ -171,7 +192,7 @@ function JobActionMenu({ jobId, onNavigate }) {
 
       {open && (
         <>
-          <div className="absolute z-20 top-full right-0 mt-1 w-44 bg-d-surface border border-d-border rounded-xl shadow-xl shadow-black/40 py-1">
+          <div className="absolute z-20 top-full right-0 mt-1 w-48 bg-d-surface border border-d-border rounded-xl shadow-xl shadow-black/40 py-1">
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); setOpen(false); onNavigate(jobId); }}
@@ -183,19 +204,11 @@ function JobActionMenu({ jobId, onNavigate }) {
             <div className="border-t border-d-border/50 my-1" />
             <button
               type="button"
-              disabled
-              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-d-muted cursor-not-allowed opacity-50"
-              title="Disponible dans P10"
+              onClick={handleDelete}
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-400 hover:bg-rose-500/10 transition"
             >
-              Modifier le statut
-            </button>
-            <button
-              type="button"
-              disabled
-              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-d-muted cursor-not-allowed opacity-50"
-              title="Disponible dans P10"
-            >
-              Envoyer devis
+              <Trash2 size={12} />
+              Supprimer le projet
             </button>
           </div>
           <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setOpen(false); }} aria-hidden="true" />
@@ -697,7 +710,12 @@ export default function JobsPage() {
                       className="md:col-span-1 flex justify-end"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <JobActionMenu jobId={job.id} onNavigate={handleNavigate} />
+                      <JobActionMenu
+                        jobId={job.id}
+                        jobLabel={job.client_name || job.job_id || `Projet #${job.id}`}
+                        onNavigate={handleNavigate}
+                        onDeleted={(deletedId) => setJobs((prev) => prev.filter((j) => j.id !== deletedId))}
+                      />
                     </div>
                   </div>
                 </li>
