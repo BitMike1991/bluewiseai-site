@@ -28,15 +28,19 @@ export default async function handler(req, res) {
         client_email,
         client_address,
         quote_amount,
+        project_description,
+        project_type,
       } = req.body;
       const updates = { updated_at: new Date().toISOString() };
-      if (notes          !== undefined) updates.notes          = notes;
-      if (status         !== undefined) updates.status         = status;
-      if (client_name    !== undefined) updates.client_name    = client_name;
-      if (client_phone   !== undefined) updates.client_phone   = client_phone;
-      if (client_email   !== undefined) updates.client_email   = client_email;
-      if (client_address !== undefined) updates.client_address = client_address;
-      if (quote_amount   !== undefined) updates.quote_amount   = Number(quote_amount) || 0;
+      if (notes               !== undefined) updates.notes               = notes;
+      if (status              !== undefined) updates.status              = status;
+      if (client_name         !== undefined) updates.client_name         = client_name;
+      if (client_phone        !== undefined) updates.client_phone        = client_phone;
+      if (client_email        !== undefined) updates.client_email        = client_email;
+      if (client_address      !== undefined) updates.client_address      = client_address;
+      if (quote_amount        !== undefined) updates.quote_amount        = Number(quote_amount) || 0;
+      if (project_description !== undefined) updates.project_description = project_description || null;
+      if (project_type        !== undefined) updates.project_type        = project_type || null;
 
       if (Object.keys(updates).length === 1) {
         return res.status(400).json({ error: "Nothing to update" });

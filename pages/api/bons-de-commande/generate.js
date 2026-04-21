@@ -41,8 +41,8 @@ function supplierLabel(key) {
 
 // ── BC HTML Template ─────────────────────────────────────────────────────────
 
-function buildBcHtml({ bc_number, supplier, date, projects, totalItems, totalQty }) {
-  const supplierName = supplierLabel(supplier);
+function buildBcHtml({ bc_number, supplier, date, projects, totalItems, totalQty, businessName, authorizedRep, hideSupplierName }) {
+  const supplierName = hideSupplierName ? 'À compléter par le fournisseur' : supplierLabel(supplier);
 
   const projectsHtml = projects.map(proj => {
     const projHeader = `
@@ -357,8 +357,8 @@ function buildBcHtml({ bc_number, supplier, date, projects, totalItems, totalQty
     </div>
     <div class="meta-block">
       <span class="meta-label">Commandé par</span>
-      <span class="meta-value">PÜR Construction &amp; Rénovation</span>
-      <span class="meta-value-sm">Jeremy Caron</span>
+      <span class="meta-value">${escHtml(businessName || 'PÜR Construction & Rénovation')}</span>
+      ${authorizedRep ? `<span class="meta-value-sm">${escHtml(authorizedRep)}</span>` : ''}
     </div>
     <div class="meta-block">
       <span class="meta-label">Date d&apos;émission</span>
@@ -516,6 +516,23 @@ export default async function handler(req, res) {
       return sum + proj.items.reduce((s2, e) => s2 + (Number(e.item.qty) || 1), 0);
     }, 0);
 
+    // Pull tenant identity from quote_config so the BC PDF says the right
+    // company + signing rep instead of the legacy "Jeremy Caron" hardcode.
+    const { data: tenantRow } = await supabase
+      .from('customers')
+      .select('business_name, quote_config')
+      .eq('id', customerId)
+      .maybeSingle();
+    const cfg = tenantRow?.quote_config || {};
+    const businessName  = cfg.branding?.business_name || tenantRow?.business_name || 'Entreprise';
+    const authorizedRep = cfg.contract?.authorized_rep
+      || cfg.email_signature?.name
+      || null;
+    // Mikael 2026-04-21 — PUR sends the same BC to multiple suppliers when
+    // shopping a project around. Hide the chosen supplier name so the same
+    // PDF can go to Royalty + Touchette without revealing the competition.
+    const hideSupplierName = req.body?.hide_supplier_name !== false;
+
     // Render HTML
     const html = buildBcHtml({
       bc_number,
@@ -524,6 +541,9 @@ export default async function handler(req, res) {
       projects,
       totalItems,
       totalQty,
+      businessName,
+      authorizedRep,
+      hideSupplierName,
     });
 
     // Resolve division_id — BC inherits from the first referenced job.

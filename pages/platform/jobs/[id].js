@@ -130,7 +130,119 @@ function PipelineDots({ status, size = 'sm' }) {
 
 // ── Summary cards ─────────────────────────────────────────────────────────────
 
-function SummaryCards({ job, payments, finances }) {
+function EditableProjectCard({ job, onUpdate }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState({
+    project_description: sanitizeProjectDescription(job.project_description) || '',
+    project_type: job.project_type || '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/jobs/${job.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          project_description: draft.project_description.trim() || null,
+          project_type: draft.project_type.trim() || null,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Échec de la mise à jour');
+      if (onUpdate) onUpdate(json.job);
+      setEditing(false);
+    } catch (e) {
+      window.alert(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <div className="rounded-xl border border-d-primary/40 bg-d-surface p-4 shadow-sm">
+        <p className="text-[10px] font-semibold text-d-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <Briefcase size={11} /> Projet (édition)
+        </p>
+        <input
+          type="text"
+          value={draft.project_type}
+          onChange={(e) => setDraft((d) => ({ ...d, project_type: e.target.value }))}
+          placeholder="Type de projet (ex: Résidentiel)"
+          className="w-full mb-2 rounded-lg border border-d-border bg-d-bg px-2 py-1 text-xs text-d-text focus:outline-none focus:ring-1 focus:ring-d-primary/50"
+        />
+        <textarea
+          value={draft.project_description}
+          onChange={(e) => setDraft((d) => ({ ...d, project_description: e.target.value }))}
+          rows={3}
+          placeholder="Description du projet"
+          className="w-full mb-2 rounded-lg border border-d-border bg-d-bg px-2 py-1 text-xs text-d-text focus:outline-none focus:ring-1 focus:ring-d-primary/50 resize-y"
+        />
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving}
+            className="flex-1 px-3 py-1.5 rounded-lg bg-d-primary text-white text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+          >
+            {saving ? 'Sauvegarde…' : 'Enregistrer'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setDraft({
+                project_description: sanitizeProjectDescription(job.project_description) || '',
+                project_type: job.project_type || '',
+              });
+              setEditing(false);
+            }}
+            disabled={saving}
+            className="px-3 py-1.5 rounded-lg border border-d-border text-xs text-d-muted hover:text-d-text"
+          >
+            Annuler
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-d-border bg-d-surface p-4 shadow-sm group">
+      <p className="text-[10px] font-semibold text-d-muted uppercase tracking-wider mb-2 flex items-center justify-between">
+        <span className="flex items-center gap-1.5"><Briefcase size={11} /> Projet</span>
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="p-1 rounded text-d-muted/60 hover:text-d-primary hover:bg-d-primary/10 transition opacity-0 group-hover:opacity-100 focus:opacity-100"
+          title="Modifier le projet"
+          aria-label="Modifier le titre et la description du projet"
+        >
+          <PenLine size={11} />
+        </button>
+      </p>
+      {job.project_type && (
+        <p className="text-sm font-semibold text-d-text mb-1">
+          {job.project_type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+        </p>
+      )}
+      {(() => {
+        const cleaned = sanitizeProjectDescription(job.project_description);
+        if (cleaned) return <p className="text-xs text-d-muted line-clamp-3">{cleaned}</p>;
+        if (!job.project_type) return <p className="text-xs text-d-muted italic">Aucune description — cliquez sur ✏️ pour ajouter</p>;
+        return null;
+      })()}
+      {job.start_date && (
+        <p className="text-xs text-d-muted mt-1.5">
+          Début prévu : <span className="text-d-text">{formatShortDate(job.start_date)}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+function SummaryCards({ job, payments, finances, onJobUpdate }) {
   const address = job.client_address;
   const addressStr = address
     ? [address.street, address.city, address.province, address.postal_code].filter(Boolean).join(', ')
@@ -188,28 +300,8 @@ function SummaryCards({ job, payments, finances }) {
         )}
       </div>
 
-      {/* Projet */}
-      <div className="rounded-xl border border-d-border bg-d-surface p-4 shadow-sm">
-        <p className="text-[10px] font-semibold text-d-muted uppercase tracking-wider mb-2 flex items-center gap-1.5">
-          <Briefcase size={11} /> Projet
-        </p>
-        {job.project_type && (
-          <p className="text-sm font-semibold text-d-text mb-1">
-            {job.project_type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-          </p>
-        )}
-        {(() => {
-          const cleaned = sanitizeProjectDescription(job.project_description);
-          if (cleaned) return <p className="text-xs text-d-muted line-clamp-3">{cleaned}</p>;
-          if (!job.project_type) return <p className="text-xs text-d-muted italic">Aucune description</p>;
-          return null;
-        })()}
-        {job.start_date && (
-          <p className="text-xs text-d-muted mt-1.5">
-            Début prévu : <span className="text-d-text">{formatShortDate(job.start_date)}</span>
-          </p>
-        )}
-      </div>
+      {/* Projet — editable inline (Mikael 2026-04-21 PUR feedback) */}
+      <EditableProjectCard job={job} onUpdate={onJobUpdate} />
 
       {/* Montants */}
       <div className="rounded-xl border border-d-border bg-d-surface p-4 shadow-sm">
@@ -1984,7 +2076,12 @@ export default function JobDetailPage() {
       </div>
 
       {/* Summary cards */}
-      <SummaryCards job={job} payments={payments} finances={finances} />
+      <SummaryCards
+        job={job}
+        payments={payments}
+        finances={finances}
+        onJobUpdate={(updated) => setData((d) => ({ ...d, job: { ...d.job, ...updated } }))}
+      />
 
       {/* Financial summary card (preserved from existing page) */}
       <div className="mb-6 rounded-xl border border-d-border p-4">

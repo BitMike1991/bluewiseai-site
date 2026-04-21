@@ -8,7 +8,7 @@ import { getAvatarColor, getInitial } from '../../../src/lib/dashboardUtils';
 import Select from '../../../src/components/ui/Select';
 import { SkeletonListRow } from '../../../src/components/ui/Skeleton';
 import EmptyState from '../../../src/components/ui/EmptyState';
-import { Users, Plus, X } from 'lucide-react';
+import { Users, Plus, X, Trash2 } from 'lucide-react';
 
 const SOURCE_LIST = ['manual', 'missed_call', 'cold_outreach', 'email', 'sms', 'form', 'referral', 'meta_ads', 'website'];
 
@@ -444,13 +444,38 @@ export default function LeadsPage() {
                     {lastContactLabel}
                   </div>
 
-                  {/* Summary */}
-                  <div className="md:col-span-2 text-xs text-right md:text-right">
-                    {(lead.summary || lead.notes) ? (
-                      <span className="line-clamp-1">{lead.summary || lead.notes}</span>
-                    ) : (
-                      <span style={{ color: styles.text.secondary, opacity: 0.5 }}>No summary</span>
-                    )}
+                  {/* Summary + delete */}
+                  <div className="md:col-span-2 text-xs text-right md:text-right flex items-center justify-end gap-2">
+                    <div className="min-w-0 flex-1">
+                      {(lead.summary || lead.notes) ? (
+                        <span className="line-clamp-1">{lead.summary || lead.notes}</span>
+                      ) : (
+                        <span style={{ color: styles.text.secondary, opacity: 0.5 }}>No summary</span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      title="Supprimer le lead"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm(`Supprimer définitivement « ${displayName} » ? Cette action est irréversible.`)) {
+                          fetch(`/api/leads/${leadId}`, { method: 'DELETE' })
+                            .then((r) => r.json())
+                            .then((json) => {
+                              if (json.success) {
+                                setLeads((prev) => prev.filter((l) => (l.lead_id ?? l.id) !== leadId));
+                              } else {
+                                window.alert(json.error || 'Échec de la suppression');
+                              }
+                            })
+                            .catch((err) => window.alert(err.message || 'Échec de la suppression'));
+                        }
+                      }}
+                      className="flex-shrink-0 p-2 rounded-lg text-d-muted/60 hover:text-rose-500 hover:bg-rose-500/10 transition min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:p-1.5"
+                      aria-label="Supprimer ce lead"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               </li>
