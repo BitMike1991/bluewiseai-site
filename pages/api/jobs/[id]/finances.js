@@ -105,12 +105,15 @@ export default async function handler(req, res) {
 
     const balanceRemaining = Math.max(0, ttc - totalPaid);
 
-    // Margin math uses HT (subtotal), NOT TTC — taxes are passthrough to Revenu
-    // Québec, not Jérémy's revenue. Using TTC would over-state margin % by
-    // ~15% on every job.
-    //
-    // Projected margin: what Jérémy will net if he pays estimated material cost
-    // + logged expenses, against the full client HT. Shown during quote/contract phase.
+    // Margin uses revenue HT (subtotal) MINUS estimatedMaterialCost (HT, from
+    // supplier list) MINUS totalExpenses (TTC, what Jérémy actually paid out).
+    // This is INTENTIONAL: matches the contractor's mental "cash" view —
+    // Jérémy thinks of expenses as "what I paid", not "HT minus future ITC".
+    // The strict accountant view (HT-HT) was tried in commit c2d6b35 and
+    // reverted in cc97cc5 because it inflated displayed profit by ~$1k/job
+    // vs. Jérémy's hand math. When QBO sync (P02+) is wired we'll surface
+    // both views: cash margin (this one) + accountant margin (HT-HT) + ITC
+    // recoverable. Until then, keep the simple cash view.
     const marginProjected = subtotal - estimatedMaterialCost - totalExpenses;
     const marginProjectedPct = subtotal > 0 ? Math.round((marginProjected / subtotal) * 100) : 0;
 
