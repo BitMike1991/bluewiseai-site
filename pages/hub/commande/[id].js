@@ -2,7 +2,7 @@
 // BC detail view — renders HTML, download PDF, re-send email.
 // Gate: enabled_hub_tools includes 'commande'.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import DashboardLayout from '../../../src/components/dashboard/DashboardLayout';
@@ -417,6 +417,33 @@ export default function BcDetailPage() {
   const [showSend,  setShowSend]  = useState(false);
   const [toast,     setToast]     = useState(null);
   const [iframeKey, setIframeKey] = useState(Date.now());
+  const iframeRef = useRef(null);
+
+  // Print only the iframe content (the BC document) — not the surrounding
+  // DashboardLayout (sidebar + topnav). Same pattern as /platform/jobs/[id]
+  // contract view. Bug filed 2026-04-21 by Jérémy: "print PDF fonctionne pas
+  // nulle part" — root cause was dangerouslySetInnerHTML injected the BC HTML
+  // into the dashboard page so window.print() captured all the dashboard
+  // chrome + dark-theme CSS.
+  function handlePrint() {
+    const iframe = iframeRef.current;
+    if (!iframe) { window.print(); return; }
+    try {
+      const w = iframe.contentWindow;
+      if (!w) { window.print(); return; }
+      w.focus();
+      w.print();
+    } catch {
+      // Fallback: open the HTML in a new window and print from there.
+      const win = window.open('', '_blank', 'width=1024,height=768');
+      if (win) {
+        win.document.write(bc.html_content || '');
+        win.document.close();
+        win.focus();
+        setTimeout(() => { try { win.print(); } catch {} }, 250);
+      }
+    }
+  }
 
   useEffect(() => {
     if (!id) return;
@@ -480,7 +507,7 @@ export default function BcDetailPage() {
           </Link>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => window.print()}
+              onClick={handlePrint}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-d-border text-xs text-d-muted hover:text-d-text transition"
             >
               <Printer size={13} /> Imprimer / PDF
@@ -546,13 +573,31 @@ export default function BcDetailPage() {
           )}
         </div>
 
-        {/* HTML render */}
+        {/* HTML render — ISOLATED iframe so window.print() from the parent
+            doesn't try to print the DashboardLayout chrome. srcDoc renders
+            the stored HTML in a fresh document with its own <style> and
+            @media print rules. Height grows to match content after load. */}
         {bc.html_content ? (
-          <div
-            className="rounded-xl border border-d-border overflow-hidden bg-white"
-            style={{ minHeight: '600px' }}
-            dangerouslySetInnerHTML={{ __html: bc.html_content }}
-          />
+          <div className="rounded-xl border border-d-border overflow-hidden bg-white">
+            <iframe
+              ref={iframeRef}
+              key={iframeKey}
+              title={`Bon de commande ${bc.bc_number}`}
+              srcDoc={bc.html_content}
+              sandbox="allow-same-origin allow-scripts allow-modals allow-popups"
+              className="w-full block bg-white"
+              style={{ minHeight: '800px', height: '1200px', border: 'none' }}
+              onLoad={(e) => {
+                try {
+                  const doc = e.currentTarget.contentDocument;
+                  if (doc) {
+                    const h = doc.documentElement.scrollHeight || doc.body.scrollHeight;
+                    if (h > 400) e.currentTarget.style.height = h + 40 + 'px';
+                  }
+                } catch {}
+              }}
+            />
+          </div>
         ) : (
           <div className="py-16 text-center text-d-muted">
             <Package size={36} className="mx-auto mb-3 opacity-30" />
