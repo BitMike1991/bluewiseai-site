@@ -1,6 +1,7 @@
 // pages/api/leads/index.js
 import { getAuthContext, getSupabaseServerClient } from "../../../lib/supabaseServer";
 import { resolveDivisionId } from "../../../lib/divisions";
+import { logRestore } from "../../../lib/deletionAudit";
 
 export default async function handler(req, res) {
   if (req.method !== "GET" && req.method !== "POST") {
@@ -38,6 +39,65 @@ export default async function handler(req, res) {
         explicit: req.body?.division_id ?? null,
       });
 
+      // Auto-restore path: if Jeremy / the agent tries to create a lead
+      // whose phone or email matches a soft-deleted lead in this tenant,
+      // restore THAT row instead of inserting a new one. Prevents duplicate
+      // history when a client comes back. The deletion_audit picks up a
+      // 'restored' row so the trail still shows the toggle.
+      let existingDeleted = null;
+      if (phone || email) {
+        const matchOr = [];
+        if (phone) matchOr.push(`phone.eq.${phone}`);
+        if (email) matchOr.push(`email.eq.${email}`);
+        const { data: matches } = await supabase
+          .from("leads")
+          .select("id, name, phone, email")
+          .eq("customer_id", customerId)
+          .not("deleted_at", "is", null)
+          .or(matchOr.join(","))
+          .order("deleted_at", { ascending: false })
+          .limit(1);
+        existingDeleted = (matches && matches[0]) || null;
+      }
+
+      if (existingDeleted) {
+        const restorePayload = {
+          deleted_at: null,
+          deleted_by_user_id: null,
+          // Refresh fields from the new submission, keeping prior data when blank.
+          name: name || existingDeleted.name,
+          phone: phone || existingDeleted.phone,
+          email: email || existingDeleted.email,
+          city: city || null,
+          source: source || "manual",
+          language: language || null,
+          notes: notes || null,
+          status: leadStatus,
+          division_id: resolvedDivisionId,
+          updated_at: new Date().toISOString(),
+        };
+        const { data: restored, error: restErr } = await supabase
+          .from("leads")
+          .update(restorePayload)
+          .eq("id", existingDeleted.id)
+          .eq("customer_id", customerId)
+          .select()
+          .single();
+        if (restErr) {
+          console.error("[api/leads] POST auto-restore error:", restErr);
+          return res.status(500).json({ error: "Failed to restore lead" });
+        }
+        await logRestore({
+          customerId,
+          entityType: "lead",
+          entityId: existingDeleted.id,
+          entityLabel: restored.name || restored.email || restored.phone || `Lead #${existingDeleted.id}`,
+          user,
+          payload: { reason: "auto_restore_on_recreate", source: source || "manual" },
+        });
+        return res.status(200).json({ success: true, lead: restored, restored: true });
+      }
+
       const insert = {
         customer_id: customerId,
         division_id: resolvedDivisionId,
@@ -60,7 +120,7 @@ export default async function handler(req, res) {
 
       if (insertError) {
         console.error("[api/leads] POST insertError:", insertError);
-        return res.status(500).json({ error: "Failed to create lead" });
+        return res.status(500).json({ error: "Failed to create lead", details: insertError.message });
       }
 
       return res.status(201).json({ success: true, lead: data });
