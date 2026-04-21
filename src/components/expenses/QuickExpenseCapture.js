@@ -7,18 +7,18 @@
 // but the job_id is forced server-side).
 
 import { useRef, useState } from 'react';
-import { Camera, Loader2, CheckCircle2, XCircle, Link2 } from 'lucide-react';
+import { Camera, Image as ImageIcon, Paperclip, Loader2, CheckCircle2, XCircle, Link2 } from 'lucide-react';
 
 export default function QuickExpenseCapture({ presetJobId = null, presetJobLabel = null, onClose, onSaved }) {
-  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const libraryInputRef = useRef(null);
+  const filesInputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [description, setDescription] = useState('');
   const [step, setStep] = useState('idle'); // idle | uploading | analyzing | done | error
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
-
-  function pickFile() { fileInputRef.current?.click(); }
 
   function onFileSelected(e) {
     const f = e.target.files?.[0];
@@ -155,50 +155,42 @@ export default function QuickExpenseCapture({ presetJobId = null, presetJobLabel
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-4 space-y-3">
-            {/* File picker / camera */}
+            {/* Preview + 3-way picker trigger */}
             <div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,application/pdf"
-                capture="environment"
-                onChange={onFileSelected}
-                className="hidden"
-              />
+              <input ref={cameraInputRef}  type="file" accept="image/*" capture="environment" onChange={onFileSelected} className="hidden" />
+              <input ref={libraryInputRef} type="file" accept="image/*"                       onChange={onFileSelected} className="hidden" />
+              <input ref={filesInputRef}   type="file" accept="image/*,application/pdf"        onChange={onFileSelected} className="hidden" />
+
               {previewUrl ? (
-                <button
-                  type="button"
-                  onClick={pickFile}
-                  className="w-full rounded-xl border-2 border-d-border overflow-hidden relative"
-                  disabled={busy}
-                >
-                  <img src={previewUrl} alt="Reçu" className="w-full max-h-64 object-contain bg-d-bg" />
-                  <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-xs text-center py-1.5">
-                    Tap pour changer
-                  </div>
-                </button>
+                <div className="rounded-xl border-2 border-d-border overflow-hidden bg-d-bg">
+                  <img src={previewUrl} alt="Reçu" className="w-full max-h-64 object-contain" />
+                </div>
               ) : file ? (
-                <button
-                  type="button"
-                  onClick={pickFile}
-                  className="w-full rounded-xl border-2 border-dashed border-d-border p-4 text-center text-sm text-d-text"
-                  disabled={busy}
-                >
+                <div className="rounded-xl border-2 border-dashed border-d-border p-4 text-center text-sm text-d-text">
                   📄 {file.name}
-                  <div className="text-[11px] text-d-muted mt-1">Tap pour changer</div>
-                </button>
+                </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={pickFile}
-                  className="w-full rounded-xl border-2 border-dashed border-d-border p-8 text-center hover:border-d-primary/40 transition flex flex-col items-center gap-2"
-                  disabled={busy}
-                >
+                <div className="rounded-xl border-2 border-dashed border-d-border p-6 text-center flex flex-col items-center gap-1.5">
                   <Camera className="w-8 h-8 text-d-primary" />
-                  <span className="text-sm font-semibold text-d-text">Prendre une photo</span>
-                  <span className="text-[11px] text-d-muted">ou choisir un fichier (photo / PDF)</span>
-                </button>
+                  <span className="text-sm font-semibold text-d-text">Ajouter le reçu</span>
+                  <span className="text-[11px] text-d-muted">Photo, bibliothèque, ou fichier PDF</span>
+                </div>
               )}
+
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                <button type="button" disabled={busy} onClick={() => cameraInputRef.current?.click()}
+                  className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg bg-d-primary text-white text-[11px] font-semibold disabled:opacity-50">
+                  <Camera size={16} /> Photo
+                </button>
+                <button type="button" disabled={busy} onClick={() => libraryInputRef.current?.click()}
+                  className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg border border-d-border text-d-text text-[11px] font-semibold disabled:opacity-50">
+                  <ImageIcon size={16} /> Bibliothèque
+                </button>
+                <button type="button" disabled={busy} onClick={() => filesInputRef.current?.click()}
+                  className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg border border-d-border text-d-text text-[11px] font-semibold disabled:opacity-50">
+                  <Paperclip size={16} /> Fichier
+                </button>
+              </div>
             </div>
 
             {/* Natural-language description */}

@@ -19,7 +19,7 @@
 //   label?       string           default 'Ajouter photo ou PDF'
 
 import { useCallback, useRef, useState } from 'react';
-import { Camera, X, FileText, Loader2 } from 'lucide-react';
+import { Camera, Image as ImageIcon, FileText, X, Loader2, Paperclip } from 'lucide-react';
 
 const DEFAULT_ACCEPT = 'image/*,application/pdf';
 const RESIZE_MAX_DIM = 1600;
@@ -63,7 +63,9 @@ export default function MediaPicker({
   className = '',
   label = 'Ajouter photo ou PDF',
 }) {
-  const inputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const libraryInputRef = useRef(null);
+  const filesInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [errorMsg, setErrorMsg]   = useState(null);
   const [dragOver, setDragOver]   = useState(false);
@@ -135,25 +137,70 @@ export default function MediaPicker({
             : 'border-d-border bg-d-surface/30'
         } p-4`}
       >
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            disabled={uploading || (!multiple && urls.length >= 1)}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-d-primary text-white text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition"
-          >
-            {uploading ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
-            {uploading ? 'Téléversement…' : label}
-          </button>
-          <span className="text-[10px] text-d-muted">ou glisse-dépose ici</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          {uploading ? (
+            <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-d-primary/20 text-d-primary text-xs font-semibold">
+              <Loader2 size={14} className="animate-spin" /> Téléversement…
+            </span>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                disabled={!multiple && urls.length >= 1}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-d-primary text-white text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition"
+                title="Prendre une photo"
+              >
+                <Camera size={14} /> Photo
+              </button>
+              <button
+                type="button"
+                onClick={() => libraryInputRef.current?.click()}
+                disabled={!multiple && urls.length >= 1}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-d-border text-d-text text-xs font-semibold hover:border-d-primary/40 transition"
+                title="Choisir depuis la bibliothèque"
+              >
+                <ImageIcon size={14} /> Bibliothèque
+              </button>
+              <button
+                type="button"
+                onClick={() => filesInputRef.current?.click()}
+                disabled={!multiple && urls.length >= 1}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-d-border text-d-text text-xs font-semibold hover:border-d-primary/40 transition"
+                title="Choisir un fichier"
+              >
+                <Paperclip size={14} /> Fichier
+              </button>
+            </>
+          )}
+          <span className="text-[10px] text-d-muted hidden sm:inline">ou glisse-dépose</span>
         </div>
 
+        {/* Camera capture (mobile: ouvre l'appli photo) */}
         <input
-          ref={inputRef}
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          multiple={multiple}
+          capture="environment"
+          className="hidden"
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+        {/* Library (mobile: bibliothèque de photos) */}
+        <input
+          ref={libraryInputRef}
+          type="file"
+          accept="image/*"
+          multiple={multiple}
+          className="hidden"
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+        {/* Files (PDFs + autres) */}
+        <input
+          ref={filesInputRef}
           type="file"
           accept={accept}
           multiple={multiple}
-          capture="environment"
           className="hidden"
           onChange={(e) => handleFiles(e.target.files)}
         />
