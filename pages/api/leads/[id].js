@@ -1,5 +1,6 @@
 // pages/api/leads/[id].js
-import { getAuthContext } from "../../../lib/supabaseServer";
+import { getAuthContext, getSupabaseServerClient } from "../../../lib/supabaseServer";
+import { isDivisionAllowedForUser } from "../../../lib/divisions";
 
 // --- helpers to clean HTML emails into readable text ---
 function decodeHtmlEntities(str) {
@@ -61,7 +62,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { supabase, customerId, user } = await getAuthContext(req, res);
+  const { supabase, customerId, user, role, divisionId } = await getAuthContext(req, res);
 
   if (!user) return res.status(401).json({ error: "Not authenticated" });
   if (!customerId)
@@ -103,7 +104,7 @@ export default async function handler(req, res) {
   // ── PATCH: update lead fields ──
   if (req.method === "PATCH") {
     try {
-      const { status, notes, name, phone, email, city, source, language } = req.body;
+      const { status, notes, name, phone, email, city, source, language, division_id } = req.body;
       const validStatuses = ["new", "active", "in_convo", "quoted", "won", "lost", "dead"];
 
       const updates = { updated_at: new Date().toISOString() };
@@ -124,6 +125,27 @@ export default async function handler(req, res) {
       if (city !== undefined) updates.city = city || null;
       if (source !== undefined) updates.source = source || null;
       if (language !== undefined) updates.language = language || null;
+
+      // Division reassignment — owner/admin can reassign to any tenant division;
+      // scoped users cannot (their RLS wouldn't let them write it anyway).
+      if (division_id !== undefined) {
+        if (division_id === null) {
+          if (role !== 'owner' && role !== 'admin') {
+            return res.status(403).json({ error: 'Only owner/admin can unassign a lead from a division' });
+          }
+          updates.division_id = null;
+        } else {
+          const admin = getSupabaseServerClient();
+          const allowed = await isDivisionAllowedForUser(admin, {
+            customer_id: customerId,
+            role,
+            user_division_id: divisionId,
+            target_division_id: Number(division_id),
+          });
+          if (!allowed) return res.status(403).json({ error: 'Not allowed to assign this division' });
+          updates.division_id = Number(division_id);
+        }
+      }
 
       if (Object.keys(updates).length === 1) {
         return res.status(400).json({ error: "Nothing to update" });
@@ -165,6 +187,7 @@ export default async function handler(req, res) {
         id,
         customer_id,
         profile_id,
+        division_id,
         name,
         first_name,
         phone,
@@ -201,6 +224,7 @@ export default async function handler(req, res) {
       id: leadRow.id,
       customer_id: leadRow.customer_id,
       profile_id: leadRow.profile_id,
+      division_id: leadRow.division_id || null,
       name:
         leadRow.name ||
         leadRow.first_name ||

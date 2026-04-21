@@ -302,6 +302,80 @@ function Modal({ open, title, children, onClose }) {
   );
 }
 
+function DivisionSelector({ leadId, currentDivisionId, onUpdated }) {
+  const [divisions, setDivisions] = useState([]);
+  const [role, setRole] = useState('owner');
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const res = await fetch('/api/divisions');
+        if (!res.ok) { if (!cancelled) setLoaded(true); return; }
+        const data = await res.json();
+        if (cancelled) return;
+        setDivisions(Array.isArray(data.divisions) ? data.divisions : []);
+        setRole(data.role || 'owner');
+      } catch {} finally { if (!cancelled) setLoaded(true); }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (!loaded) return null;
+  // Hide entirely if tenant has no divisions or the caller is scoped (1-option dropdown is noise).
+  const canReassign = role === 'owner' || role === 'admin';
+  if (divisions.length === 0) return null;
+  if (!canReassign && divisions.length < 2) return null;
+
+  async function handleChange(rawValue) {
+    const value = rawValue === '' ? null : Number(rawValue);
+    if (value === currentDivisionId) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/leads/${leadId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ division_id: value }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to reassign division');
+      onUpdated?.(value);
+    } catch (err) {
+      setError(err.message || 'Update failed');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="bg-d-surface border border-d-border rounded-2xl p-5 shadow-xl shadow-black/40">
+      <h2 className="text-sm font-semibold text-d-text mb-2 tracking-wide">Division</h2>
+      <p className="text-[11px] text-d-muted mb-3">
+        {canReassign
+          ? 'Assign this lead to the correct team (owner-only control).'
+          : 'Scope this lead lives in.'}
+      </p>
+      <select
+        value={currentDivisionId ?? ''}
+        onChange={(e) => handleChange(e.target.value)}
+        disabled={saving || !canReassign}
+        className="w-full rounded-lg border border-d-border bg-d-bg text-d-text text-sm px-3 py-2 focus:outline-none focus:border-d-primary disabled:opacity-60"
+      >
+        {canReassign && <option value="">— Unassigned —</option>}
+        {divisions.map((d) => (
+          <option key={d.id} value={d.id}>{d.name}</option>
+        ))}
+      </select>
+      {error && <p className="text-[11px] text-rose-500 mt-2">{error}</p>}
+    </div>
+  );
+}
+
 function NotesSection({ notes, onSave }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(notes);
@@ -1118,6 +1192,10 @@ export default function LeadDetailPage() {
                 </div>
               </div>
             )}
+
+            <DivisionSelector leadId={id} currentDivisionId={lead?.division_id || null} onUpdated={(newId) => {
+              setData((prev) => prev ? { ...prev, lead: { ...prev.lead, division_id: newId } } : prev);
+            }} />
 
             <LeadDetailsCard lead={lead} leadId={id} onUpdated={(updated) => {
               setData((prev) => prev ? { ...prev, lead: { ...prev.lead, ...updated } } : prev);

@@ -41,6 +41,9 @@ function saveCache(branding) {
 const BrandingContext = createContext({
   branding: DEFAULT_BRANDING,
   enabledHubTools: [],
+  role: 'owner',
+  divisionId: null,
+  division: null,
   loading: true,
 });
 
@@ -63,6 +66,9 @@ export function BrandingProvider({ children }) {
   }
   const [branding, setBranding] = useState(() => loadCached() || DEFAULT_BRANDING);
   const [enabledHubTools, setEnabledHubTools] = useState([]);
+  const [role, setRole] = useState('owner');
+  const [divisionId, setDivisionId] = useState(null);
+  const [division, setDivision] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -75,11 +81,15 @@ export function BrandingProvider({ children }) {
           const tools = Array.isArray(data.enabledHubTools) ? data.enabledHubTools : [];
           setBranding(fresh);
           setEnabledHubTools(tools);
+          setRole(data.role || 'owner');
+          setDivisionId(data.divisionId || null);
+          setDivision(data.division || null);
           saveCache(fresh);
-          // Debug: expose on window for Mikael to inspect
           if (typeof window !== "undefined") {
             window.__bwHubTools = tools;
             window.__bwBranding = fresh;
+            window.__bwRole = data.role || 'owner';
+            window.__bwDivision = data.division || null;
           }
         } else {
           console.warn("[BrandingContext] /api/settings/branding returned", res.status);
@@ -94,7 +104,7 @@ export function BrandingProvider({ children }) {
   }, []);
 
   return (
-    <BrandingContext.Provider value={{ branding, enabledHubTools, loading }}>
+    <BrandingContext.Provider value={{ branding, enabledHubTools, role, divisionId, division, loading }}>
       {children}
     </BrandingContext.Provider>
   );

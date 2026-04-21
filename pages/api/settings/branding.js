@@ -1,5 +1,17 @@
 // pages/api/settings/branding.js
-import { getAuthContext } from "../../../lib/supabaseServer";
+import { getAuthContext, getSupabaseServerClient } from "../../../lib/supabaseServer";
+
+// Keys a scoped division user (role=manager/employee) is allowed to see.
+// Owner/admin always see everything the tenant's branding.nav_items allows.
+const SCOPED_ROLE_ALLOWED_NAV_KEYS = new Set([
+  'overview',
+  'leads',
+  'jobs',
+  'inbox',
+  'calls',
+  'calendar',
+  'tasks',
+]);
 
 const DEFAULT_BRANDING = {
   logo_url: null,
@@ -25,7 +37,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { supabase, customerId, user } = await getAuthContext(req, res);
+  const { supabase, customerId, user, role, divisionId } = await getAuthContext(req, res);
 
   if (!user) {
     return res.status(401).json({ error: "Not authenticated" });
@@ -55,10 +67,45 @@ export default async function handler(req, res) {
       }
     }
 
-    const enabledHubTools = Array.isArray(data?.enabled_hub_tools) ? data.enabled_hub_tools : [];
+    let enabledHubTools = Array.isArray(data?.enabled_hub_tools) ? data.enabled_hub_tools : [];
+    let division = null;
+
+    // If the caller is scoped to a division, intersect both nav_items and
+    // enabled_hub_tools with the division's settings.
+    const isScoped = role && role !== 'owner' && role !== 'admin';
+    if (isScoped && divisionId != null) {
+      const admin = getSupabaseServerClient();
+      const { data: divRow } = await admin
+        .from('divisions')
+        .select('id, slug, name, enabled_hub_tools, active')
+        .eq('id', divisionId)
+        .eq('customer_id', customerId)
+        .maybeSingle();
+      if (divRow) {
+        division = { id: divRow.id, slug: divRow.slug, name: divRow.name, active: !!divRow.active };
+        const divTools = Array.isArray(divRow.enabled_hub_tools) ? divRow.enabled_hub_tools : [];
+        // Intersection: a tool must be enabled both at tenant and division level
+        enabledHubTools = enabledHubTools.filter((t) => divTools.includes(t));
+      }
+    }
+
+    // Scoped users get a hard-locked nav_items whitelist
+    if (isScoped) {
+      const tenantNav = Array.isArray(merged.nav_items) ? merged.nav_items : null;
+      const allowed = Array.from(SCOPED_ROLE_ALLOWED_NAV_KEYS);
+      merged.nav_items = tenantNav
+        ? tenantNav.filter((k) => SCOPED_ROLE_ALLOWED_NAV_KEYS.has(k))
+        : allowed;
+    }
 
     res.setHeader("Cache-Control", "private, max-age=300, stale-while-revalidate=600");
-    return res.status(200).json({ branding: merged, enabledHubTools });
+    return res.status(200).json({
+      branding: merged,
+      enabledHubTools,
+      role: role || 'owner',
+      divisionId: divisionId || null,
+      division,
+    });
   } catch (err) {
     console.error("Branding endpoint error:", err);
     return res.status(500).json({ error: "Internal server error" });
