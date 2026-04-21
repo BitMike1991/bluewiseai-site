@@ -26,7 +26,13 @@ export default async function handler(req, res) {
 
     if (req.method === "GET") {
       const state = createSignedState({ customerId, userId: user.id, purpose: "qbo" });
-      return res.status(200).json({ authUrl: buildAuthUrl(state), environment: cfg.environment });
+      const authUrl = buildAuthUrl(state);
+      // Convenience: ?redirect=1 sends the browser straight to Intuit so a
+      // logged-in user can connect without DevTools or a UI button.
+      if (req.query.redirect === "1") {
+        return res.redirect(302, authUrl);
+      }
+      return res.status(200).json({ authUrl, environment: cfg.environment });
     }
 
     if (req.method === "DELETE") {
