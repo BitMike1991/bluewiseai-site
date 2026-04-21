@@ -135,6 +135,8 @@ Read `WAVE1-BASELINE.md` before any prompt. Three facts every downstream prompt 
 - NEVER sync an invoice whose mapping is missing — block with a clear error.
 - NEVER reference `quote.tps` / `quote.tvq` — those columns DO NOT EXIST on `quotes`. Use `quote.tax_gst` + `quote.tax_qst`. Referencing `.tps` returns `undefined` and silently ships a $0-tax invoice. (Risk 1 from WAVE1-BASELINE.md.)
 - NEVER combine `quotes` and `expenses` in a single mapper without an adapter — their tax column names diverge (`tax_gst`/`tax_qst` vs `tps`/`tvq`).
+- NEVER ship P02 without closing the **PUR overhead gap** found during P01 verify: `quote.subtotal` bakes in $200 overhead + $100 gas (`pricing_config.overhead_pct` + gas flat), but `quote.line_items` does NOT. Sum(line.Amount) = 7771, subtotal = 8071. QBO's TotalAmt = sum of lines. P02 mapper MUST synthesize a "Frais généraux" line equal to `subtotal - sum(line_items)` when the gap is > $0.01, or checksum will fail forever. Verified live on quote id=64 → QBO Invoice 145 (2026-04-21).
+- NEVER assume "Custom Transaction Numbers" is enabled — **verified accepted** on PUR sandbox realm 9341456918724825 (DocNumber "PUR-365422" landed). P02 should still check `Preferences` once before trusting; fall back to omitting `DocNumber` if preference returns false.
 </constraints>
 
 <thinking_required>Step through one PUR invoice ($1000 HT + 5% TPS + 9.975% TVQ) end-to-end. Write the exact QBO payload. Verify BW total_ttc == QBO TotalAmt to the cent. Then do the same for a PUR expense ($1000 HT + tps + tvq) and confirm the mapper reads `expenses.tps` — not `expenses.tax_gst`.</thinking_required>
