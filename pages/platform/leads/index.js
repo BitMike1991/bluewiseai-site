@@ -106,12 +106,14 @@ function AddLeadModal({ open, onClose, onCreated }) {
 }
 
 const STATUS_OPTIONS = [
-  { value: 'all', label: 'All statuses' },
-  { value: 'new', label: 'New' },
-  { value: 'active', label: 'Active / In convo' },
-  { value: 'quoted', label: 'Quoted' },
-  { value: 'won', label: 'Won' },
-  { value: 'lost', label: 'Lost' },
+  { value: 'all', label: 'Tous les statuts' },
+  { value: 'new', label: 'Nouveau' },
+  { value: 'active', label: 'Actif' },
+  { value: 'in_convo', label: 'En conversation' },
+  { value: 'quoted', label: 'Devis envoyé' },
+  { value: 'won', label: 'Gagné' },
+  { value: 'lost', label: 'Perdu' },
+  { value: 'dead', label: 'Mort' },
 ];
 
 const SOURCE_OPTIONS = [

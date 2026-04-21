@@ -109,7 +109,8 @@ export default async function handler(req, res) {
       `,
         { count: "exact" }
       )
-      .eq("customer_id", customerId);
+      .eq("customer_id", customerId)
+      .is("deleted_at", null);
 
     if (status && status !== "all") {
       leadsQuery = leadsQuery.eq("status", status);

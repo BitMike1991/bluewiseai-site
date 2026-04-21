@@ -74,24 +74,29 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Invalid lead id" });
   }
 
-  // ── DELETE: remove lead ──
+  // ── DELETE: soft delete (sets leads.deleted_at).
+  // Physical DELETE is blocked by 8 child FKs (jobs, tasks, messages,
+  // inbox_leads, lead_events, send_logs, followups, cold_recipients) all
+  // set to NO ACTION. Soft delete keeps every related row intact and the
+  // lead disappears from the list/detail UI (filtered by deleted_at IS NULL).
   if (req.method === "DELETE") {
     try {
       const { data, error: delError } = await supabase
         .from("leads")
-        .delete()
+        .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
         .eq("id", leadId)
         .eq("customer_id", customerId)
+        .is("deleted_at", null)
         .select("id")
         .single();
 
       if (delError) {
-        console.error("[api/leads/[id]] deleteError", delError);
+        console.error("[api/leads/[id]] soft-delete error", delError);
         return res.status(500).json({ error: "Failed to delete lead" });
       }
 
       if (!data) {
-        return res.status(404).json({ error: "Lead not found" });
+        return res.status(404).json({ error: "Lead not found or already deleted" });
       }
 
       return res.status(200).json({ success: true, deleted: data.id });
@@ -209,6 +214,7 @@ export default async function handler(req, res) {
       )
       .eq("customer_id", customerId)
       .eq("id", leadId)
+      .is("deleted_at", null)
       .maybeSingle();
 
     if (leadError) {
