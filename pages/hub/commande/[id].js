@@ -588,11 +588,34 @@ export default function BcDetailPage() {
               className="w-full block bg-white"
               style={{ minHeight: '800px', height: '1200px', border: 'none' }}
               onLoad={(e) => {
+                // Re-measure several times: Google Fonts inside the iframe
+                // load asynchronously and shift layout AFTER first onLoad.
+                // Plus a ResizeObserver on the iframe document for any
+                // dynamic shifts (image lazy-load, expand/collapse).
+                const iframe = e.currentTarget;
+                let prev = 0;
+                function measure() {
+                  try {
+                    const doc = iframe.contentDocument;
+                    if (!doc) return;
+                    const h = Math.max(
+                      doc.documentElement?.scrollHeight || 0,
+                      doc.body?.scrollHeight || 0
+                    );
+                    if (h > 200 && Math.abs(h - prev) > 4) {
+                      iframe.style.height = (h + 24) + 'px';
+                      prev = h;
+                    }
+                  } catch {}
+                }
+                measure();
+                setTimeout(measure, 250);
+                setTimeout(measure, 800);
+                setTimeout(measure, 2000);
                 try {
-                  const doc = e.currentTarget.contentDocument;
-                  if (doc) {
-                    const h = doc.documentElement.scrollHeight || doc.body.scrollHeight;
-                    if (h > 400) e.currentTarget.style.height = h + 40 + 'px';
+                  const RO = iframe.contentWindow?.ResizeObserver || window.ResizeObserver;
+                  if (RO && iframe.contentDocument?.documentElement) {
+                    new RO(measure).observe(iframe.contentDocument.documentElement);
                   }
                 } catch {}
               }}

@@ -462,28 +462,70 @@ function buildBcHtml({ bc_number, supplier, date, projects, totalItems, totalQty
     .footer-note { text-align: left; }
   }
 
-  /* Print — Letter, ½ inch margins, every card stays whole */
+  /* Print — Letter, ½ inch margins, every card stays whole.
+     Hardened 2026-04-21 (PUR-bug-9 — Mikael): items + sections still split
+     on Chrome/Safari despite break-inside:avoid because (a) project-block
+     was avoid-page so it tried to fit the whole project on one page and
+     ended up splitting cards instead, (b) item-card was display:flex which
+     Chrome/Safari split THROUGH the flex children. Fix:
+       1. project-block → break-inside:auto (allow breaks BETWEEN cards).
+       2. item-card → display:block in print + float-based sketch/info
+          layout so break rules actually apply (flex containers ignore them
+          on both engines historically).
+       3. Add !important to override the non-print display:flex.
+       4. Belt-and-suspenders: -webkit-column-break-inside for old Safari
+          + transform: translateZ(0) to force a paint layer so the break
+          engine sees the card as an atomic block. */
   @media print {
     @page { size: Letter; margin: 10mm; }
     html, body { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .page { box-shadow: none; max-width: none; min-height: 0; }
     .bc-print-fab { display: none !important; }
-    .bc-item-grid { display: block !important; gap: 0; padding: 12px; }
-    .bc-item-card {
+    .bc-header, .bc-meta, .bc-summary, .bc-footer {
       break-inside: avoid;
       page-break-inside: avoid;
+    }
+    .bc-body { padding: 14px 16px; }
+    .bc-project-block {
+      break-inside: auto !important;
+      page-break-inside: auto !important;
+      margin-bottom: 14px;
+      border-radius: 0;
+    }
+    .bc-proj-header { break-after: avoid !important; page-break-after: avoid !important; }
+    .bc-item-grid {
+      display: block !important;
+      gap: 0;
+      padding: 10px;
+    }
+    .bc-item-card {
+      display: block !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      -webkit-column-break-inside: avoid !important;
+      transform: translateZ(0);
       margin: 0 0 10px 0;
       padding: 14px 14px 12px;
-      gap: 12px;
+      overflow: hidden;
+    }
+    .bc-item-card .bc-item-sketch {
+      float: left;
+      width: 96px;
+      margin-right: 14px;
+      margin-bottom: 4px;
     }
     .bc-item-sketch svg { max-width: 88px; max-height: 88px; }
-    .bc-project-block {
-      break-inside: avoid-page;
-      page-break-inside: avoid;
-      margin-bottom: 16px;
+    .bc-item-card .bc-item-info {
+      display: block;
+      overflow: hidden;
     }
-    .bc-proj-header { break-after: avoid; page-break-after: avoid; }
-    .bc-footer { break-inside: avoid; page-break-inside: avoid; }
+    .bc-item-card::after {
+      content: "";
+      display: block;
+      clear: both;
+    }
+    .bc-item-num { top: -8px; }
+    .bc-item-qty { top: 12px; right: 12px; }
   }
 </style>
 </head>
