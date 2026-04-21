@@ -328,19 +328,59 @@ function SummaryCards({ job, payments, finances, onJobUpdate }) {
         </div>
       </div>
 
-      {/* Statut + pipeline dots */}
-      <div className="rounded-xl border border-d-border bg-d-surface p-4 shadow-sm">
-        <p className="text-[10px] font-semibold text-d-muted uppercase tracking-wider mb-2">
-          Statut
-        </p>
-        <div className="mb-3">
-          <StatusBadge status={job.status} size="md" />
-        </div>
-        <PipelineDots status={job.status} size="sm" />
-        <p className="text-[10px] text-d-muted mt-2">
-          Étape {getStatusMeta(job.status).order <= 13 ? getStatusMeta(job.status).order : '—'} / 13
-        </p>
+      {/* Statut + pipeline dots — editable dropdown (Mikael 2026-04-21 PUR feedback) */}
+      <EditableStatusCard job={job} onUpdate={onJobUpdate} />
+    </div>
+  );
+}
+
+function EditableStatusCard({ job, onUpdate }) {
+  const [saving, setSaving] = useState(false);
+  const meta = getStatusMeta(job.status);
+
+  async function changeStatus(newStatus) {
+    if (newStatus === job.status) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/jobs/${job.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Échec de la mise à jour');
+      if (onUpdate) onUpdate(json.job);
+    } catch (e) {
+      window.alert(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-d-border bg-d-surface p-4 shadow-sm">
+      <p className="text-[10px] font-semibold text-d-muted uppercase tracking-wider mb-2">
+        Statut
+      </p>
+      <div className="mb-3">
+        <select
+          value={job.status || 'draft'}
+          onChange={(e) => changeStatus(e.target.value)}
+          disabled={saving}
+          aria-label="Changer le statut du projet"
+          className="w-full rounded-lg border border-d-border bg-d-bg px-2 py-1.5 text-xs text-d-text font-medium focus:outline-none focus:ring-2 focus:ring-d-primary/40 disabled:opacity-50"
+          style={{ color: meta.color }}
+        >
+          {STATUS_ORDER.map((s) => (
+            <option key={s} value={s}>{getStatusMeta(s).label}</option>
+          ))}
+        </select>
       </div>
+      <PipelineDots status={job.status} size="sm" />
+      <p className="text-[10px] text-d-muted mt-2">
+        Étape {meta.order <= 13 ? meta.order : '—'} / 13
+        {saving && <span className="ml-2 text-d-primary">· enregistrement…</span>}
+      </p>
     </div>
   );
 }

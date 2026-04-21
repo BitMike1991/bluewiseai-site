@@ -383,7 +383,7 @@ function SentTab({ status }) {
   if (bcs.length === 0) {
     return (
       <div className="text-center py-16 text-d-muted text-sm">
-        Aucun bon de commande {status === 'sent' ? 'envoyé' : 'reçu'}.
+        Aucun bon de commande {status === 'sent' ? 'envoyé' : status === 'draft' ? 'en brouillon' : 'reçu'}.
       </div>
     );
   }
@@ -418,7 +418,11 @@ function SentTab({ status }) {
                 <span className="text-[10px] text-d-muted">{bc.item_count} article{bc.item_count > 1 ? 's' : ''}</span>
               </div>
               <div className="text-xs text-d-muted mt-0.5">
-                {status === 'sent' ? `Envoyé le ${fmtDate(bc.sent_at)}` : `Reçu le ${fmtDate(bc.received_at)}`}
+                {status === 'sent'
+                  ? `Envoyé le ${fmtDate(bc.sent_at)}`
+                  : status === 'draft'
+                    ? `Créé le ${fmtDate(bc.created_at)} · pas encore envoyé`
+                    : `Reçu le ${fmtDate(bc.received_at)}`}
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
@@ -434,6 +438,14 @@ function SentTab({ status }) {
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-d-border text-xs text-d-muted hover:text-d-primary transition"
                 >
                   <Send size={12} /> Renvoyer
+                </button>
+              )}
+              {status === 'draft' && (
+                <button
+                  onClick={() => setSendModal(bc)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-d-primary text-white text-xs font-semibold hover:opacity-90 transition"
+                >
+                  <Send size={12} /> Envoyer
                 </button>
               )}
             </div>
@@ -945,7 +957,7 @@ function SupplierDispatcher({ onApplySuccess }) {
 
 export default function CommandePage() {
   const router = useRouter();
-  const [tab, setTab] = useState('pending'); // 'pending' | 'sent' | 'received'
+  const [tab, setTab] = useState('pending'); // 'pending' | 'drafts' | 'sent' | 'received'
 
   // Pending state
   const [pendingData, setPendingData] = useState(null);
@@ -1021,6 +1033,7 @@ export default function CommandePage() {
 
   const tabs = [
     { id: 'pending',  label: 'En attente', icon: Clock },
+    { id: 'drafts',   label: 'Brouillons', icon: FileText },
     { id: 'sent',     label: 'Envoyés',    icon: Send },
     { id: 'received', label: 'Reçus',      icon: CheckCircle2 },
   ];
@@ -1171,6 +1184,7 @@ export default function CommandePage() {
           </>
         )}
 
+        {tab === 'drafts'   && <SentTab status="draft" />}
         {tab === 'sent'     && <SentTab status="sent" />}
         {tab === 'received' && <SentTab status="received" />}
       </div>

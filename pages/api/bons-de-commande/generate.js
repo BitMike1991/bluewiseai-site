@@ -39,61 +39,70 @@ function supplierLabel(key) {
   return 'Autre fournisseur';
 }
 
-// ── BC HTML Template ─────────────────────────────────────────────────────────
+// ── BC HTML Template (card-based layout, mobile-safe, print-clean) ───────────
+// Mikael 2026-04-21 — rewrite from horizontal table → per-item cards matching
+// the devis PUR look. No horizontal scroll on mobile Safari; each card has
+// `page-break-inside: avoid` so printing to PDF never splits a card mid-page.
+
+function renderItemCardBc(item, idx) {
+  const num = String(idx + 1).padStart(2, '0');
+  const sketchSvg = itemSketchSvg(item);
+  const type = escHtml(item.type || '—');
+  const model = item.model ? `<span class="bc-item-model">${escHtml(item.model)}</span>` : '';
+  const ouvrant = item.ouvrant ? `<span class="bc-item-ouvrant">${escHtml(item.ouvrant)}</span>` : '';
+  const dims = (item.dimensions?.width && item.dimensions?.height)
+    ? `${escHtml(String(item.dimensions.width))}" × ${escHtml(String(item.dimensions.height))}"`
+    : '';
+  const specsRaw = Array.isArray(item.specs) ? item.specs.join(' · ') : (item.specs || '');
+  // Split long spec strings on commas so each bullet wraps cleanly on mobile.
+  const specsParts = specsRaw
+    ? specsRaw.split(/\s*,\s*|\s+·\s+/).map(s => s.trim()).filter(Boolean)
+    : [];
+  const specsHtml = specsParts.length > 0
+    ? `<ul class="bc-item-specs">${specsParts.map(s => `<li>${escHtml(s)}</li>`).join('')}</ul>`
+    : '';
+  const qty = Number(item.qty) || 1;
+
+  return `
+    <div class="bc-item-card">
+      <div class="bc-item-num">${num}</div>
+      ${qty > 1 ? `<div class="bc-item-qty">× ${qty}</div>` : ''}
+      <div class="bc-item-sketch">
+        ${sketchSvg}
+        ${dims ? `<div class="bc-item-dims">${dims}</div>` : ''}
+      </div>
+      <div class="bc-item-info">
+        <div class="bc-item-type">${type}${model}${ouvrant}</div>
+        ${specsHtml}
+      </div>
+    </div>`;
+}
 
 function buildBcHtml({ bc_number, supplier, date, projects, totalItems, totalQty, businessName, authorizedRep, hideSupplierName }) {
   const supplierName = hideSupplierName ? 'À compléter par le fournisseur' : supplierLabel(supplier);
 
   const projectsHtml = projects.map(proj => {
+    const addrStr = proj.client_address
+      ? (typeof proj.client_address === 'string'
+          ? proj.client_address
+          : [proj.client_address.street, proj.client_address.city].filter(Boolean).join(', '))
+      : '';
     const projHeader = `
-      <div class="proj-header">
-        <div class="proj-meta">
-          <span class="proj-number">Projet ${escHtml(proj.job_number || proj.job_id || 'N/A')}</span>
-          <span class="proj-client">${escHtml(proj.client_name || '—')}</span>
-          ${proj.client_address ? `<span class="proj-addr">${escHtml(typeof proj.client_address === 'string' ? proj.client_address : [proj.client_address.street, proj.client_address.city].filter(Boolean).join(', '))}</span>` : ''}
+      <div class="bc-proj-header">
+        <div class="bc-proj-meta">
+          <span class="bc-proj-number">Projet ${escHtml(proj.job_number || proj.job_id || 'N/A')}</span>
+          <span class="bc-proj-client">${escHtml(proj.client_name || '—')}</span>
+          ${addrStr ? `<span class="bc-proj-addr">${escHtml(addrStr)}</span>` : ''}
         </div>
-        <div class="proj-count">${proj.items.length} article${proj.items.length > 1 ? 's' : ''}</div>
+        <div class="bc-proj-count">${proj.items.length} article${proj.items.length > 1 ? 's' : ''}</div>
       </div>`;
 
-    const itemRows = proj.items.map((entry, rowIdx) => {
-      const item = entry.item;
-      const sketchSvg = itemSketchSvg(item);
-      const specsText = item.specs ? escHtml(item.specs) : '—';
-      const dimText = (item.dimensions?.width && item.dimensions?.height)
-        ? `${escHtml(String(item.dimensions.width))}" × ${escHtml(String(item.dimensions.height))}"`
-        : '—';
-
-      return `
-        <tr class="${rowIdx % 2 === 0 ? 'row-even' : 'row-odd'}">
-          <td class="td-num">${String(rowIdx + 1).padStart(2, '0')}</td>
-          <td class="td-sketch">${sketchSvg}</td>
-          <td class="td-type">${escHtml(item.type || '—')}</td>
-          <td class="td-model">${escHtml(item.model || '—')}</td>
-          <td class="td-ouvrant">${escHtml(item.ouvrant || '—')}</td>
-          <td class="td-dims">${dimText}</td>
-          <td class="td-specs">${specsText}</td>
-          <td class="td-qty">${escHtml(String(item.qty || 1))}</td>
-        </tr>`;
-    }).join('');
+    const itemsHtml = proj.items.map((entry, idx) => renderItemCardBc(entry.item, idx)).join('');
 
     return `
-      <div class="project-block">
+      <div class="bc-project-block">
         ${projHeader}
-        <table class="items-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Croquis</th>
-              <th>Type</th>
-              <th>Modèle</th>
-              <th>Ouvrant</th>
-              <th>Dimensions</th>
-              <th>Spécifications</th>
-              <th>Qté</th>
-            </tr>
-          </thead>
-          <tbody>${itemRows}</tbody>
-        </table>
+        <div class="bc-item-grid">${itemsHtml}</div>
       </div>`;
   }).join('');
 
@@ -131,6 +140,8 @@ function buildBcHtml({ bc_number, supplier, date, projects, totalItems, totalQty
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
   }
 
   .bc-brand { display: flex; flex-direction: column; gap: 6px; }
@@ -178,7 +189,7 @@ function buildBcHtml({ bc_number, supplier, date, projects, totalItems, totalQty
     grid-template-columns: 1fr 1fr 1fr;
     gap: 20px;
   }
-  .meta-block { display: flex; flex-direction: column; gap: 2px; }
+  .meta-block { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .meta-label {
     font-size: 9px;
     font-weight: 600;
@@ -190,6 +201,7 @@ function buildBcHtml({ bc_number, supplier, date, projects, totalItems, totalQty
     font-size: 13px;
     font-weight: 600;
     color: ${NAVY};
+    word-break: break-word;
   }
   .meta-value-sm {
     font-size: 11px;
@@ -203,6 +215,7 @@ function buildBcHtml({ bc_number, supplier, date, projects, totalItems, totalQty
     padding: 12px 40px;
     background: #fff;
     border-bottom: 1px solid #e0e4df;
+    flex-wrap: wrap;
   }
   .summary-chip {
     display: flex;
@@ -221,86 +234,166 @@ function buildBcHtml({ bc_number, supplier, date, projects, totalItems, totalQty
   /* Body */
   .bc-body { padding: 24px 40px 40px; }
 
-  .project-block {
+  .bc-project-block {
     margin-bottom: 32px;
     border: 1px solid #dde2db;
     border-radius: 10px;
     overflow: hidden;
+    background: #fff;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
-  .proj-header {
+  .bc-proj-header {
     background: #f0f3ef;
     border-bottom: 1px solid #dde2db;
-    padding: 12px 16px;
+    padding: 14px 18px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
   }
-  .proj-meta { display: flex; flex-direction: column; gap: 2px; }
-  .proj-number {
+  .bc-proj-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .bc-proj-number {
     font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
     font-weight: 700;
     color: ${NAVY};
   }
-  .proj-client { font-size: 12px; font-weight: 600; color: ${NAVY}; }
-  .proj-addr   { font-size: 11px; color: #666; }
-  .proj-count  {
+  .bc-proj-client { font-size: 13px; font-weight: 600; color: ${NAVY}; }
+  .bc-proj-addr   { font-size: 11px; color: #666; }
+  .bc-proj-count  {
     font-size: 11px;
     font-weight: 600;
-    color: ${SAGE};
+    color: ${NAVY};
     background: #e4ece4;
-    padding: 3px 10px;
+    padding: 4px 12px;
     border-radius: 20px;
+    white-space: nowrap;
   }
 
-  /* Items table */
-  .items-table { width: 100%; border-collapse: collapse; }
-  .items-table th {
+  /* Item card grid (matches devis layout) */
+  .bc-item-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .bc-item-card {
+    position: relative;
+    background: #fff;
+    border: 1px solid #dde2db;
+    border-radius: 8px;
+    padding: 18px 16px 14px;
+    display: flex;
+    gap: 14px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .bc-item-num {
+    position: absolute;
+    top: -10px;
+    left: 14px;
     background: ${NAVY};
-    color: rgba(255,255,255,0.75);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    padding: 8px 10px;
-    text-align: left;
-  }
-  .items-table td { padding: 8px 10px; vertical-align: middle; font-size: 12px; }
-  .row-even { background: #fff; }
-  .row-odd  { background: #f7f9f7; }
-  .items-table tr { border-bottom: 1px solid #e8ece7; }
-
-  .td-num {
+    color: #fff;
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
     font-weight: 700;
-    color: #aaa;
-    width: 28px;
+    padding: 3px 9px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
   }
-  .td-sketch { width: 64px; }
-  .td-sketch svg { display: block; }
-  .td-type   { font-weight: 600; min-width: 120px; }
-  .td-model  { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
-  .td-ouvrant {
+  .bc-item-qty {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: #e4ece4;
+    color: ${NAVY};
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     font-weight: 700;
-    color: ${SAGE};
+    padding: 3px 9px;
+    border-radius: 3px;
   }
-  .td-dims {
+  .bc-item-sketch {
+    flex-shrink: 0;
+    width: 96px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .bc-item-sketch svg {
+    display: block;
+    background: #f7f9f7;
+    border: 1px solid #e0e4df;
+    border-radius: 3px;
+    max-width: 96px;
+    height: auto;
+  }
+  .bc-item-dims {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+    font-size: 10px;
+    color: ${NAVY};
+    text-align: center;
+    font-weight: 600;
     white-space: nowrap;
   }
-  .td-specs { font-size: 11px; color: #555; max-width: 160px; }
-  .td-qty {
-    font-family: 'JetBrains Mono', monospace;
+  .bc-item-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .bc-item-type {
+    font-size: 13px;
     font-weight: 700;
-    font-size: 14px;
-    text-align: center;
     color: ${NAVY};
+    margin-bottom: 8px;
+    line-height: 1.3;
+    word-wrap: break-word;
+  }
+  .bc-item-model {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: #e4ece4;
+    color: ${NAVY};
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+    font-weight: 700;
+  }
+  .bc-item-ouvrant {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: #f0f3ef;
+    color: ${NAVY};
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-left: 4px;
+    opacity: 0.8;
+  }
+  .bc-item-specs {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .bc-item-specs li {
+    font-size: 11px;
+    color: #555;
+    line-height: 1.5;
+    padding-left: 10px;
+    position: relative;
+  }
+  .bc-item-specs li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 4px;
+    height: 1px;
+    background: ${NAVY};
+    opacity: 0.4;
   }
 
   /* Footer */
@@ -311,15 +404,17 @@ function buildBcHtml({ bc_number, supplier, date, projects, totalItems, totalQty
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
   }
-  .footer-totals { display: flex; gap: 24px; }
+  .footer-totals { display: flex; gap: 24px; flex-wrap: wrap; }
   .footer-total-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
   .footer-total-label {
     font-size: 9px;
     font-weight: 600;
     letter-spacing: 1px;
     text-transform: uppercase;
-    color: ${SAGE};
+    color: #666;
   }
   .footer-total-val {
     font-family: 'JetBrains Mono', monospace;
@@ -329,19 +424,77 @@ function buildBcHtml({ bc_number, supplier, date, projects, totalItems, totalQty
   }
   .footer-note { font-size: 10px; color: #888; text-align: right; max-width: 220px; }
 
+  /* Print FAB */
+  .bc-print-fab {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 10;
+    background: ${NAVY};
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .bc-print-fab:hover { opacity: 0.9; }
+
+  /* Mobile — single-column cards, no horizontal scroll on Safari */
+  @media (max-width: 768px) {
+    .bc-header { padding: 24px 20px 20px; }
+    .bc-title-block { text-align: left; }
+    .bc-meta { padding: 14px 20px; grid-template-columns: 1fr; gap: 12px; }
+    .bc-summary { padding: 10px 20px; }
+    .bc-body { padding: 18px 14px 28px; }
+    .bc-proj-header { padding: 12px 14px; }
+    .bc-item-grid { grid-template-columns: 1fr; gap: 12px; padding: 12px; }
+    .bc-item-card { padding: 16px 14px 12px; gap: 12px; }
+    .bc-item-sketch { width: 84px; }
+    .bc-item-sketch svg { max-width: 84px; }
+    .bc-footer { padding: 14px 20px; margin: 0; flex-direction: column; align-items: flex-start; }
+    .footer-note { text-align: left; }
+  }
+
+  /* Print — Letter, ½ inch margins, every card stays whole */
   @media print {
-    body { background: #fff; }
-    .page { max-width: none; }
+    @page { size: Letter; margin: 10mm; }
+    html, body { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { box-shadow: none; max-width: none; min-height: 0; }
+    .bc-print-fab { display: none !important; }
+    .bc-item-grid { display: block !important; gap: 0; padding: 12px; }
+    .bc-item-card {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      margin: 0 0 10px 0;
+      padding: 14px 14px 12px;
+      gap: 12px;
+    }
+    .bc-item-sketch svg { max-width: 88px; max-height: 88px; }
+    .bc-project-block {
+      break-inside: avoid-page;
+      page-break-inside: avoid;
+      margin-bottom: 16px;
+    }
+    .bc-proj-header { break-after: avoid; page-break-after: avoid; }
+    .bc-footer { break-inside: avoid; page-break-inside: avoid; }
   }
 </style>
 </head>
 <body>
+<button class="bc-print-fab" onclick="window.print()" aria-label="Imprimer ce bon de commande">🖨️ Imprimer / PDF</button>
 <div class="page">
 
   <header class="bc-header">
     <div class="bc-brand">
-      <div class="bc-brand-name">PÜR</div>
-      <div class="bc-brand-sub">CONSTRUCTION & RÉNOVATION INC.</div>
+      <div class="bc-brand-name">${escHtml((businessName || 'BlueWise').split(/[\s&]/)[0] || 'BlueWise')}</div>
+      <div class="bc-brand-sub">${escHtml(businessName || '')}</div>
     </div>
     <div class="bc-title-block">
       <div class="bc-doc-type">BON DE COMMANDE</div>
@@ -392,7 +545,7 @@ function buildBcHtml({ bc_number, supplier, date, projects, totalItems, totalQty
       </div>
     </div>
     <div class="footer-note">
-      Ce bon de commande est émis par PÜR Construction &amp; Rénovation Inc.<br/>
+      Ce bon de commande est émis par ${escHtml(businessName || 'l\'entreprise')}.<br/>
       Les prix fournisseurs sont confidentiels et ne figurent pas sur ce document.
     </div>
   </footer>
