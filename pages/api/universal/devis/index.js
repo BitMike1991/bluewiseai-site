@@ -534,32 +534,58 @@ export default async function handler(req, res) {
     // 2. Quote versioning — supersede old quotes
     const { data: existingQuotes } = await supabase
       .from('quotes')
-      .select('id, version')
+      .select('id, version, project_ref')
       .eq('job_id', jobDbId)
       .eq('customer_id', customer_id)
       .order('version', { ascending: false })
       .limit(1);
 
     let version = 1;
+    let inheritedProjectRef = null;
     if (existingQuotes && existingQuotes.length > 0) {
       version = existingQuotes[0].version + 1;
+      // Mikael 2026-04-22 "fait ca robuste" — revision of an existing quote
+      // MUST keep the same project_ref so devis v2 / v3 / contrat / BDC all
+      // track as the same project (PUR-0042), not PUR-0042 + PUR-0043.
+      inheritedProjectRef = existingQuotes[0].project_ref || null;
       await supabase
         .from('quotes')
         .update({ status: 'superseded', updated_at: new Date().toISOString() })
         .eq('id', existingQuotes[0].id);
     }
 
-    // 2c. Claim a sequential project_ref for this tenant (atomic RPC).
-    // Null fallback is fine — column is nullable, backfill can run later.
-    let projectRef = null;
-    try {
-      const { data: claimed, error: rpcErr } = await supabase.rpc('claim_next_project_ref', {
-        p_customer_id: customer_id,
-        p_prefix: config.quote.prefix || 'BW',
-      });
-      if (!rpcErr && typeof claimed === 'string') projectRef = claimed;
-    } catch (err) {
-      console.warn('[devis/create] claim_next_project_ref failed:', err?.message);
+    // 2c. Project ref — reuse from prior version OR claim a fresh sequential
+    // ref via atomic RPC. On RPC failure, synthesize a deterministic fallback
+    // so the devis ALWAYS carries a user-visible ref (no silent null that
+    // later breaks contrat/BDC linking).
+    const prefix = String(config.quote.prefix || 'BW').toUpperCase();
+    let projectRef = inheritedProjectRef;
+    if (!projectRef) {
+      try {
+        const { data: claimed, error: rpcErr } = await supabase.rpc('claim_next_project_ref', {
+          p_customer_id: customer_id,
+          p_prefix: prefix,
+        });
+        if (!rpcErr && typeof claimed === 'string' && claimed.trim()) {
+          projectRef = claimed.trim();
+        } else if (rpcErr) {
+          console.warn('[devis/create] claim_next_project_ref rpcErr:', rpcErr?.message);
+        }
+      } catch (err) {
+        console.warn('[devis/create] claim_next_project_ref threw:', err?.message);
+      }
+    }
+    if (!projectRef) {
+      // Deterministic fallback: count existing quotes for this customer and
+      // synthesize ${prefix}-${seq}. Keeps the paper trail usable even when
+      // the sequential RPC is unavailable.
+      const { count } = await supabase
+        .from('quotes')
+        .select('*', { count: 'exact', head: true })
+        .eq('customer_id', customer_id);
+      const seq = String((count || 0) + 1).padStart(4, '0');
+      projectRef = `${prefix}-${seq}`;
+      console.warn('[devis/create] synthesized fallback project_ref:', projectRef);
     }
 
     // 3. Insert quote record — inherit division from the job we just wrote/fetched.
