@@ -105,6 +105,9 @@ export default async function handler(req, res) {
         byJob[jobKey] = {
           job_id:         quote.job_id,
           job_number:     job?.job_number || null,
+          // Same project_ref (PUR-0042) used on devis + contrat so BDC
+          // ties into the same paper trail for accounting.
+          project_ref:    quote.project_ref || null,
           client_name:    job?.client_name || null,
           client_address: job?.client_address || null,
           items: [],
