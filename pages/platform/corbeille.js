@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import DashboardLayout from "../../src/components/dashboard/DashboardLayout";
 import EmptyState from "../../src/components/ui/EmptyState";
-import { Trash2, Users, Briefcase, RotateCcw, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { Trash2, Users, Briefcase, RotateCcw, Clock, ChevronDown, ChevronUp, Package } from "lucide-react";
 import { fmtMoneyOrDash as fmt } from "../../lib/formatters";
 
 function fmtDate(s) {
@@ -64,6 +64,7 @@ export default function CorbeillePage() {
   const items = [
     ...((data?.leads) || []),
     ...((data?.jobs) || []),
+    ...((data?.bons_de_commande) || []),
   ].sort((a, b) => new Date(b.deleted_at) - new Date(a.deleted_at));
 
   return (
@@ -95,25 +96,35 @@ export default function CorbeillePage() {
             <EmptyState
               icon={Trash2}
               title="Corbeille vide"
-              description="Aucun lead ni projet supprimé dans les derniers jours."
+              description="Aucun lead, projet ou bon de commande supprimé dans les derniers jours."
             />
           </div>
         ) : (
           <ul className="mt-6 divide-y divide-d-border rounded-xl border border-d-border overflow-hidden bg-d-surface/30">
             {items.map((it) => {
-              const Icon = it.kind === "lead" ? Users : Briefcase;
-              const detailHref = it.kind === "lead" ? `/platform/leads/${it.id}` : `/platform/jobs/${it.id}`;
+              const Icon = it.kind === "lead" ? Users : it.kind === "job" ? Briefcase : Package;
+              const detailHref = it.kind === "lead"
+                ? `/platform/leads/${it.id}`
+                : it.kind === "job"
+                  ? `/platform/jobs/${it.id}`
+                  : `/hub/commande/${it.id}`;
+              const kindLabel = it.kind === "lead" ? "Lead" : it.kind === "job" ? "Projet" : "BDC";
+              const iconColor = it.kind === "lead"
+                ? "bg-blue-500/10 text-blue-400"
+                : it.kind === "job"
+                  ? "bg-amber-500/10 text-amber-400"
+                  : "bg-emerald-500/10 text-emerald-400";
               const key = `${it.kind}-${it.id}`;
               const isRestoring = !!restoring[key];
               return (
                 <li key={key} className="px-4 py-3 flex items-center gap-3 hover:bg-d-surface/50 transition">
-                  <div className={`flex-shrink-0 h-8 w-8 rounded-lg flex items-center justify-center ${it.kind === "lead" ? "bg-blue-500/10 text-blue-400" : "bg-amber-500/10 text-amber-400"}`}>
+                  <div className={`flex-shrink-0 h-8 w-8 rounded-lg flex items-center justify-center ${iconColor}`}>
                     <Icon size={14} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-d-bg border border-d-border text-d-muted">
-                        {it.kind === "lead" ? "Lead" : "Projet"}
+                        {kindLabel}
                       </span>
                       <span className="text-sm font-medium text-d-text truncate">{it.label}</span>
                     </div>

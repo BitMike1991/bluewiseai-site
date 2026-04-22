@@ -42,6 +42,16 @@ export default async function handler(req, res) {
       .gte("deleted_at", since)
       .order("deleted_at", { ascending: false });
 
+    // 2b. Soft-deleted bons de commande (Mikael 2026-04-22 — "rajoute
+    // l'option d'effacer les brouillons ... envoie les dans la corbeille").
+    const { data: bcs } = await supabase
+      .from("bons_de_commande")
+      .select("id, bc_number, supplier, status, item_refs, deleted_at, deleted_by_user_id, created_at")
+      .eq("customer_id", customerId)
+      .not("deleted_at", "is", null)
+      .gte("deleted_at", since)
+      .order("deleted_at", { ascending: false });
+
     // 3. Full audit history (no time limit — Mikael's "always know what happened")
     const { data: audit } = await supabase
       .from("deletion_audit")
@@ -71,6 +81,16 @@ export default async function handler(req, res) {
         deleted_at: j.deleted_at,
         deleted_by_user_id: j.deleted_by_user_id,
         days_remaining: Math.max(0, TRASH_RETENTION_DAYS - Math.floor((Date.now() - new Date(j.deleted_at).getTime()) / 86400000)),
+      })),
+      bons_de_commande: (bcs || []).map((b) => ({
+        kind: "bon_de_commande",
+        id: b.id,
+        label: b.bc_number || `BDC #${b.id}`,
+        sub: [b.supplier, b.status, `${Array.isArray(b.item_refs) ? b.item_refs.length : 0} items`].filter(Boolean).join(" · "),
+        status: b.status,
+        deleted_at: b.deleted_at,
+        deleted_by_user_id: b.deleted_by_user_id,
+        days_remaining: Math.max(0, TRASH_RETENTION_DAYS - Math.floor((Date.now() - new Date(b.deleted_at).getTime()) / 86400000)),
       })),
       audit: audit || [],
     });

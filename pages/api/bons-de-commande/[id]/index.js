@@ -40,6 +40,7 @@ export default async function handler(req, res) {
       .select('*')
       .eq('id', id)
       .eq('customer_id', customerId)
+      .is('deleted_at', null)
       .maybeSingle();
 
     if (error || !bc) return res.status(404).json({ error: 'BC not found' });

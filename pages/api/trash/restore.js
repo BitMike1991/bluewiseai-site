@@ -5,7 +5,7 @@
 import { getAuthContext } from "../../../lib/supabaseServer";
 import { logRestore } from "../../../lib/deletionAudit";
 
-const ALLOWED = { lead: "leads", job: "jobs" };
+const ALLOWED = { lead: "leads", job: "jobs", bon_de_commande: "bons_de_commande" };
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -22,14 +22,20 @@ export default async function handler(req, res) {
 
   const { kind, id } = req.body || {};
   const table = ALLOWED[kind];
-  if (!table) return res.status(400).json({ error: "kind must be 'lead' or 'job'" });
+  if (!table) return res.status(400).json({ error: "kind must be 'lead', 'job' or 'bon_de_commande'" });
   if (!id) return res.status(400).json({ error: "id required" });
+
+  const SELECT_BY_KIND = {
+    lead: "id, name, first_name, email, phone",
+    job: "id, job_id, client_name",
+    bon_de_commande: "id, bc_number, supplier",
+  };
 
   try {
     // Snapshot label first for audit + return value
     const { data: row } = await supabase
       .from(table)
-      .select(kind === "lead" ? "id, name, first_name, email, phone" : "id, job_id, client_name")
+      .select(SELECT_BY_KIND[kind])
       .eq("id", id).eq("customer_id", customerId)
       .not("deleted_at", "is", null)
       .maybeSingle();
@@ -38,7 +44,9 @@ export default async function handler(req, res) {
 
     const label = kind === "lead"
       ? (row.name || row.first_name || row.email || row.phone || `Lead #${id}`)
-      : (row.client_name || row.job_id || `Project #${id}`);
+      : kind === "job"
+        ? (row.client_name || row.job_id || `Project #${id}`)
+        : (row.bc_number || `BDC #${id}`);
 
     const { error: updErr } = await supabase
       .from(table)

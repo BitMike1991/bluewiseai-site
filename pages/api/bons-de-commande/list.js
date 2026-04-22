@@ -35,6 +35,7 @@ export default async function handler(req, res) {
       .from('bons_de_commande')
       .select('id, bc_number, supplier, status, item_refs, sent_at, received_at, created_at')
       .eq('customer_id', customerId)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(jobIdFilter ? 200 : 50);
 

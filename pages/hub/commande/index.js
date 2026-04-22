@@ -30,6 +30,7 @@ import {
   Check,
   AlertCircle,
   ArrowRight,
+  Trash2,
 } from 'lucide-react';
 
 const TOOL_ID = 'commande';
@@ -363,14 +364,34 @@ function SentTab({ status }) {
   const [loading, setLoading] = useState(true);
   const [sendModal, setSendModal] = useState(null); // BC to re-send
   const [toast, setToast] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
-  useEffect(() => {
+  const loadBcs = useCallback(() => {
     setLoading(true);
     fetch(`/api/bons-de-commande/list?status=${status}`)
       .then(r => r.json())
       .then(j => { setBcs(j.bcs || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, [status]);
+
+  useEffect(() => { loadBcs(); }, [loadBcs]);
+
+  async function handleDelete(bc) {
+    const label = bc.bc_number || `BDC #${bc.id}`;
+    if (!window.confirm(`Envoyer « ${label} » à la corbeille ?\n\nRécupérable 5 jours depuis /platform/corbeille.`)) return;
+    setDeletingId(bc.id);
+    try {
+      const r = await fetch(`/api/bons-de-commande/${bc.id}/delete`, { method: 'POST' });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || 'Échec suppression');
+      setBcs(prev => prev.filter(x => x.id !== bc.id));
+      setToast({ msg: `${label} envoyé à la corbeille`, type: 'success' });
+    } catch (e) {
+      setToast({ msg: e.message, type: 'error' });
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   if (loading) {
     return (
@@ -448,6 +469,15 @@ function SentTab({ status }) {
                   <Send size={12} /> Envoyer
                 </button>
               )}
+              <button
+                onClick={() => handleDelete(bc)}
+                disabled={deletingId === bc.id}
+                title="Envoyer à la corbeille"
+                aria-label="Envoyer à la corbeille"
+                className="flex items-center justify-center w-8 h-8 rounded-lg border border-d-border text-d-muted hover:text-rose-400 hover:border-rose-400/40 transition disabled:opacity-40"
+              >
+                {deletingId === bc.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+              </button>
             </div>
           </div>
         ))}
