@@ -62,7 +62,7 @@ const ALL_NAV_ITEMS = NAV_SECTIONS.flatMap((s) => s.items);
 
 export default function Sidebar({ isOpen, onClose, customerName }) {
   const router = useRouter();
-  const { branding, enabledHubTools } = useBranding();
+  const { branding, enabledHubTools, role } = useBranding();
   const [collapsed, setCollapsed] = useState(false);
   const [badges, setBadges] = useState({});
 
@@ -93,8 +93,11 @@ export default function Sidebar({ isOpen, onClose, customerName }) {
     try { localStorage.setItem("sidebar-collapsed", String(next)); } catch {}
   };
 
-  // Filter nav items by tenant config
-  const visibleKeys = branding.nav_items ? new Set(branding.nav_items) : null;
+  // Filter nav items by tenant config. Owner/admin bypass the filter so
+  // stale branding cache (e.g. pre-Corbeille whitelist) can't hide an item
+  // the owner should always be able to reach — Mikael 2026-04-22 on PUR CRM.
+  const isOwnerOrAdmin = role === 'owner' || role === 'admin';
+  const visibleKeys = (!isOwnerOrAdmin && branding.nav_items) ? new Set(branding.nav_items) : null;
 
   const sidebarBg = branding.sidebar_bg || branding.surface_color || "#0a0a12";
   const borderColor = branding.border_color || "#1e1e2e";
