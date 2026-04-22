@@ -8,6 +8,10 @@ import { applyCorsHeaders } from '../../../../lib/universal-api-auth';
 import { fetchWithTimeout } from '../../../../lib/fetch-with-timeout';
 import { alertJeremy } from '../../../../lib/notifications/jeremy-alert';
 import { createAutoTasks } from '../../../../lib/tasks/auto';
+import { sendEmailGmail } from '../../../../lib/providers/gmail';
+import { sendEmailMailgun } from '../../../../lib/providers/mailgun';
+import { encryptToken } from '../../../../lib/tokenEncryption';
+import { buildDevisAcceptedEmail } from '../../../../lib/email-templates/devis-accepted';
 
 const supabase = getSupabaseServerClient();
 
@@ -38,7 +42,7 @@ export default async function handler(req, res) {
       .from('quotes')
       .select(`
         id, job_id, customer_id, status, subtotal, tax_gst, tax_qst, total_ttc,
-        line_items, payment_terms, notes, version, quote_number
+        line_items, payment_terms, notes, version, quote_number, project_ref
       `)
       .eq('quote_number', quote_number)
       .limit(1);
@@ -112,7 +116,7 @@ export default async function handler(req, res) {
     if (quote.status === 'superseded') {
       const { data: latestQuotes } = await supabase
         .from('quotes')
-        .select('id, quote_number, status, version, subtotal, tax_gst, tax_qst, total_ttc, line_items, payment_terms, notes')
+        .select('id, quote_number, project_ref, status, version, subtotal, tax_gst, tax_qst, total_ttc, line_items, payment_terms, notes')
         .eq('job_id', quote.job_id)
         .eq('customer_id', customerId)
         .order('version', { ascending: false })
@@ -311,6 +315,124 @@ export default async function handler(req, res) {
         job_url: `https://${custDomain}/platform/jobs/${job.id}`,
       },
     }).catch(() => {});
+
+    // Client-facing "devis accepté — voici votre lien pour signer" email.
+    // Mikael 2026-04-22 — the n8n workflow that was handling this logged
+    // "sent" in the CRM timeline but never actually delivered (Mailgun key
+    // stale per feedback_email_sending.md). Sending it directly from here
+    // with Gmail OAuth (primary) → Mailgun (fallback), logging the real
+    // delivery status to messages so the timeline stops lying.
+    if (contractUrl && job.client_email) {
+      const branding = customer?.quote_config?.branding || {
+        business_name: customer?.business_name || 'BlueWise',
+      };
+      const projectRef = quote.project_ref || quote.quote_number || quote_number;
+      const { subject, html, text } = buildDevisAcceptedEmail({
+        clientName: job.client_name,
+        projectRef,
+        totalTtc: quote.total_ttc,
+        signUrl: contractUrl,
+        businessPhone: branding.phone,
+        branding,
+        signature: customer?.quote_config?.email_signature || null,
+      });
+
+      let sent = null;
+      let provider = null;
+      let oauthRow = null;
+      try {
+        const oauthRes = await supabase
+          .from('customer_email_oauth')
+          .select('id, provider, access_token, refresh_token, token_expiry, email_address, status')
+          .eq('customer_id', customerId)
+          .eq('status', 'active')
+          .eq('provider', 'gmail')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        oauthRow = oauthRes?.data || null;
+      } catch (e) {
+        console.warn('[devis/accept] oauth lookup failed', e?.message);
+      }
+
+      if (oauthRow?.email_address) {
+        provider = 'gmail';
+        const from = `${branding.business_name || 'BlueWise'} <${oauthRow.email_address}>`;
+        try {
+          sent = await sendEmailGmail(
+            { to: job.client_email, from, subject, body: text, html },
+            oauthRow,
+            async (newAccessToken, newExpiry) => {
+              try {
+                await supabase
+                  .from('customer_email_oauth')
+                  .update({
+                    access_token: encryptToken(newAccessToken),
+                    token_expiry: newExpiry,
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq('id', oauthRow.id);
+              } catch (e) {
+                console.warn('[devis/accept] oauth token update failed', e?.message);
+              }
+            }
+          );
+        } catch (e) {
+          console.warn('[devis/accept] gmail send threw', e?.message);
+          sent = { success: false, error: e?.message || 'gmail error' };
+        }
+      }
+
+      if (!sent || !sent.success) {
+        const mgFrom = process.env.MAILGUN_FROM
+          || (process.env.MAILGUN_DOMAIN ? `${branding.business_name || 'BlueWise'} <noreply@${process.env.MAILGUN_DOMAIN}>` : '');
+        if (mgFrom) {
+          const prevErr = sent?.error;
+          provider = 'mailgun';
+          try {
+            sent = await sendEmailMailgun({
+              to: job.client_email,
+              from: mgFrom,
+              subject,
+              body: text,
+              html,
+            });
+            if (!sent?.success && prevErr) sent.error = `gmail:${prevErr} | mailgun:${sent.error}`;
+          } catch (e) {
+            sent = { success: false, error: `gmail:${prevErr || 'n/a'} | mailgun threw: ${e?.message}` };
+          }
+        }
+      }
+
+      // Log the actual delivery status — status 'sent' only when the provider
+      // confirmed acceptance. No more phantom "sent" rows in the CRM timeline.
+      try {
+        await supabase.from('messages').insert({
+          customer_id: customerId,
+          lead_id: job.lead_id || null,
+          direction: 'outbound',
+          channel: 'email',
+          message_type: 'email',
+          subject,
+          body: text,
+          provider,
+          provider_message_id: sent?.provider_message_id || null,
+          status: sent?.success ? 'sent' : 'failed',
+          error: sent?.success ? null : (sent?.error || 'no provider available'),
+          to_address: job.client_email,
+          from_address: provider === 'gmail' ? oauthRow?.email_address : process.env.MAILGUN_FROM,
+          meta: {
+            devis_accepted: true,
+            quote_id: quote.id,
+            quote_number: qNum,
+            project_ref: projectRef,
+            sign_url: contractUrl,
+          },
+        });
+      } catch (e) {
+        console.warn('[devis/accept] messages log failed', e?.message);
+      }
+    }
 
     // Auto-tasks (fire-and-forget)
     if (contractUrl) {
