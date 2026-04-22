@@ -204,6 +204,26 @@ function buildLineItems(items, globalSupplier) {
       specs: specsStr,
       category: it.category || null,
       collection: it.collection_info?.name || it.collection || null,
+      // Factory-relevant fields surfaced for the BDC (Mikael 2026-04-22:
+      // Jeremy's format needs frame_thickness, egress, thermos, moustiquaire,
+      // config_code directly on the line_item so the BDC renderer doesn't
+      // fall back to generic catalog defaults).
+      config_code: it.config_code || null,
+      color_ext: it.color_ext || it.color_name || null,
+      color_int: it.color_int || it.color_name || null,
+      material: it.collection === 'hybride' ? 'hybride' : (it.collection === 'pvc' ? 'upvc' : undefined),
+      thermos: it.thermos || null,
+      moustiquaire: it.moustiquaire ?? false,
+      egress: it.egress || null,
+      frame: it.frame || null,
+      frame_thickness: it.frame_thickness || null,
+      frame_depth: it.frame_depth || null,
+      door_model: it.door_model || null,
+      slab_w: it.slab_w || null,
+      swing: it.swing || null,
+      glass: it.glass || null,
+      glass_type: it.glass_type || null,
+      style_info: it.style_info || null,
       // Tracking fields
       _source: 'commande',
       _item_index: i,
