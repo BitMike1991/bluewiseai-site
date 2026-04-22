@@ -149,7 +149,7 @@ export default async function handler(req, res) {
 
   const { data: quotes, error: quotesError } = await supabase
     .from('quotes')
-    .select('id, quote_number, job_id, version, status, line_items, subtotal, meta')
+    .select('id, quote_number, project_ref, job_id, version, status, line_items, subtotal, meta')
     .in('id', Array.from(quoteIdSet))
     .eq('customer_id', customerId);
 
@@ -289,6 +289,7 @@ export default async function handler(req, res) {
         };
         unmatchedItems.push({
           quote_number: quote.quote_number,
+          project_ref: quote.project_ref || null,
           item_index: idx,
           description: li.description || `${li.type || ''} ${li.model || ''}`.trim(),
         });
@@ -431,6 +432,7 @@ export default async function handler(req, res) {
     breakdown.push({
       quote_id:              quoteId,
       quote_number:          quote.quote_number || `q-${quoteId}`,
+      project_ref:           quote.project_ref || null,
       job_id:                quote.job_id,
       matched:               quoteMatched,
       unmatched:             quoteUnmatched,

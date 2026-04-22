@@ -284,7 +284,7 @@ function RetourFournisseur({ bc, bcId, onReceived }) {
                 >
                   <div className="flex items-center gap-2">
                     <FileText size={12} className="text-d-muted" />
-                    <span className="font-mono text-d-primary">{b.quote_number}</span>
+                    <span className="font-mono text-d-primary">{b.project_ref || b.quote_number}</span>
                     {b.all_priced && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
                         Prêt
@@ -319,7 +319,7 @@ function RetourFournisseur({ bc, bcId, onReceived }) {
             <ul className="space-y-1">
               {result.unmatched_items.map((u, i) => (
                 <li key={i} className="text-xs text-d-muted">
-                  <span className="font-mono text-d-text/70">{u.quote_number}</span>
+                  <span className="font-mono text-d-text/70">{u.project_ref || u.quote_number}</span>
                   {' '}· {u.description || `Article #${u.item_index + 1}`}
                 </li>
               ))}

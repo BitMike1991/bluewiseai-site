@@ -75,7 +75,7 @@ export default async function handler(req, res) {
 
   const { data: quotes, error: quotesError } = await supabase
     .from('quotes')
-    .select('id, quote_number, job_id, status, line_items, meta')
+    .select('id, quote_number, project_ref, job_id, status, line_items, meta')
     .in('id', Array.from(quoteIdSet))
     .eq('customer_id', customerId); // strict multi-tenant guard
 
@@ -322,6 +322,7 @@ export default async function handler(req, res) {
     quoteResults.push({
       quote_id:       quoteId,
       quote_number:   quote.quote_number || `q-${quoteId}`,
+      project_ref:    quote.project_ref || null,
       items_applied:  quoteApplied,
       all_priced:     allPriced,
       new_status:     newStatus,

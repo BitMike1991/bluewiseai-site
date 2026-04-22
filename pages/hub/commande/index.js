@@ -618,7 +618,7 @@ function SupplierDispatcher({ onApplySuccess }) {
               <div className="mt-2 space-y-1">
                 {applyResult.breakdown.map(b => (
                   <div key={b.quote_id} className="text-xs text-d-muted flex items-center gap-2">
-                    <span className="font-mono text-d-text">{b.quote_number}</span>
+                    <span className="font-mono text-d-text">{b.project_ref || b.quote_number}</span>
                     <span>{b.items_applied} item{b.items_applied > 1 ? 's' : ''}</span>
                     {b.all_priced && (
                       <span className="text-emerald-400 font-semibold">→ Prêt</span>
@@ -783,7 +783,7 @@ function SupplierDispatcher({ onApplySuccess }) {
               {autoMatches.map((m, i) => (
                 <div key={i} className="flex items-center gap-3 px-5 py-2.5 flex-wrap">
                   <div className="flex-1 min-w-0">
-                    <span className="font-mono text-xs font-bold text-d-text">{m.quote_number}</span>
+                    <span className="font-mono text-xs font-bold text-d-text">{m.project_ref || m.quote_number}</span>
                     <span className="text-xs text-d-muted ml-2">{m.client_name}</span>
                     <span className="text-xs text-d-muted ml-2">item #{m.item_idx + 1}</span>
                     <span className="text-xs text-d-text ml-2">{m.parsed_model} {m.parsed_dims}</span>
@@ -818,7 +818,7 @@ function SupplierDispatcher({ onApplySuccess }) {
               return (
                 <div key={i} className="px-5 py-4">
                   <div className="mb-2">
-                    <span className="font-mono text-xs font-bold text-d-text">{uqi.quote_number}</span>
+                    <span className="font-mono text-xs font-bold text-d-text">{uqi.project_ref || uqi.quote_number}</span>
                     <span className="text-xs text-d-muted ml-2">{uqi.client_name}</span>
                     <span className="text-xs text-d-muted ml-2">item #{uqi.item_idx + 1}</span>
                   </div>
@@ -911,7 +911,7 @@ function SupplierDispatcher({ onApplySuccess }) {
                         <option value="">— Assigner à un devis —</option>
                         {(si.possible_targets || []).map((pt, pi) => (
                           <option key={pi} value={`${pt.quote_id}:${pt.item_idx}`}>
-                            {pt.quote_number} item #{pt.item_idx + 1} — {pt.item_description}
+                            {pt.project_ref || pt.quote_number} item #{pt.item_idx + 1} — {pt.item_description}
                             {pt.dims_delta != null ? ` (+${pt.dims_delta}" diff)` : ''}
                           </option>
                         ))}

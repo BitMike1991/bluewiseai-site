@@ -196,7 +196,7 @@ export default async function handler(req, res) {
   // ── 3. Load ALL quotes in awaiting_supplier status ────────────────────────
   const { data: quotes, error: quotesError } = await supabase
     .from('quotes')
-    .select('id, quote_number, job_id, line_items, status')
+    .select('id, quote_number, project_ref, job_id, line_items, status')
     .eq('customer_id', customerId)
     .eq('status', 'awaiting_supplier')
     .order('id');
@@ -280,6 +280,7 @@ export default async function handler(req, res) {
           );
           matches.push({
             quote_number:     quote.quote_number || `q-${quote.id}`,
+            project_ref:      quote.project_ref || null,
             quote_id:         quote.id,
             job_id:           quote.job_id,
             client_name:      jobMap[quote.job_id] || '',
@@ -301,6 +302,7 @@ export default async function handler(req, res) {
       allQuoteItems.push({
         quote_id: quote.id,
         quote_number: quote.quote_number || `q-${quote.id}`,
+        project_ref: quote.project_ref || null,
         job_id: quote.job_id,
         client_name: jobMap[quote.job_id] || '',
         item_idx: idx,
@@ -357,6 +359,7 @@ export default async function handler(req, res) {
 
       matches.push({
         quote_number:     qi.quote_number,
+        project_ref:      qi.project_ref || null,
         quote_id:         qi.quote_id,
         job_id:           qi.job_id,
         client_name:      qi.client_name,
@@ -396,6 +399,7 @@ export default async function handler(req, res) {
 
       unmatchedQuoteItems.push({
         quote_number:       qi.quote_number,
+        project_ref:        qi.project_ref || null,
         quote_id:           qi.quote_id,
         job_id:             qi.job_id,
         client_name:        qi.client_name,
@@ -426,6 +430,7 @@ export default async function handler(req, res) {
           const dist = dimDistance(si.dimensions, qi.item.dimensions);
           return {
             quote_number:      qi.quote_number,
+            project_ref:       qi.project_ref || null,
             quote_id:          qi.quote_id,
             item_idx:          qi.item_idx,
             item_description:  qi.item.description || `${qi.item.type || ''} ${qi.item.model || ''}`.trim(),

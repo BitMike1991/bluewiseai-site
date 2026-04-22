@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     // OR any quote that has _queued_for_bc items (items can be queued in any status)
     const { data: quotes, error: qErr } = await supabase
       .from('quotes')
-      .select('id, job_id, quote_number, line_items, status, customer_id')
+      .select('id, job_id, quote_number, project_ref, line_items, status, customer_id')
       .eq('customer_id', customerId)
       .not('line_items', 'is', null);
 
@@ -68,6 +68,7 @@ export default async function handler(req, res) {
         const entry = {
           quote_id:       quote.id,
           quote_number:   quote.quote_number,
+          project_ref:    quote.project_ref || null,
           item_index:     idx,
           item,
           job_id:         quote.job_id,
@@ -97,6 +98,7 @@ export default async function handler(req, res) {
           byJob[key] = {
             job_id:         entry.job_id,
             job_number:     entry.job_number,
+            project_ref:    entry.project_ref,
             client_name:    entry.client_name,
             client_address: entry.client_address,
             items: [],

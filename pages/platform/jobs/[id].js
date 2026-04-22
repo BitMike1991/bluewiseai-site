@@ -1036,7 +1036,7 @@ function TabDevis({ quotes }) {
               className="w-full flex items-center justify-between px-4 py-3 hover:bg-d-surface/40 transition text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-primary/50"
             >
               <div className="flex items-center gap-3">
-                <span className="text-xs font-mono text-d-primary">{q.quote_number}</span>
+                <span className="text-xs font-mono text-d-primary">{q.project_ref || q.quote_number}</span>
                 <span className="text-xs text-d-muted">v{q.version}</span>
                 <span
                   className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border"

@@ -620,7 +620,7 @@ export default async function handler(req, res) {
 
     // 4. Generate HTML — route by template
     const templateData = {
-      quote_number, date, valid_days: qValid, start_date,
+      quote_number, project_ref: projectRef, date, valid_days: qValid, start_date,
       client_name, client_phone, client_email, client_address, client_city,
       project_description, line_items: processedItems, subtotal, tax_gst, tax_qst, total_ttc,
       notes, acceptance_url
