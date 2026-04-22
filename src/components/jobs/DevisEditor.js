@@ -361,6 +361,65 @@ function showEnergyStarBadge(item) {
   return isPvcFenetre(item);
 }
 
+/**
+ * Money input with local string state + commit-on-blur.
+ *
+ * Mikael 2026-04-22: "on doit ce battre rentrer un prix" — the old
+ * <input type="number" value={Number(x.toFixed(2))}> round-tripped every
+ * keystroke through Number(), which killed mid-edit decimals ("8." became
+ * "8", "." vanished), forced cursor jumps with text-right, and rerendered
+ * the whole row on every digit. This subcomponent owns its own string
+ * buffer while the user is typing, only commits the parsed number on
+ * blur / Enter, and accepts "," as decimal separator (QC convention).
+ */
+function MoneyInput({ value, onCommit, className = '', placeholder = '0.00', ariaLabel }) {
+  const initial = value == null || value === '' ? '' : Number(value).toFixed(2);
+  const [buf, setBuf] = useState(initial);
+  const lastCommittedRef = useRef(initial);
+
+  // Re-sync when the upstream value changes AND it wasn't a local edit
+  // (prevents Jérémy's typing from being overwritten by a parent re-render).
+  useEffect(() => {
+    const next = value == null || value === '' ? '' : Number(value).toFixed(2);
+    if (next !== lastCommittedRef.current) {
+      setBuf(next);
+      lastCommittedRef.current = next;
+    }
+  }, [value]);
+
+  function commit() {
+    const normalized = String(buf).replace(/\s/g, '').replace(',', '.');
+    const n = normalized === '' ? null : Number(normalized);
+    if (Number.isFinite(n) || n === null) {
+      const formatted = n == null ? '' : n.toFixed(2);
+      setBuf(formatted);
+      lastCommittedRef.current = formatted;
+      onCommit(n == null ? null : n);
+    } else {
+      // Invalid — snap back to the last good value.
+      setBuf(lastCommittedRef.current);
+    }
+  }
+
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={buf}
+      onChange={(e) => setBuf(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') { e.currentTarget.blur(); }
+        if (e.key === 'Escape') { setBuf(lastCommittedRef.current); e.currentTarget.blur(); }
+      }}
+      onFocus={(e) => e.currentTarget.select()}
+      placeholder={placeholder}
+      aria-label={ariaLabel}
+      className={className}
+    />
+  );
+}
+
 function LineItemRow({ item, index, onChange, onDelete, onToggleBC, onOpenFullEdit, petitsFrais = true, startExpanded = false }) {
   const [expanded, setExpanded] = useState(startExpanded);
   const [showCalc, setShowCalc] = useState(false);
@@ -544,19 +603,15 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC, onOpenFullEd
         </label>
         <label className="flex items-center gap-1.5 text-xs text-d-muted">
           Prix
-          <input
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="0.01"
-            value={Number(effectiveUnit.toFixed(2))}
-            onChange={e => {
-              const entered = Number(e.target.value) || 0;
+          <MoneyInput
+            value={effectiveUnit}
+            onCommit={(n) => {
+              const entered = n == null ? 0 : n;
               const canonicalNew = petitsFrais ? entered : entered + cannettesPerUnit;
               onChange(index, { ...item, unit_price: canonicalNew, _unit_price_full: canonicalNew });
             }}
-            aria-label={`Prix unitaire article ${index + 1}`}
-            className="w-20 min-h-[36px] sm:min-h-0 px-2 py-1.5 sm:py-0.5 rounded-lg border border-d-border bg-d-surface text-d-text text-base sm:text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
+            ariaLabel={`Prix unitaire article ${index + 1}`}
+            className="w-28 min-h-[36px] sm:min-h-0 px-2 py-1.5 sm:py-0.5 rounded-lg border border-d-border bg-d-surface text-d-text text-base sm:text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
           />
         </label>
         <span className="text-xs font-semibold text-d-text ml-auto whitespace-nowrap">= {fmtQC(total)}</span>
@@ -825,15 +880,11 @@ function LineItemRow({ item, index, onChange, onDelete, onToggleBC, onOpenFullEd
                   </span>
                 </label>
                 <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    min="0"
-                    step="0.01"
-                    value={costVal === '' ? '' : Number(costVal).toFixed(2)}
-                    onChange={e => applyCostFormula(e.target.value)}
+                  <MoneyInput
+                    value={costVal === '' ? '' : costVal}
+                    onCommit={(n) => applyCostFormula(n == null ? 0 : n)}
                     placeholder="0.00"
-                    aria-label="Cost fournisseur"
+                    ariaLabel="Cost fournisseur"
                     className="w-32 min-h-[36px] sm:min-h-0 px-2 py-1.5 sm:py-1 rounded-lg border border-d-border bg-d-surface text-sm text-d-text text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-d-primary/60"
                   />
                   {hasCost && (
