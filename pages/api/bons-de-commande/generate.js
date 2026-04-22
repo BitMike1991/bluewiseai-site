@@ -44,7 +44,7 @@ export default async function handler(req, res) {
 
     const { data: quotes, error: qErr } = await supabase
       .from('quotes')
-      .select('id, job_id, quote_number, project_ref, line_items, customer_id')
+      .select('id, job_id, quote_number, project_ref, notes, line_items, customer_id')
       .in('id', quoteIds)
       .eq('customer_id', customerId); // TENANT GUARD
 
@@ -108,10 +108,14 @@ export default async function handler(req, res) {
           // Same project_ref (PUR-0042) used on devis + contrat so BDC
           // ties into the same paper trail for accounting.
           project_ref:    quote.project_ref || null,
+          // Global project notes from the quote that sourced these items.
+          project_notes:  quote.notes || null,
           client_name:    job?.client_name || null,
           client_address: job?.client_address || null,
           items: [],
         };
+      } else if (!byJob[jobKey].project_notes && quote.notes) {
+        byJob[jobKey].project_notes = quote.notes;
       }
       byJob[jobKey].items.push({ item, quote_id: ref.quote_id, item_index: ref.item_index });
 

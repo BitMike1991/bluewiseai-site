@@ -202,6 +202,11 @@ function buildLineItems(items, globalSupplier) {
       ouvrant: it.ouvrant || null,
       dimensions,
       specs: specsStr,
+      // Per-item note (location: "Évier", "Cuisine", "Porte arrière"...).
+      // Mikael 2026-04-22: "les note par item doivent apparaitre partiut
+      // BDC/devis/contrat". Persisted at the top level so all three
+      // templates can surface it without scraping the specs string.
+      note: it.note || null,
       category: it.category || null,
       collection: it.collection_info?.name || it.collection || null,
       // Factory-relevant fields surfaced for the BDC (Mikael 2026-04-22:
@@ -446,6 +451,10 @@ export default async function handler(req, res) {
       version: 1,
       status: 'awaiting_supplier',
       line_items: lineItems,
+      // Global project notes from Jeremy's commande form — flow through to
+      // devis/contrat/BDC so comments like "installer après la toiture" or
+      // "client absent les lundis" reach every document.
+      notes: project?.notes ? String(project.notes).trim() : null,
       subtotal: 0,
       tax_gst: 0,
       tax_qst: 0,

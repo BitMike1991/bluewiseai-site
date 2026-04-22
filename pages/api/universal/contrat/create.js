@@ -963,6 +963,10 @@ export default async function handler(req, res) {
         // Surface the human project_ref (PUR-0042) so the contract header
         // can show it alongside the contract_number.
         project_ref: quoteRow.project_ref || null,
+        // Global project notes from the devis (Mikael 2026-04-22 — "jeremy
+        // peut mettre des note global sur le projet"). Rendered as a
+        // dedicated "Notes du projet" block on the contract.
+        project_notes: quoteRow.notes || null,
         client_name: job?.client_name || quoteRow.client_name || '',
         client_phone: job?.client_phone || '',
         client_email: job?.client_email || '',
