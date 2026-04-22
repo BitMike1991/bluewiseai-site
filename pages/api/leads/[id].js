@@ -430,7 +430,34 @@ export default async function handler(req, res) {
       updated_at: t.updated_at,
     }));
 
-    const jobs = jobResult.data || [];
+    const rawJobs = jobResult.data || [];
+
+    // Attach the latest quote's project_ref onto each job so the lead detail
+    // page can surface the human-facing reference (PUR-0042) that Jérémy
+    // knows the project by — Mikael 2026-04-22: "link au bon leads et
+    // accessible de la page leads dans les info".
+    let jobs = rawJobs;
+    if (rawJobs.length > 0) {
+      const jobIds = rawJobs.map((j) => j.id);
+      const { data: refRows } = await supabase
+        .from('quotes')
+        .select('job_id, project_ref, status, version, created_at')
+        .in('job_id', jobIds)
+        .eq('customer_id', customerId)
+        .order('version', { ascending: false });
+      const refByJob = {};
+      for (const r of (refRows || [])) {
+        if (!refByJob[r.job_id]) {
+          refByJob[r.job_id] = r.project_ref || null;
+        } else if (r.status !== 'superseded' && r.project_ref) {
+          refByJob[r.job_id] = r.project_ref;
+        }
+      }
+      jobs = rawJobs.map((j) => ({
+        ...j,
+        project_ref: refByJob[j.id] || null,
+      }));
+    }
 
     // Extract form submissions from events payload
     const formSubmissions = (formSubmissionResult?.data || []).map((e) => {

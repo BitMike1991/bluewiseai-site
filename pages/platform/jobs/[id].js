@@ -427,7 +427,7 @@ function TabApercu({ job, events, lead, payments }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="rounded-xl border border-d-border p-3">
           <p className="text-[10px] text-d-muted mb-1">ID Projet</p>
-          <p className="text-xs font-mono text-d-primary">{job.job_id || `#${job.id}`}</p>
+          <p className="text-xs font-mono text-d-primary">{job.project_ref || job.job_id || `#${job.id}`}</p>
         </div>
         <div className="rounded-xl border border-d-border p-3">
           <p className="text-[10px] text-d-muted mb-1">Créé le</p>
@@ -1115,7 +1115,7 @@ function TabDevis({ quotes }) {
 
 // ── Tab: Contrat ──────────────────────────────────────────────────────────────
 
-function TabContrat({ contracts }) {
+function TabContrat({ contracts, projectRef }) {
   if (!contracts || contracts.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-d-border/60 p-8 text-center">
@@ -1136,6 +1136,9 @@ function TabContrat({ contracts }) {
                 <p className="text-sm font-medium text-d-text">
                   {c.template_name || 'Contrat'} {c.template_version || ''}
                 </p>
+                {projectRef && (
+                  <p className="text-xs font-mono text-d-primary mt-0.5">{projectRef}</p>
+                )}
                 <p className="text-xs text-d-muted mt-0.5">Créé le {formatDate(c.created_at)}</p>
                 {c.signer_name && (
                   <p className="text-xs text-d-muted mt-0.5">Signataire : {c.signer_name}</p>
@@ -1178,7 +1181,7 @@ function TabContrat({ contracts }) {
 
 // ── Tab: Paiements ────────────────────────────────────────────────────────────
 
-function TabPaiements({ payments, quoteAmount, jobId, onPaymentAdded, finances }) {
+function TabPaiements({ payments, quoteAmount, jobId, projectRef, onPaymentAdded, finances }) {
   // Prefer the authoritative TTC from finances (which reads live quote totals).
   // Fall back to quote_amount * 1.14975 only if finances isn't loaded.
   const totalFacture = Number(finances?.ttc ?? (parseFloat(quoteAmount || 0) * 1.14975));
@@ -1191,8 +1194,16 @@ function TabPaiements({ payments, quoteAmount, jobId, onPaymentAdded, finances }
 
   return (
     <div className="space-y-2">
-      {/* Add payment button */}
-      <div className="flex justify-end mb-2">
+      {/* Project reference + Add payment button */}
+      <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+        {projectRef && (
+          <span
+            className="font-mono text-[11px] font-bold tracking-wider px-2 py-1 rounded-lg bg-d-primary/10 border border-d-primary/40 text-d-primary"
+            title="Référence projet — lie lead → devis → contrat → paiements"
+          >
+            {projectRef}
+          </span>
+        )}
         <button
           type="button"
           onClick={() => setAddOpen(true)}
@@ -2014,7 +2025,7 @@ export default function JobDetailPage() {
       }
 
       case 'contrat':
-        return <TabContrat contracts={contracts} />;
+        return <TabContrat contracts={contracts} projectRef={job.project_ref || job.job_id} />;
 
       case 'paiements':
         return (
@@ -2022,6 +2033,7 @@ export default function JobDetailPage() {
             payments={payments}
             quoteAmount={quoteAmount}
             jobId={job.id}
+            projectRef={job.project_ref || job.job_id}
             finances={finances}
             onPaymentAdded={() => { loadJob(); loadFinances(); }}
           />
@@ -2033,7 +2045,7 @@ export default function JobDetailPage() {
             finances={finances}
             quoteAmount={quoteAmount}
             jobId={job.id}
-            jobLabel={`${job.job_id || '#' + job.id}${job.client_name ? ' · ' + job.client_name : ''}`}
+            jobLabel={`${job.project_ref || job.job_id || '#' + job.id}${job.client_name ? ' · ' + job.client_name : ''}`}
             onExpenseAdded={() => loadFinances()}
           />
         );
@@ -2089,13 +2101,13 @@ export default function JobDetailPage() {
             </Link>
             <span className="text-xs text-d-muted/40">/</span>
             <span className="text-xs text-d-text font-medium truncate max-w-[200px]">
-              {job.job_id || job.client_name || `Projet #${job.id}`}
+              {job.project_ref || job.job_id || job.client_name || `Projet #${job.id}`}
             </span>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-lg font-semibold text-d-text">
-              {job.job_id || `Projet #${job.id}`}
+              {job.project_ref || job.job_id || `Projet #${job.id}`}
             </h1>
             <StatusBadge status={job.status} size="lg" />
           </div>

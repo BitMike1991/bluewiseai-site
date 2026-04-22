@@ -239,8 +239,50 @@ export default async function handler(req, res) {
       }
     }
 
+    // Stamp the human-facing project_ref onto the job row so the admin UI
+    // (title, breadcrumb, cards) can show PUR-0042 instead of the raw
+    // Date.now()-suffixed job_id. Mikael 2026-04-22: the project_ref is THE
+    // visible reference across devis, contrat, BDC — the job detail page
+    // has to align. Pulled from the latest non-superseded quote; cheap
+    // extra query even when ?expand=quotes isn't set.
+    let primaryRef = null;
+    try {
+      const latestQuotes = fetchQuotes && Array.isArray(quotesRes?.data)
+        ? quotesRes.data
+        : null;
+      if (latestQuotes) {
+        const active = latestQuotes.find((q) => q.status !== 'superseded');
+        primaryRef = (active || latestQuotes[0])?.project_ref || null;
+      } else {
+        const { data: refRow } = await supabase
+          .from('quotes')
+          .select('project_ref, status, version')
+          .eq('job_id', job.id)
+          .eq('customer_id', customerId)
+          .neq('status', 'superseded')
+          .order('version', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        primaryRef = refRow?.project_ref || null;
+        if (!primaryRef) {
+          const { data: anyRow } = await supabase
+            .from('quotes')
+            .select('project_ref')
+            .eq('job_id', job.id)
+            .eq('customer_id', customerId)
+            .order('version', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          primaryRef = anyRow?.project_ref || null;
+        }
+      }
+    } catch {}
+    const jobWithRef = primaryRef
+      ? { ...job, project_ref: primaryRef }
+      : job;
+
     const response = {
-      job,
+      job: jobWithRef,
       contracts: contractsRes.data || [],
       payments: paymentsRes.data || [],
       events: eventsRes.data || [],

@@ -1229,7 +1229,9 @@ export default function LeadDetailPage() {
                         className="flex items-center justify-between rounded-xl border border-d-border bg-d-surface px-3 py-2 hover:border-d-primary/40 transition"
                       >
                         <div className="flex flex-col text-xs">
-                          <span className="font-mono text-d-primary">{job.job_id}</span>
+                          <span className="font-mono text-d-primary font-semibold">
+                            {job.project_ref || job.job_id}
+                          </span>
                           <span className="text-d-muted">
                             {(job.project_type || "N/A").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
                           </span>

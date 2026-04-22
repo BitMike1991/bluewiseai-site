@@ -35,7 +35,7 @@ export default async function handler(req, res) {
 
   const { data: quote, error: qErr } = await supabase
     .from('quotes')
-    .select('id, customer_id, job_id, status, line_items, subtotal, tax_gst, tax_qst, total_ttc, valid_until, notes, meta, created_at, quote_number')
+    .select('id, customer_id, job_id, status, line_items, subtotal, tax_gst, tax_qst, total_ttc, valid_until, notes, meta, created_at, quote_number, project_ref')
     .eq('quote_number', quote_number)
     .maybeSingle();
 
@@ -69,6 +69,7 @@ export default async function handler(req, res) {
 
   const templateData = {
     quote_number,
+    project_ref: quote.project_ref || null,
     date: quote.created_at ? quote.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
     valid_days: config.quote.valid_days || 15,
     client_name: job?.client_name || '',
