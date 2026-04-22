@@ -183,9 +183,13 @@ export default function CommandePage() {
     };
 
     if (state.category === 'window') {
-      const isHybrid = state.form.collection === 'hybride';
-      const colors = isHybrid ? WINDOW_COLORS.standard_hybride : WINDOW_COLORS.standard_upvc;
-      const colorObj = colors.find((c) => c.id === state.form.color) || colors[0];
+      // Dual color selector (Mikael 2026-04-22: "selecteur de tout partout
+      // avec blanc int et blanc ext default pour pvc et noir ext blanc int
+      // default sur hybride mais on peut tout faire"). color_ext/int hold
+      // the display names directly; color_name stays the ext for legacy
+      // renders that only know about a single color.
+      const colorExt = state.form.color_ext || 'Blanc';
+      const colorInt = state.form.color_int || 'Blanc';
       Object.assign(item, {
         window_type: state.window_type,
         config_code: state.config.code,
@@ -193,7 +197,9 @@ export default function CommandePage() {
         collection: state.form.collection,
         collection_info: COLLECTIONS[state.form.collection],
         color: state.form.color,
-        color_name: colorObj?.name || state.form.color,
+        color_name: colorExt,
+        color_ext: colorExt,
+        color_int: colorInt,
         thermos: state.form.thermos,
         moustiquaire: state.form.moustiquaire,
         egress: state.form.egress,

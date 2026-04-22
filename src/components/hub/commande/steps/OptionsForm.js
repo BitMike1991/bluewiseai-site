@@ -3,14 +3,25 @@ import { Input, Select } from '@/components/hub/ui';
 import { COLLECTIONS, WINDOW_COLORS, ENTRY_DOOR_MODELS } from '@/lib/hub/catalog-data';
 import s from '../commande.module.css';
 
+// Canonical color palette exposed in every ext/int selector. Mikael
+// 2026-04-22: "selecteur de tout partout" — the full set is always
+// available; collection only drives the DEFAULT, not what's allowed.
+// Example: Thomas Gigandet wants PVC blanc ext / brun int (rare combo,
+// not in the old PVC-only palette). Fine.
+const COLOR_OPTIONS = [
+  'Blanc',
+  'Noir',
+  'Anodisé',
+  'Charbon',
+  'Brun commercial',
+  'Sur mesure',
+];
+
 export default function OptionsForm({ state, dispatch }) {
   const set = (field) => (e) =>
     dispatch({ type: A.SET_FORM_FIELD, field, value: e.target.value });
 
   if (state.category === 'window') {
-    const isHybrid = state.form.collection === 'hybride';
-    const colors = isHybrid ? WINDOW_COLORS.standard_hybride : WINDOW_COLORS.standard_upvc;
-
     return (
       <div className={s.optionsGrid}>
         <div className={s.gridRow2}>
@@ -20,12 +31,15 @@ export default function OptionsForm({ state, dispatch }) {
           </Select>
           <Input label="Épaisseur du cadre" value={state.form.frame_thickness} onChange={set('frame_thickness')} placeholder="ex: 4 9/16, 6 9/16" />
         </div>
-        <div className={s.gridRow3}>
-          <Select label="Couleur" value={state.form.color} onChange={set('color')}>
-            {colors.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
+        <div className={s.gridRow2}>
+          <Select label="Couleur extérieure" value={state.form.color_ext} onChange={set('color_ext')}>
+            {COLOR_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
           </Select>
+          <Select label="Couleur intérieure" value={state.form.color_int} onChange={set('color_int')}>
+            {COLOR_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+          </Select>
+        </div>
+        <div className={s.gridRow2}>
           <Select label="Thermos" value={state.form.thermos} onChange={set('thermos')}>
             <option value="double">Double Low-E Argon</option>
             <option value="triple">Triple Low-E Argon</option>
@@ -75,8 +89,12 @@ export default function OptionsForm({ state, dispatch }) {
           </Select>
         </div>
         <div className={s.gridRow3}>
-          <Input label="Couleur extérieur" value={state.form.color_ext} onChange={set('color_ext')} />
-          <Input label="Couleur intérieur" value={state.form.color_int} onChange={set('color_int')} />
+          <Select label="Couleur extérieure" value={state.form.color_ext} onChange={set('color_ext')}>
+            {COLOR_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+          </Select>
+          <Select label="Couleur intérieure" value={state.form.color_int} onChange={set('color_int')}>
+            {COLOR_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+          </Select>
           <Select label="Moulure" value={state.form.moulding} onChange={set('moulding')}>
             <option value="contemporaine">Hybride contemporaine</option>
             <option value="coloniale">Hybride coloniale</option>
@@ -112,14 +130,14 @@ export default function OptionsForm({ state, dispatch }) {
       <div className={s.optionsGrid}>
         <div className={s.gridRow3}>
           <Input label="&Eacute;paisseur du cadre" value={state.form.frame_thickness} onChange={set('frame_thickness')} placeholder="ex: 4 9/16, 5 1/2, 7 1/4" />
-          <Select label="Couleur extérieur" value={state.form.color_ext} onChange={set('color_ext')}>
-            <option value="blanc_k1285">Blanc K-1285</option>
-            <option value="noir_k90421">Noir K-90421</option>
-            <option value="anodise">Anodisé (option)</option>
+          <Select label="Couleur extérieure" value={state.form.color_ext} onChange={set('color_ext')}>
+            {COLOR_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+          </Select>
+          <Select label="Couleur intérieure" value={state.form.color_int} onChange={set('color_int')}>
+            {COLOR_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
           </Select>
         </div>
         <div className={s.gridRow3}>
-          <Input label="Couleur intérieur" value={state.form.color_int} onChange={set('color_int')} />
           <Select label="Verre" value={state.form.glass_type} onChange={set('glass_type')}>
             <option value="double">Double Low-E Argon</option>
             <option value="triple">Triple Low-E</option>

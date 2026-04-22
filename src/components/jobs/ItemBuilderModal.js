@@ -178,9 +178,10 @@ export default function ItemBuilderModal({ open, mode = 'new', initial = null, s
     const commandeItem = { id, supplier: state.item_supplier, qty, note, category: state.category, width: w, height: h };
 
     if (state.category === 'window') {
-      const isHybrid = state.form.collection === 'hybride';
-      const colors = isHybrid ? WINDOW_COLORS.standard_hybride : WINDOW_COLORS.standard_upvc;
-      const colorObj = colors.find(c => c.id === state.form.color) || colors[0];
+      // Dual color selector — same as CommandePage. Mikael 2026-04-22: both
+      // ext and int exposed on every item, any combination allowed.
+      const colorExt = state.form.color_ext || 'Blanc';
+      const colorInt = state.form.color_int || 'Blanc';
       Object.assign(commandeItem, {
         window_type: state.window_type,
         config_code: state.config.code,
@@ -189,7 +190,9 @@ export default function ItemBuilderModal({ open, mode = 'new', initial = null, s
         collection: state.form.collection,
         collection_info: COLLECTIONS[state.form.collection],
         color: state.form.color,
-        color_name: colorObj?.name || state.form.color,
+        color_name: colorExt,
+        color_ext: colorExt,
+        color_int: colorInt,
         thermos: state.form.thermos,
         moustiquaire: state.form.moustiquaire,
         egress: state.form.egress,

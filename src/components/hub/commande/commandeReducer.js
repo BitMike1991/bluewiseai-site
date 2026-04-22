@@ -174,11 +174,32 @@ export default function commandeReducer(state, action) {
     case A.SET_CONFIG:
       return { ...state, config: action.payload };
 
-    case A.SET_FORM_FIELD:
-      return {
-        ...state,
-        form: { ...state.form, [action.field]: action.value },
-      };
+    case A.SET_FORM_FIELD: {
+      const newForm = { ...state.form, [action.field]: action.value };
+      // When the window collection switches (PVC ↔ Hybride) apply the
+      // default color pair per Mikael 2026-04-22:
+      //   PVC     → extérieur Blanc / intérieur Blanc
+      //   Hybride → extérieur Noir  / intérieur Blanc
+      // User can override either side — standard or custom combos still
+      // possible (e.g. Thomas Gigandet: PVC blanc ext / brun int).
+      // Only reset when the user hasn't already manually overridden to a
+      // non-default value this session — track via _color_user_set.
+      if (action.field === 'collection' && state.category === 'window') {
+        if (!newForm._color_user_set) {
+          if (action.value === 'hybride') {
+            newForm.color_ext = 'Noir';
+            newForm.color_int = 'Blanc';
+          } else {
+            newForm.color_ext = 'Blanc';
+            newForm.color_int = 'Blanc';
+          }
+        }
+      }
+      if (action.field === 'color_ext' || action.field === 'color_int') {
+        newForm._color_user_set = true;
+      }
+      return { ...state, form: newForm };
+    }
 
     case A.SET_PROJECT_FIELD:
       return {
@@ -262,6 +283,12 @@ export default function commandeReducer(state, action) {
       if (item.category === 'window') {
         form.collection = item.collection || 'pvc';
         form.color = item.color || 'blanc';
+        // Prefer explicit ext/int; fall back to the legacy single color_name
+        // so items saved before the dual selector still edit correctly.
+        const legacyName = item.color_name || '';
+        form.color_ext = item.color_ext || legacyName || (form.collection === 'hybride' ? 'Noir' : 'Blanc');
+        form.color_int = item.color_int || legacyName || 'Blanc';
+        form._color_user_set = true; // don't overwrite during edit session
         form.thermos = item.thermos || 'double';
         form.moustiquaire = item.moustiquaire !== false;
         form.egress = item.egress || 'rencontre';
