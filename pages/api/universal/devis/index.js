@@ -643,7 +643,6 @@ export default async function handler(req, res) {
     }
 
     // 6. Finalize quote with filename
-    const prefix = config.quote.prefix || 'BW';
     const filename = `${prefix}-devis-${quote_number.replace(prefix + '-', '')}.html`;
     await supabase
       .from('quotes')
