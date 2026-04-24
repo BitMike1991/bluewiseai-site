@@ -37,6 +37,38 @@ function channelsFor({ to, criticality }) {
   return ['email'];
 }
 
+// Format a paste-ready Markdown block a human can drop into a JARVIS conversation.
+// Design principle: every field Mikael might need to debug (URL, status, response,
+// recent timeline) is in ONE copy-paste target, not scattered across email sections.
+function buildPasteBlock({ check_id, check_name, criticality, from, to, detail, error_payload, recent }) {
+  const lines = [];
+  lines.push('```');
+  lines.push(`[Sentinelle ${(to || '?').toUpperCase()}] ${check_name || check_id}`);
+  lines.push(`check_id: ${check_id}`);
+  lines.push(`state: ${from || '∅'} → ${to} (${criticality})`);
+  lines.push(`detail: ${String(detail || '').slice(0, 300)}`);
+  if (error_payload && typeof error_payload === 'object') {
+    lines.push('');
+    lines.push('diagnostic:');
+    for (const [k, v] of Object.entries(error_payload)) {
+      if (v == null) continue;
+      const val = typeof v === 'object' ? JSON.stringify(v) : String(v);
+      lines.push(`  ${k}: ${val.length > 400 ? val.slice(0, 400) + '…' : val}`);
+    }
+  }
+  if (Array.isArray(recent) && recent.length > 0) {
+    lines.push('');
+    lines.push(`recent_events (last ${recent.length}):`);
+    for (const e of recent) {
+      const t = (e.created_at || '').slice(11, 19);
+      const d = String(e.detail || '').slice(0, 80);
+      lines.push(`  ${t} ${e.status} ${e.ms ?? '?'}ms — ${d}`);
+    }
+  }
+  lines.push('```');
+  return lines.join('\n');
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
@@ -97,6 +129,28 @@ export default async function handler(req, res) {
   const recent = digestRes.ok ? await digestRes.json() : [];
   const digest = recent.length >= 3;
 
+  // Pull the last event for THIS check to grab its error_payload (rich diagnostic)
+  // plus last 5 events for quick timeline context. Everything here feeds the paste-ready
+  // block so Mikael can copy the alert into a JARVIS chat and we debug in one shot.
+  const lastEventRes = await fetch(
+    `${SB_URL}/rest/v1/system_health_events?check_id=eq.${encodeURIComponent(check_id)}&select=status,detail,ms,error_payload,created_at&order=created_at.desc&limit=5`,
+    { headers: sbHeaders() },
+  );
+  const lastEvents = lastEventRes.ok ? await lastEventRes.json() : [];
+  const richError = lastEvents[0]?.error_payload || null;
+
+  // Assemble the paste-ready diagnostic. Rendered as a Markdown code block on the email.
+  const pasteBlock = buildPasteBlock({
+    check_id,
+    check_name: check.name,
+    criticality: effectiveCriticality,
+    from,
+    to,
+    detail,
+    error_payload: richError,
+    recent: lastEvents,
+  });
+
   const channels = channelsFor({ to, criticality: effectiveCriticality });
 
   // Insert alert row
@@ -112,6 +166,7 @@ export default async function handler(req, res) {
       channels,
       digest,
       digest_items: digest ? recent : null,
+      error_payload: richError,
     }]),
   });
   if (!insertRes.ok) {
@@ -146,6 +201,9 @@ export default async function handler(req, res) {
     channels,
     digest,
     digest_items: digest ? recent.slice(0, 10) : null,
+    error_payload: richError,
+    recent_events: lastEvents,
+    paste_block: pasteBlock,
     dashboard_url: `https://www.bluewiseai.com/platform/sentinelle?check=${encodeURIComponent(check_id)}`,
   };
 
