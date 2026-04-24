@@ -9,6 +9,35 @@ import { loadEnabledChecks } from '../../../lib/sentinelle/registry.js';
 import { runAll } from '../../../lib/sentinelle/runner.js';
 import { persistRun } from '../../../lib/sentinelle/persist.js';
 
+// Fan out state_changes to /api/sentinelle/alert in parallel. Fire-and-forget so a
+// slow alert router never blocks the run-all response.
+function fanOutAlerts(stateChanges, checksById, secret, origin) {
+  if (!stateChanges || stateChanges.length === 0) return Promise.resolve([]);
+  const url = `${origin}/api/sentinelle/alert`;
+  return Promise.all(stateChanges.map(async (sc) => {
+    try {
+      const ac = new AbortController();
+      const t = setTimeout(() => ac.abort(), 8000);
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${secret}` },
+        body: JSON.stringify({
+          check_id: sc.id,
+          from: sc.from,
+          to: sc.to,
+          detail: sc.detail,
+          criticality: sc.criticality || checksById.get(sc.id)?.criticality,
+        }),
+        signal: ac.signal,
+      });
+      clearTimeout(t);
+      return { id: sc.id, status: res.status };
+    } catch (e) {
+      return { id: sc.id, status: 0, error: String(e?.message || e).slice(0, 120) };
+    }
+  }));
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
@@ -43,6 +72,12 @@ export default async function handler(req, res) {
       { ok: 0, warn: 0, critical: 0, error: 0 },
     );
 
+    const checksById = new Map(checks.map((c) => [c.id, c]));
+    const proto = (req.headers['x-forwarded-proto'] || 'https').split(',')[0];
+    const host = req.headers['x-forwarded-host'] || req.headers.host || 'www.bluewiseai.com';
+    const origin = `${proto}://${host}`;
+    const alertResults = await fanOutAlerts(state_changes, checksById, secret, origin);
+
     const payload = {
       run_id: runId,
       started_at: startedAt.toISOString(),
@@ -50,6 +85,7 @@ export default async function handler(req, res) {
       summary,
       events_written,
       state_changes,
+      alerts: alertResults,
       results,
     };
 
