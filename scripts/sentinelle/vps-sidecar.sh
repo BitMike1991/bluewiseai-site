@@ -17,7 +17,7 @@ if [ -f "/root/.n8n/api-credentials.env" ]; then
   source /root/.n8n/api-credentials.env
 fi
 SENTINELLE_SECRET="${SENTINELLE_SECRET:-}"
-INGEST_URL="${SENTINELLE_INGEST_URL:-https://bluewiseai.com/api/sentinelle/ingest-vps}"
+INGEST_URL="${SENTINELLE_INGEST_URL:-https://www.bluewiseai.com/api/sentinelle/ingest-vps}"
 
 if [ -z "$SENTINELLE_SECRET" ]; then
   echo "$(date -Iseconds) FATAL SENTINELLE_SECRET not set" >&2
