@@ -1,0 +1,98 @@
+{
+  "_comment": "Sentinelle P-08b — Voice Escalation Poller. Source-of-truth for the n8n workflow.\nCron: every 1 min. (1) self-heal: marks escalations 'resolved' when underlying check returned to ok.\n(2) gets pending escalations whose escalate_after has passed AND check is still critical.\n(3) for each, calls Retell create-phone-call with dynamic_variables.\n(4) marks escalation 'voice_sent' with the Retell call_id.\nWorkflow id (live): esGAok6u0Tz9RwbV — recreate via POST /api/v1/workflows from this JSON if lost.",
+  "name": "Sentinelle Voice Escalation Poller",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [ { "field": "cronExpression", "expression": "* * * * *" } ] }
+      },
+      "id": "c0000000-0000-4000-8000-000000000001",
+      "name": "Every 1 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [200, 320]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.system_health_escalations e\nSET status = 'resolved', resolved_at = now()\nFROM public.system_health_checks c\nWHERE e.status = 'pending'\n  AND e.check_id = c.id\n  AND c.last_status <> 'critical'",
+        "options": {}
+      },
+      "id": "c0000000-0000-4000-8000-000000000002",
+      "name": "Self-heal resolved escalations",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [420, 320],
+      "credentials": { "postgres": { "id": "cHvqnVOGqHt37625", "name": "Supabase Database" } },
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT e.id          AS escalation_id,\n       e.check_id    AS check_id,\n       e.alert_id    AS alert_id,\n       e.triggered_at,\n       extract(epoch FROM (now() - e.triggered_at)) / 60 AS minutes_pending,\n       c.name        AS check_name,\n       c.criticality,\n       c.last_status,\n       c.last_detail,\n       a.from_status,\n       a.to_status,\n       a.detail      AS alert_detail\n  FROM public.system_health_escalations e\n  JOIN public.system_health_checks   c ON c.id = e.check_id\n  LEFT JOIN public.system_health_alerts a ON a.id = e.alert_id\n WHERE e.status = 'pending'\n   AND e.escalate_after < now()\n   AND c.last_status = 'critical'\n ORDER BY e.escalate_after ASC\n LIMIT 5",
+        "options": {}
+      },
+      "id": "c0000000-0000-4000-8000-000000000003",
+      "name": "Get due escalations",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [640, 320],
+      "credentials": { "postgres": { "id": "cHvqnVOGqHt37625", "name": "Supabase Database" } },
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter to actual rows (Postgres can return [{}] when 0 rows).\n// One item per due escalation; downstream HTTP fans out automatically.\n// $env.MIKAEL_ALERT_PHONE — if missing, skip everything (defensive).\nconst phone = $env.MIKAEL_ALERT_PHONE;\nif (!phone) return [];\nconst items = $input.all();\nconst out = [];\nfor (const it of items) {\n  const r = it.json;\n  if (!r || !r.escalation_id) continue;\n  const minutesPending = Math.round(Number(r.minutes_pending || 30));\n  const detail = String(r.alert_detail || r.last_detail || '').slice(0, 240);\n  out.push({ json: {\n    to_number: phone,\n    escalation_id: r.escalation_id,\n    check_id: r.check_id,\n    check_name: r.check_name || r.check_id,\n    criticality: r.criticality || 'high',\n    from_status: r.from_status || 'unknown',\n    to_status: r.to_status || r.last_status || 'critical',\n    detail,\n    minutes_pending: String(minutesPending),\n  }});\n}\nreturn out;\n"
+      },
+      "id": "c0000000-0000-4000-8000-000000000004",
+      "name": "Build Retell calls",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [860, 320]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.retellai.com/v2/create-phone-call",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ from_number: '+15144184743', to_number: $json.to_number, override_agent_id: 'agent_0a57b37818e2a4f00a725a0759', retell_llm_dynamic_variables: { check_name: $json.check_name, check_id: $json.check_id, criticality: $json.criticality, from_status: $json.from_status, to_status: $json.to_status, detail: $json.detail, minutes_pending: $json.minutes_pending } }) }}",
+        "options": {
+          "timeout": 15000,
+          "retry": { "maxTries": 2, "waitBetweenTries": 4000 }
+        }
+      },
+      "id": "c0000000-0000-4000-8000-000000000005",
+      "name": "Retell create-phone-call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1080, 320],
+      "credentials": { "httpBearerAuth": { "id": "OOrI1pRmJzQ1b4aZ", "name": "Retell Bearer" } },
+      "continueOnFail": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.system_health_escalations\n  SET status = 'voice_sent',\n      voice_call_id = '{{ $json.call_id || '' }}'\nWHERE id = {{ $('Build Retell calls').item.json.escalation_id }}\n  AND length('{{ $json.call_id || '' }}') > 0",
+        "options": {}
+      },
+      "id": "c0000000-0000-4000-8000-000000000006",
+      "name": "Mark voice_sent",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1300, 320],
+      "credentials": { "postgres": { "id": "cHvqnVOGqHt37625", "name": "Supabase Database" } },
+      "alwaysOutputData": true
+    }
+  ],
+  "connections": {
+    "Every 1 min":                       { "main": [[{ "node": "Self-heal resolved escalations", "type": "main", "index": 0 }]] },
+    "Self-heal resolved escalations":    { "main": [[{ "node": "Get due escalations", "type": "main", "index": 0 }]] },
+    "Get due escalations":               { "main": [[{ "node": "Build Retell calls", "type": "main", "index": 0 }]] },
+    "Build Retell calls":                { "main": [[{ "node": "Retell create-phone-call", "type": "main", "index": 0 }]] },
+    "Retell create-phone-call":          { "main": [[{ "node": "Mark voice_sent", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
